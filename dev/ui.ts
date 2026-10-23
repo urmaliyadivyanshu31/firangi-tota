@@ -6,10 +6,7 @@ import type { Channel, Era, EraId, Lang } from '../src/content/types'
 import type { ChapterState } from '../src/game/state'
 import { dayDate } from '../src/game/dates'
 import { setLang } from '../src/i18n/lang'
-import { renderLanguage } from '../src/ui/screens/language'
-import { renderHome } from '../src/ui/screens/home'
-import { renderSetup } from '../src/ui/screens/setup'
-import { renderIntro } from '../src/ui/screens/intro'
+import { renderMain } from '../src/ui/screens/main'
 import { renderDay } from '../src/ui/screens/day'
 import { renderEnd } from '../src/ui/screens/end'
 import { renderCredits } from '../src/ui/screens/credits'
@@ -18,7 +15,7 @@ import { buildSheet } from '../src/ui/message'
 import { pencilOn } from '../src/game/config'
 
 const q = new URLSearchParams(location.search)
-const screen = q.get('screen') ?? 'home'
+const screen = q.get('screen') ?? 'main'
 const lang = (q.get('lang') === 'hi' ? 'hi' : 'en') as Lang
 const channel = (q.get('channel') ?? 'petition') as Channel
 setLang(lang)
@@ -60,24 +57,14 @@ const four = (['petition', 'note', 'radio', 'telegram'] as Channel[]).map((ch, i
 })
 
 switch (screen) {
-  case 'lang':
-    renderLanguage(root, { pick: log('pick') })
-    break
-  case 'home':
-  case 'home-done':
-    renderHome(root, {
+  case 'main':
+  case 'main-done':
+    renderMain(root, {
       eras: four,
-      best: screen === 'home-done' ? { 'delhi-1857': { difficulty: 'easy', days: 7 }, 'lahore-1929': { difficulty: 'medium', days: 4 } } : {},
-      dailyDone: screen === 'home-done',
-    }, { chapter: log('chapter'), daily: log('daily'), continue: log('continue'), lang: log('lang'), sound: log('sound'), credits: log('credits') })
-    break
-  case 'setup':
-    renderSetup(root, { era }, { start: log('start'), back: log('back') })
-    break
-  case 'intro':
-  case 'intro2':
-    renderIntro(root, { era }, { next: log('next') })
-    if (screen === 'intro2') root.querySelector<HTMLElement>('[data-action="next"]')!.click()
+      best: screen === 'main-done' ? { 'delhi-1857': { difficulty: 'easy', days: 7 }, 'lahore-1929': { difficulty: 'medium', days: 4 } } : {},
+      selected: (q.get('era') as EraId | null) ?? 'delhi-1857',
+      difficulty: 'easy',
+    }, { select: log('select'), difficulty: log('difficulty'), begin: log('begin'), credits: log('credits') })
     break
   case 'day':
     day(chapter())

@@ -12,7 +12,7 @@ const en = {
   langShort: 'EN',
 
   // Home
-  premise: 'Four desks of the freedom struggle, and one forger: the Firangi Tota',
+  premise: 'Four desks of the freedom struggle. Among the true messages, the Firangi Tota slips in forgeries',
   continue: 'Continue',
   dailyTitle: 'Aaj ka Taar',
   dailyPlay: 'Play',
@@ -39,10 +39,13 @@ const en = {
 
   // Intro
   introYou: 'You',
+  forgerLabel: 'Tota',
+  chaptersLabel: 'Chapters',
+  homeCredits: 'Inspired by Politburo or Parrot · Credits',
   introHow: 'Check each message against the case file. Stamp ASLI if genuine, TOTA if forged.',
   introStakes: 'One wrong stamp, or a burnt-out agarbatti, and you are caught.',
   next: 'Next',
-  begin: 'Start day 1',
+  begin: 'Begin',
 
   // Day
   dayOf: 'Day {n} of {total}',
@@ -85,6 +88,11 @@ const en = {
   // End
   survivedTitle: 'You survived',
   caughtTitle: 'You were caught',
+  caughtStamp: 'Caught',
+  survivedStamp: 'Survived',
+  verdictPassed: 'You passed the Tota\'s forgery',
+  verdictRejected: 'You rejected a genuine message',
+  receipts: 'Receipts',
   nextHappened: 'What happened next',
   caughtHappened: 'What happened to people like you',
   theirSide: 'Their side',
@@ -112,7 +120,7 @@ const hi: Strings = {
   langChange: 'भाषा बदलें',
   langShort: 'हिंदी',
 
-  premise: 'आज़ादी की लड़ाई की चार मेज़ें, और एक जालसाज़: फ़िरंगी तोता',
+  premise: 'आज़ादी की लड़ाई की चार मेज़ें। सच्चे संदेशों के बीच फ़िरंगी तोता जाली संदेश मिला देता है',
   continue: 'आगे खेलें',
   dailyTitle: 'आज का तार',
   dailyPlay: 'खेलें',
@@ -137,10 +145,13 @@ const hi: Strings = {
   back: 'वापस',
 
   introYou: 'आप',
+  forgerLabel: 'तोता',
+  chaptersLabel: 'अध्याय',
+  homeCredits: 'Politburo or Parrot से प्रेरित · क्रेडिट',
   introHow: 'हर संदेश को केस फ़ाइल से मिलाएँ। सच्चा हो तो असली, जाली हो तो तोता।',
   introStakes: 'एक ग़लत मुहर, या अगरबत्ती बुझी, और आप पकड़े गए।',
   next: 'आगे',
-  begin: 'पहला दिन शुरू करें',
+  begin: 'शुरू करें',
 
   dayOf: 'दिन {n} / {total}',
   dayLabel: 'दिन',
@@ -180,6 +191,11 @@ const hi: Strings = {
 
   survivedTitle: 'आप बच निकले',
   caughtTitle: 'आप पकड़े गए',
+  caughtStamp: 'पकड़े गए',
+  survivedStamp: 'बच गए',
+  verdictPassed: 'आपने जाली संदेश को असली माना',
+  verdictRejected: 'आपने असली संदेश को जाली माना',
+  receipts: 'उन दिनों…',
   nextHappened: 'आगे क्या हुआ',
   caughtHappened: 'आप जैसे लोगों के साथ क्या हुआ',
   theirSide: 'उनकी बात',
@@ -211,6 +227,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'kindForged', 'survivedTitle', 'caughtTitle', 'nextHappened', 'caughtHappened',
   'theirSide', 'playAgain', 'home', 'share', 'creditsInspired', 'creditsCode',
   'tooSlow', 'copied', 'copyFailed', 'shareWhatsApp', 'dailyChapter',
+  'forgerLabel', 'chaptersLabel', 'homeCredits', 'caughtStamp', 'survivedStamp', 'verdictPassed', 'verdictRejected', 'receipts',
   'langShort', 'premise', 'dailyScore', 'dailyTomorrow', 'dailyNext', 'shareGrid', 'dayLabel',
   'dayTitle', 'skip', 'blankFact', 'sheetPetitionHead', 'sheetRadioHead',
   'sheetTelegramHead', 'tellLabel', 'whyLabel', 'source', 'sound', 'listen', 'listenStop', 'voiceError',

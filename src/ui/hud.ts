@@ -1,7 +1,7 @@
 import type { Era, Lang } from '../content/types'
-import { strings, t, tf } from '../i18n/strings'
+import { t, tf } from '../i18n/strings'
 import { h, svg } from './h'
-import { speakerIcon, speakerOffIcon } from './icons'
+import { langSwitch, setSoundToggle, soundToggle } from './controls'
 import { eraLabel } from './message'
 import { homeIcon } from './ornament'
 
@@ -55,13 +55,10 @@ export function setTimer(root: HTMLElement, frac: number, secs?: number): void {
   if (bar) applyTimer(bar, frac, secs)
 }
 
-/** Swap the sound icon in place. */
+/** Swap the horn in place. */
 export function setSound(root: HTMLElement, on: boolean, lang: Lang): void {
   const b = root.querySelector<HTMLButtonElement>('.hud [data-action="sound"]')
-  if (!b) return
-  b.setAttribute('aria-pressed', String(on))
-  b.title = t(on ? 'soundOn' : 'soundOff', lang)
-  b.replaceChildren(on ? speakerIcon() : speakerOffIcon())
+  if (b) setSoundToggle(b, on, lang)
 }
 
 const SMOKE = `<svg class="agarbatti__smoke" viewBox="0 0 24 64" aria-hidden="true" focusable="false">
@@ -83,7 +80,6 @@ let lastDay = ''
 
 export function hud(p: HudProps, on: HudHandlers): HTMLElement {
   const { lang } = p
-  const other: Lang = lang === 'en' ? 'hi' : 'en'
   const where = eraLabel(p.era, lang)
   const key = `${p.era.id}|${p.mode.kind}|${p.day}`
   const flip = lastDay !== '' && lastDay !== key && lastDay.startsWith(`${p.era.id}|${p.mode.kind}|`)
@@ -100,9 +96,8 @@ export function hud(p: HudProps, on: HudHandlers): HTMLElement {
         h('span', { class: 'hud__title' }, where.title),
         where.place ? h('span', { class: 'hud__place' }, where.place) : null),
       h('div', { class: 'hud__tools' },
-        iconBtn('sound', t('sound', lang), p.soundOn ? speakerIcon() : speakerOffIcon(), () => on.sound(), { 'aria-pressed': String(p.soundOn), title: t(p.soundOn ? 'soundOn' : 'soundOff', lang) }),
-        h('button', { class: 'hud__btn hud__lang', type: 'button', 'data-action': 'lang', lang: other,
-          'aria-label': `${t('langChange', lang)}: ${strings[other].langSelf}`, onclick: () => on.lang() }, strings[other].langShort))),
+        soundToggle(p.soundOn, lang, () => on.sound()),
+        langSwitch(lang, () => on.lang()))),
     h('div', { class: 'hud__row hud__row--clock' },
       h('p', { class: 'hud__day' },
         h('span', { class: 'hud__daylabel', 'aria-hidden': 'true' }, t('dayLabel', lang)),

@@ -3,7 +3,7 @@ import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
 import type { VoiceState } from '../../audio/voice'
 import type { SheetSpec } from '../../scene/index'
-import { announce, h, mount } from '../h'
+import { announce, h, mount, svg } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
@@ -136,7 +136,10 @@ export function setReadable(root: HTMLElement): void {
   if (!a || a.root !== root || a.props.readable) return
   a.props = { ...a.props, readable: true }
   a.screen.classList.remove('is-arriving')
-  for (const b of stampButtons(a.screen)) b.disabled = false
+  for (const b of stampButtons(a.screen)) {
+    b.disabled = false
+    b.classList.add('is-ready') // a small wobble: they have come alive
+  }
   const listen = a.screen.querySelector<HTMLButtonElement>('[data-action="listen"]')
   if (listen) listen.disabled = false
   const copy = a.screen.querySelector<HTMLElement>('.day__message')
@@ -296,14 +299,17 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     tabs[k] = b
     return b
   }
+  // A rubber stamp on a wooden mount: the handle on the left, the inked face with both names, the meaning and the key
   const stampBtn = (v: Verdict, arrow: string, key: string) =>
     h('button', { class: `stamp stamp--${v}`, type: 'button', 'data-stamp': v, disabled: waiting, onclick: () => on.stamp(v) },
+      stampHandle(),
       h('span', { class: 'stamp__face' },
-        h('span', { class: 'stamp__dev', lang: 'hi' }, t(v, 'hi')),
-        h('span', { class: 'stamp__lat', lang: 'en' }, t(v, 'en'))),
-      h('span', { class: 'stamp__foot' },
-        h('span', { class: 'stamp__hint' }, t(v === 'asli' ? 'asliHint' : 'totaHint', lang)),
-        h('kbd', { class: 'stamp__key', 'aria-hidden': 'true' }, `${arrow} ${key}`)))
+        h('span', { class: 'stamp__names' },
+          h('span', { class: 'stamp__dev', lang: 'hi' }, t(v, 'hi')),
+          h('span', { class: 'stamp__lat', lang: 'en' }, t(v, 'en'))),
+        h('span', { class: 'stamp__foot' },
+          h('span', { class: 'stamp__hint' }, t(v === 'asli' ? 'asliHint' : 'totaHint', lang)),
+          h('kbd', { class: 'stamp__key', 'aria-hidden': 'true' }, `${arrow} ${key}`))))
 
   // Listen; with more than one voice, a chevron (or a long press) picks the voice
   let listenGroup: HTMLElement | null = null
@@ -418,4 +424,15 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     announce(`${t(verdictKey(state), lang)}${stop} ${t(msg.real ? 'wasGenuine' : 'wasForged', lang)}${stop}`)
     nextBtn?.focus({ preventScroll: true })
   }
+}
+
+/** The wooden handle of a rubber stamp, seen from the side. */
+function stampHandle(): SVGSVGElement {
+  return svg(`<svg class="stamp__handle" viewBox="0 0 30 40" aria-hidden="true" focusable="false">
+  <ellipse cx="15" cy="8.5" rx="8" ry="7" fill="#8a5a32"/>
+  <ellipse cx="13" cy="6.5" rx="3.6" ry="2.4" fill="#c99a62" opacity=".7"/>
+  <path d="M11.5 14h7l1.4 12h-9.8z" fill="#6e4424"/>
+  <path d="M4 26h22v6H4z" fill="#9b6a3c"/>
+  <path d="M5 32h20v4.5H5z" fill="currentColor"/>
+</svg>`)
 }

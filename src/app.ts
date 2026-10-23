@@ -13,7 +13,8 @@ import { mulberry32, seedFrom } from './game/rng'
 import { chapterShareText, shareText } from './game/share'
 import { createChapter, nextDay, stamp, type ChapterState, type Verdict } from './game/state'
 import { store } from './game/storage'
-import { getLang, hasLang, setLang } from './i18n/lang'
+import type { Lang } from './content/types'
+import { getLang, setLang } from './i18n/lang'
 import { strings, t } from './i18n/strings'
 import type { Voice, VoiceState } from './audio/voice'
 import { DEFAULT_VOICE, VOICES, voiceChoices, type VoiceChoice } from './content/voices'
@@ -21,16 +22,14 @@ import {
   STAGE_LOST_EVENT, loadStage, mountFallback,
   type DayTitle, type EraDressing, type Fallback, type FlashKind, type QualityTier, type SheetSpec, type Stage, type StageCueName, type StampKind,
 } from './scene/index'
+import { controlCluster, setSoundToggle } from './ui/controls'
 import { h } from './ui/h'
 import { buildSheet, dayTitleFor } from './ui/message'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
 import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
 import { renderEnd, type EndProps } from './ui/screens/end'
-import { MODE_KEY, renderHome, suggestedEra, type Best } from './ui/screens/home'
-import { renderIntro } from './ui/screens/intro'
-import { renderLanguage } from './ui/screens/language'
-import { renderSetup } from './ui/screens/setup'
+import { MODE_KEY, renderMain, suggestedEra, type Best } from './ui/screens/main'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
 export interface AppEnv {
@@ -74,7 +73,7 @@ type Play =
 
 interface DailyRecord { era: EraId; number: number; results: boolean[] }
 
-type Screen = 'lang' | 'home' | 'setup' | 'intro' | 'day' | 'end' | 'credits'
+type Screen = 'main' | 'day' | 'end' | 'credits'
 
 export function startApp(root: AppRoot, env: AppEnv): void {
   const ui = root.ui
@@ -87,7 +86,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   // ------------------------------------------------------------------ state
 
-  let screen: Screen = 'lang'
+  let screen: Screen = 'main'
+  /** Redraws the screen on show, for a language change. */
+  let redraw: () => void = () => undefined
   let play: Play | null = null
   let readable = false // the paper is in view: stamps work, the agarbatti burns
   let revealed = false
@@ -95,6 +96,14 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let gen = 0 // bumps on every navigation and every new day; async work started before it is dropped
 
   let muted = store.get<unknown>('muted', false) === true
+
+  // the main page's choices
+  let selected: EraId = suggestedEra(ERAS, bests())?.id ?? ERAS[0]?.id ?? 'delhi-1857'
+  const savedMode = store.get<unknown>('difficulty', 'easy')
+  let difficulty: Difficulty = DIFFICULTIES.find((d) => d === savedMode) ?? 'easy'
+
+  // sound and language, top right on every screen (in the top bar during a day)
+  const controls = h('div', { class: 'controls-dock' })
 
   // the desk (3D stage or 2D fallback), and what it should show
   let desk: Desk | null = null
@@ -166,8 +175,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     }
   }
 
-  if (hasLang()) showHome()
-  else showLanguage()
+  document.body.appendChild(controls)
+  // the daily puzzle is off the main page for now; ?daily still opens it
+  if (params.has('daily')) openDaily()
+  else showMain()
 
   // Ruling R10: the first screen paints without three.js; the stage loads after that paint, when
   // the browser is idle, or at once on the first chapter tap.
@@ -210,7 +221,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         void desk.showMessage(sheetFor(p, getLang()))
         desk.skip()
       }
-    } else if (screen === 'home' || screen === 'setup' || screen === 'intro' || screen === 'lang') {
+    } else if (screen === 'main') {
       void desk.establish()
     }
     syncPause()
@@ -414,73 +425,67 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     return !muted
   }
 
-  function showLanguage(): void {
-    leave()
-    screen = 'lang'
-    establish()
-    renderLanguage(ui, {
-      pick: (l) => {
-        setLang(l)
-        showHome()
+  /** Sound and language, top right; during a day they live in the top bar instead. */
+  function drawControls(): void {
+    controls.hidden = screen === 'day'
+    controls.replaceChildren(controlCluster({ soundOn: !muted, lang: getLang() }, {
+      sound: () => {
+        const btn = controls.querySelector<HTMLButtonElement>('[data-action="sound"]')
+        const on = toggleSound()
+        if (btn) setSoundToggle(btn, on, getLang())
       },
-    })
+      lang: (l: Lang) => {
+        setLang(l)
+        redraw()
+      },
+    }))
   }
 
-  function showHome(): void {
+  /** Shows a screen: remembers how to redraw it (a language change) and refreshes the controls. */
+  function show(next: Screen, draw: () => void): void {
+    screen = next
+    redraw = () => {
+      draw()
+      drawControls()
+    }
+    redraw()
+  }
+
+  /** The one main page: the chosen chapter's paper over its room. */
+  function showMain(): void {
     leave()
-    screen = 'home'
-    audio.ambience(null)
-    setDeskEra(deskEra ?? suggestedEra(ERAS, bests())?.id)
+    setDeskEra(selected)
     establish()
+    audio.ambience(selected)
     syncPause()
-    renderHome(ui, { eras: ERAS, best: bests(), dailyDone: dailyDone(), soundOn: !muted, ...(today() ? { dailyNumber: today()!.number } : {}) }, {
-      chapter: (id) => {
+    show('main', () => renderMain(ui, { eras: ERAS, best: bests(), selected, difficulty }, {
+      select: (id) => {
+        if (id === selected) return
+        selected = id
         void ensureStage()
-        showSetup(eraById(id))
+        setDeskEra(id)
+        establish()
+        audio.ambience(id)
+        audio.cue('page')
+        redraw()
       },
-      daily: () => {
+      difficulty: (d) => {
+        if (d === difficulty) return
+        difficulty = d
+        store.set('difficulty', d)
+        redraw()
+      },
+      begin: () => {
         void ensureStage()
-        openDaily()
+        startChapter(eraById(selected), difficulty)
       },
-      continue: () => {
-        const e = suggestedEra(ERAS, bests())
-        if (!e) return
-        void ensureStage()
-        showSetup(e)
-      },
-      lang: () => {
-        setLang(getLang() === 'en' ? 'hi' : 'en')
-        showHome()
-      },
-      sound: () => {
-        toggleSound()
-        showHome()
-      },
-      credits: () => showCredits(showHome),
-    })
+      credits: () => showCredits(showMain),
+    }))
   }
 
   function showCredits(back: () => void): void {
-    screen = 'credits'
     clearToast()
-    renderCredits(ui, { back })
-  }
-
-  function showSetup(era: Era): void {
-    leave()
-    screen = 'setup'
-    setDeskEra(era.id)
-    establish()
-    audio.ambience(era.id)
-    syncPause()
-    renderSetup(ui, { era }, { start: (d) => showIntro(era, d), back: showHome })
-  }
-
-  function showIntro(era: Era, d: Difficulty): void {
-    screen = 'intro'
-    establish()
-    audio.cue('page')
-    renderIntro(ui, { era }, { next: () => startChapter(era, d) })
+    show('credits', () => renderCredits(ui, { back }))
   }
 
   function startChapter(era: Era, d: Difficulty): void {
@@ -489,7 +494,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       state = createChapter(era, d, seed === null ? env.random : mulberry32(seed))
     } catch (err) {
       console.error('[app] could not build the chapter', err)
-      showHome()
+      showMain()
       return
     }
     leave()
@@ -526,6 +531,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function beginDay(): void {
     const p = play
     if (!p) return
+    controls.hidden = true
     const token = ++gen
     stopVoice()
     readable = false
@@ -595,8 +601,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         drawDay()
         if (readable || revealed) desk?.redrawMessage(sheetFor(p))
       },
-      quit: showHome,
+      quit: showMain,
     })
+    controls.hidden = true
     if (!revealed) syncHudInsets()
   }
 
@@ -670,9 +677,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   function showEnd(props: EndProps, line: string, again: () => void): void {
     leave()
-    screen = 'end'
     syncPause()
-    renderEnd(ui, props, { again, home: showHome, share: () => void share(line) })
+    show('end', () => renderEnd(ui, props, { again, home: showMain, share: () => void share(line) }))
   }
 
   // ------------------------------------------------------------------ the daily puzzle
@@ -728,17 +734,16 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const era = eraById(d.era)
     const line = shareText({ daily: d.number, eraTitle: era.title[getLang()], results })
     leave()
-    screen = 'end'
     syncPause()
     const now = env.now()
-    renderDailyEnd(ui, { era, number: d.number, results, nextAt: nextDailyAt(now), now: env.now }, {
+    show('end', () => renderDailyEnd(ui, { era, number: d.number, results, nextAt: nextDailyAt(now), now: env.now }, {
       share: () => void share(line),
       chapter: () => {
-        void ensureStage()
-        showSetup(era)
+        selected = era.id
+        showMain()
       },
-      home: showHome,
-    })
+      home: showMain,
+    }))
   }
 
   // ------------------------------------------------------------------ progress
