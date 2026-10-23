@@ -1,42 +1,25 @@
 import type { Fact } from '../../types.js'
 
 // The case file. hardHidden lines are blank in Hard: a history buff knows them.
+// Each line backs at least one forgery's slip (see messages.ts).
 export const facts: Fact[] = [
   {
     id: 'appointed-day',
-    label: { en: 'Appointed day', hi: 'तय दिन' },
-    value: { en: '15 Aug, Friday. Assent: 18 July', hi: '15 अगस्त, शुक्रवार। राजा की मंज़ूरी: 18 जुलाई' },
+    label: { en: 'Freedom day', hi: 'आज़ादी का दिन' },
+    value: { en: 'Friday 15 Aug; Act 18 July', hi: 'शुक्रवार 15 अगस्त; क़ानून 18 जुलाई' },
     sources: [
       { id: 'menon-1957', loc: 'ch. XVII' },
       { id: 'mansergh-xii', loc: 'Introduction' },
     ],
   },
   {
-    id: 'titles',
-    label: { en: "Mountbatten's style", hi: 'माउंटबेटन का ओहदा' },
-    value: { en: 'Viscount; not Viceroy after 14 Aug', hi: 'वाइकाउंट; 14 अगस्त के बाद वायसराय नहीं' },
-    sources: [
-      { id: 'mansergh-xii', loc: 'No. 300 and note' },
-      { id: 'cad-14aug1947', loc: 'intimation to the Viceroy' },
-      { id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' },
-    ],
-    hardHidden: true,
-  },
-  {
     id: 'radcliffe',
     label: { en: 'Sir Cyril Radcliffe', hi: 'सर सिरिल रैडक्लिफ़' },
-    value: { en: 'Arrived 8 July; secretary Christopher Beaumont', hi: '8 जुलाई को आए; सचिव क्रिस्टोफ़र बोमॉन्ट' },
+    value: { en: 'Landed 8 July; first India visit', hi: '8 जुलाई को आए; पहली बार भारत' },
     sources: [
-      { id: 'mansergh-xii', loc: 'Introduction; No. 377' },
-      { id: 'campbell-johnson-1951', loc: 'July–August 1947 entries' },
+      { id: 'mansergh-xii', loc: 'Introduction' },
       { id: 'chester-2002' },
     ],
-  },
-  {
-    id: 'members',
-    label: { en: 'Commission judges', hi: 'कमीशन के जज' },
-    value: { en: 'Teja Singh: Punjab. C.C. Biswas: Bengal', hi: 'तेजा सिंह: पंजाब। सी.सी. बिस्वास: बंगाल' },
-    sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendices I and II' }],
   },
   {
     id: 'awards',
@@ -49,25 +32,34 @@ export const facts: Fact[] = [
     ],
   },
   {
-    id: 'notional',
-    label: { en: 'First Schedule', hi: 'पहली सूची' },
-    value: { en: 'East Bengal: Murshidabad, Nadia, Malda', hi: 'पूर्वी बंगाल: मुर्शिदाबाद, नदिया, मालदा' },
-    sources: [{ id: 'menon-1957', loc: 'Appendix XI: Indian Independence Act, First and Second Schedules' }],
-  },
-  {
     id: 'session',
     label: { en: 'Midnight session', hi: 'आधी रात की बैठक' },
-    value: { en: '11 pm; Prasad, Assembly President, presides', hi: 'रात 11 बजे; संविधान सभा के अध्यक्ष प्रसाद' },
+    value: { en: '14 Aug, 11 pm; Prasad presides', hi: '14 अगस्त, रात 11 बजे; अध्यक्ष प्रसाद' },
     sources: [{ id: 'cad-14aug1947' }],
   },
   {
-    id: 'staff',
-    label: { en: "Who's who", hi: 'कौन क्या' },
-    value: { en: "Abell: Viceroy's secretary. Rees: ~50,000 troops", hi: 'एबेल: वायसराय के सचिव। रीस: करीब 50,000 फ़ौजी' },
-    sources: [
-      { id: 'mansergh-xii', loc: 'Nos. 377, 391' },
-      { id: 'menon-1957', loc: 'ch. XVIII' },
-    ],
+    id: 'jinnah',
+    label: { en: 'Mr Jinnah', hi: 'मिस्टर जिन्ना' },
+    value: { en: 'Karachi from 7 Aug; Governor-General 15th', hi: '7 अगस्त से कराची; 15 को गवर्नर-जनरल' },
+    sources: [{ id: 'menon-1957', loc: 'ch. XVIII' }],
+  },
+  {
+    id: 'gandhi',
+    label: { en: 'Gandhiji', hi: 'गांधीजी' },
+    value: { en: 'Calcutta from 9 Aug; fasts 15th', hi: '9 अगस्त से कलकत्ता; 15 को उपवास' },
+    sources: [{ id: 'cwmg-89', loc: 'Introduction; documents for 9–15 August 1947' }],
+  },
+  {
+    id: 'states',
+    label: { en: 'Princely states', hi: 'रियासतें' },
+    value: { en: 'Patel, Minister; V.P. Menon, Secretary', hi: 'पटेल मंत्री; वी.पी. मेनन सचिव' },
+    sources: [{ id: 'menon-1956', loc: 'ch. V, Stopping the Gap' }],
+  },
+  {
+    id: 'boundary-force',
+    label: { en: 'Boundary Force', hi: 'बाउंड्री फ़ोर्स' },
+    value: { en: 'Maj-Gen Rees; about 50,000 men', hi: 'मेजर-जनरल रीस; करीब 50,000 जवान' },
+    sources: [{ id: 'menon-1957', loc: 'ch. XVIII' }],
   },
   {
     id: 'delhi-flags',
@@ -77,13 +69,10 @@ export const facts: Fact[] = [
     hardHidden: true,
   },
   {
-    id: 'clock',
-    label: { en: 'Clocks', hi: 'घड़ियाँ' },
-    value: { en: 'Karachi on Delhi time; London behind', hi: 'कराची का समय दिल्ली वाला; लंदन पीछे' },
-    sources: [
-      { id: 'iana-tz', loc: 'Zones Asia/Karachi and Asia/Kolkata' },
-      { id: 'mansergh-xii', loc: 'No. 462 (Karachi 8.30 pm, received in London 5.45 pm)' },
-    ],
+    id: 'tryst',
+    label: { en: "Nehru's speech", hi: 'नेहरू का भाषण' },
+    value: { en: 'Assembly, late on 14 August', hi: 'संविधान सभा, 14 अगस्त देर रात' },
+    sources: [{ id: 'cad-14aug1947' }],
     hardHidden: true,
   },
 ]

@@ -5,16 +5,16 @@ export const rules: Rule[] = [
   {
     id: 'priority',
     text: {
-      en: "Priorities: IMPORTANT, IMMEDIATE, MOST IMMEDIATE. Numbers: 'No. 3408-S' or UNNUMBERED. No 'URGENT'.",
-      hi: "प्राथमिकता: IMPORTANT, IMMEDIATE, MOST IMMEDIATE। नंबर: 'No. 3408-S' या UNNUMBERED। 'URGENT' कभी नहीं।",
+      en: "Telegrams are marked IMPORTANT, IMMEDIATE or MOST IMMEDIATE. Never 'URGENT'.",
+      hi: "तारों पर IMPORTANT, IMMEDIATE या MOST IMMEDIATE लिखा होता है। 'URGENT' कभी नहीं।",
     },
     arrivesOnDay: 1,
   },
   {
-    id: 'begins-ends',
+    id: 'slogans',
     text: {
-      en: "Passed-on text sits between 'Begins.' and 'Ends.' Office notes never end with slogans.",
-      hi: "आगे भेजा गया संदेश 'Begins.' और 'Ends.' के बीच होता है। दफ़्तरी नोट कभी नारे से ख़त्म नहीं होते।",
+      en: "Office telegrams and notes never end with a slogan such as 'Jai Hind'.",
+      hi: "दफ़्तरी तार और नोट कभी 'जय हिंद' जैसे नारे से ख़त्म नहीं होते।",
     },
     arrivesOnDay: 1,
   },
@@ -29,15 +29,15 @@ export const rules: Rule[] = [
   {
     id: 'council-house',
     text: {
-      en: 'The Constituent Assembly meets at the Council House. There is no Lok Sabha yet.',
-      hi: 'संविधान सभा काउंसिल हाउस में बैठती है। लोकसभा अभी है ही नहीं।',
+      en: "No Lok Sabha and no President of India yet; Prasad is the Assembly's President.",
+      hi: 'अभी न लोकसभा है, न भारत का राष्ट्रपति; प्रसाद संविधान सभा के अध्यक्ष हैं।',
     },
     arrivesOnDay: 3,
   },
   {
     id: 'weekday',
     text: {
-      en: 'Weekday must match date. 15 August 1947 is a Friday.',
+      en: 'The weekday must match the date. 15 August 1947 is a Friday.',
       hi: 'दिन तारीख़ से मेल खाए। 15 अगस्त 1947 शुक्रवार है।',
     },
     arrivesOnDay: 5,
@@ -45,17 +45,17 @@ export const rules: Rule[] = [
   {
     id: 'london-time',
     text: {
-      en: "London 'Received' stamps show London time, so may read earlier than sending.",
-      hi: "लंदन की 'Received' मुहर पर लंदन का समय होता है, जो भेजने के समय से पहले का हो सकता है।",
+      en: "London is 4½ hours behind Delhi, so its 'Received' times can look earlier.",
+      hi: "लंदन दिल्ली से 4½ घंटे पीछे है, इसलिए वहाँ 'मिला' का समय पहले का दिख सकता है।",
     },
     arrivesOnDay: 7,
   },
   {
-    id: 'garbled',
+    id: 'renames',
     text: {
-      en: 'A garbled cipher group is written [group corrupt].',
-      hi: 'बिगड़े साइफ़र ग्रुप पर [group corrupt] लिखा जाता है।',
+      en: "From 15 August, Mountbatten is no longer Viceroy, and Viceroy's House is Government House.",
+      hi: '15 अगस्त से माउंटबेटन वायसराय नहीं रहे, और वायसराय हाउस अब गवर्नमेंट हाउस है।',
     },
-    arrivesOnDay: 1,
+    arrivesOnDay: 9,
   },
 ]
