@@ -34,6 +34,16 @@ const era: Era = {
     en: 'Lahore CID plants: forged notes in the comrades\' voice',
     hi: 'लाहौर सीआईडी के भेजे जाली पर्चे, साथियों की ज़बान में',
   },
+  endings: {
+    caught: {
+      stamp: { en: 'Conspiracy Case', hi: 'लाहौर षड्यंत्र केस' },
+      title: { en: 'The CID found the post box', hi: 'सीआईडी ने पोस्ट बॉक्स ढूँढ लिया' },
+    },
+    survived: {
+      stamp: { en: 'Notes delivered', hi: 'चिट्ठियाँ पहुँचीं' },
+      title: { en: 'Not one police plant got past you', hi: 'पुलिस का एक भी जाली पर्चा तुमसे बच नहीं पाया' },
+    },
+  },
   sources,
   facts,
   rules,
