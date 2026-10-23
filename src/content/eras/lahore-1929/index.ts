@@ -36,7 +36,7 @@ const era: Era = {
   },
   endings: {
     caught: {
-      stamp: { en: 'Conspiracy Case', hi: 'लाहौर षड्यंत्र केस' },
+      stamp: { en: 'Lahore Conspiracy Case', hi: 'लाहौर षड्यंत्र केस' },
       title: { en: 'The CID found the post box', hi: 'सीआईडी ने पोस्ट बॉक्स ढूँढ लिया' },
     },
     survived: {

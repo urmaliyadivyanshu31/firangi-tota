@@ -671,10 +671,10 @@ export const messages: Message[] = [
     from: M,
     to: POST_BOX,
     text: {
-      en: "In December Panditji left Lahore dressed as a panda, taking Villager's mother and sister on a 'pilgrimage'. You never heard this.",
+      en: "In December Panditji left Lahore dressed as a pilgrims' priest, a panda, taking Villager's mother and sister on a 'pilgrimage'. You never heard this.",
       hi: "दिसंबर में पंडितजी पंडा बनकर लाहौर से निकले, विलेजर की माँ और बहन को 'तीर्थयात्रा' पर ले जाते हुए। यह तुमने कभी नहीं सुना।",
     },
-    checks: { en: ['dressed as a panda', "Villager's mother and sister"], hi: ['पंडा बनकर', 'विलेजर की माँ और बहन'] },
+    checks: { en: ['a panda', "Villager's mother and sister"], hi: ['पंडा बनकर', 'विलेजर की माँ और बहन'] },
     why: {
       text: {
         en: "Azad left as a pilgrims' guide, escorting Sukhdev's mother and sister.",
@@ -699,7 +699,7 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'The sahib was Bhagat Singh; Azad went as a panda with pilgrims.',
+          en: "The sahib was Bhagat Singh; Azad went as a pilgrims' priest.",
           hi: 'साहब भगत सिंह बने थे; आज़ाद तीर्थयात्रियों के पंडा बनकर गए।',
         },
         sources: [{ id: 'maclean-durga' }, { id: 'sanyal-1931', loc: 'ch. IV, the escape' }],
@@ -835,7 +835,7 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: "No record says he wrote it; in court they sang 'Bharat na reh sakega'.",
+          en: "No record from then says he wrote it; they sang 'Bharat na reh sakega'.",
           hi: "उस दौर के किसी रिकॉर्ड में नहीं कि यह गीत उन्होंने लिखा; अदालत में 'भारत न रह सकेगा' गाया गया।",
         },
         sources: [{ id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', p. 101" }],
@@ -1232,8 +1232,8 @@ export const messages: Message[] = [
   },
 
   // Day 10, Thursday 11 April: who sat in the gallery, and what the bombs did. Joint statement
-  // (6 June 1929): Simon 'was sitting in the President's gallery'; 'slight abrasions in less
-  // than half a dozen cases'. Chaman Lal 2009 lists six minor injuries.
+  // (6 June 1929): Simon 'was sitting in the President's gallery'. Six were hurt: Noorani p. 32,
+  // 'Sir Bomanji Dalal was wounded in the thigh … Sir George Schuster and four others were slightly injured'.
   {
     id: 'lh-simon-g',
     tier: 3,
@@ -1243,16 +1243,16 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. No one died; a few people got scratches.",
-      hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। कोई नहीं मरा; कुछ लोगों को खरोंचें आईं।',
+      en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. No one died; a few people were hurt.",
+      hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। कोई नहीं मरा; कुछ लोग घायल हुए।',
     },
     checks: { en: ['Sir John Simon', 'No one died'], hi: ['सर जॉन साइमन', 'कोई नहीं मरा'] },
     why: {
       text: {
-        en: "Simon sat in the President's gallery; six people had minor injuries.",
-        hi: 'साइमन प्रेसिडेंट गैलरी में थे; छह लोगों को मामूली चोटें आईं।',
+        en: "Simon sat in the President's gallery; no one died, six were hurt.",
+        hi: 'साइमन प्रेसिडेंट गैलरी में थे; कोई नहीं मरा, छह लोग घायल हुए।',
       },
-      sources: [{ id: 'bs-joint-statement' }, CHAMAN, { id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
+      sources: [{ id: 'bs-joint-statement' }, CHAMAN, { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }, { id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
     },
   },
   {
@@ -1272,10 +1272,10 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'No one died; six people had only minor injuries.',
-          hi: 'कोई नहीं मरा; छह लोगों को बस मामूली चोटें आईं।',
+          en: 'No one died; six were hurt, Sir Bomanji Dalal the worst.',
+          hi: 'कोई नहीं मरा; छह लोग घायल हुए, सबसे ज़्यादा सर बोमनजी दलाल।',
         },
-        sources: [{ id: 'bs-joint-statement' }, CHAMAN],
+        sources: [{ id: 'bs-joint-statement' }, CHAMAN, { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }],
       },
     ],
   },
@@ -1342,7 +1342,7 @@ export const messages: Message[] = [
     checks: { en: ['Ten years today', 'Jallianwala Bagh'], hi: ['दस साल', 'जलियाँवाला बाग़'] },
     why: {
       text: {
-        en: 'Dyer fired on the crowd at Jallianwala Bagh on 13 April 1919.',
+        en: "Dyer's troops fired on the crowd at Jallianwala Bagh on 13 April 1919.",
         hi: 'डायर ने 13 अप्रैल 1919 को जलियाँवाला बाग़ में भीड़ पर गोली चलवाई।',
       },
       sources: [{ id: 'collett-2005' }],
