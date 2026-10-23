@@ -106,6 +106,33 @@ describe('mountFallback: the message on paper', () => {
     vi.unstubAllGlobals()
   })
 
+  it('reveals the verdict on the same paper, then draws its back', async () => {
+    vi.useFakeTimers()
+    const f = fakeCanvas()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    const fb = mountFallback(el, 'bombay-1942')
+    await fb.showMessage(sheet())
+    const done = fb.reveal({
+      outcome: 'wrong', real: true, documentMark: false, highlight: ['42.34 metres'], note: 'the right wavelength',
+      back: { verdictLine: 'Wrong — this one was genuine', tell: 'Congress Radio called on 42.34 metres.', stamp: { text: 'Raided', tone: 'caught', style: 'raided' }, source: 'Usha Mehta (1969), p. 12' },
+      lang: 'en',
+    })
+    await vi.advanceTimersByTimeAsync(10)
+    expect(f.texts.map((t) => t.text).join(' ')).toContain('wavelength')
+    expect(fb.getSourceRect()).toBeNull()
+    await vi.advanceTimersByTimeAsync(2000)
+    await done
+    const all = f.texts.map((t) => t.text).join(' ')
+    expect(all).toContain('Wrong — this one was genuine')
+    expect(all).toContain('RAIDED')
+    expect(fb.getSourceRect()).not.toBeNull()
+    expect(fb.getPaperRect()).not.toBeNull()
+    fb.dispose()
+    vi.useRealTimers()
+  })
+
   it('copes without a 2D context', async () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => null) as unknown as HTMLCanvasElement['getContext'])
     const fb = mountFallback(document.createElement('div'), 'delhi-1947')

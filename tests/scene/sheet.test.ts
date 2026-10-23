@@ -5,7 +5,11 @@ import {
   PAGE_W,
   drawDayTitle,
   drawSheet,
+  drawRevealMarks,
+  drawSheetBack,
   findChecks,
+  highlightRects,
+  stampBox,
   measureSheet,
   splitLeaflet,
   splitSignature,
@@ -164,5 +168,65 @@ describe('sheet text helpers', () => {
     const all = texts.map((t) => t.text).join('')
     expect(all).toContain('दिन 1')
     expect(all).toContain('DAY 1')
+  })
+})
+
+describe('the verdict on the paper', () => {
+  for (const [lang, body, words] of [
+    ['en', EN_BODY, ['Mirza Mughal', 'Commander-in-Chief']],
+    ['hi', HI_BODY, ['मिर्ज़ा मुग़ल', 'कमांडर-इन-चीफ़']],
+  ] as const) {
+    it(`finds where each highlight sits on the ${lang} sheet, from the same layout`, () => {
+      const { ctx } = fake2d()
+      const s = spec({ lang, body })
+      const found = highlightRects(ctx, s, [...words, 'not on this paper'])
+      for (const h of found.slice(0, 2)) {
+        expect(h.rects.length, h.text).toBeGreaterThan(0)
+        for (const r of h.rects) {
+          expect(r.u0).toBeGreaterThanOrEqual(0)
+          expect(r.u1).toBeLessThanOrEqual(1)
+          expect(r.u1).toBeGreaterThan(r.u0)
+          expect(r.v1).toBeGreaterThan(r.v0)
+          expect(r.v0).toBeGreaterThan(0.2) // in the body, below the heading and the From and To lines
+          expect(r.v1).toBeLessThan(1)
+        }
+      }
+      expect(found[2]?.rects).toEqual([])
+      // the from and to lines can be marked too
+      expect(highlightRects(ctx, s, [s.from])[0]?.rects.length).toBeGreaterThan(0)
+    })
+  }
+
+  it('draws the back in the same form, with the verdict, the tell, the stamp and the source', () => {
+    const { ctx, texts } = fake2d()
+    const out = drawSheetBack(ctx, 1024, 1365, spec({ channel: 'telegram', era: 'delhi-1947' }), {
+      outcome: 'wrong',
+      back: {
+        verdictLine: 'Wrong — this one was genuine',
+        tell: 'The award was published on 17 August.',
+        consequence: 'Your post is given away.',
+        stamp: { text: 'Caught', tone: 'caught', style: 'telegraph' },
+        source: 'Transfer of Power, vol. XII (1983), p. 579',
+      },
+    }, { stamp: true })
+    const all = texts.map((t) => t.text).join(' ')
+    for (const w of ['Wrong', 'genuine', 'published', 'given', 'CAUGHT', 'Source']) expect(all).toContain(w)
+    expect(out.source.u1).toBeGreaterThan(out.source.u0)
+    expect(out.source.v0).toBeGreaterThan(0.8) // at the foot of the paper
+  })
+})
+
+describe('the margin note', () => {
+  const note = 'फ़ौज मिर्ज़ा मुग़ल के हाथ थी, जैसा फ़ाइल में है'
+  it('writes whole words only, never a word cut part-way, in at most three lines', () => {
+    const words = note.split(' ')
+    for (const progress of [0.7, 0.85, 1]) {
+      const { ctx, texts } = fake2d()
+      drawRevealMarks(ctx, 512, 683, [], { color: 'blue', note, lang: 'hi', body: 60, bodyEnd: 0.55, progress, avoid: [stampBox(0.71, 0.8, 4 / 3)] })
+      for (const t of texts) expect(words).toContain(t.text)
+      const lines = new Set(texts.map((t) => Math.round(t.y)))
+      expect(lines.size).toBeLessThanOrEqual(3)
+      if (progress === 1) expect(texts.map((t) => t.text).join(' ')).toBe(note)
+    }
   })
 })

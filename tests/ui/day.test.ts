@@ -186,12 +186,14 @@ describe('renderDay: the top bar', () => {
     expect(sound.getAttribute('aria-label')).toBe(strings.en.sound)
     expect(sound.getAttribute('aria-pressed')).toBe('true')
     sound.click()
-    root.querySelector<HTMLButtonElement>('.hud [data-action="lang"]')!.click()
+    const langs = [...root.querySelectorAll<HTMLButtonElement>('.hud .langswitch__opt')]
+    expect(langs.map((b) => [b.textContent, b.getAttribute('aria-pressed')])).toEqual([['हिंदी', 'false'], ['English', 'true']])
+    langs[1]!.click() // already English: nothing
+    langs[0]!.click()
     root.querySelector<HTMLButtonElement>('.hud [data-action="quit"]')!.click()
     expect(on.sound).toHaveBeenCalledTimes(1)
     expect(on.lang).toHaveBeenCalledTimes(1)
     expect(on.quit).toHaveBeenCalledTimes(1)
-    expect(root.querySelector('.hud [data-action="lang"]')!.textContent).toBe(strings.hi.langShort)
   })
 })
 
@@ -228,30 +230,47 @@ describe('renderDay: Listen', () => {
 })
 
 describe('renderDay: the choice of voice', () => {
-  it('opens a two-option picker from the chevron and reports the pick', () => {
+  const two = [
+    { id: 'dastango', label: 'दास्तानगो' },
+    { id: 'guest', label: 'पीयूष मिश्रा', credit: 'Voice: Piyush Mishra (with permission)' },
+  ]
+
+  it('shows no picker when the dastango is the only voice', () => {
+    const root = mount()
+    const e = era()
+    renderDay(root, props(e, chapter(e), { voice: 'idle', voices: [two[0]!], voiceStyle: 'dastango' }), handlers())
+    expect(root.querySelector('[data-action="listen"]')).not.toBeNull()
+    expect(root.querySelector('[data-action="voice-style"]')).toBeNull()
+    expect(root.querySelector('.voice-picker')).toBeNull()
+  })
+
+  it('opens a two-option picker from the chevron, reports the pick and shows the guest credit', () => {
     const root = mount()
     const e = era()
     const on = { ...handlers(), voiceStyle: vi.fn() }
-    renderDay(root, props(e, chapter(e), { lang: 'hi', voice: 'idle', voiceStyle: 'era' }), on)
+    renderDay(root, props(e, chapter(e), { lang: 'hi', voice: 'idle', voices: two, voiceStyle: 'dastango' }), on)
     const picker = root.querySelector<HTMLElement>('.voice-picker')!
     const more = root.querySelector<HTMLButtonElement>('[data-action="voice-style"]')!
-    expect(picker.classList.contains('is-open')).toBe(false)
+    const credit = root.querySelector<HTMLElement>('.voice-credit')!
+    expect(credit.hidden).toBe(true)
     more.click()
     expect(picker.classList.contains('is-open')).toBe(true)
     expect(more.getAttribute('aria-expanded')).toBe('true')
     const opts = [...picker.querySelectorAll<HTMLButtonElement>('.voice-opt')]
-    expect(opts.map((o) => o.textContent)).toEqual(['युग की आवाज़', 'दास्तानगो'])
+    expect(opts.map((o) => o.textContent)).toEqual(['दास्तानगो', 'पीयूष मिश्रा'])
     expect(opts.map((o) => o.getAttribute('aria-checked'))).toEqual(['true', 'false'])
     opts[1]!.click()
-    expect(on.voiceStyle).toHaveBeenCalledWith('dastango')
+    expect(on.voiceStyle).toHaveBeenCalledWith('guest')
     expect(opts.map((o) => o.getAttribute('aria-checked'))).toEqual(['false', 'true'])
     expect(picker.classList.contains('is-open')).toBe(false)
+    expect(credit.hidden).toBe(false)
+    expect(credit.textContent).toBe(two[1]!.credit)
   })
 
   it('closes the picker with Escape before anything else', () => {
     const root = mount()
     const e = era()
-    renderDay(root, props(e, chapter(e), { voice: 'idle' }), handlers())
+    renderDay(root, props(e, chapter(e), { voice: 'idle', voices: two }), handlers())
     root.querySelector<HTMLButtonElement>('[data-action="voice-style"]')!.click()
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(root.querySelector('.voice-picker')!.classList.contains('is-open')).toBe(false)
@@ -391,57 +410,62 @@ describe('renderDay: case file and rulebook', () => {
   })
 })
 
-describe('renderDay: the result card (Ruling R2)', () => {
-  it('shows the verdict, the one-line tell, the kind and sources behind Source, and Next', () => {
-    const e = era()
-    const root = mount()
-    const on = handlers()
-    // day 2 is the forged m2, stamped correctly
-    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true }), { revealed: true }), on)
-    expect(root.querySelector('button[data-stamp]')).toBeNull()
-    const reveal = root.querySelector<HTMLElement>('.reveal--right')!
-    expect(reveal.querySelector('.reveal__word')!.textContent).toBe(strings.en.right)
-    expect(reveal.querySelector('.tell-line')!.textContent).toBe('The court sat in Delhi, not Lahore.')
-    const fold = reveal.querySelector<HTMLDetailsElement>('details.fold')!
-    expect(fold.open).toBe(false)
-    expect(fold.querySelector('summary')!.textContent).toBe(strings.en.source)
-    expect(fold.textContent).toContain(strings.en.kindForged)
-    expect(fold.textContent).toContain('B. Author, Second Book (1950), ch. 3')
-    root.querySelector<HTMLButtonElement>('button[data-action="next"]')!.click()
-    expect(on.next).toHaveBeenCalledTimes(1)
-  })
-
-  it('says wrong and why a genuine message checks out', () => {
-    const e = era()
-    const root = mount()
-    renderDay(root, props(e, chapter(e, { day: 1, phase: 'caught', lastCorrect: false }), { revealed: true }), handlers())
-    const reveal = root.querySelector<HTMLElement>('.reveal--wrong')!
-    expect(reveal.querySelector('.reveal__word')!.textContent).toBe(strings.en.wrong)
-    expect(reveal.querySelector('.truth')!.textContent).toBe(strings.en.wasGenuine)
-    expect(reveal.querySelector('.tell-line')!.textContent).toBe('The gate rota is recorded.')
-    expect(reveal.textContent).toContain('Written for the game · every detail checks out')
-    expect(reveal.textContent).toContain('A. Author, First Book (1900), p. 14')
-  })
-
-  it('labels a real document with a scroll, not an emoji', () => {
-    const e = era()
-    e.messages[0]!.document = { sources: [{ id: 's2', loc: 'plate 4' }] }
-    const root = mount()
-    renderDay(root, props(e, chapter(e, { phase: 'stamped', lastCorrect: true }), { revealed: true }), handlers())
-    const truth = root.querySelector<HTMLElement>('.truth--document')!
-    expect(truth.textContent).toContain(strings.en.kindReal)
-    expect(truth.querySelector('svg.scroll-mark')).not.toBeNull()
-    expect(root.textContent).not.toContain('📜')
-    expect(root.querySelector('.reveal')!.textContent).toContain('B. Author, Second Book (1950), plate 4')
-  })
-
+describe('renderDay: after the stamp', () => {
   it('announces the result and says "Too slow" after a timeout (Ruling R12)', () => {
     const e = era()
     const root = mount()
     renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'timeout' }), { revealed: true }), handlers())
-    expect(root.querySelector('.reveal__word')!.textContent).toBe(strings.en.tooSlow)
     expect(document.getElementById('ft-live')!.textContent).toContain(strings.en.tooSlow)
-    renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'timeout' }), { revealed: true, lang: 'hi' }), handlers())
-    expect(root.querySelector('.reveal__word')!.textContent).toBe('देर हो गई')
+    expect(root.querySelector('button[data-stamp]')).toBeNull()
+  })
+})
+
+describe('renderDay: the verdict on the paper', () => {
+  const rect = { x: 40, y: 500, w: 120, h: 20 }
+
+  it('keeps only Next, a source button over the paper\u2019s source line, and a mirror for screen readers', () => {
+    const e = era()
+    const root = mount()
+    const on = handlers()
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true, lastVerdict: 'tota' }), {
+      revealed: true,
+      onPaper: { mirror: 'Right · This message was forged. The court sat in Delhi, not Lahore.', sourceRect: rect, sources: [{ id: 's2', loc: 'ch. 3' }], kind: strings.en.kindForged },
+    }), on)
+    expect(root.querySelector('.reveal')).toBeNull() // no DOM result card
+    expect(root.querySelector('.paper-result__mirror')!.textContent).toContain('The court sat in Delhi, not Lahore.')
+    const src = root.querySelector<HTMLButtonElement>('.source-hit')!
+    expect(src.style.left).toBe('40px')
+    expect(src.style.top).toBe('486px') // centred on the line
+    expect(src.style.height).toBe('48px') // never smaller than a fingertip
+    expect(src.getAttribute('aria-label')).toBe('Source: B. Author, Second Book (1950), ch. 3')
+    const pop = root.querySelector<HTMLElement>('#ft-source-pop')!
+    expect(pop.hidden).toBe(true)
+    src.click()
+    expect(pop.hidden).toBe(false)
+    expect(pop.textContent).toContain('B. Author, Second Book (1950), ch. 3')
+    expect(pop.textContent).toContain(strings.en.kindForged) // the honest note: written for the game
+    root.querySelector<HTMLButtonElement>('[data-action="next"]')!.click()
+    expect(on.next).toHaveBeenCalledTimes(1)
+  })
+
+  it('at the chapter\u2019s end offers Play again, Home and Share, with the receipts behind a tap', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), again: vi.fn(), home: vi.fn(), share: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 1, phase: 'caught', lastCorrect: false, lastVerdict: 'tota' }), {
+      revealed: true,
+      onPaper: { mirror: 'You rejected a genuine message', sourceRect: null, sources: [{ id: 's1', loc: 'p. 14' }], end: { receipts: e.receipts } },
+    }), on)
+    expect(root.querySelector('[data-action="next"]')).toBeNull()
+    for (const a of ['again', 'home', 'share']) root.querySelector<HTMLElement>(`[data-action="${a}"]`)!.click()
+    expect(on.again).toHaveBeenCalledTimes(1)
+    expect(on.home).toHaveBeenCalledTimes(1)
+    expect(on.share).toHaveBeenCalledTimes(1)
+    const receipts = root.querySelector<HTMLDetailsElement>('.paper-receipts')!
+    expect(receipts.open).toBe(false)
+    expect(receipts.querySelector('summary')!.textContent).toBe(strings.en.receipts)
+    expect(receipts.querySelectorAll('.receipt')).toHaveLength(1)
+    // without a rect from the stage, the source is a small slip among the buttons
+    expect(root.querySelector('.paper-result__actions [data-action="source"]')!.textContent).toBe(strings.en.source)
   })
 })
