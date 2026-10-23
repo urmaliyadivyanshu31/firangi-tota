@@ -370,3 +370,55 @@ describe('showMessage resolves only once the paper is readable', () => {
     })
   }
 })
+
+describe('the verdict keeps the paper clear of the HUD', () => {
+  const verdict = {
+    outcome: 'right' as const,
+    real: true,
+    documentMark: false,
+    highlight: ['Mirza Mughal'],
+    note: 'the details check out',
+    back: { verdictLine: 'Right — this one was genuine', tell: 'The diary records it.', stamp: { text: 'Survived', tone: 'survived' as const, style: 'seal' as const }, source: 'Trial of Bahadur Shah, 1858' },
+    lang: 'en' as const,
+  }
+  const setHud = (el: HTMLElement, top: number, bottom: number, left = 0) => {
+    el.style.setProperty('--ft-hud-top', `${top}px`)
+    el.style.setProperty('--ft-hud-bottom', `${bottom}px`)
+    el.style.setProperty('--ft-hud-left', `${left}px`)
+    el.style.setProperty('--ft-hud-right', '0px')
+  }
+
+  it('re-frames on reveal after a right stamp, so the ending buttons never cover the paper', async () => {
+    const { el, stage } = stageFor(sampleDressing)
+    setHud(el, 60, 100)
+    await state(stage.showMessage(sheet()), 6000)
+    await state(stage.stamp('asli'), 3000)
+    stage.flash('right')
+    const before = stage.getPaperRect()
+    expect(before).not.toBeNull()
+    // the survived ending brings its buttons in: the HUD's foot grows well past the paper's
+    const H = window.innerHeight
+    const buttonsTop = (before?.y ?? 0) + (before?.h ?? 0) * 0.6
+    setHud(el, 60, H - buttonsTop)
+    expect(await state(stage.reveal(verdict), 5000)).toBe('done')
+    await pump(800)
+    const after = stage.getPaperRect()
+    expect(after).not.toBeNull()
+    expect((after?.y ?? 0) + (after?.h ?? 0)).toBeLessThanOrEqual(buttonsTop + 2)
+    expect(after?.y ?? 0).toBeGreaterThanOrEqual(60 - 2)
+    stage.dispose()
+  })
+
+  it('glides to a new framing whenever the app changes its HUD, even without a reveal', async () => {
+    const { el, stage } = stageFor(sampleDressing)
+    setHud(el, 60, 100)
+    await state(stage.showMessage(sheet()), 6000)
+    const before = stage.getPaperRect()
+    setHud(el, 60, window.innerHeight * 0.5)
+    await pump(1200)
+    const after = stage.getPaperRect()
+    expect((after?.y ?? 0) + (after?.h ?? 0)).toBeLessThanOrEqual(window.innerHeight * 0.5 + 2)
+    expect(after?.h ?? 0).toBeLessThan(before?.h ?? 0)
+    stage.dispose()
+  })
+})
