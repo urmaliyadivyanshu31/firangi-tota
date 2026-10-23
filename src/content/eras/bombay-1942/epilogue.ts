@@ -17,7 +17,7 @@ export const epilogue: Epilogue = {
   ],
   caught: [
     {
-      en: 'Police break in. You are arrested at the set and jailed in Yerwada.',
+      en: 'Police break in. You are arrested at the radio and jailed in Yerwada.',
       hi: 'पुलिस घुस आती है। आप मशीन के पास पकड़े जाते हैं, फिर यरवदा जेल।',
     },
     {

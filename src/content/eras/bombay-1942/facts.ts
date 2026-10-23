@@ -1,18 +1,9 @@
 import type { Fact } from '../../types.js'
 
-// The announcer-operator's case file (dossier §4): one short line each. Three are hardHidden.
+// The announcer-operator's case file (dossier §4; people-and-moments.md §3A): one short line each.
+// Three are hardHidden.
+// The wavelength (42.34 m) and the air time (8:45 pm) live in the rulebook and on the paper's header.
 export const facts: Fact[] = [
-  {
-    id: 'f-signature',
-    label: { en: 'Wavelength', hi: 'वेवलेंथ' },
-    value: { en: '42.34 m (police: 41.78 in August)', hi: '42.34 मीटर (पुलिस: अगस्त में 41.78)' },
-    sources: [
-      { id: 'usha-mehta-1969', loc: 'opening words' },
-      { id: 'chatterjee-1989', loc: 'Home Dept record (on air 27 Aug 1942 on 41.78 m); transcript of 20 Oct 1942' },
-      { id: 'thakkar-2021', loc: 'Scroll excerpt (trial on 41.78 m)' },
-      { id: 'nehru-centre-2021', loc: 'Congress Radio article' },
-    ],
-  },
   {
     id: 'f-aicc',
     label: { en: 'Resolution', hi: 'प्रस्ताव' },
@@ -46,16 +37,14 @@ export const facts: Fact[] = [
     label: { en: 'Leaders held', hi: 'नेता कहाँ बंद' },
     value: { en: 'Gandhiji: Aga Khan Palace. Nehru: Ahmednagar', hi: 'गांधीजी: आग़ा ख़ान महल। नेहरू: अहमदनगर क़िला' },
     sources: [{ id: 'top-ii-1971', loc: 'Introduction p. xii; No. 553 (letter from Aga Khan’s Palace, 14 Aug 1942)' }],
-    hardHidden: true,
   },
   {
-    id: 'f-sites',
-    label: { en: 'Old flat', hi: 'पुराना फ़्लैट' },
-    value: { en: 'Laxmi Bhuvan, Sandhurst Road', hi: 'लक्ष्मी भुवन, सैंडहर्स्ट रोड' },
+    id: 'f-newsite',
+    label: { en: 'Second site', hi: 'दूसरा ठिकाना' },
+    value: { en: 'Paradise Bungalow, Mahalaxmi, from 3 Nov', hi: 'पैराडाइज़ बंगला, महालक्ष्मी, 3 नवंबर से' },
     sources: [
-      { id: 'huacuja-2023', loc: 'police list of sites (from Sengupta and Chatterjee 1988)' },
+      { id: 'huacuja-2023', loc: 'Fig. 4, police list of sites (from Sengupta and Chatterjee 1988)' },
       { id: 'chatterjee-1989' },
-      { id: 'nehru-centre-2021' },
     ],
   },
   {
@@ -76,10 +65,20 @@ export const facts: Fact[] = [
     hardHidden: true,
   },
   {
-    id: 'f-money',
-    label: { en: 'Money', hi: 'पैसा' },
-    value: { en: '16 annas a rupee; no decimals', hi: '16 आने का रुपया; दशमलव नहीं' },
-    sources: [{ id: 'thakkar-2021', loc: 'Scroll excerpt (court figures, Rs 599-8-0)' }],
+    id: 'f-netaji',
+    label: { en: 'Netaji Subhas Bose', hi: 'नेताजी सुभाष बोस' },
+    value: { en: 'In Germany, on Azad Hind Radio', hi: 'जर्मनी में, आज़ाद हिंद रेडियो पर' },
+    sources: [
+      { id: 'huacuja-2023', loc: 'p. 1630 (text at n. 65: in Germany, broadcasting through Quit India); p. 1639 (n. 110: Azad Hind Radio)' },
+      { id: 'bipan-chandra-1989', loc: 'ch. 35, p. 477 (reached Singapore only on 2 July 1943)' },
+    ],
+    hardHidden: true,
+  },
+  {
+    id: 'f-chiefs',
+    label: { en: 'British chiefs', hi: 'अंग्रेज़ों के मुखिया' },
+    value: { en: 'Prime Minister Churchill; Viceroy Linlithgow', hi: 'प्रधानमंत्री चर्चिल; वायसराय लिनलिथगो' },
+    sources: [{ id: 'top-ii-1971', loc: 'No. 662 (Linlithgow to Churchill, 31 Aug 1942)' }],
     hardHidden: true,
   },
 ]

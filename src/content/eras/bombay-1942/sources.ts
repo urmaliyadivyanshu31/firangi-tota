@@ -1,6 +1,8 @@
 import type { Source } from '../../types.js'
 
-// Every source the Bombay 1942 content uses. All are cited in docs/research/quit-india-1942.md.
+// Every source the Bombay 1942 content uses. All are cited in docs/research/quit-india-1942.md,
+// except churchill-1942 and cad-1947 (story pass), and cwmg-76, nehru-1946, mkgandhi-agakhan and
+// rbi-1957, which come from docs/research/people-and-moments.md and were re-read for these facts.
 export const sources: Source[] = [
   {
     id: 'usha-mehta-1969',
@@ -115,6 +117,48 @@ export const sources: Source[] = [
     title: 'Historic Statements (statement of 8 April 1942)',
     year: '1967',
     url: 'https://archive.org/details/historic_statements_by_savarkar.v001',
+  },
+  {
+    id: 'churchill-1942',
+    author: 'Winston S. Churchill',
+    title: 'Speech at the Lord Mayor’s Luncheon, Mansion House, London, 10 November 1942 (International Churchill Society text)',
+    year: '1942',
+    url: 'https://winstonchurchill.org/resources/speeches/1941-1945-war-leader/the-bright-gleam-of-victory/',
+  },
+  {
+    id: 'cad-1947',
+    author: 'Constituent Assembly of India',
+    title: 'Debates, vol. IV, 22 July 1947: resolution on the National Flag (Wheel “to represent the Charkha”)',
+    year: '1947',
+    url: 'https://www.constitutionofindia.net/debates/22-jul-1947/',
+  },
+  {
+    id: 'cwmg-76',
+    author: 'M. K. Gandhi',
+    title: 'Collected Works of Mahatma Gandhi, vol. 76, No. 442: letter to Lord Linlithgow, “Detention Camp, November 5, 1942”, pp. 416–17',
+    year: '1942',
+    url: 'https://archive.org/details/HindSwaraj-CWMG-076',
+  },
+  {
+    id: 'nehru-1946',
+    author: 'Jawaharlal Nehru',
+    title: 'The Discovery of India (Signet Press, Calcutta): preface (written in Ahmadnagar Fort, April–September 1944); p. 593',
+    year: '1946',
+    url: 'https://archive.org/details/in.ernet.dli.2015.537133',
+  },
+  {
+    id: 'mkgandhi-agakhan',
+    author: 'Mani Bhavan Gandhi Sangrahalaya (mkgandhi.org)',
+    title: 'Aga Khan Palace: Gandhi, Kasturba, Sarojini Naidu and Mahadev Desai interned from 9 August 1942',
+    year: 'n.d.',
+    url: 'https://www.mkgandhi.org/gandhiyatra/agakhan-palace.php',
+  },
+  {
+    id: 'rbi-1957',
+    author: 'Reserve Bank of India, Monetary Museum',
+    title: 'Republic India coinage: decimal paisa in force from 1 April 1957, replacing 16 annas',
+    year: 'n.d.',
+    url: 'https://rbi.org.in/Scripts/mc_republic.aspx',
   },
   {
     id: 'calendar-1942',
