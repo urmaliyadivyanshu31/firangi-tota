@@ -57,7 +57,7 @@ export const messages: Message[] = [
         en: "Mountbatten's real calendar counted down; 5 to 15 August is ten days.",
         hi: 'माउंटबेटन का असली कैलेंडर उल्टी गिनती गिनता था; 5 से 15 अगस्त तक दस दिन हैं।',
       },
-      sources: [{ id: 'campbell-johnson-1951', loc: 'July 1947 entry on the tear-off calendar' }],
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 22 July 1947' }],
     },
   },
   {
@@ -81,7 +81,7 @@ export const messages: Message[] = [
           hi: 'बारह नहीं, दस दिन: आज 5 अगस्त है, आज़ादी का दिन 15 को।',
         },
         factId: 'appointed-day',
-        sources: [{ id: 'campbell-johnson-1951', loc: 'July 1947 entry on the tear-off calendar' }],
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 22 July 1947' }],
       },
     ],
   },
@@ -379,10 +379,10 @@ export const messages: Message[] = [
     from: TEL_KARACHI,
     to: CIPHER,
     text: {
-      en: "IMMEDIATE, KARACHI, {weekday} {date}. Mr Jinnah, elected President of Pakistan's Constituent Assembly today, told it: 'You are free; you are free to go to your temples…'",
-      hi: "IMMEDIATE, कराची, {weekday} {date}। आज पाकिस्तान की संविधान सभा के अध्यक्ष चुने गए मिस्टर जिन्ना ने सभा से कहा: 'आप आज़ाद हैं; आप अपने मंदिरों में जाने के लिए आज़ाद हैं…'",
+      en: "IMMEDIATE, KARACHI. Mr Jinnah, elected President of Pakistan's Assembly today, told it: '…you are free to go to your temples… to your mosques or to any other place of worship…'",
+      hi: "IMMEDIATE, कराची। आज पाकिस्तान की सभा के अध्यक्ष चुने गए मिस्टर जिन्ना ने सभा से कहा: '…आप अपने मंदिरों में जाने के लिए आज़ाद हैं… अपनी मस्जिदों या किसी भी और इबादतगाह में…'",
     },
-    checks: { en: ['elected President', 'You are free'], hi: ['अध्यक्ष चुने गए', 'आप आज़ाद हैं'] },
+    checks: { en: ['elected President', 'temples'], hi: ['अध्यक्ष चुने गए', 'मंदिरों'] },
     document: { sources: [{ id: 'capd-1947', loc: 'No. 2, Monday 11 August 1947' }] },
     why: {
       text: {
@@ -578,8 +578,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'cwmg-89', loc: 'Letter to Satis Chandra Das Gupta, Hydari Mansion, 13 August 1947' }] },
     why: {
       text: {
-        en: "13 August evening: Gandhi and Suhrawardy, Bengal's former Premier, began living together.",
-        hi: '13 अगस्त की शाम: गांधी और बंगाल के पूर्व प्रीमियर सुहरावर्दी साथ रहने लगे।',
+        en: "13 August evening: Gandhi and Suhrawardy, Bengal's outgoing Premier, began living together.",
+        hi: '13 अगस्त की शाम: गांधी और बंगाल के जाते हुए प्रीमियर सुहरावर्दी साथ रहने लगे।',
       },
       sources: [{ id: 'cwmg-89', loc: 'Introduction; letters from Beliaghata, 13 August 1947' }],
     },
@@ -785,7 +785,7 @@ export const messages: Message[] = [
     to: RECORD,
     text: {
       en: "From last night's sitting, Pandit Nehru: '…At the stroke of the midnight hour, when the world sleeps, India will awake to life and freedom.'",
-      hi: "कल रात की बैठक से, पंडित नेहरू: '…आधी रात के घंटे की चोट पर, जब दुनिया सो रही है, भारत जीवन और आज़ादी के लिए जागेगा।'",
+      hi: "कल रात की बैठक से, पंडित नेहरू: '…ठीक आधी रात के घंटे पर, जब दुनिया सो रही है, भारत जीवन और आज़ादी के लिए जाग उठेगा।'",
     },
     checks: { en: ['last night', 'midnight hour'], hi: ['कल रात', 'आधी रात के घंटे'] },
     document: { sources: [{ id: 'cad-14aug1947' }] },
@@ -807,7 +807,7 @@ export const messages: Message[] = [
     to: GOVT_HOUSE,
     text: {
       en: "From the Red Fort this morning, Pandit Nehru: '…At the stroke of the midnight hour, when the world sleeps, India will awake to life and freedom.'",
-      hi: "आज सुबह लाल क़िले से, पंडित नेहरू: '…आधी रात के घंटे की चोट पर, जब दुनिया सो रही है, भारत जीवन और आज़ादी के लिए जागेगा।'",
+      hi: "आज सुबह लाल क़िले से, पंडित नेहरू: '…ठीक आधी रात के घंटे पर, जब दुनिया सो रही है, भारत जीवन और आज़ादी के लिए जाग उठेगा।'",
     },
     checks: { en: ['Red Fort this morning'], hi: ['आज सुबह लाल क़िले से'] },
     tells: [
@@ -839,8 +839,8 @@ export const messages: Message[] = [
     from: PRESS_GH,
     to: CIPHER,
     text: {
-      en: 'Note: the envelope Pandit Nehru gave His Excellency after midnight, meant to hold the new Cabinet list, was empty.',
-      hi: 'नोट: आधी रात के बाद पंडित नेहरू ने हिज़ एक्सेलेंसी को जो लिफ़ाफ़ा दिया, उसमें नए मंत्रिमंडल की सूची होनी थी। वह ख़ाली निकला।',
+      en: "Note: the envelope Pandit Nehru gave His Excellency after midnight, meant to hold the new Cabinet's portfolios, was empty.",
+      hi: 'नोट: आधी रात के बाद पंडित नेहरू ने हिज़ एक्सेलेंसी को जो लिफ़ाफ़ा दिया, उसमें नए मंत्रियों के विभागों की सूची होनी थी। वह ख़ाली निकला।',
     },
     checks: { en: ['was empty'], hi: ['ख़ाली निकला'] },
     why: {
@@ -898,15 +898,15 @@ export const messages: Message[] = [
     ],
   },
   {
-    id: 'd11-bismillah-myth',
+    id: 'd11-gandhi-red-fort',
     tier: 2,
     real: false,
     onDay: 11,
     from: TEL_DELHI,
     to: GOVT_HOUSE,
     text: {
-      en: 'IMMEDIATE. At the Red Fort this morning, Ustad Bismillah Khan played the shehnai, and Gandhiji spoke after Pandit Nehru.',
-      hi: 'IMMEDIATE. आज सुबह लाल क़िले पर उस्ताद बिस्मिल्लाह ख़ान ने शहनाई बजाई, और पंडित नेहरू के बाद गांधीजी बोले।',
+      en: 'IMMEDIATE. At the Red Fort this morning, Gandhiji spoke after Pandit Nehru raised the flag.',
+      hi: 'IMMEDIATE. आज सुबह लाल क़िले पर पंडित नेहरू के झंडा फहराने के बाद गांधीजी बोले।',
     },
     checks: { en: ['Gandhiji spoke'], hi: ['गांधीजी बोले'] },
     tells: [
@@ -1028,8 +1028,8 @@ export const messages: Message[] = [
     from: { en: 'Conference Secretary, Government House', hi: 'कॉन्फ़्रेंस सचिव, गवर्नमेंट हाउस' },
     to: CIPHER,
     text: {
-      en: 'Ministers received the awards this morning. Pandit Nehru, Mr Liaquat Ali Khan and Sardar Patel meet Lord Mountbatten here at 5 pm.',
-      hi: 'मंत्रियों को फ़ैसले आज सुबह मिल गए। पंडित नेहरू, मिस्टर लियाक़त अली ख़ान और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
+      en: 'Ministers now have the awards. Pandit Nehru, Mr Liaquat Ali Khan and Sardar Patel meet Lord Mountbatten here at 5 pm.',
+      hi: 'मंत्रियों को फ़ैसले मिल गए हैं। पंडित नेहरू, मिस्टर लियाक़त अली ख़ान और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
     },
     checks: { en: ['Mr Liaquat Ali Khan'], hi: ['लियाक़त अली ख़ान'] },
     why: {
@@ -1049,8 +1049,8 @@ export const messages: Message[] = [
     from: { en: 'Conference Secretary, Government House', hi: 'कॉन्फ़्रेंस सचिव, गवर्नमेंट हाउस' },
     to: CIPHER,
     text: {
-      en: 'Ministers received the awards this morning. Pandit Nehru, Mr Jinnah and Sardar Patel meet Lord Mountbatten here at 5 pm.',
-      hi: 'मंत्रियों को फ़ैसले आज सुबह मिल गए। पंडित नेहरू, मिस्टर जिन्ना और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
+      en: 'Ministers now have the awards. Pandit Nehru, Mr Jinnah and Sardar Patel meet Lord Mountbatten here at 5 pm.',
+      hi: 'मंत्रियों को फ़ैसले मिल गए हैं। पंडित नेहरू, मिस्टर जिन्ना और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
     },
     checks: { en: ['Mr Jinnah'], hi: ['मिस्टर जिन्ना'] },
     tells: [
@@ -1520,8 +1520,8 @@ export const messages: Message[] = [
     checks: { en: ['no one in this House may contact'], hi: ['कोई भी सर सिरिल रैडक्लिफ़ से'] },
     why: {
       text: {
-        en: 'Mountbatten ordered his staff to have no contact with Radcliffe while he worked.',
-        hi: 'माउंटबेटन ने स्टाफ़ से कहा था कि रैडक्लिफ़ के काम के दौरान उनसे कोई संपर्क न रखें।',
+        en: 'Mountbatten ordered staff to have no contact with Radcliffe; whether it held is disputed.',
+        hi: 'माउंटबेटन ने स्टाफ़ से कहा था कि रैडक्लिफ़ से कोई संपर्क न रखें; यह निभा या नहीं, इस पर बहस है।',
       },
       sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 9 August 1947' }],
     },
@@ -1702,10 +1702,10 @@ export const messages: Message[] = [
     from: TRAVANCORE,
     to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
     text: {
-      en: "Your Excellency's letter… has been handed over to me by Sir C.P. Ramaswami Aiyar… I have decided… to take this step of accession to India… C.P. RAMASWAMI AIYAR, Maharaja",
-      hi: 'आपका पत्र… मुझे सर सी.पी. रामास्वामी अय्यर ने दिया है… मैंने भारत में शामिल होने का यह क़दम उठाने का फ़ैसला किया है… सी.पी. रामास्वामी अय्यर, महाराजा',
+      en: "Your Excellency's letter… has been handed over to me by Sir C.P. Ramaswami Aiyar… I have decided… to take this step of accession to the Dominion of India… RAMASWAMI AIYAR",
+      hi: 'आपका पत्र… मुझे सर सी.पी. रामास्वामी अय्यर ने दिया है… मैंने भारत डोमिनियन में शामिल होने का यह क़दम उठाने का फ़ैसला किया है… रामास्वामी अय्यर',
     },
-    checks: { en: ['C.P. RAMASWAMI AIYAR, Maharaja'], hi: ['सी.पी. रामास्वामी अय्यर, महाराजा'] },
+    checks: { en: ['RAMASWAMI AIYAR'], hi: ['है… रामास्वामी अय्यर'] },
     tells: [
       {
         kind: 'name',
@@ -1857,8 +1857,8 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'Calcutta stayed in West Bengal, India; no award text was out before the 17th.',
-          hi: 'कलकत्ता पश्चिमी बंगाल, यानी भारत में रहा; 17 से पहले फ़ैसले का कोई पाठ बाहर नहीं था।',
+          en: 'Calcutta stayed in West Bengal, India; the award stayed sealed until 17 August.',
+          hi: 'कलकत्ता पश्चिमी बंगाल, यानी भारत में रहा; फ़ैसला 17 अगस्त तक बंद रहा।',
         },
         sources: [{ id: 'menon-1957', loc: 'ch. XVII (award outcome)' }, { id: 'mansergh-xii', loc: 'No. 489' }],
       },

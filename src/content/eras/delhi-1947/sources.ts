@@ -26,7 +26,7 @@ export const sources: Source[] = [
   {
     id: 'capd-1947',
     author: 'Constituent Assembly of Pakistan',
-    title: 'Constituent Assembly of Pakistan Debates, Vol. I, Nos. 1–4 (10–14 August 1947)',
+    title: 'Constituent Assembly of Pakistan Debates, Vol. I, Nos. 1–4 (10–14 August 1947) (Nos. 1–3 at CAPD_I_1 to I_3)',
     year: '1947',
     url: 'https://archive.org/details/CAPD_I_4',
   },
