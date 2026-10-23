@@ -106,3 +106,5 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   original or designed voices are used: no community-uploaded clones of real people.
 - The owner listened to the five Fish Audio samples and chose to keep these library voices. The
   read-aloud button is switched on now that the free model works.
+- Simplified: one voice, the "Dastango" storyteller, reads every era. A guest voice of a real
+  person is added only with that person's verifiable permission, and credited.
