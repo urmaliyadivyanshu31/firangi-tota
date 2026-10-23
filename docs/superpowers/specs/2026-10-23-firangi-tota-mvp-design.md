@@ -140,9 +140,127 @@ templates are correct.
 
 ## Eras
 
-_Filled in from the research dossiers in `docs/research/`: for each era, the persona, the window
-of days, the case file, the forger, the channel, the scene, the sound, the receipts and the
-epilogue._
+Each era is grounded in its dossier in `docs/research/`. Every fact, real message, tell and receipt
+must come from the dossier, or from a source it cites, with page or URL. Dates and weekdays are
+real: day 1 of a chapter is the first date of its window. Easy plays the first 7 days, Medium 10,
+Hard all 14. The player's character is fictional; their job is real.
+
+Each chapter ends in one of two ways:
+- **Survived:** "what happened next", with sources, plus 2–3 **receipt cards**. A receipt card is a
+  documented quote about someone who sided with the British, shown with its source.
+- **Caught:** the era's real consequence, with sources, plus the same receipt cards.
+
+### 1. Dilli, 1857 (`delhi-1857.md`)
+- **You:** a munshi in Bahadur Shah Zafar's darbar at the Red Fort, reading arzis (petitions),
+  letters and news for the King's office.
+- **Window:** Sun 17 – Sat 30 May 1857. Jiwan Lal's daily diary is the spine:
+  - the new commanders are named;
+  - gold mohurs are struck in Zafar's name;
+  - Zafar refuses a holy war against Hindus;
+  - a drum proclamation orders Hindus and Muslims not to quarrel;
+  - the Eid procession is mistaken for a British advance;
+  - guns are found stuffed with gravel;
+  - a "spy" in a fortune-teller's dress is accused of being John Lawrence.
+  - The killings of 16 May fall before the window and are never staged. The epilogue states the
+    atrocities on both sides plainly, with sources.
+- **Channel:** letters and petitions in Persian or Urdu with seals, handed in at the darbar, plus
+  the occasional intercepted English note.
+- **Forger:** an agent writing for the Firangi. This is grounded in the real letter forged in May in
+  the names of Mahbub Ali Khan and Hakim Ahsanullah and planted on the gate guards (Mainodin, p. 59),
+  and in the summer of rumours about a Persian army. Do not name Rajab Ali as the May forger; he
+  works for Hodson from June.
+- **Case file (examples):** regiments, the gates (including the Fort-versus-city Lahore Gate trap),
+  officials and titles (Governor-General Canning, not "Viceroy"), money (16 annas, a gold mohur
+  normally ~Rs 16), Hijri dates, seals and honorifics.
+- **Hard tells:** "Jai Hind", "Viceroy Canning", the Chandni Chowk clock tower, a railway to Delhi,
+  "Indian Army", "Lee-Enfield".
+- **Caught:** your stamp helped the Firangi. When Delhi fell in September, the court's servants were
+  tried, and convicts of 1857 were sent to the new penal settlement at Port Blair (Kala Pani) from
+  March 1858. Verify the source before writing this.
+- **Scene:** a chamber in the Fort at night, with a low writing desk, a chirag, qalam and inkpot,
+  sealed petitions, and a jharokha onto the Delhi skyline. Sound: naqqar khana drums at the watches,
+  drum proclamations, crows, distant horses, and both the azan and temple bells.
+
+### 2. Lahore, 1929 (`bhagat-singh-1929.md`)
+- **You:** a "post box", a Lahore student who receives and forwards notes for HSRA comrades in
+  hiding. The role is real: Durga Devi did this (Maclean).
+- **Window:** Tue 2 – Mon 15 April 1929:
+  - the hat photo;
+  - Bhagat Singh's letter to Sukhdev;
+  - the Assembly bombs and leaflets on 8 April ("It takes a loud voice to make the deaf hear");
+  - the Tribune headline;
+  - the blacksmith's tip, and the sulphur-stained drain spout at the Kashmir Building.
+  - It ends with the raid on 15 April.
+- **Channel:** folded notes, pink leaflets with a printed heading, the occasional telegram.
+- **Forger:** Lahore CID plants. Informers really did trade clues for reward money: Babu Singh
+  offered clues for Rs 1,000.
+- **Rules from the record:** notices are signed "Balraj, Commander-in-Chief"; a parcel goes only to
+  the person who shows the keys; never ask a comrade about their past; real leaflets are pink with
+  the printed heading. Police vocabulary ("outrage", "miscreants") gives a forger away.
+- **Caught:** arrested in the Lahore Conspiracy Case round-ups, then Lahore jail. Use the dossier's
+  facts.
+- **Scene:** a rented room in Lahore, with a lantern, a bicycle, Urdu and English papers and pink
+  leaflets. Sound: tongas, bicycle bells, train whistles from Lahore station, distant slogans.
+
+### 3. Bombay, 1942 (`quit-india-1942.md`)
+- **You:** the announcer-operator at the secret Congress Radio. It's a composite of the roles of
+  Usha Mehta and Chandrakant Jhaveri. You decide what goes on air before the 8:45 pm broadcast.
+- **Window:** Fri 30 Oct – Thu 12 Nov 1942. The hunt closes in: radio shops are raided, technicians
+  talk, JP escapes on Diwali night. It ends with the raid at Parekh Wadi. If you survive, the
+  epilogue shows that the real station was betrayed anyway.
+- **Channel:** news slips and scripts brought by couriers, plus cut discs.
+- **Forger:** CID Special Branch plants. Netaji's Azad Hind Radio is **not** treated as a forger;
+  that would be wrong and needlessly hurtful.
+- **Rules from the record:** 42.34 m (41.78 m in the first broadcasts); 8:45 pm; "never talk of the
+  persons behind the stations"; hold back unconfirmed reports, as the station really did with a
+  Meerut story on 26 Oct; war time GMT+6:30 from 1 Sep 1942.
+- **Caught:** arrested, then Yerwada jail. Usha Mehta was released in April 1946.
+- **Scene:** the Parekh Wadi flat at night, with a valve transmitter and microphone, a gramophone
+  with a Vande Mataram disc, and a curtained window. Sound: shortwave static and tuning, valve hum,
+  tram bells, the evening sea wind.
+
+### 4. Delhi, August 1947 (`independence-1947.md`)
+- **You:** an Indian cipher-and-telegraph clerk at Government House, New Delhi.
+- **Window:** Tue 5 – Mon 18 Aug 1947:
+  - the leaked Ferozepore map (8 Aug);
+  - "Eliminate Salient";
+  - the awards are signed on 12/13 Aug and held back;
+  - the midnight session (11 pm; conches; Prasad's "half a minute to 12");
+  - the 60 hours of notional boundaries with flags in the wrong towns;
+  - publication on Sun 17 Aug.
+- **Channel:** telegrams with real formats: MOST IMMEDIATE, numbers like "No. 3408-S",
+  "Begins … Ends.", Received stamps.
+- **Forger:** forged "award" telegrams from the "mischief makers" the Army Chief warned about ("the
+  wildest rumours are current"). Forgeries fail on names, places, dates, titles and procedure, never
+  on religion.
+- **Hard tells:** "Viceroy" vs "Governor-General" around midnight; Viscount, not Earl; "Rashtrapati
+  Bhavan" (the name dates from 1950); "paise" (1957); "the Red Fort flag on 15 Aug" (it was the
+  16th); Pakistan's clock half an hour behind (only from 1951).
+- **Caught:** not jail in a free India. Your stamp let a rumour run ahead of the truth, told with
+  restraint (aggregates and ranges, never gore). The content writer proposes the exact framing and
+  it is reviewed.
+- **Scene:** the cipher room, with a ceiling fan, typewriter, telegram forms, Mountbatten's real
+  tear-off countdown calendar, and monsoon rain on the window. Sound: the teleprinter and sounder,
+  the fan, rain, conches and crowds at midnight on 14 Aug.
+
+### Receipts (all eras)
+Taken from section 12 of each dossier. Every side that helped the British or sat out gets roasted,
+with proof:
+- **1857:** the princes rewarded with land.
+- **1929:** the approvers, and each organisation's reaction in its own words.
+- **1942:** the CPI's "People's War" line, the League's "abstain", Savarkar's "stick to your posts",
+  Mookerjee's letter of 26 July, the RSS's stance as documented, and the Rai Bahadurs. Allah Bux,
+  who gave up his titles, is the counterpoint.
+- **1947:** Radcliffe's five weeks, the typewriter deadlock, the Nizam chasing a title on 13 Aug.
+
+Each card carries the quote, the source, and a one-line explanation from the side itself where the
+dossier has one. Never about a religion or a community. Never mock the dead or summoned witnesses.
+
+### Content volume
+At least 30 messages per era (about half genuine, half forged) across tiers 1–3, enough that a
+14-day run and the daily puzzle rarely repeat. Each era also gets 8–10 case-file lines, 5–7 rules,
+the epilogue and 2–3 receipts. Everything is written in English and simple Hindi; the Hindi must be
+easy for a village kid, everyday Hindustani in Devanagari, not Sanskritised.
 
 ## Left to the builder
 
