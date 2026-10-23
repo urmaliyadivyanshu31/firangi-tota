@@ -1,8 +1,9 @@
 import type { Fact } from '../../types.js'
-import { fanshawe, jl, majumdar, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources.js'
+import { fanshawe, jl, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources.js'
 
 // The case file: one short line each. Two lines are hardHidden (blank in Hard mode).
-// The calendar now lives in the weekdays rule, and the titles in the english-titles rule.
+// The calendar now lives in the weekdays rule, and the titles (Canning, Governor-General) in the
+// english-titles rule.
 export const facts: Fact[] = [
   {
     id: 'court',
@@ -23,9 +24,17 @@ export const facts: Fact[] = [
     sources: [sen('pp.59-62'), mh('p.53')],
   },
   {
+    // Meerut rose on the evening of Sunday 10 May (Sen pp.58-60); the riders reached Delhi on the
+    // morning of 11 May (Sen p.70; JL pp.75-79).
+    id: 'meerut',
+    label: { en: 'Meerut rising', hi: 'मेरठ की बग़ावत' },
+    value: { en: 'Sunday 10 May; Delhi, 11 May', hi: 'रविवार 10 मई; दिल्ली, 11 मई' },
+    sources: [sen('pp.57-60'), sen('p.70'), jl('pp.75-79')],
+  },
+  {
     id: 'lahore-gates',
     label: { en: 'Lahore Gates', hi: 'लाहौरी दरवाज़े' },
-    value: { en: "Two: the city's (west), the Fort's", hi: 'दो: शहर का (पश्चिम), क़िले का' },
+    value: { en: "Two: city's (west), Fort's (east)", hi: 'दो: शहर का (पश्चिम), क़िले का (पूरब)' },
     sources: [fanshawe('pp.5-6'), fanshawe('p.53'), mh('p.61')],
   },
   {
@@ -42,15 +51,9 @@ export const facts: Fact[] = [
   },
   {
     id: 'pay',
-    label: { en: 'Perwanah pay', hi: 'परवाने की तनख़्वाह' },
-    value: { en: 'Foot Rs 30, trooper Rs 50', hi: 'पैदल 30 रुपये, सवार 50' },
+    label: { en: 'Pay promised', hi: 'वादे की तनख़्वाह' },
+    value: { en: 'Foot soldier Rs 30, horseman 50', hi: 'पैदल 30 रुपये, सवार 50 रुपये' },
     sources: [mh('p.60')],
-  },
-  {
-    id: 'governor-general',
-    label: { en: 'Governor-General', hi: 'गवर्नर-जनरल' },
-    value: { en: 'Lord Canning', hi: 'लॉर्ड कैनिंग' },
-    sources: [majumdar('p.71'), sen('p.77'), sen('p.327'), sen('pp.321-22'), mh('p.59')],
   },
   {
     id: 'bakht-khan',

@@ -67,6 +67,20 @@ export const sources: Source[] = [
     url: 'https://archive.org/details/historyofindiann02lowc',
   },
   {
+    id: 'sudha-chauhan-1981',
+    author: 'Sudha Chauhan',
+    title: 'Subhadra Kumari Chauhan (Bharatiya Sahitya ke Nirmata), Sahitya Akademi',
+    year: '1981',
+    url: 'https://archive.org/details/subhadra-kumari-chauhan-by-sudha-chauhan-sahitya-academy',
+  },
+  {
+    id: 'chauhan-1930',
+    author: 'Subhadra Kumari Chauhan',
+    title: "Mukul (poems, with 'Jhansi ki Rani'), Patna: M. N. Varman and Co.",
+    year: '1930',
+    url: 'https://archive.org/details/zQGk_mukul-by-subhadra-kumari-chauhan-1930-patna-m.-n.-varman-and-co',
+  },
+  {
     id: 'hunter-1885',
     author: 'W. W. Hunter',
     title: 'The Imperial Gazetteer of India, 2nd ed., Vol. I',
