@@ -11,8 +11,8 @@ export const receipts: Receipt[] = [
     id: 'patiala-jind-nabha',
     who: { en: 'Patiala, Jind and Nabha', hi: 'पटियाला, जींद और नाभा' },
     quote: {
-      en: "'…Narnal… was given to Puttiala… Dadra was… made over to the Maharajah of Jeend… Kauli was given to the Rajah of Nabha.' (Mainodin)",
-      hi: "'…नारनौल… पटियाला को दिया गया… दादरी… जींद के महाराजा को दे दी गई… कौली नाभा के राजा को दिया गया।' (मैनुद्दीन)",
+      en: "'…Narnal… was given to Puttiala… Kauli was given to the Rajah of Nabha… Dadra was… made over to the Maharajah of Jeend.' (Mainodin)",
+      hi: "'…नारनौल… पटियाला को दिया गया… कौली नाभा के राजा को दिया गया… दादरी… जींद के महाराजा को दे दी गई।' (मैनुद्दीन)",
     },
     joke: {
       en: 'Zafar wrote: no reply. The Company wrote: eighteen hours.',

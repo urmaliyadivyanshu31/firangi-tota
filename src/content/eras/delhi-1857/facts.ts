@@ -7,7 +7,7 @@ export const facts: Fact[] = [
   {
     id: 'court',
     label: { en: 'The King', hi: 'बादशाह' },
-    value: { en: 'Bahadur Shah Zafar; coins: Siraj-ud-din', hi: 'बहादुर शाह ज़फ़र; सिक्कों पर: सिराजुद्दीन' },
+    value: { en: 'Bahadur Shah Zafar; coins: Siraj-ud-din (Suraj-u-din)', hi: 'बहादुर शाह ज़फ़र; सिक्कों पर: सिराजुद्दीन' },
     sources: [jl('pp.96-97'), mh('p.59'), sen('p.95')],
   },
   {

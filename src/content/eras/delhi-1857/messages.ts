@@ -74,8 +74,8 @@ const eventMessages: Message[] = [
         kind: 'name',
         factId: 'commanders',
         explain: {
-          en: 'Mirza Mughal was made Commander-in-Chief, not Jawan Bakht; he became minister.',
-          hi: 'कमांडर-इन-चीफ़ मिर्ज़ा मुग़ल बने, जवाँ बख़्त नहीं; उन्हें वज़ीर बनाया गया।',
+          en: 'Mirza Mughal was made Commander-in-Chief; Jawan Bakht was made minister.',
+          hi: 'कमांडर-इन-चीफ़ मिर्ज़ा मुग़ल बने; जवाँ बख़्त वज़ीर बनाए गए।',
         },
         sources: [jl('pp.96-97'), trial(CHUNI_18)],
       },
@@ -124,7 +124,7 @@ const eventMessages: Message[] = [
         factId: 'court',
         explain: {
           en: 'The coins name Suraj-u-din (Siraj-ud-din), not Abu Bakr, whatever soldiers said.',
-          hi: 'सिक्कों पर सिराजुद्दीन है, अबू बक्र नहीं, 17 मई को सिपाही चाहे जो कहें।',
+          hi: 'सिक्कों पर सिराजुद्दीन है, अबू बक्र नहीं, 17 मई को सिपाहियों ने चाहे जो कहा हो।',
         },
         sources: [jl('pp.95-97')],
       },
@@ -223,7 +223,7 @@ const eventMessages: Message[] = [
         ruleId: 'court-manners',
         sources: [trial(KING_ORDER)],
         explain: {
-          en: 'The King complained of caps and horses at court, not praised them.',
+          en: 'The King complained of caps and horses at court; he never praised them.',
           hi: 'बादशाह ने दरबार में टोपी और घोड़ों की शिकायत की, तारीफ़ नहीं।',
         },
       },
@@ -695,8 +695,8 @@ const datelessMessages: Message[] = [
     from: { en: 'The King, in pencil', hi: 'बादशाह, पेंसिल से' },
     to: MIRZA,
     text: {
-      en: 'Mirza Mughal will post a guard at the Lahore Gate of the Fort, at the western end of the road, where it meets the city wall.',
-      hi: 'मिर्ज़ा मुग़ल क़िले के लाहौरी दरवाज़े पर, सड़क के पश्चिमी सिरे पर जहाँ वह शहर की दीवार से मिलती है, पहरा लगाएँ।',
+      en: 'Mirza Mughal will post a guard at the Lahore Gate of the Fort, at the western end of the road through the Chandni Chowk, where it meets the city wall.',
+      hi: 'मिर्ज़ा मुग़ल क़िले के लाहौरी दरवाज़े पर, चाँदनी चौक वाली सड़क के पश्चिमी सिरे पर जहाँ वह शहर की दीवार से मिलती है, पहरा लगाएँ।',
     },
     checks: { en: ['Lahore Gate of the Fort', 'where it meets the city wall'], hi: ['क़िले के लाहौरी दरवाज़े पर', 'शहर की दीवार से मिलती है'] },
     tells: [
@@ -888,8 +888,8 @@ const datelessMessages: Message[] = [
         ruleId: 'persian-bait',
         sources: [trial(PERSIAN)],
         explain: {
-          en: "A Persian army was rumour, not fact; even Delhi's editors doubted Attock.",
-          hi: 'ईरानी फ़ौज अफ़वाह थी, सच नहीं; दिल्ली के संपादकों को भी अटक पर शक था।',
+          en: "A Persian army was rumour; that summer even Delhi's editors doubted Attock.",
+          hi: 'ईरानी फ़ौज अफ़वाह थी; उस गर्मी दिल्ली के संपादकों को भी अटक पर शक था।',
         },
       },
     ],
