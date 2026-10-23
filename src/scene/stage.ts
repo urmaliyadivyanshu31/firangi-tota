@@ -57,7 +57,7 @@ import {
   saveTier,
   startTier,
 } from './quality'
-import { MARK_COLORS, MAX_ASPECT, TITLE_TONE, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, type BackLayout, type SheetMetrics } from './sheet'
+import { MARK_COLORS, MAX_ASPECT, TITLE_TONE, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type BackLayout, type SheetMetrics } from './sheet'
 import { fitPose, readInsets, rectOnDesk, rectOnWall, safeBox, type NdcBox } from './shots'
 import { createTweens, ease, lerp } from './tween'
 import {
@@ -324,7 +324,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const calendar = hooks.calendar ? createCalendar(hooks.calendar, t) : null
     const flash = createFlash()
     camera.add(flash.mesh)
-    scene.add(paper.group, stamps.group, dust.points, sheet.group, envelope.group, title.group, camera)
+    scene.add(paper.group, stamps.group, dust.points, sheet.group, sheet.shadow, envelope.group, title.group, camera)
     if (calendar) scene.add(calendar.group)
     return {
       scene,
@@ -362,6 +362,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   }
 
   const defaultTitle = (): NonNullable<DressingHooks['title']> => ({ pos: [0, 0.5, -0.53], w: 0.46 })
+  /** The desk top under the paper (the sheet's shadow lies on it). */
+  const deskTop = () => 0
 
   const paperRest = () => new THREE.Vector3(SPOTS.paper.x, 0, SPOTS.paper.z)
 
@@ -632,6 +634,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const glance = parallax.step(step)
     rig.setParallax(glance.yaw, glance.pitch)
     rig.update(step, clock)
+    w.sheet.updateShadow(deskTop())
     if (w.flash.mesh.visible) w.flash.fit(camera)
     const dressDirty = takeShadowsDirty(w.scene)
     const shadowPass = renderer.shadowMap.enabled && (shadowDirty || casters > 0 || dressDirty)
@@ -1048,6 +1051,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         body: msg.m.body,
         bodyEnd: msg.m.bodyEnd,
         progress,
+        avoid: [stampBox(msg.stamp?.u ?? msg.m.stampAt[0], msg.stamp?.v ?? msg.m.stampAt[1], msg.m.aspect)],
       })
       w.sheet.overlay.needsUpdate = true
       w.sheet.setOverlay(true)

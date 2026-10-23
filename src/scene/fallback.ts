@@ -3,7 +3,7 @@
 // No three.js here, so the app can show it without loading the 3D chunk.
 import type { EraId } from '../content/types'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
-import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, type PageRect } from './sheet'
+import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type PageRect } from './sheet'
 import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StampKind } from './types'
 
 export interface Fallback {
@@ -90,7 +90,8 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
         const marks = highlightRects(c, sheet, v.r.highlight, ph / pw)
         const m = measureSheet(c, sheet, ph / pw)
         c.save()
-        drawRevealMarks(c, pw, ph, marks, { color: v.r.real ? MARK_COLORS.verified : MARK_COLORS.slip, note: v.r.note, lang: v.r.lang, body: m.body, bodyEnd: m.bodyEnd, progress: 1, keep: true })
+        const at = stamp?.at ?? m.stampAt
+        drawRevealMarks(c, pw, ph, marks, { color: v.r.real ? MARK_COLORS.verified : MARK_COLORS.slip, note: v.r.note, lang: v.r.lang, body: m.body, bodyEnd: m.bodyEnd, progress: 1, keep: true, avoid: [stampBox(at[0], at[1], ph / pw)] })
         c.restore()
       })
       paperBox = out

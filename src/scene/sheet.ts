@@ -1720,6 +1720,14 @@ export interface MarkOptions {
   progress: number
   /** Draw over what is there (the 2D fallback's paper) instead of clearing a transparent layer. */
   keep?: boolean
+  /** Boxes the note must keep clear of (the stamp's imprint), as page fractions. */
+  avoid?: PageRect[]
+}
+
+/** The page box (fractions) an ASLI/TOTA imprint centred at (u, v) covers, with a little air. */
+export function stampBox(u: number, v: number, aspect: number): PageRect {
+  const r = (STAMP_SHARE / 2) * 1.08
+  return { u0: u - r, u1: u + r, v0: v - r / aspect, v1: v + r / aspect }
 }
 
 /**
@@ -1789,32 +1797,53 @@ export function drawRevealMarks(ctx: Ctx, w: number, h: number, marks: Highlight
     }
   })
   ctx.globalAlpha = 1
-  // the margin note, written in after the rings
+  // the margin note, written in after the rings: in the free paper below the writing, above the
+  // check note, beside (never under) the stamp; up to three lines, a little smaller if it must be
   const np = Math.max(0, Math.min(1, (o.progress - ringsEnd) / (1 - ringsEnd || 1)))
   if (o.note && np > 0) {
     const hi = o.lang === 'hi'
-    const size = Math.min(58, o.body * (hi ? 0.84 : 0.92))
-    ctx.font = font(hi ? FACE.deva : FACE.hand, size)
-    const lines = wrapText(ctx, o.note, PAGE_W * 0.56)
-    const keys = typedKeys(o.note).length
-    let left = Math.round(keys * np)
-    const top = Math.min(H - 190, Math.max(o.bodyEnd * H + size * 1.3, H * 0.5))
+    const face = hi ? FACE.deva : FACE.hand
+    const base = Math.min(58, o.body * (hi ? 0.86 : 0.94))
+    const top0 = o.bodyEnd * H + base * 0.45
+    const bottom0 = H - BOTTOM - 34 - base * 1.15
+    let x0 = 90
+    let x1 = PAGE_W - 90
+    for (const b of o.avoid ?? []) {
+      const by0 = b.v0 * H
+      const by1 = b.v1 * H
+      if (by1 <= top0 || by0 >= bottom0) continue
+      const leftW = b.u0 * PAGE_W - 18 - x0
+      const rightW = x1 - (b.u1 * PAGE_W + 18)
+      if (leftW >= rightW) x1 = Math.min(x1, b.u0 * PAGE_W - 18)
+      else x0 = Math.max(x0, b.u1 * PAGE_W + 18)
+    }
+    const room = Math.max(base * 1.3, bottom0 - top0)
+    let size = base
+    let lines: Line[] = []
+    for (;;) {
+      ctx.font = font(face, size)
+      lines = wrapText(ctx, o.note, Math.max(160, x1 - x0))
+      const fits = lines.length <= 3 && lines.length * size * 1.22 <= room
+      if (fits || size <= base * 0.62) break
+      size *= 0.94
+    }
+    const lh = size * 1.22
+    const blockH = lines.length * lh
+    const top = top0 + Math.max(0, (room - blockH) / 2) + size * 0.85
+    // revealed a whole word at a time, so no word is ever cut part-way
+    const words = lines.reduce((n, l) => n + l.toks.length, 0)
+    let left = Math.round(words * np)
     ctx.save()
-    ctx.translate(92, top)
-    ctx.rotate(-0.03)
+    ctx.translate(x0, top)
+    ctx.rotate(-0.025)
     ctx.textBaseline = 'alphabetic'
+    ctx.textAlign = 'left'
     lines.forEach((line, i) => {
-      if (left <= 0) return
-      let text = ''
       for (const t of line.toks) {
-        const word = o.note.slice(t.s, t.e)
-        const cl = keyClusters(word)
-        if (left <= 0) break
-        const take = cl.slice(0, left).join('')
-        left -= Math.min(cl.length, left)
-        text += (text ? ' ' : '') + take
+        if (left <= 0) return
+        left--
+        ctx.fillText(o.note.slice(t.s, t.e), t.x, i * lh)
       }
-      ctx.fillText(text, 0, i * size * 1.25)
     })
     ctx.restore()
   }
@@ -1966,7 +1995,6 @@ export function drawSheetBack(
   const leaf = splitLeaflet(s)
   const tint = s.channel === 'petition' ? 0xeedfba : s.channel === 'telegram' ? 0xf1e5bf : s.channel === 'radio' ? 0xf3eedb : leaf ? 0xefc6c0 : 0xf0ebdc
   const rng = mulberry32(seedFrom(`back|${s.era}|${r.back.verdictLine}`))
-  const B = 54
   const L = 104
   const R = PAGE_W - 104
   const good = r.outcome === 'right'
@@ -1996,23 +2024,44 @@ export function drawSheetBack(
     ctx.stroke()
     ctx.restore()
   } else crease(ctx, 0, H / 2, PAGE_W, H / 2)
-  const verdict = makeBlock(ctx, {
-    text: r.back.verdictLine, face: printFace, size: B * 1.12, weight: '', lh: B * 1.36, x: L, y: 150, color: verdictCol, kind: 'print', align: 'left', firstIndent: 0, checkable: false, bold: 0.025, maxW: R - L,
-  })
-  let y = blockBottom(verdict) + B * 0.5
-  const ruleY = y
-  y += B * 1.2
-  const tell = makeBlock(ctx, {
-    text: r.back.tell, face: bodyF, size: B * (hi ? 1.0 : 0.96), weight: '', lh: B * (hi ? 1.5 : 1.42), x: L, y, color: ink, kind: s.channel === 'note' ? 'hand' : 'print', align: 'left', firstIndent: 0, checkable: false, maxW: R - L,
-  })
-  y = blockBottom(tell)
-  let cons: Block | null = null
-  if (r.back.consequence) {
-    cons = makeBlock(ctx, {
-      text: r.back.consequence, face: hi ? FACE.deva : FACE.print, size: B * 0.82, weight: '', lh: B * 1.25, x: L, y: y + B * 1.25, color: '#6e1d14', kind: 'print', align: 'left', firstIndent: 0, checkable: false, maxW: R - L,
+  // the verdict as a headline, the tell and the consequence at the front's body size; all of it
+  // shrinks together only if the stamp and the source would not fit below
+  const srcSize = 30
+  ctx.font = font(hi ? FACE.deva : FACE.print, srcSize)
+  const srcLabel = hi ? 'स्रोत: ' : 'Source: '
+  const srcH = wrapText(ctx, srcLabel + r.back.source, R - L).length * srcSize * 1.3
+  const layoutAt = (k: number) => {
+    const B = 64 * k
+    const verdict = makeBlock(ctx, {
+      text: r.back.verdictLine, face: printFace, size: (hi ? 96 : 88) * k, weight: '', lh: (hi ? 112 : 100) * k, x: L, y: 160 * Math.max(0.8, k), color: verdictCol, kind: 'print', align: 'left', firstIndent: 0, checkable: false, bold: 0.028, maxW: R - L,
     })
-    y = blockBottom(cons)
+    let y = blockBottom(verdict) + B * 0.5
+    const ruleY = y
+    y += B * 1.25
+    const tell = makeBlock(ctx, {
+      text: r.back.tell, face: bodyF, size: B * (hi ? 1.0 : 0.96), weight: '', lh: B * (hi ? 1.5 : 1.42), x: L, y, color: ink, kind: s.channel === 'note' ? 'hand' : 'print', align: 'left', firstIndent: 0, checkable: false, maxW: R - L,
+    })
+    y = blockBottom(tell)
+    let cons: Block | null = null
+    if (r.back.consequence) {
+      cons = makeBlock(ctx, {
+        text: r.back.consequence, face: hi ? FACE.deva : FACE.print, size: B * 0.86, weight: '', lh: B * 1.3, x: L, y: y + B * 1.2, color: '#6e1d14', kind: 'print', align: 'left', firstIndent: 0, checkable: false, maxW: R - L,
+      })
+      y = blockBottom(cons)
+    }
+    return { verdict, tell, cons, ruleY, y, B }
   }
+  let fitK = 1
+  let lay = layoutAt(fitK)
+  // (room for the stamp is kept whether or not it has landed yet, so the words never jump)
+  const stampRoom = r.back.stamp ? 230 : 40
+  while (lay.y + lay.B * 0.6 + stampRoom + srcH + 90 > H && fitK > 0.62) {
+    fitK *= 0.94
+    lay = layoutAt(fitK)
+  }
+  const { verdict, tell, cons, ruleY } = lay
+  let y = lay.y
+  const B = lay.B
   for (const b of [verdict, tell, ...(cons ? [cons] : [])]) paintBlock(ctx, b, rng)
   ctx.save()
   setMultiply(ctx)
@@ -2025,8 +2074,7 @@ export function drawSheetBack(
   ctx.stroke()
   ctx.restore()
   // the source, small, at the foot, underlined like a reference to follow
-  const label = hi ? 'स्रोत: ' : 'Source: '
-  const srcSize = 30
+  const label = srcLabel
   ctx.font = font(hi ? FACE.deva : FACE.print, srcSize)
   const srcLines = wrapText(ctx, label + r.back.source, R - L)
   const srcTop = H - 70 - (srcLines.length - 1) * srcSize * 1.3
@@ -2051,7 +2099,7 @@ export function drawSheetBack(
   if (o.stamp && r.back.stamp) {
     const free0 = y + B * 0.6
     const free1 = srcTop - srcSize * 1.4
-    const size = Math.max(150, Math.min(330, free1 - free0, PAGE_W * 0.4))
+    const size = Math.max(170, Math.min(340, free1 - free0, PAGE_W * 0.42))
     const cy = Math.max(free0 + size * 0.45, (free0 + free1) / 2)
     drawEraStamp(ctx, PAGE_W * 0.64, cy, size, r.back.stamp, { lang: s.lang, date: s.dateLine, paper: hex(tint), seed: seedFrom(r.back.stamp.text) })
   }

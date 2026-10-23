@@ -19,7 +19,7 @@ const EXTRA = process.env.EXTRA ? `&${process.env.EXTRA}` : ''
 const SHOTS = process.env.EXTRA?.includes('reveal=')
   ? [
       ['read', 700],
-      ['reveal', 1300],
+      ['reveal', 1650],
       ['back', 400],
     ]
   : [
