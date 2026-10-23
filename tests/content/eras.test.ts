@@ -34,6 +34,18 @@ describe('registered eras', () => {
             expect(buildRun(era, d, mulberry32(seed))).toHaveLength(DAYS[d])
           }
         })
+        // The edges of the rng: 0.99 skips every dated event (rng() >= EVENT_CHANCE), so the free pool
+        // alone must fill the run; 0 takes every event it can. Both pick from the ends of each pool.
+        for (const [label, r] of [['skips every event', 0.99], ['takes every event', 0]] as const) {
+          it(`builds a ${d} run when the rng ${label}`, () => {
+            const run = buildRun(era, d, () => r)
+            expect(run).toHaveLength(DAYS[d])
+            expect(new Set(run.map((m) => m.id)).size).toBe(run.length)
+            const pairs = run.map((m) => m.pair).filter((p) => p !== undefined)
+            expect(new Set(pairs).size).toBe(pairs.length)
+            if (r > 0.6) expect(run.some((m) => m.onDay !== undefined)).toBe(false)
+          })
+        }
       }
       it('has the expected number of facts, rules and receipts', () => {
         expect(era.facts.length).toBeGreaterThanOrEqual(8)
