@@ -11,7 +11,7 @@ import { forgetLang, setLang } from '../src/i18n/lang'
 import { strings } from '../src/i18n/strings'
 import type { Voice, VoiceState } from '../src/audio/voice'
 import { VOICES } from '../src/content/voices'
-import type { SheetSpec, Stage, StageCueName } from '../src/scene/index'
+import type { RevealSpec, ScreenRect, SheetSpec, Stage, StageCueName } from '../src/scene/index'
 
 // ---------------------------------------------------------------- mocks: content, stage, audio
 
@@ -30,6 +30,9 @@ const m = vi.hoisted(() => {
     redrawMessage: vi.fn((_s: SheetSpec) => undefined),
     flash: vi.fn((_k: string) => undefined),
     skip: vi.fn(),
+    reveal: vi.fn((_s: RevealSpec) => Promise.resolve()),
+    getSourceRect: vi.fn((): ScreenRect | null => null),
+    getPaperRect: vi.fn((): ScreenRect | null => null),
   })
   return {
     fakeStage,
@@ -41,6 +44,9 @@ const m = vi.hoisted(() => {
       showMessage: vi.fn((_s: SheetSpec) => Promise.resolve()),
       dayTitle: vi.fn((_t: { big: string; small: string }) => Promise.resolve()),
       stamp: vi.fn((_k: string) => Promise.resolve()),
+      reveal: vi.fn((_s: RevealSpec) => Promise.resolve()),
+      getSourceRect: vi.fn((): ScreenRect | null => null),
+      getPaperRect: vi.fn((): ScreenRect | null => null),
     },
     mountFallback: vi.fn(),
     audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn() },
@@ -110,6 +116,10 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
 }
 
 const stampBtn = (ui: HTMLElement, v: string) => ui.querySelector<HTMLButtonElement>(`[data-stamp="${v}"]`)!
+
+/** The verdict on the paper: what the stage was asked to show, and the DOM's mirror of it. */
+const lastReveal = () => m.stage.reveal.mock.calls[m.stage.reveal.mock.calls.length - 1]![0] as RevealSpec
+const mirror = (ui: HTMLElement) => ui.querySelector('.paper-result__mirror')?.textContent ?? ''
 
 const $ = (ui: HTMLElement, sel: string) => ui.querySelector<HTMLElement>(sel)
 function click(ui: HTMLElement, sel: string): void {
@@ -217,7 +227,7 @@ describe('first visit and language', () => {
 })
 
 describe('a chapter', () => {
-  it('1857 → Easy → intro → day 1 → a right stamp shows the reveal with its source, then day 2', async () => {
+  it('1857 → Easy → day 1 → a right stamp turns the paper over to its verdict and source, then day 2', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     expect(text(ui)).toContain('Day 1 of 7')
@@ -228,21 +238,21 @@ describe('a chapter', () => {
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
 
-    const reveal = $(ui, '.reveal--right')!
-    expect(reveal).not.toBeNull()
-    expect(reveal.textContent).toContain(strings.en.right)
-    if (msg.real) {
-      expect(reveal.textContent).toContain(msg.why!.text.en)
-      expect(reveal.textContent).toContain(`A. Author, First Book (1900), ${msg.why!.sources[0]!.loc}`)
-    } else {
-      expect(reveal.textContent).toContain(msg.tells![0]!.explain.en)
-      expect(reveal.textContent).toContain(`B. Author, Second Book (1950), ${msg.tells![0]!.sources![0]!.loc}`)
-    }
-    // the stage stamped the paper and flashed before the result card; the room stays live under it
-    expect(m.stage.setEra).toHaveBeenCalledWith(expect.objectContaining({ id: 'delhi-1857' }))
+    // the stage stamped the paper, flashed, then turned it over to the verdict
     expect(m.stage.stamp).toHaveBeenCalledWith(right(msg))
     expect(m.stage.flash).toHaveBeenCalledWith('right')
     expect(m.stage.caught).not.toHaveBeenCalled()
+    const spec = lastReveal()
+    expect(spec).toMatchObject({ outcome: 'right', real: msg.real, highlight: msg.checks!.en, lang: 'en' })
+    expect(spec.back.verdictLine).toBe(`${strings.en.right} · ${msg.real ? strings.en.wasGenuine : strings.en.wasForged}`)
+    expect(spec.back.tell).toBe(msg.real ? msg.why!.text.en : msg.tells![0]!.explain.en)
+    expect(spec.back.source).toBe(msg.real ? `A. Author, First Book (1900), ${msg.why!.sources[0]!.loc}` : `B. Author, Second Book (1950), ${msg.tells![0]!.sources![0]!.loc}`)
+    expect(spec.back.consequence).toBeUndefined()
+    // the DOM keeps a mirror, the citations behind the source button, and Next
+    expect(mirror(ui)).toContain(spec.back.tell)
+    expect($(ui, '#ft-source-pop')!.textContent).toContain(spec.back.source)
+    expect(ui.querySelector('.reveal, .wire')).toBeNull() // no DOM result card, no telegram
+    expect(m.stage.setEra).toHaveBeenCalledWith(expect.objectContaining({ id: 'delhi-1857' }))
     expect(m.stage.setPaused).toHaveBeenLastCalledWith(false)
     expect(m.audio.ambience).toHaveBeenCalledWith('delhi-1857')
     expect(m.audio.cue).toHaveBeenCalledWith(msg.real ? 'stampAsli' : 'stampTota')
@@ -257,43 +267,42 @@ describe('a chapter', () => {
     expect(m.stage.dayTitle.mock.calls.map((c) => c[0].big)).toEqual(['Day 1', 'Day 2'])
     expect(m.stage.showMessage).toHaveBeenCalledTimes(2)
     expect(m.stage.showPaper).not.toHaveBeenCalled()
-    expect(m.stage.setPaused).toHaveBeenLastCalledWith(false)
   })
 
-  it('a wrong stamp darkens the stage, says Wrong, then shows the caught end screen with the receipts', async () => {
+  it('a wrong stamp darkens the room and ends the chapter on the paper: the verdict, its ending and stamp, the receipts', async () => {
     const { ui } = boot('?lang=en&seed=5')
     await toDay1(ui)
     const msg = queueFor('delhi-1857', 'easy', 5)[0]!
     click(ui, `[data-stamp="${wrong(msg)}"]`)
     await flush()
-    expect($(ui, '.reveal--wrong')!.textContent).toContain(strings.en.wrong)
     expect(m.stage.flash).toHaveBeenCalledWith('wrong')
     expect(m.stage.caught).toHaveBeenCalledTimes(1)
-
-    click(ui, '[data-action="next"]')
-    await flush()
-    expect($(ui, '.screen--end .wire')).not.toBeNull()
-    expect($(ui, '.end-stamp')!.textContent).toBe('Caught') // the era's own ending stamp
-    expect($(ui, '.wire__heading')!.textContent).toBe('The forger won')
-    expect($(ui, '.wire__verdict')!.textContent).toBe(msg.real ? strings.en.verdictRejected : strings.en.verdictPassed)
-    expect(text(ui)).toContain('You were sent to Kala Pani.')
-    expect(ui.querySelectorAll('.receipt')).toHaveLength(2) // behind the Receipts tap
-    expect($(ui, '.fold--receipts')).not.toBeNull()
+    const spec = lastReveal()
+    expect(spec.outcome).toBe('wrong')
+    expect(spec.back.verdictLine).toBe(msg.real ? strings.en.verdictRejected : strings.en.verdictPassed)
+    expect(spec.back.consequence).toBe('The forger won. You were sent to Kala Pani.')
+    expect(spec.back.stamp).toEqual({ text: 'Caught', tone: 'caught', style: 'seal' })
+    expect(mirror(ui)).toContain('You were sent to Kala Pani.')
+    expect($(ui, '[data-action="next"]')).toBeNull()
+    expect($(ui, '[data-action="again"]')).not.toBeNull()
+    expect($(ui, '[data-action="home"]')).not.toBeNull()
+    expect(ui.querySelectorAll('.paper-receipts .receipt')).toHaveLength(2) // behind the Receipts tap
     expect(text(ui)).toContain('I kept my title.')
     expect(text(ui)).toContain('A. Author, First Book (1900), p. 20')
-    expect(m.audio.cue).toHaveBeenCalledWith('endTelegram')
   })
 
   it('the agarbatti burning out is a timeout: "Too slow", caught, with ticks in the last 30%', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     seconds(60)
-    expect($(ui, '.reveal')).toBeNull()
+    expect($(ui, '.paper-result')).toBeNull()
     expect(m.audio.cue).not.toHaveBeenCalledWith('clockTick')
     expect($(ui, '.agarbatti')!.style.getPropertyValue('--burn')).toBe(String(31 / 90)) // the first frame only starts the clock
     seconds(35)
     await flush()
-    expect($(ui, '.reveal--wrong')!.querySelector('.reveal__word')!.textContent).toBe(strings.en.tooSlow)
+    expect(lastReveal().outcome).toBe('timeout')
+    expect(lastReveal().back.verdictLine).toBe(strings.en.tooSlow)
+    expect(mirror(ui)).toContain(strings.en.tooSlow)
     // a clock under 30% (26 s down to 6 s), then a rising tension tick in the last 5 s
     const count = (c: string) => m.audio.cue.mock.calls.filter(([x]) => x === c).length
     expect(count('clockTick')).toBeGreaterThanOrEqual(19)
@@ -306,29 +315,27 @@ describe('a chapter', () => {
     expect(m.stage.stamp).not.toHaveBeenCalled() // nobody stamped
     expect(m.stage.flash).toHaveBeenCalledWith('wrong')
     expect(m.stage.caught).toHaveBeenCalledTimes(1)
-    click(ui, '[data-action="next"]')
-    await flush()
-    expect($(ui, '.wire__verdict')!.textContent).toBe(strings.en.tooSlow)
   })
 
-  it('pauses the agarbatti while the tab is hidden and while the reveal shows', async () => {
+  it('pauses the agarbatti while the tab is hidden and while the verdict shows', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     seconds(10)
     setHidden(true)
     seconds(200)
-    expect($(ui, '.reveal')).toBeNull()
+    expect($(ui, '.paper-result')).toBeNull()
     setHidden(false)
     seconds(60)
-    expect($(ui, '.reveal')).toBeNull()
+    expect($(ui, '.paper-result')).toBeNull()
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
     seconds(200)
-    expect($(ui, '.reveal--right')).not.toBeNull() // still the reveal: no timeout behind it
+    expect(m.stage.reveal).toHaveBeenCalledTimes(1) // still the first verdict: no timeout behind it
+    expect($(ui, '[data-action="next"]')).not.toBeNull()
   })
 
-  it('surviving every day records the best run, plays the survived cue and offers a share line', async () => {
+  it('surviving every day ends on the paper: the best run kept, the survived cue, a share line', async () => {
     const share = vi.fn(() => Promise.resolve())
     nav.share = share
     const { ui } = boot('?lang=en&seed=8')
@@ -338,10 +345,12 @@ describe('a chapter', () => {
       expect(text(ui)).toContain(`Day ${day} of 7`)
       click(ui, `[data-stamp="${right(q[day - 1]!)}"]`)
       await flush()
-      click(ui, '[data-action="next"]')
-      await flush()
+      if (day < 7) {
+        click(ui, '[data-action="next"]')
+        await flush()
+      }
     }
-    expect($(ui, '.end-stamp')!.textContent).toBe('Cleared') // the era's own ending stamp
+    expect(lastReveal().back.stamp).toEqual({ text: 'Cleared', tone: 'survived', style: 'seal' })
     expect(m.audio.cue).toHaveBeenCalledWith('survived')
     expect(localStorage.getItem('ft:best:delhi-1857:easy')).toBe('7')
     click(ui, '[data-action="share"]')
@@ -357,8 +366,6 @@ describe('a chapter', () => {
     const { ui } = boot('?lang=en&seed=5')
     await toDay1(ui, 'delhi-1857', 'medium')
     click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'medium', 5)[0]!)}"]`)
-    await flush()
-    click(ui, '[data-action="next"]')
     await flush()
     click(ui, '[data-action="again"]')
     await flush()
@@ -395,7 +402,7 @@ describe('the daily puzzle', () => {
       expect(text(ui)).toContain(`Day ${i + 1} of 5`)
       click(ui, '[data-stamp="asli"]')
       await flush()
-      expect($(ui, '.reveal')).not.toBeNull()
+      expect($(ui, '.paper-result')).not.toBeNull()
       click(ui, '[data-action="next"]')
       await flush()
     }
@@ -409,7 +416,7 @@ describe('the daily puzzle', () => {
     expect(ui.querySelectorAll('.share-grid .tile')).toHaveLength(5)
     expect(text(ui)).toContain(strings.en.dailyTomorrow)
     expect($(ui, '.daily-end__clock')!.textContent).toBe('12:30:00') // 11:30 IST: 12.5 hours to midnight IST
-    expect(text(ui)).not.toContain(strings.en.caughtTitle)
+    expect(text(ui)).not.toContain(strings.en.caughtStamp)
     expect(JSON.parse(localStorage.getItem(`ft:daily:${d.isoDate}`)!).results).toEqual(results)
     click(ui, '[data-action="share"]')
     await flush()
@@ -517,8 +524,6 @@ describe('sharing without navigator.share', () => {
     await toDay1(ui)
     click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
     await flush()
-    click(ui, '[data-action="next"]')
-    await flush()
     click(ui, '[data-action="share"]')
     await flush()
     const line = chapterShareText({ eraTitle: 'Title 1857', mode: 'Easy', survived: 0, days: 7 })
@@ -537,8 +542,6 @@ describe('sharing without navigator.share', () => {
     const { ui } = boot('?lang=en&seed=5')
     await toDay1(ui)
     click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
-    await flush()
-    click(ui, '[data-action="next"]')
     await flush()
     click(ui, '[data-action="share"]')
     await flush()
@@ -577,7 +580,7 @@ describe('the 3D stage (Ruling R10)', () => {
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
-    expect($(ui, '.reveal--right')).not.toBeNull()
+    expect($(ui, '.paper-result')).not.toBeNull()
   })
 
   it('falls back when the stage chunk fails to load', async () => {
@@ -609,7 +612,7 @@ describe('the 3D stage (Ruling R10)', () => {
     m.stage.stamp.mockClear()
     click(ui, `[data-stamp="${right(q[1]!)}"]`)
     await flush()
-    expect($(ui, '.reveal--right')).not.toBeNull()
+    expect($(ui, '.paper-result')).not.toBeNull()
     expect(m.stage.stamp).not.toHaveBeenCalled() // the dead stage is no longer used
   })
 
@@ -631,7 +634,7 @@ describe('the 3D stage (Ruling R10)', () => {
       click(ui, `[data-stamp="${verdict === 'asli' ? 'tota' : 'asli'}"]`) // ignored: one stamp per day
       expect(m.stage.stamp).toHaveBeenCalledTimes(1)
       await vi.advanceTimersByTimeAsync(5000)
-      expect($(ui, '.reveal--right')).not.toBeNull()
+      expect($(ui, '.paper-result')).not.toBeNull()
     } finally {
       vi.useRealTimers()
     }
@@ -660,7 +663,7 @@ describe('the immersive day', () => {
     expect($(ui, '.screen--day.is-arriving')).not.toBeNull()
     expect($(ui, '.day__message')!.textContent).toBe('') // the hidden copy waits for the paper too
     seconds(200)
-    expect($(ui, '.reveal')).toBeNull() // no agarbatti before the paper is readable
+    expect($(ui, '.paper-result')).toBeNull() // no agarbatti before the paper is readable
     click(ui, `[data-stamp="${right(msg)}"]`)
     expect(m.stage.stamp).not.toHaveBeenCalled()
 
@@ -670,7 +673,7 @@ describe('the immersive day', () => {
     expect($(ui, '.day__message .msg__body')!.textContent).toBe(sheet.body)
     seconds(91)
     await flush()
-    expect($(ui, '.reveal__word')!.textContent).toBe(strings.en.tooSlow)
+    expect(mirror(ui)).toContain(strings.en.tooSlow)
   })
 
   it('a tap on the room skips the arrival and the stamp; the stamps stay off while it comes down', async () => {
@@ -688,12 +691,12 @@ describe('the immersive day', () => {
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
     expect(stampBtn(ui, 'asli').disabled && stampBtn(ui, 'tota').disabled).toBe(true)
-    expect($(ui, '.reveal')).toBeNull()
+    expect($(ui, '.paper-result')).toBeNull()
     $(ui, '.tapcatch')!.dispatchEvent(new Event('pointerdown'))
     expect(m.stage.skip).toHaveBeenCalledTimes(2)
     stamping.resolve()
     await flush()
-    expect($(ui, '.reveal--right')).not.toBeNull()
+    expect($(ui, '.paper-result')).not.toBeNull()
   })
 
   it('switches language mid-day: the paper is redrawn, the agarbatti keeps burning', async () => {
@@ -868,7 +871,7 @@ describe('the 2D desk mirrors the stage', () => {
     expect(f.flash).toHaveBeenCalledWith('wrong')
     expect(m.audio.cue).toHaveBeenCalledWith(wrong(msg) === 'asli' ? 'stampAsli' : 'stampTota')
     expect(m.audio.cue).toHaveBeenCalledWith('caught') // the flat desk has no flash sound of its own
-    expect($(ui, '.reveal--wrong')).not.toBeNull()
+    expect($(ui, '.paper-result')).not.toBeNull()
   })
 })
 
@@ -931,74 +934,38 @@ describe('the stage, wired', () => {
       expect(m.stage.showMessage.mock.calls[0]![0].revealed).toBeUndefined()
       click(ui, `[data-stamp="${right(msg)}"]`)
       await flush()
-      if (msg.real) expect(m.stage.redrawMessage).toHaveBeenLastCalledWith(expect.objectContaining({ documentMark: true, revealed: true }))
-      else expect(m.stage.redrawMessage).not.toHaveBeenCalled()
+      expect(lastReveal().documentMark).toBe(msg.real)
     } finally {
       for (const r of eraById('delhi-1857').messages) delete r.document
     }
   })
 })
 
-describe('the verdict on the paper (stage.reveal)', () => {
-  function withReveal(rect: DOMRect | null = null) {
-    const reveal = vi.fn((_s: unknown) => Promise.resolve())
-    const getSourceRect = vi.fn(() => rect)
-    Object.assign(m.stage, { reveal, getSourceRect })
-    return { reveal, getSourceRect }
-  }
-  afterEach(() => {
-    delete (m.stage as Record<string, unknown>).reveal
-    delete (m.stage as Record<string, unknown>).getSourceRect
-  })
-
-  it('turns the paper over after the stamp, and the DOM keeps only Next, the source and a mirror', async () => {
-    const r = withReveal()
-    const { ui } = boot('?lang=en&seed=3')
-    await toDay1(ui)
-    const msg = queueFor('delhi-1857', 'easy', 3)[0]!
-    click(ui, `[data-stamp="${right(msg)}"]`)
-    await flush()
-    expect(r.reveal).toHaveBeenCalledTimes(1)
-    const spec = r.reveal.mock.calls[0]![0] as { outcome: string; real: boolean; highlight: string[]; back: { verdictLine: string; stamp?: string } }
-    expect(spec).toMatchObject({ outcome: 'right', real: msg.real, highlight: msg.checks!.en })
-    expect(spec.back.stamp).toBeUndefined()
-    expect($(ui, '.reveal')).toBeNull()
-    expect($(ui, '.paper-result__mirror')!.textContent).toContain(spec.back.verdictLine)
-    expect($(ui, '[data-action="source"]')).not.toBeNull()
-    click(ui, '[data-action="next"]')
-    await flush()
-    expect(text(ui)).toContain('Day 2 of 7')
-  })
-
-  it('ends a caught chapter on the paper: its ending and stamp, then Play again and Home', async () => {
-    const r = withReveal()
-    const { ui } = boot('?lang=en&seed=5')
-    await toDay1(ui)
-    const msg = queueFor('delhi-1857', 'easy', 5)[0]!
-    click(ui, `[data-stamp="${wrong(msg)}"]`)
-    await flush()
-    const spec = r.reveal.mock.calls[0]![0] as { outcome: string; back: { verdictLine: string; consequence?: string; stamp?: string } }
-    expect(spec.outcome).toBe('wrong')
-    expect(spec.back.verdictLine).toBe(msg.real ? strings.en.verdictRejected : strings.en.verdictPassed)
-    expect(spec.back.stamp).toBe('Caught')
-    expect(spec.back.consequence).toBe('The forger won You were sent to Kala Pani.')
-    expect($(ui, '.screen--end')).toBeNull() // no separate telegram
-    expect($(ui, '[data-action="next"]')).toBeNull()
-    expect(localStorage.getItem('ft:best:delhi-1857:easy')).toBeNull() // 0 days: nothing to keep
-    click(ui, '[data-action="again"]')
-    await flush()
-    expect(text(ui)).toContain('Day 1 of 7')
-  })
-
-  it('places the source button over the line the stage reports', async () => {
-    const rect = { left: 30, top: 610, width: 200, height: 24, right: 230, bottom: 634, x: 30, y: 610, toJSON: () => ({}) } as DOMRect
-    withReveal(rect)
+describe('the verdict on the paper: placing the buttons', () => {
+  it('puts the source button over the line the stage reports, and Next under the paper', async () => {
+    m.stage.getSourceRect.mockImplementation(() => ({ x: 30, y: 600, w: 200, h: 24 }))
+    m.stage.getPaperRect.mockImplementation(() => ({ x: 20, y: 120, w: 350, h: 460 }))
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
     await flush()
     const btn = $(ui, '.source-hit')!
     expect(btn.style.left).toBe('30px')
-    expect(btn.style.top).toBe('610px')
+    expect(btn.style.top).toBe('588px') // centred on the line, a full 48 px tall
+    expect(btn.getAttribute('aria-label')).toContain(strings.en.source)
+    click(ui, '.source-hit')
+    expect($(ui, '#ft-source-pop')!.hidden).toBe(false)
+  })
+
+  it('switches language on the verdict: the sheet and its back redraw in the new language', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
+    await flush()
+    m.stage.redrawMessage.mockClear()
+    click(ui, '.hud [data-lang="hi"]')
+    expect(m.stage.redrawMessage).toHaveBeenCalledWith(expect.objectContaining({ lang: 'hi' }))
+    expect(lastReveal().lang).toBe('hi')
+    expect(m.stage.reveal).toHaveBeenCalledTimes(2)
   })
 })

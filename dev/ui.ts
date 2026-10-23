@@ -8,7 +8,6 @@ import { dayDate } from '../src/game/dates'
 import { setLang } from '../src/i18n/lang'
 import { renderMain } from '../src/ui/screens/main'
 import { renderDay } from '../src/ui/screens/day'
-import { renderEnd } from '../src/ui/screens/end'
 import { renderCredits } from '../src/ui/screens/credits'
 import { renderDailyEnd } from '../src/ui/screens/daily'
 import { buildSheet } from '../src/ui/message'
@@ -90,18 +89,6 @@ switch (screen) {
   case 'reveal-wrong':
     day(chapter({ day: 1, phase: 'caught', lastCorrect: false }), { revealed: true, timerFrac: 0.4 })
     break
-  case 'end-survived':
-  case 'end-caught': {
-    const survived = screen === 'end-survived'
-    renderEnd(root, {
-      era,
-      state: chapter(survived ? { day: 7, phase: 'survived' } : { day: 2, phase: 'caught', lastCorrect: false }),
-      outcome: survived ? 'survived' : 'caught',
-      receipts: era.receipts,
-      epilogue: era.epilogue,
-    }, { again: log('again'), home: log('home'), share: log('share') })
-    break
-  }
   case 'daily-end':
     renderDailyEnd(root, { era, number: 3, results: [true, true, false, true, true], nextAt: Date.now() + 7 * 3600_000, now: Date.now }, { share: log('share'), chapter: log('chapter'), home: log('home') })
     break

@@ -410,63 +410,18 @@ describe('renderDay: case file and rulebook', () => {
   })
 })
 
-describe('renderDay: the result card (Ruling R2)', () => {
-  it('shows the verdict, the one-line tell, the kind and sources behind Source, and Next', () => {
-    const e = era()
-    const root = mount()
-    const on = handlers()
-    // day 2 is the forged m2, stamped correctly
-    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true }), { revealed: true }), on)
-    expect(root.querySelector('button[data-stamp]')).toBeNull()
-    const reveal = root.querySelector<HTMLElement>('.reveal--right')!
-    expect(reveal.querySelector('.reveal__word')!.textContent).toBe(strings.en.right)
-    expect(reveal.querySelector('.tell-line')!.textContent).toBe('The court sat in Delhi, not Lahore.')
-    const fold = reveal.querySelector<HTMLDetailsElement>('details.fold')!
-    expect(fold.open).toBe(false)
-    expect(fold.querySelector('summary')!.textContent).toBe(strings.en.source)
-    expect(fold.textContent).toContain(strings.en.kindForged)
-    expect(fold.textContent).toContain('B. Author, Second Book (1950), ch. 3')
-    root.querySelector<HTMLButtonElement>('button[data-action="next"]')!.click()
-    expect(on.next).toHaveBeenCalledTimes(1)
-  })
-
-  it('says wrong and why a genuine message checks out', () => {
-    const e = era()
-    const root = mount()
-    renderDay(root, props(e, chapter(e, { day: 1, phase: 'caught', lastCorrect: false }), { revealed: true }), handlers())
-    const reveal = root.querySelector<HTMLElement>('.reveal--wrong')!
-    expect(reveal.querySelector('.reveal__word')!.textContent).toBe(strings.en.wrong)
-    expect(reveal.querySelector('.truth')!.textContent).toBe(strings.en.wasGenuine)
-    expect(reveal.querySelector('.tell-line')!.textContent).toBe('The gate rota is recorded.')
-    expect(reveal.textContent).toContain('Written for the game · every detail checks out')
-    expect(reveal.textContent).toContain('A. Author, First Book (1900), p. 14')
-  })
-
-  it('labels a real document with a scroll, not an emoji', () => {
-    const e = era()
-    e.messages[0]!.document = { sources: [{ id: 's2', loc: 'plate 4' }] }
-    const root = mount()
-    renderDay(root, props(e, chapter(e, { phase: 'stamped', lastCorrect: true }), { revealed: true }), handlers())
-    const truth = root.querySelector<HTMLElement>('.truth--document')!
-    expect(truth.textContent).toContain(strings.en.kindReal)
-    expect(truth.querySelector('svg.scroll-mark')).not.toBeNull()
-    expect(root.textContent).not.toContain('📜')
-    expect(root.querySelector('.reveal')!.textContent).toContain('B. Author, Second Book (1950), plate 4')
-  })
-
+describe('renderDay: after the stamp', () => {
   it('announces the result and says "Too slow" after a timeout (Ruling R12)', () => {
     const e = era()
     const root = mount()
     renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'timeout' }), { revealed: true }), handlers())
-    expect(root.querySelector('.reveal__word')!.textContent).toBe(strings.en.tooSlow)
     expect(document.getElementById('ft-live')!.textContent).toContain(strings.en.tooSlow)
-    renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'timeout' }), { revealed: true, lang: 'hi' }), handlers())
-    expect(root.querySelector('.reveal__word')!.textContent).toBe('देर हो गई')
+    expect(root.querySelector('button[data-stamp]')).toBeNull()
   })
 })
 
 describe('renderDay: the verdict on the paper', () => {
-  const rect = { left: 40, top: 500, width: 120, height: 20, right: 160, bottom: 520, x: 40, y: 500, toJSON: () => ({}) } as DOMRect
+  const rect = { x: 40, y: 500, w: 120, h: 20 }
 
   it('keeps only Next, a source button over the paper\u2019s source line, and a mirror for screen readers', () => {
     const e = era()
@@ -474,13 +429,13 @@ describe('renderDay: the verdict on the paper', () => {
     const on = handlers()
     renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true, lastVerdict: 'tota' }), {
       revealed: true,
-      onPaper: { mirror: 'Right · This message was forged. The court sat in Delhi, not Lahore.', sourceRect: rect, sources: [{ id: 's2', loc: 'ch. 3' }] },
+      onPaper: { mirror: 'Right · This message was forged. The court sat in Delhi, not Lahore.', sourceRect: rect, sources: [{ id: 's2', loc: 'ch. 3' }], kind: strings.en.kindForged },
     }), on)
     expect(root.querySelector('.reveal')).toBeNull() // no DOM result card
     expect(root.querySelector('.paper-result__mirror')!.textContent).toContain('The court sat in Delhi, not Lahore.')
     const src = root.querySelector<HTMLButtonElement>('.source-hit')!
     expect(src.style.left).toBe('40px')
-    expect(src.style.top).toBe('500px')
+    expect(src.style.top).toBe('486px') // centred on the line
     expect(src.style.height).toBe('48px') // never smaller than a fingertip
     expect(src.getAttribute('aria-label')).toBe('Source: B. Author, Second Book (1950), ch. 3')
     const pop = root.querySelector<HTMLElement>('#ft-source-pop')!
@@ -488,6 +443,7 @@ describe('renderDay: the verdict on the paper', () => {
     src.click()
     expect(pop.hidden).toBe(false)
     expect(pop.textContent).toContain('B. Author, Second Book (1950), ch. 3')
+    expect(pop.textContent).toContain(strings.en.kindForged) // the honest note: written for the game
     root.querySelector<HTMLButtonElement>('[data-action="next"]')!.click()
     expect(on.next).toHaveBeenCalledTimes(1)
   })

@@ -21,7 +21,7 @@ describe('the reveal on the paper', () => {
     expect(r.back.tell).toBe(r.note)
     expect(r.back.source).toBe('B. Author, Second Book (1950), ch. 3')
     expect(r.back.consequence).toBeUndefined()
-    expect(r.back.stamp).toBeUndefined()
+    expect(r.back.stamp).toEqual({ text: strings.en.right, tone: 'right', style: 'seal' })
   })
 
   it('at a caught end, carries the era’s ending title, one line of what happened and its stamp', () => {
@@ -30,8 +30,8 @@ describe('the reveal on the paper', () => {
     expect(r.outcome).toBe('wrong')
     expect(r.note).toBe('The gate rota is recorded.')
     expect(r.back.verdictLine).toBe(strings.en.verdictRejected)
-    expect(r.back.consequence).toBe('The forger got through The forgery was found.')
-    expect(r.back.stamp).toBe('Caught')
+    expect(r.back.consequence).toBe('The forger got through. The forgery was found.')
+    expect(r.back.stamp).toEqual({ text: 'Caught', tone: 'caught', style: 'seal' })
   })
 
   it('at the last day survived, carries the survived ending, in Hindi too', () => {
@@ -40,12 +40,20 @@ describe('the reveal on the paper', () => {
     const r = buildReveal({ era: e, msg: msgById(e, 'm1'), verdict: 'asli', lang: 'hi', end: 'survived' })
     expect(r.outcome).toBe('right')
     expect(r.documentMark).toBe(true) // after the stamp the paper may show it (R30b)
-    expect(r.back.stamp).toBe('पास')
-    expect(r.back.consequence).toBe('हर चिट्ठी परखी गई शहर टिका रहा।')
+    expect(r.back.stamp).toEqual({ text: 'पास', tone: 'survived', style: 'seal' })
+    expect(r.back.consequence).toBe('हर चिट्ठी परखी गई। शहर टिका रहा।')
   })
 
   it('names a timeout as such', () => {
     const e = era()
     expect(buildReveal({ era: e, msg: msgById(e, 'm2'), verdict: 'timeout', lang: 'en', end: 'caught' }).outcome).toBe('timeout')
+  })
+
+  it('stamps the back in the era\u2019s own style', () => {
+    const styles = (['petition', 'note', 'radio', 'telegram'] as const).map((channel) => {
+      const e = era({ channel })
+      return buildReveal({ era: e, msg: msgById(e, 'm1'), verdict: 'tota', lang: 'en', end: 'caught' }).back.stamp?.style
+    })
+    expect(styles).toEqual(['seal', 'police', 'raided', 'telegraph'])
   })
 })

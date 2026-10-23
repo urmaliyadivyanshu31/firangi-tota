@@ -2,14 +2,14 @@ import type { Era, Lang, Receipt, SourceRef } from '../../content/types'
 import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
 import type { VoiceState } from '../../audio/voice'
-import type { SheetSpec } from '../../scene/index'
+import type { ScreenRect, SheetSpec } from '../../scene/index'
 import { announce, h, mount, svg } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
 import { relatedFacts } from '../pencil'
-import { formatSource, proofFold, sourceList, tellLines, truthEl } from '../reveal'
+import { formatSource, sourceList } from '../reveal'
 
 // A day over the live room. The message itself is on the 3D paper; the DOM keeps a visually
 // hidden copy for screen readers, and a Listen button plays the era's recorded voice. Around it: the thin top bar, the case file and
@@ -33,7 +33,7 @@ export interface DayProps {
   secs: number
   /** The paper is in view: the stamps work. Before that the arrival plays and a tap skips it. */
   readable: boolean
-  /** Show the result card (right/wrong, kind, why or tells, sources, Next). */
+  /** The verdict is in: it is on the paper's back; the DOM shows Next (or the end's buttons). */
   revealed: boolean
   soundOn: boolean
   /** Read-aloud is available (the era voices are loaded), and what it is doing now. */
@@ -52,10 +52,13 @@ export interface DayProps {
 export interface PaperReveal {
   /** Everything the paper's back says, for screen readers. */
   mirror: string
-  /** Where the paper's source line is on screen, for the button over it. */
-  sourceRect: DOMRect | null
-  /** The citations that button opens. */
+  /** Where the paper's source line is on screen (CSS px), for the button over it. */
+  sourceRect: ScreenRect | null
+  /** Where the paper is on screen, to set the buttons under it. */
+  paperRect?: ScreenRect | null
+  /** The citations that button opens, and the honest note on what kind of text this was. */
   sources: SourceRef[]
+  kind?: string
   /** The chapter ends here: Play again, Home and Share, with the receipts behind a tap. */
   end?: { receipts: Receipt[] }
 }
@@ -385,12 +388,13 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     h('div', { class: 'tabs' }, tab('file', t('caseFile', lang), null), tab('rules', t('rulebook', lang), anyNew ? newTag() : null), listenGroup),
     h('div', { class: 'stamps' }, stampBtn('asli', '←', '1'), stampBtn('tota', '→', '2')))
 
-  // ---- the result: on the 3D paper's back (the buttons, the source and a mirror here), or a card
+  // ---- the result is on the 3D paper's back: here only the buttons, the source and a mirror
   let nextBtn: HTMLButtonElement | null = null
   let result: HTMLElement | null = null
-  if (revealed && p.onPaper) {
-    const r = p.onPaper
-    const pop = h('div', { class: 'source-pop pcard', role: 'dialog', 'aria-label': t('source', lang), id: 'ft-source-pop' }, h('div', { class: 'pcard__scroll' }, sourceList(r.sources, era)))
+  if (revealed) {
+    const r: PaperReveal = p.onPaper ?? { mirror: '', sourceRect: null, sources: [] }
+    const pop = h('div', { class: 'source-pop pcard', role: 'dialog', 'aria-label': t('source', lang), id: 'ft-source-pop' },
+      h('div', { class: 'pcard__scroll' }, r.kind ? h('p', { class: 'kind' }, r.kind) : null, sourceList(r.sources, era)))
     pop.hidden = true
     const toggleSource = () => {
       pop.hidden = !pop.hidden
@@ -400,7 +404,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     const rect = r.sourceRect
     const srcBtn = h('button', { class: rect ? 'source-hit' : 'btn btn--chit source-slip', type: 'button', 'data-action': 'source', 'aria-label': label,
       'aria-controls': 'ft-source-pop', 'aria-expanded': 'false', onclick: toggleSource,
-      ...(rect ? { style: `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;width:${Math.max(48, Math.round(rect.width))}px;height:${Math.max(48, Math.round(rect.height))}px` } : {}) },
+      ...(rect ? { style: `left:${Math.round(rect.x)}px;top:${Math.round(rect.y + rect.h / 2 - Math.max(48, rect.h) / 2)}px;width:${Math.max(48, Math.round(rect.w))}px;height:${Math.max(48, Math.round(rect.h))}px` } : {}) },
       rect ? null : t('source', lang))
     const end = r.end
     const again = on.again
@@ -423,22 +427,12 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
             : null,
         ]
       : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
+    // under the paper: centred on it in landscape, along the bottom on a phone
+    const under = r.paperRect && isWide() ? `left:${Math.round(r.paperRect.x)}px;width:${Math.round(r.paperRect.w)}px;right:auto` : ''
     result = h('div', { class: 'paper-result' },
       h('p', { class: 'sr-only paper-result__mirror', 'aria-live': 'polite' }, r.mirror),
       rect ? srcBtn : null, pop,
-      h('footer', { class: 'paper-result__actions' }, rect ? null : srcBtn, actions))
-  } else if (revealed) {
-    const correct = state.lastCorrect === true
-    nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang))
-    result = h('div', { class: 'result' },
-      h('section', { class: `pcard reveal reveal--${correct ? 'right' : 'wrong'}`, role: 'dialog', 'aria-labelledby': 'ft-verdict' },
-        jaali('pcard__jaali'),
-        h('div', { class: 'pcard__scroll' },
-          h('h2', { id: 'ft-verdict', class: 'reveal__word' }, h('span', null, t(verdictKey(state), lang))),
-          truthEl(msg, lang),
-          tellLines(msg, lang),
-          proofFold(msg, era, lang)),
-        h('footer', { class: 'pcard__foot' }, nextBtn)))
+      h('footer', { class: 'paper-result__actions', ...(under ? { style: under } : {}) }, rect ? null : srcBtn, actions))
   }
 
   const copy = h('article', { class: 'day__message sr-only', lang, 'aria-live': 'polite', 'aria-atomic': 'true' })

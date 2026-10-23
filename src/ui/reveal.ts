@@ -1,8 +1,7 @@
-import type { Era, Lang, Message, SourceRef } from '../content/types'
+import type { Channel, Era, Lang, Message, SourceRef } from '../content/types'
 import { t, type Strings } from '../i18n/strings'
 import { h } from './h'
-import { scrollMark } from './ornament'
-import type { RevealSpec } from './reveal-contract'
+import type { RevealSpec, RevealStamp } from '../scene/index'
 
 // What a message really was, why, and the proof. Shared by the day's result card and the end card.
 
@@ -22,15 +21,6 @@ export function sourceItem(ref: SourceRef, era: Era): HTMLElement {
 
 export function sourceList(refs: SourceRef[], era: Era): HTMLElement {
   return h('ul', { class: 'sources' }, refs.map((r) => sourceItem(r, era)))
-}
-
-/** A small "Source" line that opens the citations (and anything else worth a tap). */
-export function sourcesFold(refs: SourceRef[], era: Era, lang: Lang, extra: HTMLElement | null = null): HTMLElement | null {
-  if (!refs.length && !extra) return null
-  return h('details', { class: 'fold' },
-    h('summary', { class: 'fold__head' }, t('source', lang)),
-    extra,
-    refs.length ? sourceList(refs, era) : null)
 }
 
 /** Every source behind the verdict: the document, the why, or each tell (or its fact). No repeats. */
@@ -58,24 +48,13 @@ export function kindKey(msg: Message): keyof Strings {
   return msg.real ? 'kindWritten' : 'kindForged'
 }
 
-/** "This message was forged", or "…genuine" over a scroll and "Real document" for a real one. */
-export function truthEl(msg: Message, lang: Lang): HTMLElement {
-  return h('div', { class: `truth truth--${msg.document ? 'document' : msg.real ? 'written' : 'forged'}` },
-    h('p', null, t(msg.real ? 'wasGenuine' : 'wasForged', lang)),
-    msg.document ? h('p', { class: 'truth__kind' }, scrollMark(), t('kindReal', lang)) : null)
+/** "Written for the game…", "Forged by the Tota…" or "Real document": the honest note under the sources. */
+export function kindLine(msg: Message, lang: Lang): string {
+  return t(kindKey(msg), lang)
 }
 
-/** The one-line tell (forged) or why (genuine). */
-export function tellLines(msg: Message, lang: Lang): HTMLElement[] {
-  if (msg.real) return msg.why ? [h('p', { class: 'tell-line tell-line--why' }, msg.why.text[lang])] : []
-  return (msg.tells ?? []).map((tell) => h('p', { class: 'tell-line' }, tell.explain[lang]))
-}
-
-/** Behind the Source tap: what kind of text this was (unless the truth line said so) and the citations. */
-export function proofFold(msg: Message, era: Era, lang: Lang): HTMLElement | null {
-  const kind = msg.document ? null : h('p', { class: 'kind' }, t(kindKey(msg), lang))
-  return sourcesFold(messageSources(msg, era), era, lang, kind)
-}
+/** Each era stamps its back in its own way: a Mughal seal, a CID stamp, RAIDED, a telegraph office. */
+const STAMP_STYLE: Record<Channel, RevealStamp['style']> = { petition: 'seal', note: 'police', radio: 'raided', telegram: 'telegraph' }
 
 /** The verdict said plainly, from what happened: right, a forgery passed, a genuine one rejected, or too slow. */
 export function verdictLine(msg: Message, verdict: 'asli' | 'tota' | 'timeout', lang: Lang): string {
@@ -108,7 +87,14 @@ export function buildReveal(p: {
   const first = messageSources(msg, era)[0]
   const ending = end ? era.endings?.[end] : undefined
   const line = end ? (end === 'caught' ? era.epilogue.caught : era.epilogue.survived)[0]?.[lang] : undefined
-  const consequence = end ? [ending?.title[lang], line].filter(Boolean).join(' ') : ''
+  // the ending's title, closed like a sentence, then its one line
+  const title = ending?.title[lang]
+  const closed = title && !/[.!?।]$/.test(title) ? `${title}${lang === 'hi' ? '।' : '.'}` : title
+  const consequence = end ? [closed, line].filter(Boolean).join(' ') : ''
+  const style = STAMP_STYLE[era.channel]
+  const stamp: RevealStamp = end
+    ? { text: ending?.stamp[lang] ?? t(end === 'caught' ? 'caughtStamp' : 'survivedStamp', lang), tone: end, style }
+    : { text: t(right ? 'right' : verdict === 'timeout' ? 'tooSlow' : 'wrong', lang), tone: right ? 'right' : 'wrong', style }
   return {
     outcome: right ? 'right' : verdict === 'timeout' ? 'timeout' : 'wrong',
     real: msg.real,
@@ -119,7 +105,7 @@ export function buildReveal(p: {
       verdictLine: verdictLine(msg, verdict, lang),
       tell: note,
       ...(consequence ? { consequence } : {}),
-      ...(end ? { stamp: ending?.stamp[lang] ?? t(end === 'caught' ? 'caughtStamp' : 'survivedStamp', lang) } : {}),
+      stamp,
       source: first ? formatSource(first, era) : '',
     },
     lang,

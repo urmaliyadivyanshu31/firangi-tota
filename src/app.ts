@@ -20,17 +20,15 @@ import type { Voice, VoiceState } from './audio/voice'
 import { DEFAULT_VOICE, VOICES, voiceChoices, type VoiceChoice } from './content/voices'
 import {
   STAGE_LOST_EVENT, loadStage, mountFallback,
-  type DayTitle, type EraDressing, type Fallback, type FlashKind, type QualityTier, type SheetSpec, type Stage, type StageCueName, type StampKind,
+  type DayTitle, type EraDressing, type Fallback, type FlashKind, type QualityTier, type RevealSpec, type ScreenRect, type SheetSpec, type Stage, type StageCueName, type StampKind,
 } from './scene/index'
 import { controlCluster, setSoundToggle } from './ui/controls'
 import { h } from './ui/h'
 import { buildSheet, dayTitleFor } from './ui/message'
-import { buildReveal, messageSources } from './ui/reveal'
-import type { RevealDesk, RevealSpec } from './ui/reveal-contract'
+import { buildReveal, kindLine, messageSources } from './ui/reveal'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
 import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
-import { renderEnd, type EndProps } from './ui/screens/end'
 import { MODE_KEY, renderMain, suggestedEra, type Best } from './ui/screens/main'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
@@ -67,9 +65,11 @@ interface Desk {
   dispose(): void
   /** The desk names its own beats (arrival, stamp impact) through onCue; the flat desk does not. */
   cues: boolean
-  /** The verdict on the paper's back, when the desk can (the stage's reveal); else the DOM card shows it. */
-  reveal?: (s: RevealSpec) => Promise<void>
-  getSourceRect?: () => DOMRect | null
+  /** The verdict on the paper: the slip ringed, a margin note, then the back. */
+  reveal(s: RevealSpec): Promise<void>
+  /** Where the back's source line and the paper are on screen, for the buttons over and under them. */
+  getSourceRect(): ScreenRect | null
+  getPaperRect(): ScreenRect | null
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
@@ -238,9 +238,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   }
 
   function stageDesk(s: Stage, dressingFor: (id: EraId) => EraDressing): Desk {
-    const r = s as Stage & Partial<RevealDesk>
     return {
-      ...(r.reveal ? { reveal: (x: RevealSpec) => r.reveal!(x), getSourceRect: () => r.getSourceRect?.() ?? null } : {}),
+      reveal: (x) => s.reveal(x),
+      getSourceRect: () => s.getSourceRect(),
+      getPaperRect: () => s.getPaperRect(),
       setEra: (id) => s.setEra(dressingFor(id)),
       establish: () => s.establish(),
       dayTitle: (x) => s.dayTitle(x),
@@ -258,9 +259,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   /** The flat desk: the same sheet, title, imprint and flash, drawn on one canvas. */
   function fallbackDesk(f: Fallback): Desk {
-    const r = f as Fallback & Partial<RevealDesk>
     return {
-      ...(r.reveal ? { reveal: (x: RevealSpec) => r.reveal!(x), getSourceRect: () => r.getSourceRect?.() ?? null } : {}),
+      reveal: (x) => f.reveal(x),
+      getSourceRect: () => f.getSourceRect(),
+      getPaperRect: () => f.getPaperRect(),
       setEra: (id) => f.setEra(id),
       establish: () => Promise.resolve(),
       dayTitle: (x) => f.dayTitle(x),
@@ -625,12 +627,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         audio.cue('plaqueFlick')
         stopVoice()
         const msg = currentMessage(p)
-        if (paper && msg && desk?.reveal) {
-          // the paper's back in the new language: turn it again, at once
+        if (readable || revealed) desk?.redrawMessage(sheetFor(p))
+        if (paper && msg && desk) {
+          // the paper's back in the new language: the same message, so it redraws at once
           paper = { ...paper, spec: buildReveal({ era: p.era, msg, verdict: p.state.lastVerdict ?? 'timeout', lang: getLang(), ...(paper.end ? { end: paper.end } : {}) }) }
           void desk.reveal(paper.spec)
-          desk.skip()
-        } else if (readable || revealed) desk?.redrawMessage(sheetFor(p))
+        }
         drawDay()
       },
       quit: showMain,
@@ -652,9 +654,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const b = r.spec.back
     const stop = r.spec.lang === 'hi' ? '।' : '.'
     return {
-      mirror: [b.verdictLine, b.tell, b.consequence, b.stamp].filter(Boolean).join(`${stop} `),
-      sourceRect: desk?.getSourceRect?.() ?? null,
+      mirror: [b.verdictLine, b.tell, b.consequence, b.stamp?.text].filter(Boolean).join(`${stop} `),
+      sourceRect: desk?.getSourceRect() ?? null,
+      paperRect: desk?.getPaperRect() ?? null,
       sources: [...(msg ? messageSources(msg, p.era) : []), ...(r.end ? p.era.epilogue.sources : [])],
+      ...(msg ? { kind: kindLine(msg, r.spec.lang) } : {}),
       ...(r.end ? { end: { receipts: p.era.receipts } } : {}),
     }
   }
@@ -693,7 +697,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // note, then the verdict, the tell and, at the chapter's end, the era's ending and its stamp.
     const msg = currentMessage(p)
     const end = p.kind !== 'chapter' ? undefined : !correct ? 'caught' : p.state.day >= p.state.days ? 'survived' : undefined
-    if (desk?.reveal && msg) {
+    if (desk && msg) {
       const spec = buildReveal({ era: p.era, msg, verdict: v, lang: getLang(), ...(end ? { end } : {}) })
       // the buttons below the paper's back take more room than the stamps did at the chapter's end
       root.stage.style.setProperty('--ft-hud-bottom', `${end ? 230 : 110}px`)
@@ -705,7 +709,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     revealed = true
     busy = false
     drawDay()
-    if (!paper && msg?.document) desk?.redrawMessage(sheetFor(p)) // the paper may show its tag now
   }
 
   /** The chapter ended on the paper: keep the best run, mark a survived chapter. */
@@ -732,9 +735,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const p = play
     if (!p || busy || !revealed) return
     if (p.kind === 'chapter') {
-      if (p.state.phase === 'caught') return endChapter(p, 'caught')
+      if (p.state.phase !== 'stamped') return // a caught or survived chapter ends on the paper's back
       p.state = nextDay(p.state)
-      if (p.state.phase === 'survived') return endChapter(p, 'survived')
       return beginDay()
     }
     if (p.results.length >= p.daily.messages.length) return endDaily(p)
@@ -744,22 +746,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   }
 
   // ------------------------------------------------------------------ the end
-
-  function endChapter(p: Extract<Play, { kind: 'chapter' }>, outcome: 'survived' | 'caught'): void {
-    const survived = outcome === 'survived' ? p.state.days : p.state.day - 1
-    recordBest(p.era.id, p.difficulty, survived)
-    if (outcome === 'survived') audio.cue('survived')
-    const { era, difficulty, state } = p
-    const line = chapterShareText({ eraTitle: era.title.en, mode: strings.en[MODE_KEY[difficulty]], survived, days: state.days })
-    showEnd({ era, state, outcome, receipts: era.receipts, epilogue: era.epilogue }, line, () => startChapter(era, difficulty))
-  }
-
-  function showEnd(props: EndProps, line: string, again: () => void): void {
-    leave()
-    syncPause()
-    audio.cue('endTelegram') // the telegram comes off the teleprinter before its stamp lands
-    show('end', () => renderEnd(ui, props, { again, home: showMain, share: () => void share(line) }))
-  }
 
   // ------------------------------------------------------------------ the daily puzzle
 
