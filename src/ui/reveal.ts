@@ -1,8 +1,9 @@
 import type { Era, Lang, Message, SourceRef } from '../content/types'
 import { t, type Strings } from '../i18n/strings'
 import { h } from './h'
+import { scrollMark } from './ornament'
 
-// What a message really was, why, and the proof. Shared by the day reveal and the end screen.
+// What a message really was, why, and the proof. Shared by the day's result card and the end card.
 
 /** "Author, Title (Year), loc" */
 export function formatSource(ref: SourceRef, era: Era): string {
@@ -20,6 +21,15 @@ export function sourceItem(ref: SourceRef, era: Era): HTMLElement {
 
 export function sourceList(refs: SourceRef[], era: Era): HTMLElement {
   return h('ul', { class: 'sources' }, refs.map((r) => sourceItem(r, era)))
+}
+
+/** A small "Source" line that opens the citations (and anything else worth a tap). */
+export function sourcesFold(refs: SourceRef[], era: Era, lang: Lang, extra: HTMLElement | null = null): HTMLElement | null {
+  if (!refs.length && !extra) return null
+  return h('details', { class: 'fold' },
+    h('summary', { class: 'fold__head' }, t('source', lang)),
+    extra,
+    refs.length ? sourceList(refs, era) : null)
 }
 
 /** Every source behind the verdict: the document, the why, or each tell (or its fact). No repeats. */
@@ -47,18 +57,21 @@ export function kindKey(msg: Message): keyof Strings {
   return msg.real ? 'kindWritten' : 'kindForged'
 }
 
-/** The why (genuine) or each tell's explanation (forged). */
-export function explainEl(msg: Message, lang: Lang): HTMLElement {
-  if (msg.real) return h('div', { class: 'explain' }, msg.why ? h('p', null, msg.why.text[lang]) : null)
-  return h('div', { class: 'explain' }, h('ul', { class: 'tells' }, (msg.tells ?? []).map((tell) => h('li', null, tell.explain[lang]))))
+/** "This message was forged", or "…genuine" over a scroll and "Real document" for a real one. */
+export function truthEl(msg: Message, lang: Lang): HTMLElement {
+  return h('div', { class: `truth truth--${msg.document ? 'document' : msg.real ? 'written' : 'forged'}` },
+    h('p', null, t(msg.real ? 'wasGenuine' : 'wasForged', lang)),
+    msg.document ? h('p', { class: 'truth__kind' }, scrollMark(), t('kindReal', lang)) : null)
 }
 
-/** Kind line, explanation and sources, in that order. */
-export function proofEl(msg: Message, era: Era, lang: Lang): HTMLElement[] {
-  const refs = messageSources(msg, era)
-  return [
-    h('p', { class: `kind kind--${msg.document ? 'document' : msg.real ? 'written' : 'forged'}` }, t(kindKey(msg), lang)),
-    explainEl(msg, lang),
-    refs.length ? h('div', { class: 'proof__sources' }, h('h3', null, t('sources', lang)), sourceList(refs, era)) : null,
-  ].filter((x): x is HTMLElement => x !== null)
+/** The one-line tell (forged) or why (genuine). */
+export function tellLines(msg: Message, lang: Lang): HTMLElement[] {
+  if (msg.real) return msg.why ? [h('p', { class: 'tell-line tell-line--why' }, msg.why.text[lang])] : []
+  return (msg.tells ?? []).map((tell) => h('p', { class: 'tell-line' }, tell.explain[lang]))
+}
+
+/** Behind the Source tap: what kind of text this was (unless the truth line said so) and the citations. */
+export function proofFold(msg: Message, era: Era, lang: Lang): HTMLElement | null {
+  const kind = msg.document ? null : h('p', { class: 'kind' }, t(kindKey(msg), lang))
+  return sourcesFold(messageSources(msg, era), era, lang, kind)
 }

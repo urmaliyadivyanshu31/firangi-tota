@@ -29,14 +29,28 @@ describe('renderLanguage', () => {
 describe('renderHome', () => {
   const handlers = () => ({ chapter: vi.fn(), daily: vi.fn(), continue: vi.fn(), lang: vi.fn(), sound: vi.fn(), credits: vi.fn() })
 
-  it('shows both titles, the parrot mark, and the chapter cards in order', () => {
+  it('shows the title lettering with the parrot, one premise line and the chapter tiles in order', () => {
     const root = mount()
     renderHome(root, { eras: fourEras(), best: {}, dailyDone: false }, handlers())
-    expect(root.textContent).toContain('Firangi Tota')
-    expect(root.textContent).toContain('फ़िरंगी तोता')
-    expect(root.querySelector('svg.mark')).not.toBeNull()
+    expect(root.querySelector('.home__title .sr-only')!.textContent).toBe('Firangi Tota')
+    expect(root.querySelector('.lettering')!.textContent).toContain('फ़िरंगी तोता')
+    expect(root.querySelector('.lettering svg.lettering__parrot .parrot__eye')).not.toBeNull()
+    expect(root.querySelector('.home__premise')!.textContent).toBe(strings.en.premise)
     const ids = [...root.querySelectorAll<HTMLElement>('[data-era]')].map((c) => c.dataset.era)
     expect(ids).toEqual(['delhi-1857', 'lahore-1929', 'bombay-1942', 'delhi-1947'])
+  })
+
+  it('keeps each tile to its year and place, with its own period artefact', () => {
+    const root = mount()
+    const eras = fourEras()
+    renderHome(root, { eras, best: {}, dailyDone: false }, handlers())
+    const tile = (id: string) => root.querySelector<HTMLElement>(`[data-era="${id}"]`)!
+    const e = eras.find((x) => x.id === 'delhi-1857')!
+    expect(tile('delhi-1857').textContent).toBe(`${e.year}${e.place.en}`)
+    expect(tile('delhi-1857').querySelector('.art--seal')).not.toBeNull()
+    expect(tile('lahore-1929').querySelector('.art--leaflet')).not.toBeNull()
+    expect(tile('bombay-1942').querySelector('.art--dial .art__needle')).not.toBeNull()
+    expect(tile('delhi-1947').querySelector('.art--strip')).not.toBeNull()
   })
 
   it('wires chapter, daily, continue, language, sound and credits', () => {
@@ -69,6 +83,9 @@ describe('renderHome', () => {
     expect(root.querySelector('[data-action="continue"]')!.textContent).toContain('1929')
     expect(root.querySelector('[data-era="delhi-1857"]')!.textContent).toContain(strings.en.modeEasy)
     expect(root.querySelector('[data-era="lahore-1929"]')!.textContent).toContain('4')
+    // survived: an ink tick on the tile; a best run: a pencilled 4/10
+    expect(root.querySelector('[data-era="delhi-1857"] .chapter__mark.is-done svg')).not.toBeNull()
+    expect(root.querySelector('[data-era="lahore-1929"] .chapter__mark')!.textContent).toBe('4/10')
   })
 
   it('offers the other language on the language button', () => {
@@ -113,10 +130,13 @@ describe('renderIntro', () => {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  it('shows the first day with its weekday', () => {
+  it('explains the stamps and the stakes on the second card', () => {
     const root = mount()
     renderIntro(root, { era: era() }, { next: vi.fn() })
-    expect(root.textContent).toContain('Monday, 11 May 1857')
+    click(root, '[data-action="next"]')
+    expect(root.textContent).toContain(strings.en.introHow)
+    expect(root.textContent).toContain(strings.en.introStakes)
+    expect(root.querySelector('[data-action="next"]')!.textContent).toBe(strings.en.begin)
   })
 })
 

@@ -66,7 +66,7 @@ describe('voice client', () => {
     const { v, el, states } = setup()
     await v.play(A)
     el().fire('ended')
-    expect(states.at(-1)).toBe('idle')
+    expect(states[states.length - 1]).toBe('idle')
   })
 
   it('tapping the same message while it plays stops it', async () => {
@@ -75,7 +75,7 @@ describe('voice client', () => {
     await v.play(A)
     expect(el().pause).toHaveBeenCalled()
     expect(el().play).toHaveBeenCalledTimes(1)
-    expect(states.at(-1)).toBe('idle')
+    expect(states[states.length - 1]).toBe('idle')
   })
 
   it('tapping the same message while it loads also stops it', async () => {
@@ -118,7 +118,7 @@ describe('voice client', () => {
     const p = v.play(A)
     el().fire('error')
     await p
-    expect(states.at(-1)).toBe('error')
+    expect(states[states.length - 1]).toBe('error')
   })
 
   it('after an error, tapping the same message tries again', async () => {
@@ -128,7 +128,7 @@ describe('voice client', () => {
     await p
     await v.play(A)
     expect(el().play).toHaveBeenCalledTimes(2)
-    expect(states.at(-1)).toBe('playing')
+    expect(states[states.length - 1]).toBe('playing')
   })
 
   it('stop() silences a clip; its late events are ignored', async () => {
@@ -137,7 +137,7 @@ describe('voice client', () => {
     v.stop()
     el().fire('playing')
     el().fire('error')
-    expect(states.at(-1)).toBe('idle')
+    expect(states[states.length - 1]).toBe('idle')
   })
 
   it('never falls back to speechSynthesis', async () => {
