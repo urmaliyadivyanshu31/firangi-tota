@@ -108,3 +108,10 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   read-aloud button is switched on now that the free model works.
 - Simplified: one voice, the "Dastango" storyteller, reads every era. A guest voice of a real
   person is added only with that person's verifiable permission, and credited.
+
+## 2026-10-24: Home screen
+
+- Aaj ka Taar (the daily puzzle) is removed from the home screen for now; its code stays for later.
+- Credits are one small line inside the home card.
+- No modern UI components (gradient buttons, pills, round icon buttons). Every control is a period
+  object: paper, ink stamp, brass, wax seal. Bigger on desktop.
