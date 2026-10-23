@@ -220,6 +220,48 @@ export function clothTexture(color: number, o: TexOptions & { stripe?: number })
   )
 }
 
+/**
+ * A damp stain on transparent, for a decal over plaster: mottled wet below an irregular edge, a
+ * darker tide mark along it and a pale bloom of salts just past it. The stain rises from the bottom
+ * of the canvas (rising damp) and tiles across u; flip the plane to hang it from a sill or a ceiling.
+ * Twice as wide as tall.
+ */
+export function stainTexture(color: number, o: TexOptions): THREE.CanvasTexture {
+  const n = makeNoise(o.rng)
+  const C = rgb(color)
+  const W = o.size
+  const H = Math.max(16, o.size / 2)
+  const c = makeCanvas(W, H)
+  const ctx = c.getContext('2d')
+  if (ctx) {
+    const img = ctx.createImageData(W, H)
+    const d = img.data
+    for (let y = 0; y < H; y++) {
+      const v = y / H
+      for (let x = 0; x < W; x++) {
+        const u = x / W
+        // the edge wanders between 15% and 70% of the height; below it the wall is wet
+        const edge = 0.15 + 0.35 * n(u * 3, 0.5, 3, 4) + 0.2 * n(u * 9, 2.5, 9, 4)
+        const t = v - edge
+        const wet = sstep(-0.04, 0.4, t) * (0.35 + 0.65 * n(u * 7, v * 3, 7, 3)) * 0.6
+        const tide = Math.exp(-((t + 0.02) * (t + 0.02)) / 0.0011) * (0.3 + 0.5 * n(u * 20, 1.5, 20, 4)) * 0.55
+        const bloom = Math.exp(-((t + 0.07) * (t + 0.07)) / 0.0025) * sstep(0.35, 0.8, n(u * 14, 3.5, 14, 4)) * 0.3
+        const dark = wet + tide
+        const a = Math.min(1, dark + bloom)
+        const i = (y * W + x) * 4
+        for (let ch = 0; ch < 3; ch++) {
+          const base = C[ch] ?? 0
+          const pale = Math.min(255, base * 1.5 + 40)
+          d[i + ch] = a > 0 ? (base * (1 - tide * 0.6) * dark + pale * bloom) / a : base
+        }
+        d[i + 3] = a * 255
+      }
+    }
+    ctx.putImageData(img, 0, 0)
+  }
+  return toTexture(c, { repeat: o.repeat ?? [1, 1], anisotropy: o.anisotropy })
+}
+
 /** Brass or tin: brushed streaks along u and darker tarnish blotches. */
 export function metalTexture(color: number, o: TexOptions): THREE.CanvasTexture {
   const n = makeNoise(o.rng)

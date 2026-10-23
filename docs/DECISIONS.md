@@ -78,3 +78,23 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - firangitota.com was bought on Vercel (team oxdivs-projects) and is valid until 24 Oct 2027. The
   owner chose no auto-renew. It points at the production deploy only after the owner approves the
   preview.
+
+## 2026-10-24: Fully immersive, like the reference
+
+- The owner rejected the first wired build as flat: the message sat in a panel over a dark 3D
+  background. The game must live inside the 3D room, the way Politburo or Parrot does: the whole
+  screen is the room; each day opens with an in-world day title; the message arrives in that era's own
+  way and is printed on the 3D paper; the 3D stamp lands on it; the interface is a thin layer of
+  period-styled cards and buttons.
+- It should look Indian and of its era, and be more beautiful than the reference: period paper
+  forms, saffron, indigo and maroon, block-print borders.
+
+## 2026-10-24: Voices
+
+- Read-aloud uses ElevenLabs voices in the style of each era (an older court munshi in 1857, a young
+  Punjabi voice in 1929, a woman radio announcer through an old-radio filter in 1942, a crisp official
+  in 1947), in Hindi and English. The browser voice was too poor.
+- Two separate controls: a speaker icon for game sound on/off, and a microphone icon that reads the
+  message aloud in the era voice.
+- The ElevenLabs key lives only on the server (never in the repo or the browser). The voice endpoint
+  accepts only our own message ids, and each clip is generated once and cached.
