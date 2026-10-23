@@ -98,3 +98,9 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   message aloud in the era voice.
 - The ElevenLabs key lives only on the server (never in the repo or the browser). The voice endpoint
   accepts only our own message ids, and each clip is generated once and cached.
+- For now the ElevenLabs account stays on the free plan, so the read-aloud button is hidden behind a
+  build flag (`VITE_VOICE=on`) until the plan is upgraded.
+- Players can switch read-aloud between the era voice and a "Dastango" storyteller voice. The game
+  never imitates a real person's voice without their permission.
+- Voices are generated with Fish Audio's free model for now; ElevenLabs stays as an option. Only
+  original or designed voices are used: no community-uploaded clones of real people.

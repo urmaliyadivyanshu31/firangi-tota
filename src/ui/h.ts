@@ -37,7 +37,7 @@ function append(el: Element, children: (Child | Child[])[]): void {
 /** Parse a trusted, static SVG string (our own drawings and icons; never content or user text). */
 export function svg(markup: string): SVGSVGElement {
   const tpl = document.createElement('template')
-  tpl.innerHTML = markup.trim()
+  tpl.innerHTML = markup.trim().replace(/>\s+</g, '><') // no stray whitespace text in the drawing
   return tpl.content.firstElementChild as SVGSVGElement
 }
 

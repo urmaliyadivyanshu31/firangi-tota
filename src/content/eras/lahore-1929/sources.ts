@@ -1,4 +1,4 @@
-import type { Source } from '../../types'
+import type { Source } from '../../types.js'
 
 // Every source the Lahore 1929 content cites. All come from the dossier
 // docs/research/bhagat-singh-1929.md (section 11) and the sources it cites.

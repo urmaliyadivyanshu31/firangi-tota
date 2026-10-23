@@ -24,7 +24,23 @@ npm install
 npm run dev
 ```
 
-Other commands: `npm run build`, `npm run preview`, `npm test`, `npm run typecheck`.
+Other commands: `npm run build`, `npm run preview`, `npm test`, `npm run typecheck`,
+`npm run check-secrets`.
+
+### Era voices (optional)
+
+The speaker button reads each message aloud in a voice of its era, using ElevenLabs. The game works
+without it; the button just shows an error.
+
+1. Run `npx -y @elevenlabs/cli@latest onboard init` in this folder. It signs you in and stores a key
+   in `.env.local`. To do it by hand, copy `.env.example` to `.env.local` and put your key after
+   `ELEVENLABS_API_KEY=`.
+2. Run `npm run dev`. The dev server serves `/api/voice` and reads the key on the server side only.
+
+Never commit a key. Git ignores `.env.local`, only variables starting with `VITE_` ever reach the
+browser, and `npm run check-secrets` (also run in CI) fails if a key shows up in a tracked file. In
+production the key is set as `ELEVENLABS_API_KEY` in the Vercel project settings. Voice Library
+voices need a paid ElevenLabs plan to work through the API.
 
 ## Licence
 

@@ -1,79 +1,127 @@
-// Screenshots and Playwright videos of a full day on the 3D stage (dev/immersive.html), per era,
-// screen size, tier and language. Start the dev server first:
-//   npx vite --port 5231 --strictPort &   node dev/shoot-immersive.mjs
-// Env: BASE, OUT (default docs/screens/immersive), ERAS, SIZES (390x844,1440x900), TIERS (low,high),
-// LANGS (en,hi), VIDEO=0 to skip video, EXTRA=<query> appended to every URL, BEATS=<beat,...>.
-import { mkdirSync, renameSync } from 'node:fs'
+// Shoots every screen of the real app at 390×844 and 1440×900, in Hindi and English.
+// Start the dev server first (npx vite --port 5391 --strictPort), then:
+//   node dev/shoot-immersive.mjs [base] [outDir] [only: en-m,hi-d,...]   (output is gitignored)
+import { mkdirSync } from 'node:fs'
 import { chromium } from '@playwright/test'
 
-const BASE = process.env.BASE ?? 'http://localhost:5231'
-const OUT = process.env.OUT ?? 'docs/screens/immersive'
-const list = (v, d) => (v ? v.split(',') : d)
-const ERAS = list(process.env.ERAS, ['delhi-1857', 'lahore-1929', 'bombay-1942', 'delhi-1947'])
-const SIZES = list(process.env.SIZES, ['390x844', '1440x900']).map((s) => s.split('x').map(Number))
-const TIERS = list(process.env.TIERS, ['low', 'high'])
-const LANGS = list(process.env.LANGS, ['en', 'hi'])
-const VIDEO = process.env.VIDEO !== '0'
-const EXTRA = process.env.EXTRA ? `&${process.env.EXTRA}` : ''
-// beats to photograph, with a delay after the beat starts (ms)
-const SHOTS = [
-  ['establish', 1300],
-  ['title', 1150],
-  ['arrival', 900],
-  ['read', 700],
-  ['stamp', 520],
-  ['flash', 260],
-  ['result', 300],
-]
-const BEATS = list(process.env.BEATS, SHOTS.map((s) => s[0]))
+const BASE = process.argv[2] ?? 'http://localhost:5391'
+const OUT = process.argv[3] ?? 'docs/screens/immersive-ui'
+const ONLY = process.argv[4] ?? ''
 mkdirSync(OUT, { recursive: true })
-mkdirSync(`${OUT}/video`, { recursive: true })
+const ERA = process.env.ERA ?? 'delhi-1857'
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-const browser = await chromium.launch({
-  args: ['--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=metal', '--use-gl=angle', '--enable-unsafe-swiftshader'],
-})
-const report = []
-for (const era of ERAS) {
-  for (const [w, h] of SIZES) {
-    for (const tier of TIERS) {
-      for (const lang of LANGS) {
-        const tag = `${era}-${w}x${h}-${tier}-${lang}`
-        const ctx = await browser.newContext({
-          viewport: { width: w, height: h },
-          deviceScaleFactor: w < 600 ? 2 : 1,
-          isMobile: w < 600,
-          hasTouch: w < 600,
-          ...(VIDEO ? { recordVideo: { dir: `${OUT}/video/tmp`, size: { width: w, height: h } } } : {}),
-        })
-        const page = await ctx.newPage()
-        const errors = []
-        page.on('pageerror', (e) => errors.push(String(e)))
-        page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
-        await page.goto(`${BASE}/dev/immersive.html?auto&hud&era=${era}&lang=${lang}&tier=${tier}${EXTRA}`)
-        for (const [beat, delay] of SHOTS) {
-          await page.waitForFunction((b) => {
-            const order = ['establish', 'title', 'arrival', 'read', 'stamp', 'flash', 'result', 'done']
-            const cur = window.__beat ?? ''
-            return order.indexOf(cur) >= order.indexOf(b)
-          }, beat, { timeout: 40000 })
-          await page.waitForTimeout(delay)
-          if (BEATS.includes(beat)) await page.screenshot({ path: `${OUT}/${tag}-${SHOTS.findIndex((s) => s[0] === beat)}-${beat}.png` })
-        }
-        await page.waitForFunction(() => window.__beat === 'done', null, { timeout: 40000 })
-        const cues = await page.evaluate(() => window.__cues ?? [])
-        const video = page.video()
-        await ctx.close()
-        if (video) {
-          try {
-            renameSync(await video.path(), `${OUT}/video/${tag}.webm`)
-          } catch (e) {
-            errors.push(`video: ${e}`)
-          }
-        }
-        report.push({ tag, cues: cues.join(' '), errors })
-        console.log(tag, errors.length ? `ERRORS ${errors.join(' | ')}` : 'ok', cues.join(' '))
-      }
+// FLAT=1 turns WebGL off, so the 2D desk and its DOM effects are what you see.
+const browser = await chromium.launch({ args: process.env.FLAT ? ['--disable-webgl', '--disable-3d-apis'] : ['--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
+const errors = []
+
+async function run(lang, size) {
+  const mobile = size === 'm'
+  const ctx = await browser.newContext({
+    viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 },
+    deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile,
+  })
+  const page = await ctx.newPage()
+  page.on('pageerror', (e) => errors.push(`${lang}-${size}: ${e.message}`))
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(`${lang}-${size}: ${m.text()}`) })
+  let n = 0
+  const shot = async (name) => {
+    await page.screenshot({ path: `${OUT}/${size}-${lang}-${String(++n).padStart(2, '0')}-${name}.png` })
+  }
+  const q = `?lang=${lang}&seed=7&inspect`
+
+  // first visit: the language card
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+  await sleep(2500)
+  await shot('language')
+  await page.click(`[data-lang="${lang}"]`)
+  await sleep(2500)
+  await shot('home')
+
+  await page.goto(`${BASE}/${q}`, { waitUntil: 'networkidle' })
+  await sleep(1500)
+  await page.click(`[data-era="${ERA}"]`)
+  await sleep(1800)
+  await shot('setup')
+  await page.click('[data-mode="easy"]')
+  await sleep(700)
+  await shot('intro-1')
+  await page.click('[data-action="next"]')
+  await sleep(500)
+  await shot('intro-2')
+  await page.click('[data-action="next"]')
+  await sleep(500)
+  await shot('day-arriving')
+  await page.waitForFunction(() => window.__ft?.readable === true, null, { timeout: 15000 }).catch(() => null)
+  await sleep(900)
+  await shot('day-reading')
+  if (mobile) {
+    await page.click('[data-tab="file"]')
+    await sleep(700)
+    await shot('day-casefile')
+    await page.click('.sheet--file .sheet__close')
+    await sleep(500)
+    await page.click('[data-tab="rules"]')
+    await sleep(700)
+    await shot('day-rulebook')
+    await page.click('.sheet--rules .sheet__close')
+    await sleep(500)
+  }
+  const real = await page.evaluate(() => window.__ft.play.state.queue[window.__ft.play.state.day - 1].real)
+  await page.click(`[data-stamp="${real ? 'asli' : 'tota'}"]`)
+  await sleep(350)
+  await shot('day-stamping')
+  await page.waitForSelector('.reveal', { timeout: 8000 })
+  await sleep(900)
+  await shot('result-right')
+  await page.click('[data-action="next"]')
+  await page.waitForFunction(() => window.__ft?.readable === true, null, { timeout: 15000 }).catch(() => null)
+  await sleep(600)
+  await shot('day2-reading')
+  const real2 = await page.evaluate(() => window.__ft.play.state.queue[window.__ft.play.state.day - 1].real)
+  await page.click(`[data-stamp="${real2 ? 'tota' : 'asli'}"]`)
+  await page.waitForSelector('.reveal', { timeout: 8000 })
+  await sleep(900)
+  await shot('result-wrong')
+  await page.click('.reveal .fold__head')
+  await sleep(300)
+  await shot('result-wrong-source')
+  await page.click('[data-action="next"]')
+  await sleep(1200)
+  await shot('end-caught')
+
+  // the daily puzzle, all five, then its result card
+  await page.goto(`${BASE}/${q}`, { waitUntil: 'networkidle' })
+  await sleep(1200)
+  await page.click('[data-action="daily"]')
+  for (let i = 0; i < 5; i++) {
+    await page.waitForFunction(() => window.__ft?.readable === true, null, { timeout: 15000 }).catch(() => null)
+    if (i === 0) await shot('daily-day')
+    await page.click('[data-stamp="asli"]')
+    await page.waitForSelector('.reveal', { timeout: 8000 })
+    await sleep(200)
+    await page.click('[data-action="next"]')
+  }
+  await sleep(1500)
+  await shot('daily-end')
+
+  await page.goto(`${BASE}/${q}`, { waitUntil: 'networkidle' })
+  await sleep(1000)
+  await page.click('[data-action="credits"]')
+  await sleep(700)
+  await shot('credits')
+  await ctx.close()
+}
+
+for (const lang of ['en', 'hi']) {
+  for (const size of ['m', 'd']) {
+    if (ONLY && !ONLY.split(',').includes(`${lang}-${size}`)) continue
+    try {
+      await run(lang, size)
+    } catch (err) {
+      errors.push(`${lang}-${size} FAILED: ${err.message}`)
     }
   }
 }
 await browser.close()
+console.log(errors.length ? errors.join('\n') : 'no errors')
