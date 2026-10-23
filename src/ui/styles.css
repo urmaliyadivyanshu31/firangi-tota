@@ -768,6 +768,24 @@ a { color: inherit; }
 .source { font-size: 13.5px; line-height: 1.4; }
 .source a { color: var(--indigo); }
 
+/* the verdict on the 3D paper's back: here only the buttons below it, a hit area over its source line, and the citations */
+.paper-result { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.paper-result > * { pointer-events: auto; }
+.source-hit { position: fixed; z-index: 6; border-radius: 4px; background: transparent; }
+.source-hit:hover { background: rgba(232, 150, 46, .12); }
+.source-pop { position: fixed; z-index: 7; left: 50%; bottom: calc(160px + env(safe-area-inset-bottom)); width: min(92vw, 480px); max-height: 46vh; transform: translateX(-50%); }
+.source-pop .pcard__scroll { padding: 26px 28px; font-size: 14px; }
+.paper-result__actions {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 10px;
+  padding: 22px 44px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(rgba(var(--soot), 0), rgba(var(--soot), .55) 35%, rgba(var(--soot), .7));
+}
+[data-layout='wide'] .paper-result__actions { left: calc(var(--dossier-w) + 36px); right: max(18px, env(safe-area-inset-right)); padding: 22px 0 max(16px, env(safe-area-inset-bottom)); align-items: center; }
+[data-layout='wide'] .paper-result__actions > * { width: min(100%, 520px); }
+.paper-receipts { color: var(--cream); text-align: center; }
+.paper-receipts .fold__head { justify-content: center; color: var(--cream); }
+.paper-receipts .receipts { max-height: 38vh; overflow-y: auto; padding: 4px; text-align: left; }
+
 /* ---------- The end of a chapter: a telegram with the era's stamp ---------- */
 
 .screen--end.is-caught::before { background: radial-gradient(120% 90% at 50% 50%, rgba(80, 0, 0, .12) 30%, rgba(110, 10, 4, .6) 100%); }

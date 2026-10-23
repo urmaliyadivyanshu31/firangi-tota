@@ -2,6 +2,7 @@ import type { Era, Lang, Message, SourceRef } from '../content/types'
 import { t, type Strings } from '../i18n/strings'
 import { h } from './h'
 import { scrollMark } from './ornament'
+import type { RevealSpec } from './reveal-contract'
 
 // What a message really was, why, and the proof. Shared by the day's result card and the end card.
 
@@ -74,4 +75,53 @@ export function tellLines(msg: Message, lang: Lang): HTMLElement[] {
 export function proofFold(msg: Message, era: Era, lang: Lang): HTMLElement | null {
   const kind = msg.document ? null : h('p', { class: 'kind' }, t(kindKey(msg), lang))
   return sourcesFold(messageSources(msg, era), era, lang, kind)
+}
+
+/** The verdict said plainly, from what happened: right, a forgery passed, a genuine one rejected, or too slow. */
+export function verdictLine(msg: Message, verdict: 'asli' | 'tota' | 'timeout', lang: Lang): string {
+  if (verdict === 'timeout') return t('tooSlow', lang)
+  const right = (verdict === 'asli') === msg.real
+  if (right) return `${t('right', lang)} · ${t(msg.real ? 'wasGenuine' : 'wasForged', lang)}`
+  return t(msg.real ? 'verdictRejected' : 'verdictPassed', lang)
+}
+
+/** The one-line tell (forged) or why (genuine). */
+export function tellText(msg: Message, lang: Lang): string {
+  return (msg.real ? msg.why?.text[lang] : msg.tells?.[0]?.explain[lang]) ?? ''
+}
+
+/**
+ * What the paper's back says after the stamp. On the chapter's last reveal (caught, or the last day
+ * survived) it also carries the era's ending: its title, one line of what happened, and its stamp.
+ */
+export function buildReveal(p: {
+  era: Era
+  msg: Message
+  verdict: 'asli' | 'tota' | 'timeout'
+  lang: Lang
+  /** The chapter ends with this reveal. */
+  end?: 'caught' | 'survived'
+}): RevealSpec {
+  const { era, msg, verdict, lang, end } = p
+  const right = verdict !== 'timeout' && (verdict === 'asli') === msg.real
+  const note = tellText(msg, lang)
+  const first = messageSources(msg, era)[0]
+  const ending = end ? era.endings?.[end] : undefined
+  const line = end ? (end === 'caught' ? era.epilogue.caught : era.epilogue.survived)[0]?.[lang] : undefined
+  const consequence = end ? [ending?.title[lang], line].filter(Boolean).join(' ') : ''
+  return {
+    outcome: right ? 'right' : verdict === 'timeout' ? 'timeout' : 'wrong',
+    real: msg.real,
+    documentMark: !!msg.document,
+    highlight: (msg.checks?.[lang] ?? []).filter((c) => c.trim() !== ''),
+    note,
+    back: {
+      verdictLine: verdictLine(msg, verdict, lang),
+      tell: note,
+      ...(consequence ? { consequence } : {}),
+      ...(end ? { stamp: ending?.stamp[lang] ?? t(end === 'caught' ? 'caughtStamp' : 'survivedStamp', lang) } : {}),
+      source: first ? formatSource(first, era) : '',
+    },
+    lang,
+  }
 }

@@ -1,4 +1,4 @@
-import type { Era, Lang } from '../../content/types'
+import type { Era, Lang, Receipt, SourceRef } from '../../content/types'
 import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
 import type { VoiceState } from '../../audio/voice'
@@ -9,7 +9,7 @@ import { isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
 import { relatedFacts } from '../pencil'
-import { proofFold, tellLines, truthEl } from '../reveal'
+import { formatSource, proofFold, sourceList, tellLines, truthEl } from '../reveal'
 
 // A day over the live room. The message itself is on the 3D paper; the DOM keeps a visually
 // hidden copy for screen readers, and a Listen button plays the era's recorded voice. Around it: the thin top bar, the case file and
@@ -45,6 +45,19 @@ export interface DayProps {
   daily?: number
   /** Show every rule, none tagged new (the daily puzzle plays with the whole rulebook). */
   allRules?: boolean
+  /** The verdict is on the 3D paper's back: the DOM keeps only the buttons, the source and a mirror. */
+  onPaper?: PaperReveal
+}
+
+export interface PaperReveal {
+  /** Everything the paper's back says, for screen readers. */
+  mirror: string
+  /** Where the paper's source line is on screen, for the button over it. */
+  sourceRect: DOMRect | null
+  /** The citations that button opens. */
+  sources: SourceRef[]
+  /** The chapter ends here: Play again, Home and Share, with the receipts behind a tap. */
+  end?: { receipts: Receipt[] }
 }
 
 export interface DayHandlers {
@@ -61,6 +74,10 @@ export interface DayHandlers {
   lang(): void
   /** Leave for home. When given, a home button shows in the top bar. */
   quit?(): void
+  /** The chapter's end, on the paper: play again, go home, share. */
+  again?(): void
+  home?(): void
+  share?(): void
 }
 
 export interface VoiceOption {
@@ -368,10 +385,49 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     h('div', { class: 'tabs' }, tab('file', t('caseFile', lang), null), tab('rules', t('rulebook', lang), anyNew ? newTag() : null), listenGroup),
     h('div', { class: 'stamps' }, stampBtn('asli', '←', '1'), stampBtn('tota', '→', '2')))
 
-  // ---- the result card
+  // ---- the result: on the 3D paper's back (the buttons, the source and a mirror here), or a card
   let nextBtn: HTMLButtonElement | null = null
   let result: HTMLElement | null = null
-  if (revealed) {
+  if (revealed && p.onPaper) {
+    const r = p.onPaper
+    const pop = h('div', { class: 'source-pop pcard', role: 'dialog', 'aria-label': t('source', lang), id: 'ft-source-pop' }, h('div', { class: 'pcard__scroll' }, sourceList(r.sources, era)))
+    pop.hidden = true
+    const toggleSource = () => {
+      pop.hidden = !pop.hidden
+      srcBtn.setAttribute('aria-expanded', String(!pop.hidden))
+    }
+    const label = `${t('source', lang)}: ${r.sources[0] ? formatSource(r.sources[0], era) : ''}`
+    const rect = r.sourceRect
+    const srcBtn = h('button', { class: rect ? 'source-hit' : 'btn btn--chit source-slip', type: 'button', 'data-action': 'source', 'aria-label': label,
+      'aria-controls': 'ft-source-pop', 'aria-expanded': 'false', onclick: toggleSource,
+      ...(rect ? { style: `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;width:${Math.max(48, Math.round(rect.width))}px;height:${Math.max(48, Math.round(rect.height))}px` } : {}) },
+      rect ? null : t('source', lang))
+    const end = r.end
+    const again = on.again
+    const home = on.home
+    const share = on.share
+    const actions = end
+      ? [
+          share ? h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'share', onclick: () => share() }, t('share', lang)) : null,
+          h('div', { class: 'row2' },
+            h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'again', onclick: () => again?.() }, t('playAgain', lang)),
+            h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'home', onclick: () => home?.() }, t('home', lang))),
+          end.receipts.length
+            ? h('details', { class: 'fold fold--receipts paper-receipts' }, h('summary', { class: 'fold__head' }, t('receipts', lang)),
+                h('div', { class: 'receipts' }, end.receipts.slice(0, 2).map((rc, i) =>
+                  h('article', { class: 'receipt', 'data-receipt': rc.id, style: `--i:${i}` },
+                    h('blockquote', { class: 'receipt__quote' }, h('p', null, rc.quote[lang])),
+                    h('p', { class: 'receipt__who' }, rc.who[lang]),
+                    h('p', { class: 'receipt__joke' }, rc.joke[lang]),
+                    h('p', { class: 'receipt__source' }, formatSource(rc.source, era))))))
+            : null,
+        ]
+      : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
+    result = h('div', { class: 'paper-result' },
+      h('p', { class: 'sr-only paper-result__mirror', 'aria-live': 'polite' }, r.mirror),
+      rect ? srcBtn : null, pop,
+      h('footer', { class: 'paper-result__actions' }, rect ? null : srcBtn, actions))
+  } else if (revealed) {
     const correct = state.lastCorrect === true
     nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang))
     result = h('div', { class: 'result' },

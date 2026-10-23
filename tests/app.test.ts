@@ -938,3 +938,67 @@ describe('the stage, wired', () => {
     }
   })
 })
+
+describe('the verdict on the paper (stage.reveal)', () => {
+  function withReveal(rect: DOMRect | null = null) {
+    const reveal = vi.fn((_s: unknown) => Promise.resolve())
+    const getSourceRect = vi.fn(() => rect)
+    Object.assign(m.stage, { reveal, getSourceRect })
+    return { reveal, getSourceRect }
+  }
+  afterEach(() => {
+    delete (m.stage as Record<string, unknown>).reveal
+    delete (m.stage as Record<string, unknown>).getSourceRect
+  })
+
+  it('turns the paper over after the stamp, and the DOM keeps only Next, the source and a mirror', async () => {
+    const r = withReveal()
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const msg = queueFor('delhi-1857', 'easy', 3)[0]!
+    click(ui, `[data-stamp="${right(msg)}"]`)
+    await flush()
+    expect(r.reveal).toHaveBeenCalledTimes(1)
+    const spec = r.reveal.mock.calls[0]![0] as { outcome: string; real: boolean; highlight: string[]; back: { verdictLine: string; stamp?: string } }
+    expect(spec).toMatchObject({ outcome: 'right', real: msg.real, highlight: msg.checks!.en })
+    expect(spec.back.stamp).toBeUndefined()
+    expect($(ui, '.reveal')).toBeNull()
+    expect($(ui, '.paper-result__mirror')!.textContent).toContain(spec.back.verdictLine)
+    expect($(ui, '[data-action="source"]')).not.toBeNull()
+    click(ui, '[data-action="next"]')
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+  })
+
+  it('ends a caught chapter on the paper: its ending and stamp, then Play again and Home', async () => {
+    const r = withReveal()
+    const { ui } = boot('?lang=en&seed=5')
+    await toDay1(ui)
+    const msg = queueFor('delhi-1857', 'easy', 5)[0]!
+    click(ui, `[data-stamp="${wrong(msg)}"]`)
+    await flush()
+    const spec = r.reveal.mock.calls[0]![0] as { outcome: string; back: { verdictLine: string; consequence?: string; stamp?: string } }
+    expect(spec.outcome).toBe('wrong')
+    expect(spec.back.verdictLine).toBe(msg.real ? strings.en.verdictRejected : strings.en.verdictPassed)
+    expect(spec.back.stamp).toBe('Caught')
+    expect(spec.back.consequence).toBe('The forger won You were sent to Kala Pani.')
+    expect($(ui, '.screen--end')).toBeNull() // no separate telegram
+    expect($(ui, '[data-action="next"]')).toBeNull()
+    expect(localStorage.getItem('ft:best:delhi-1857:easy')).toBeNull() // 0 days: nothing to keep
+    click(ui, '[data-action="again"]')
+    await flush()
+    expect(text(ui)).toContain('Day 1 of 7')
+  })
+
+  it('places the source button over the line the stage reports', async () => {
+    const rect = { left: 30, top: 610, width: 200, height: 24, right: 230, bottom: 634, x: 30, y: 610, toJSON: () => ({}) } as DOMRect
+    withReveal(rect)
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
+    await flush()
+    const btn = $(ui, '.source-hit')!
+    expect(btn.style.left).toBe('30px')
+    expect(btn.style.top).toBe('610px')
+  })
+})

@@ -464,3 +464,52 @@ describe('renderDay: the result card (Ruling R2)', () => {
     expect(root.querySelector('.reveal__word')!.textContent).toBe('देर हो गई')
   })
 })
+
+describe('renderDay: the verdict on the paper', () => {
+  const rect = { left: 40, top: 500, width: 120, height: 20, right: 160, bottom: 520, x: 40, y: 500, toJSON: () => ({}) } as DOMRect
+
+  it('keeps only Next, a source button over the paper\u2019s source line, and a mirror for screen readers', () => {
+    const e = era()
+    const root = mount()
+    const on = handlers()
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true, lastVerdict: 'tota' }), {
+      revealed: true,
+      onPaper: { mirror: 'Right · This message was forged. The court sat in Delhi, not Lahore.', sourceRect: rect, sources: [{ id: 's2', loc: 'ch. 3' }] },
+    }), on)
+    expect(root.querySelector('.reveal')).toBeNull() // no DOM result card
+    expect(root.querySelector('.paper-result__mirror')!.textContent).toContain('The court sat in Delhi, not Lahore.')
+    const src = root.querySelector<HTMLButtonElement>('.source-hit')!
+    expect(src.style.left).toBe('40px')
+    expect(src.style.top).toBe('500px')
+    expect(src.style.height).toBe('48px') // never smaller than a fingertip
+    expect(src.getAttribute('aria-label')).toBe('Source: B. Author, Second Book (1950), ch. 3')
+    const pop = root.querySelector<HTMLElement>('#ft-source-pop')!
+    expect(pop.hidden).toBe(true)
+    src.click()
+    expect(pop.hidden).toBe(false)
+    expect(pop.textContent).toContain('B. Author, Second Book (1950), ch. 3')
+    root.querySelector<HTMLButtonElement>('[data-action="next"]')!.click()
+    expect(on.next).toHaveBeenCalledTimes(1)
+  })
+
+  it('at the chapter\u2019s end offers Play again, Home and Share, with the receipts behind a tap', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), again: vi.fn(), home: vi.fn(), share: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 1, phase: 'caught', lastCorrect: false, lastVerdict: 'tota' }), {
+      revealed: true,
+      onPaper: { mirror: 'You rejected a genuine message', sourceRect: null, sources: [{ id: 's1', loc: 'p. 14' }], end: { receipts: e.receipts } },
+    }), on)
+    expect(root.querySelector('[data-action="next"]')).toBeNull()
+    for (const a of ['again', 'home', 'share']) root.querySelector<HTMLElement>(`[data-action="${a}"]`)!.click()
+    expect(on.again).toHaveBeenCalledTimes(1)
+    expect(on.home).toHaveBeenCalledTimes(1)
+    expect(on.share).toHaveBeenCalledTimes(1)
+    const receipts = root.querySelector<HTMLDetailsElement>('.paper-receipts')!
+    expect(receipts.open).toBe(false)
+    expect(receipts.querySelector('summary')!.textContent).toBe(strings.en.receipts)
+    expect(receipts.querySelectorAll('.receipt')).toHaveLength(1)
+    // without a rect from the stage, the source is a small slip among the buttons
+    expect(root.querySelector('.paper-result__actions [data-action="source"]')!.textContent).toBe(strings.en.source)
+  })
+})
