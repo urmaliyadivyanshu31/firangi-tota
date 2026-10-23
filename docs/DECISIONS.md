@@ -100,3 +100,5 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   accepts only our own message ids, and each clip is generated once and cached.
 - For now the ElevenLabs account stays on the free plan, so the read-aloud button is hidden behind a
   build flag (`VITE_VOICE=on`) until the plan is upgraded.
+- Players can switch read-aloud between the era voice and a "Dastango" storyteller voice. The game
+  never imitates a real person's voice without their permission.
