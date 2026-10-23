@@ -8,7 +8,8 @@ import type { L10n, Message } from '../../types.js'
 // day of the window. onDay messages on days 1–3 are tier 1 (Easy keeps days 1–3 at tier 1).
 //
 // The storyline (onDay events): d1 "uncensored news" goes out; d2 Patel and Azad on record;
-// d5 a second site opens; d7 the radio shops are raided; d11 three months since 9 August;
+// d5 a second site opens; d7 the radio shops are raided; d8 Gandhi's 5 November letter from the
+// Aga Khan Palace on Lord Halifax's son; d11 three months since 9 August;
 // d12 JP has escaped; d13 Churchill's "liquidation" speech; d14 the morning broadcast, the raid
 // on the organisers' office and Lohia's "the work must go on".
 //
@@ -515,6 +516,53 @@ export const messages: Message[] = [
     ],
   },
 
+  // Day 8, Fri 6 Nov: Gandhi's letter of 5 November from the Aga Khan Palace ("Detention Camp")
+  // on the death of Peter Wood, son of Lord Halifax (Viceroy Irwin of 1929).
+  {
+    id: 'b42-d8-letter-g',
+    tier: 3,
+    real: true,
+    pair: 'd8-letter',
+    onDay: 8,
+    from: { en: 'Letter copy, from Poona', hi: 'ख़त की नक़ल, पूना से' },
+    to: ANN,
+    text: {
+      en: 'Gandhiji to the Viceroy, from Detention Camp, 5 November: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.” Peter was Lord Halifax’s son.',
+      hi: 'गांधीजी का वायसराय को ख़त, नज़रबंदी कैंप से, 5 नवंबर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।” पीटर लॉर्ड हैलिफ़ैक्स के बेटे थे।',
+    },
+    checks: { en: ['from Detention Camp'], hi: ['नज़रबंदी कैंप से'] },
+    document: { sources: [{ id: 'cwmg-76', loc: 'No. 442, pp. 416–17' }] },
+    why: {
+      text: {
+        en: 'Real letter, written at the Aga Khan Palace, which Gandhi headed “Detention Camp”.',
+        hi: 'असली ख़त, आग़ा ख़ान महल से लिखा; गांधीजी ने ऊपर “नज़रबंदी कैंप” लिखा।',
+      },
+      sources: [{ id: 'cwmg-76', loc: 'No. 442, pp. 416–17 (from TOP III, p. 209)' }, { id: 'mkgandhi-agakhan' }],
+    },
+  },
+  {
+    id: 'b42-d8-letter-f',
+    tier: 2,
+    real: false,
+    pair: 'd8-letter',
+    onDay: 8,
+    from: { en: 'Letter copy, from Poona', hi: 'ख़त की नक़ल, पूना से' },
+    to: ANN,
+    text: {
+      en: 'Gandhiji to the Viceroy, from Ahmednagar Fort, 5 November: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.” Peter was Lord Halifax’s son.',
+      hi: 'गांधीजी का वायसराय को ख़त, अहमदनगर क़िले से, 5 नवंबर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।” पीटर लॉर्ड हैलिफ़ैक्स के बेटे थे।',
+    },
+    checks: { en: ['from Ahmednagar Fort'], hi: ['अहमदनगर क़िले से'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'Gandhiji is held at the Aga Khan Palace; Ahmednagar Fort holds Nehru.', hi: 'गांधीजी आग़ा ख़ान महल में बंद हैं; अहमदनगर क़िले में नेहरू हैं।' },
+        factId: 'f-detention',
+        sources: [{ id: 'cwmg-76', loc: 'No. 442' }, { id: 'top-ii-1971', loc: 'Introduction p. xii' }],
+      },
+    ],
+  },
+
   {
     id: 'b42-opening2-g',
     tier: 2,
@@ -729,6 +777,48 @@ export const messages: Message[] = [
         explain: { en: 'Unconfirmed news is held back, not rushed on air.', hi: 'कच्ची ख़बर रोकी जाती है, जल्दी में सुनाई नहीं जाती।' },
         ruleId: 'r-confirm',
         sources: [{ id: 'chatterjee-1989', loc: 'police transcript of 26 Oct 1942' }],
+      },
+    ],
+  },
+
+  // Where the news came from: the Congress office in Bombay, run underground by Sucheta Kripalani.
+  {
+    id: 'b42-sucheta-g',
+    tier: 2,
+    real: true,
+    pair: 'sucheta',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'Tonight’s main news comes from the Congress office that Sucheta Kripalani runs. Read it straight after Sare Jahan Se Achcha.',
+      hi: 'आज रात की ख़ास ख़बरें उस कांग्रेस दफ़्तर से आई हैं जिसे सुचेता कृपलानी चलाती हैं। “सारे जहाँ से अच्छा” के फ़ौरन बाद इन्हें पढ़िए।',
+    },
+    checks: { en: ['Sucheta Kripalani'], hi: ['सुचेता कृपलानी'] },
+    why: {
+      text: {
+        en: 'Usha Mehta: the Congress office in Bombay, run by Sucheta Kripalani, supplied news.',
+        hi: 'उषा मेहता: बंबई का कांग्रेस दफ़्तर, जिसे सुचेता कृपलानी चलाती थीं, ख़बरें भेजता था।',
+      },
+      sources: [{ id: 'usha-mehta-1969', loc: 'news from the AICC office, Sucheta Kripalani in charge' }],
+    },
+  },
+  {
+    id: 'b42-sucheta-f',
+    tier: 3,
+    real: false,
+    pair: 'sucheta',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'Tonight’s main news comes from the Congress office that Kasturba Gandhi runs. Read it straight after Sare Jahan Se Achcha.',
+      hi: 'आज रात की ख़ास ख़बरें उस कांग्रेस दफ़्तर से आई हैं जिसे कस्तूरबा गांधी चलाती हैं। “सारे जहाँ से अच्छा” के फ़ौरन बाद इन्हें पढ़िए।',
+    },
+    checks: { en: ['Kasturba Gandhi'], hi: ['कस्तूरबा गांधी'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'Sucheta Kripalani runs it; Kasturba is held with Gandhiji at the Aga Khan Palace.', hi: 'दफ़्तर सुचेता कृपलानी चलाती हैं; कस्तूरबा गांधीजी के साथ आग़ा ख़ान महल में बंद हैं।' },
+        sources: [{ id: 'mkgandhi-agakhan' }, { id: 'usha-mehta-1969' }],
       },
     ],
   },
@@ -1208,8 +1298,7 @@ export const messages: Message[] = [
       {
         kind: 'anachronism',
         explain: { en: 'Rs 599-8-0, not 599.50. Decimal rupees are fifteen years away.', hi: '599-8-0 रुपये, 599.50 नहीं। दशमलव वाला रुपया अभी 15 साल दूर है।' },
-        factId: 'f-money',
-        sources: [{ id: 'thakkar-2021', loc: 'Scroll excerpt (court record)' }],
+        sources: [{ id: 'thakkar-2021', loc: 'Scroll excerpt (court record)' }, { id: 'rbi-1957' }],
       },
     ],
   },
@@ -1299,6 +1388,114 @@ export const messages: Message[] = [
         ],
       },
     ],
+  },
+  // Myth (people-and-moments §3C #7): "the government admitted 10,000 dead".
+  {
+    id: 'b42-toll-myth-f',
+    tier: 3,
+    real: false,
+    pair: 'toll',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Even their own Home Member, Maxwell, told the Assembly on 16 September: police and army firing had killed 10,000.',
+      hi: 'उनके अपने होम मेंबर (गृह विभाग के मुखिया) मैक्सवेल ने 16 सितंबर को असेंबली में माना: पुलिस और फ़ौज की गोलियों से 10,000 मरे।',
+    },
+    checks: { en: ['killed 10,000'], hi: ['10,000 मरे'] },
+    tells: [
+      {
+        kind: 'number',
+        explain: { en: 'Maxwell said 340 and 318; 10,000 was Nehru’s later estimate.', hi: 'मैक्सवेल ने 340 और 318 कहा; 10,000 नेहरू का बाद का अंदाज़ा था।' },
+        sources: [{ id: 'iar-1942', loc: 'September chronicle, 16 Sep' }, { id: 'nehru-1946', loc: 'p. 593' }],
+      },
+    ],
+  },
+
+  // Netaji, as knowledge the desk has, never as relayed content (r-axis) and never as the forger.
+  {
+    id: 'b42-netaji-g',
+    tier: 2,
+    real: true,
+    pair: 'netaji',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Listeners keep asking: is this Netaji’s radio? No. Subhas Chandra Bose speaks from Germany, on Azad Hind Radio; we speak from inside India.',
+      hi: 'सुनने वाले बार-बार पूछते हैं: क्या यह नेताजी का रेडियो है? नहीं। सुभाष चंद्र बोस जर्मनी से, आज़ाद हिंद रेडियो पर बोलते हैं; हम हिंदुस्तान के अंदर से बोलते हैं।',
+    },
+    checks: { en: ['speaks from Germany'], hi: ['जर्मनी से'] },
+    why: {
+      text: {
+        en: 'True: in 1942 Bose broadcast from Germany, and listeners sometimes mixed up the stations.',
+        hi: 'सच: 1942 में बोस जर्मनी से बोलते थे, और लोग कभी-कभी दोनों रेडियो को एक समझ लेते थे।',
+      },
+      sources: [
+        { id: 'huacuja-2023', loc: 'p. 1630 (text at n. 65); p. 1639 (text at n. 110)' },
+        { id: 'abbas-ccas', loc: 'listeners took Congress Radio for a station abroad' },
+      ],
+    },
+  },
+  {
+    id: 'b42-netaji-f',
+    tier: 3,
+    real: false,
+    pair: 'netaji',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Listeners keep asking: is this Netaji’s radio? No. Subhas Chandra Bose speaks from Singapore, on Azad Hind Radio; we speak from inside India.',
+      hi: 'सुनने वाले बार-बार पूछते हैं: क्या यह नेताजी का रेडियो है? नहीं। सुभाष चंद्र बोस सिंगापुर से, आज़ाद हिंद रेडियो पर बोलते हैं; हम हिंदुस्तान के अंदर से बोलते हैं।',
+    },
+    checks: { en: ['speaks from Singapore'], hi: ['सिंगापुर से'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'He was in Germany in 1942; he reached Singapore only on 2 July 1943.', hi: '1942 में वे जर्मनी में थे; सिंगापुर वे 2 जुलाई 1943 को पहुँचे।' },
+        factId: 'f-netaji',
+        sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35, p. 477' }, { id: 'huacuja-2023', loc: 'p. 1630 (text at n. 65)' }],
+      },
+    ],
+  },
+
+  // Myth (people-and-moments §3C #10): Nehru's book was written in the fort, but in 1944.
+  {
+    id: 'b42-discovery-f',
+    tier: 3,
+    real: false,
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'News from Ahmednagar Fort: Pandit Nehru has finished writing his new book there, The Discovery of India.',
+      hi: 'अहमदनगर क़िले से ख़बर: पंडित नेहरू ने वहाँ अपनी नई किताब ‘डिस्कवरी ऑफ़ इंडिया’ (भारत एक खोज) लिखकर पूरी कर ली है।',
+    },
+    checks: { en: ['The Discovery of India'], hi: ['डिस्कवरी ऑफ़ इंडिया'] },
+    tells: [
+      {
+        kind: 'anachronism',
+        explain: { en: 'He wrote it in Ahmednagar Fort, but in April–September 1944.', hi: 'किताब अहमदनगर क़िले में ही लिखी गई, पर अप्रैल-सितंबर 1944 में।' },
+        sources: [{ id: 'nehru-1946', loc: 'Preface' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-kanaklata-g',
+    tier: 2,
+    real: true,
+    from: { en: 'News slip, from Assam', hi: 'ख़बर की पर्ची, असम से' },
+    to: ANN,
+    text: {
+      en: 'Remember Kanaklata Barua of Assam. On 20 September she led the march on Gohpur police station with the flag in her hands, and was shot.',
+      hi: 'असम की कनकलता बरुआ को याद कीजिए। 20 सितंबर को वे हाथ में झंडा लेकर गोहपुर थाने की ओर जुलूस के आगे चलीं, और उन्हें गोली मार दी गई।',
+    },
+    checks: { en: ['Kanaklata Barua', '20 September'], hi: ['कनकलता बरुआ', '20 सितंबर'] },
+    why: {
+      text: {
+        en: 'Kanaklata Barua, a teenage girl, was shot at Gohpur thana on 20 September 1942.',
+        hi: 'किशोरी कनकलता बरुआ को 20 सितंबर 1942 को गोहपुर थाने पर गोली मारी गई।',
+      },
+      sources: [{ id: 'rebel-india-1946', loc: 'Assam section (Gohpur, Darrang district)' }],
+    },
   },
 
   {

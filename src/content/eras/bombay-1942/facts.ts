@@ -1,6 +1,7 @@
 import type { Fact } from '../../types.js'
 
-// The announcer-operator's case file (dossier §4): one short line each. Three are hardHidden.
+// The announcer-operator's case file (dossier §4; people-and-moments.md §3A): one short line each.
+// Three are hardHidden.
 // The wavelength (42.34 m) and the air time (8:45 pm) live in the rulebook and on the paper's header.
 export const facts: Fact[] = [
   {
@@ -64,10 +65,13 @@ export const facts: Fact[] = [
     hardHidden: true,
   },
   {
-    id: 'f-money',
-    label: { en: 'Money', hi: 'पैसा' },
-    value: { en: '16 annas a rupee; no decimals', hi: '16 आने का रुपया; दशमलव नहीं' },
-    sources: [{ id: 'thakkar-2021', loc: 'Scroll excerpt (court figures, Rs 599-8-0)' }],
+    id: 'f-netaji',
+    label: { en: 'Netaji Subhas Bose', hi: 'नेताजी सुभाष बोस' },
+    value: { en: 'In Germany, on Azad Hind Radio', hi: 'जर्मनी में, आज़ाद हिंद रेडियो पर' },
+    sources: [
+      { id: 'huacuja-2023', loc: 'p. 1630 (text at n. 65: in Germany, broadcasting through Quit India); p. 1639 (n. 110: Azad Hind Radio)' },
+      { id: 'bipan-chandra-1989', loc: 'ch. 35, p. 477 (reached Singapore only on 2 July 1943)' },
+    ],
     hardHidden: true,
   },
   {
