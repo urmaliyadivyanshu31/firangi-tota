@@ -72,3 +72,9 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   (`docs/superpowers/specs/2026-10-23-firangi-tota-mvp-design.md`).
 - Launch as fast as possible, quality first. The owner reads the Hindi and every receipt card
   before the game goes public.
+
+## 2026-10-24: Domain
+
+- firangitota.com was bought on Vercel (team oxdivs-projects) and is valid until 24 Oct 2027. The
+  owner chose no auto-renew. It points at the production deploy only after the owner approves the
+  preview.
