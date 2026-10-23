@@ -336,3 +336,37 @@ describe('reveal: the verdict on the same paper', () => {
     stage.dispose()
   })
 })
+
+describe('showMessage resolves only once the paper is readable', () => {
+  for (const channel of ['petition', 'note', 'radio', 'telegram'] as const) {
+    it(`${channel}: the sheet has landed and the camera has leaned in when it resolves`, async () => {
+      const { stage } = stageFor(channel === 'telegram' ? delhi1947 : sampleDressing)
+      const p = stage.showMessage(sheet({ channel, body: 'Cabinet agrees the boundary award is published only after 15 August. Repeat: after 15 August.' }))
+      let resolvedAt = -1
+      void p.then(() => {
+        resolvedAt = now
+      })
+      // sample the paper on screen every frame until the promise settles
+      let moving = 0
+      let last: ReturnType<typeof stage.getPaperRect> = null
+      for (let i = 0; i < 900 && resolvedAt < 0; i++) {
+        await pump(16)
+        const r = stage.getPaperRect()
+        if (r && last && Math.abs(r.x - last.x) + Math.abs(r.w - last.w) > 0.5) moving++
+        last = r
+      }
+      expect(resolvedAt).toBeGreaterThan(0)
+      expect(moving).toBeGreaterThan(5) // it really did arrive
+      const atResolve = stage.getPaperRect()
+      expect(atResolve).not.toBeNull()
+      await pump(1500)
+      const later = stage.getPaperRect()
+      // nothing still travelling: only the camera's slow breath remains
+      const drift = (a: number, b: number) => Math.abs(a - b) / Math.max(1, Math.abs(b))
+      expect(drift(atResolve?.w ?? 0, later?.w ?? 1)).toBeLessThan(0.03)
+      expect(drift(atResolve?.h ?? 0, later?.h ?? 1)).toBeLessThan(0.03)
+      expect(Math.abs((atResolve?.x ?? 0) - (later?.x ?? 0))).toBeLessThan((later?.w ?? 0) * 0.03 + 1)
+      stage.dispose()
+    })
+  }
+})

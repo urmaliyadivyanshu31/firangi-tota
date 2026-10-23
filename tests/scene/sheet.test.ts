@@ -5,8 +5,10 @@ import {
   PAGE_W,
   drawDayTitle,
   drawSheet,
+  backBox,
   drawRevealMarks,
   drawSheetBack,
+  sourceLine,
   findChecks,
   highlightRects,
   stampBox,
@@ -228,5 +230,44 @@ describe('the margin note', () => {
       expect(lines.size).toBeLessThanOrEqual(3)
       if (progress === 1) expect(texts.map((t) => t.text).join(' ')).toBe(note)
     }
+  })
+})
+
+describe('the back keeps inside its paper', () => {
+  for (const channel of ['petition', 'note', 'radio', 'telegram'] as const) {
+    it(`${channel}: every word sits inside the inner box, and the source is one line`, () => {
+      const { ctx, texts } = fake2d()
+      const H = 1333
+      drawSheetBack(ctx, 1000, H, spec({ channel }), {
+        outcome: 'wrong',
+        back: {
+          verdictLine: 'Wrong — this one was genuine',
+          tell: 'The diary for 18 May records the very words.',
+          consequence: 'Delhi falls, September 1857. The court is emptied.',
+          stamp: { text: 'Caught', tone: 'caught', style: 'seal' },
+          source: 'Trial of Bahadur Shah, 1858, Petition 3, Delhi Gazette p. 113, and more',
+        },
+      }, { stamp: true })
+      const box = backBox(channel, H)
+      // (the stamp's words are drawn round its own centre, so they are left out here)
+      const words = texts.filter((t) => t.text !== 'CAUGHT' && t.x > 1)
+      for (const t of words) {
+        expect(t.x, t.text).toBeGreaterThanOrEqual(box.L - 1)
+        expect(t.x + textWidth(t.text, t.font), t.text).toBeLessThanOrEqual(box.R + 1)
+        expect(t.y, t.text).toBeLessThanOrEqual(box.bottom + 1)
+      }
+      expect(texts.filter((t) => t.text.startsWith('Source'))).toHaveLength(1)
+    })
+  }
+
+  it('fits a 60-character source on one line and cuts a longer one with an ellipsis', () => {
+    const { ctx } = fake2d()
+    const short = sourceLine(ctx, 'Source: Trial of Bahadur Shah, 1858, Petition 3, Delhi papers', '"FT Print"', 784)
+    expect(short.text.endsWith('…')).toBe(false)
+    expect(short.w).toBeLessThanOrEqual(784)
+    const long = sourceLine(ctx, `Source: ${'a very long reference '.repeat(8)}`, '"FT Print"', 784)
+    expect(long.text.endsWith('…')).toBe(true)
+    expect(long.w).toBeLessThanOrEqual(784)
+    expect(long.text).not.toMatch(/ …$/)
   })
 })
