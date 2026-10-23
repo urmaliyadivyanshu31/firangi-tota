@@ -1971,6 +1971,33 @@ export function drawEraStamp(
   ctx.restore()
 }
 
+/** The back's inner box (page units) for each paper: words never cross into its furniture. */
+export function backBox(channel: Channel, H: number): { L: number; R: number; top: number; bottom: number } {
+  if (channel === 'petition') return { L: 120, R: PAGE_W - 120, top: 122, bottom: H - 112 } // inside the floral band
+  if (channel === 'telegram') return { L: 82, R: PAGE_W - 82, top: 92, bottom: H - 66 } // inside the printed border
+  if (channel === 'radio') return { L: 96, R: PAGE_W - 196, top: 92, bottom: H - 62 } // left of the red margin
+  return { L: 96, R: PAGE_W - 96, top: 92, bottom: H - 62 }
+}
+
+/** One line of source: the size that fits (30 down to 23 units), else cut at a word with an ellipsis. */
+export function sourceLine(ctx: Ctx, text: string, face: string, maxW: number): { text: string; size: number; w: number } {
+  let size = 30
+  ctx.font = font(face, size)
+  while (ctx.measureText(text).width > maxW && size > 23) {
+    size -= 1
+    ctx.font = font(face, size)
+  }
+  let t = text
+  if (ctx.measureText(t).width > maxW) {
+    const words = text.split(' ')
+    while (words.length > 1 && ctx.measureText(`${words.join(' ')}…`).width > maxW) words.pop()
+    t = `${words.join(' ')}…`
+    // a single overlong word: cut letters until it fits
+    while (t.length > 2 && ctx.measureText(t).width > maxW) t = `${t.slice(0, -2)}…`
+  }
+  return { text: t, size, w: Math.min(maxW, ctx.measureText(t).width) }
+}
+
 export interface BackLayout {
   /** The source line on the back, for an accessible link laid over it. */
   source: PageRect
@@ -1995,8 +2022,11 @@ export function drawSheetBack(
   const leaf = splitLeaflet(s)
   const tint = s.channel === 'petition' ? 0xeedfba : s.channel === 'telegram' ? 0xf1e5bf : s.channel === 'radio' ? 0xf3eedb : leaf ? 0xefc6c0 : 0xf0ebdc
   const rng = mulberry32(seedFrom(`back|${s.era}|${r.back.verdictLine}`))
-  const L = 104
-  const R = PAGE_W - 104
+  // every word stays inside the paper's inner box: clear of the floral band, the printed border,
+  // the foolscap margin
+  const box = backBox(s.channel, H)
+  const L = box.L
+  const R = box.R
   const good = r.outcome === 'right'
   const ink = '#241a14'
   const verdictCol = good ? '#1d5c36' : '#a3261a'
@@ -2026,14 +2056,17 @@ export function drawSheetBack(
   } else crease(ctx, 0, H / 2, PAGE_W, H / 2)
   // the verdict as a headline, the tell and the consequence at the front's body size; all of it
   // shrinks together only if the stamp and the source would not fit below
-  const srcSize = 30
-  ctx.font = font(hi ? FACE.deva : FACE.print, srcSize)
-  const srcLabel = hi ? 'स्रोत: ' : 'Source: '
-  const srcH = wrapText(ctx, srcLabel + r.back.source, R - L).length * srcSize * 1.3
+  // the source: one line (a short form of about 60 characters fits), smaller if it must be, and
+  // cut with an ellipsis beyond that
+  const srcFace = hi ? FACE.deva : FACE.print
+  const srcText = sourceLine(ctx, (hi ? 'स्रोत: ' : 'Source: ') + r.back.source, srcFace, R - L)
+  const srcSize = srcText.size
+  const srcH = srcSize * 1.6
   const layoutAt = (k: number) => {
     const B = 64 * k
+    const vSize = (hi ? 96 : 88) * k
     const verdict = makeBlock(ctx, {
-      text: r.back.verdictLine, face: printFace, size: (hi ? 96 : 88) * k, weight: '', lh: (hi ? 112 : 100) * k, x: L, y: 160 * Math.max(0.8, k), color: verdictCol, kind: 'print', align: 'left', firstIndent: 0, checkable: false, bold: 0.028, maxW: R - L,
+      text: r.back.verdictLine, face: printFace, size: vSize, weight: '', lh: (hi ? 112 : 100) * k, x: L, y: box.top + vSize * 0.85, color: verdictCol, kind: 'print', align: 'left', firstIndent: 0, checkable: false, bold: 0.028, maxW: R - L,
     })
     let y = blockBottom(verdict) + B * 0.5
     const ruleY = y
@@ -2055,7 +2088,7 @@ export function drawSheetBack(
   let lay = layoutAt(fitK)
   // (room for the stamp is kept whether or not it has landed yet, so the words never jump)
   const stampRoom = r.back.stamp ? 230 : 40
-  while (lay.y + lay.B * 0.6 + stampRoom + srcH + 90 > H && fitK > 0.62) {
+  while (lay.y + lay.B * 0.6 + stampRoom + srcH > box.bottom && fitK > 0.62) {
     fitK *= 0.94
     lay = layoutAt(fitK)
   }
@@ -2073,24 +2106,19 @@ export function drawSheetBack(
   ctx.lineTo(L + (R - L) * 0.6, ruleY)
   ctx.stroke()
   ctx.restore()
-  // the source, small, at the foot, underlined like a reference to follow
-  const label = srcLabel
-  ctx.font = font(hi ? FACE.deva : FACE.print, srcSize)
-  const srcLines = wrapText(ctx, label + r.back.source, R - L)
-  const srcTop = H - 70 - (srcLines.length - 1) * srcSize * 1.3
+  // the source, small, at the foot of the inner box, underlined like a reference to follow
+  const srcTop = box.bottom - srcSize * 0.35
+  ctx.font = font(srcFace, srcSize)
   ctx.fillStyle = '#3a4a6a'
   ctx.textBaseline = 'alphabetic'
-  let srcW = 0
-  srcLines.forEach((line, i) => {
-    const text = (label + r.back.source).slice(line.toks[0]?.s ?? 0, line.toks[line.toks.length - 1]?.e ?? 0)
-    ctx.fillText(text, L, srcTop + i * srcSize * 1.3)
-    srcW = Math.max(srcW, line.w)
-  })
+  ctx.textAlign = 'left'
+  ctx.fillText(srcText.text, L, srcTop)
+  const srcW = srcText.w
   ctx.strokeStyle = 'rgba(58,74,106,0.5)'
   ctx.setLineDash([3, 5])
   ctx.lineWidth = 1.5
   ctx.beginPath()
-  const lastY = srcTop + (srcLines.length - 1) * srcSize * 1.3 + 6
+  const lastY = srcTop + 6
   ctx.moveTo(L, lastY)
   ctx.lineTo(L + srcW, lastY)
   ctx.stroke()
@@ -2099,9 +2127,9 @@ export function drawSheetBack(
   if (o.stamp && r.back.stamp) {
     const free0 = y + B * 0.6
     const free1 = srcTop - srcSize * 1.4
-    const size = Math.max(170, Math.min(340, free1 - free0, PAGE_W * 0.42))
-    const cy = Math.max(free0 + size * 0.45, (free0 + free1) / 2)
-    drawEraStamp(ctx, PAGE_W * 0.64, cy, size, r.back.stamp, { lang: s.lang, date: s.dateLine, paper: hex(tint), seed: seedFrom(r.back.stamp.text) })
+    const size = Math.max(150, Math.min(340, free1 - free0, (R - L) * 0.5))
+    const cy = Math.min(free1 - size * 0.5, Math.max(free0 + size * 0.5, (free0 + free1) / 2))
+    drawEraStamp(ctx, L + (R - L) * 0.64, cy, size, r.back.stamp, { lang: s.lang, date: s.dateLine, paper: hex(tint), seed: seedFrom(r.back.stamp.text) })
   }
   ctx.restore()
   return { source: { u0: L / PAGE_W, u1: (L + srcW) / PAGE_W, v0: (srcTop - srcSize) / H, v1: (lastY + 8) / H } }
