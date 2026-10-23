@@ -36,6 +36,8 @@ export interface ArrivalCtx {
   typewriterPose: PoseFn | null
   /** False once the world was rebuilt or the stage stopped: an arrival then stops quietly. */
   alive(): boolean
+  /** True while skip() is finishing the arrival: then no key sounds (a hundred at once). */
+  skipping(): boolean
 }
 
 const Y_AXIS = new THREE.Vector3(0, 1, 0)
@@ -236,9 +238,14 @@ async function typewriter(ctx: ArrivalCtx): Promise<void> {
   sheet.setFold('flat')
   sheet.setSeal(false)
   if (t.idleSheet) t.idleSheet.visible = false
-  const lines = metrics.typed.length ? metrics.typed : [{ top: 0.3, bottom: 0.34, x0: 0.08, x1: 0.92, chars: 30 }]
+  // the form fields were typed before it reached us; the message is struck here, key by key
+  const lines = metrics.typed.filter((l) => !l.field && l.keys.length > 0)
   const first = lines[0]
-  if (!first) return
+  if (!first) {
+    if (t.idleSheet) t.idleSheet.visible = true
+    placeAtRest(ctx)
+    return
+  }
   sheet.setReveal({ top: first.top, bottom: first.bottom, x0: first.x0, x1: first.x1, u: first.x0 }, metrics.tint)
   setFeed(0)
   sheet.group.visible = true
@@ -246,45 +253,73 @@ async function typewriter(ctx: ArrivalCtx): Promise<void> {
     if (t.carriage) t.carriage.position.copy(carriageHome)
     if (t.idleSheet) t.idleSheet.visible = true
   }
+  const cue = (name: 'key' | 'space' | 'ding' | 'return') => {
+    if (!ctx.skipping()) ctx.cue(name)
+  }
   try {
     void ctx.rig.goTo(ctx.typewriterPose, 600, ease.inOut)
     await tw.wait(200)
-    ctx.cue('arrive')
-    // the form is rolled in to its first line, the carriage pushed over to the margin
+    // the form is rolled in to its first line (the platen's ratchet), the carriage set at the margin
+    cue('return')
     const shift0 = (0.5 - first.x0) * 0.21
     await tw.run(300, (k) => {
       shift = shift0 * k
       setFeed((first.bottom + 0.012) * k)
     }, ease.inOut)
-    // one budget for the whole message: the carriage returns, then the letters share the rest
-    const chars = lines.reduce((n, l) => n + l.chars, 0)
-    const returnMs = 55
-    const typeMs = Math.max(450, 1050 - returnMs * lines.length)
+    // one budget for the message, shared by its keys: brisk for a long telegram, never a blur
+    const keys = lines.reduce((n, l) => n + l.keys.length, 0)
+    const perKey = Math.min(32, Math.max(17, 3000 / Math.max(1, keys)))
+    let jitter = 0.37
+    const nextJitter = () => {
+      jitter = (jitter * 9301 + 0.4927) % 1
+      return 0.75 + jitter * 0.55
+    }
     for (let i = 0; i < lines.length; i++) {
       const L = lines[i]
       if (!L || !ctx.alive()) return
       const f = Math.max(feed, L.bottom + 0.012)
       if (f > feed + 0.001) {
         const f0 = feed
-        await tw.run(60, (k) => setFeed(lerp(f0, f, k)), ease.out)
+        await tw.run(70, (k) => setFeed(lerp(f0, f, k)), ease.out)
       }
-      const ms = Math.max(60, (typeMs * L.chars) / Math.max(1, chars))
-      ctx.cue('type')
-      await tw.run(ms, (k) => {
-        const u = lerp(L.x0, L.x1, k)
-        sheet.setReveal({ top: L.top, bottom: L.bottom, x0: L.x0, x1: L.x1, u }, metrics.tint)
-        shift = (0.5 - u) * 0.21
+      // each key's moment on the line; the reveal and its cue happen together, on the stage clock
+      const at: number[] = []
+      let total = 0
+      for (const key of L.keys) {
+        at.push(total)
+        total += perKey * (key.space ? 1.35 : nextJitter())
+      }
+      let next = 0
+      let dinged = false
+      const strike = (elapsed: number) => {
+        while (next < L.keys.length && (at[next] ?? Infinity) <= elapsed + 1e-6) {
+          const key = L.keys[next]
+          next++
+          if (!key) continue
+          sheet.setReveal({ top: L.top, bottom: L.bottom, x0: L.x0, x1: L.x1, u: key.u }, metrics.tint)
+          shift = (0.5 - key.u) * 0.21
+          cue(key.space ? 'space' : 'key')
+          // the margin bell rings some eight letters before a full line's end
+          if (!dinged && L.x1 >= 0.8 && key.u >= 0.72) {
+            dinged = true
+            cue('ding')
+          }
+        }
         pose()
-      })
-      const next = lines[i + 1]
-      const to = next ? (0.5 - next.x0) * 0.21 : 0
-      if (L.x1 - L.x0 > 0.35) ctx.cue('ding')
+      }
+      await tw.run(total, (k) => strike(k * total))
+      strike(Infinity)
+      const nextLine = lines[i + 1]
+      if (!nextLine) break
+      // carriage return and line feed
+      cue('return')
       const s0 = shift
-      await tw.run(returnMs, (k) => {
+      const to = (0.5 - nextLine.x0) * 0.21
+      await tw.run(150, (k) => {
         shift = lerp(s0, to, k)
         pose()
       }, ease.out)
-      if (L.x1 - L.x0 > 0.35) ctx.shake(0.0015)
+      ctx.shake(0.0012)
     }
     sheet.setReveal(null)
     // pulled out of the machine, then laid on the baize

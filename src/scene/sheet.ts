@@ -195,6 +195,8 @@ interface Block {
   /** Extra letter spacing in units (Latin only). */
   track?: number
   alpha?: number
+  /** A form field typed before the arrival (From, To, No.): shown at once, not struck key by key. */
+  field?: boolean
 }
 
 function makeBlock(ctx: Ctx, o: Omit<Block, 'lines'> & { maxW: number }): Block {
@@ -1141,7 +1143,7 @@ function telegramLayout(ctx: Ctx, env: Env): Layout {
     text: hi ? 'अति आवश्यक' : 'MOST IMMEDIATE', face: hi ? FACE.deva : FACE.print, size: hi ? 34 : 28, weight: '', lh: 40, x: L + 22, y: rowY, color: red, kind: 'print', align: 'left', firstIndent: 0, checkable: false, bold: 0.035, track: hi ? 0 : 4, maxW: 420,
   })
   const serial = makeBlock(ctx, {
-    text: `${hi ? 'सं.' : 'No.'} ${s.serial ?? '3408-S'}`, face: typed, size: 36, weight: '', lh: 40, x: R, y: rowY, color: ink, kind: 'type', align: 'right', firstIndent: 0, checkable: true, maxW: 300,
+    text: `${hi ? 'सं.' : 'No.'} ${s.serial ?? '3408-S'}`, face: typed, size: 36, weight: '', lh: 40, x: R, y: rowY, color: ink, kind: 'type', align: 'right', firstIndent: 0, checkable: true, maxW: 300, field: true,
   })
   blocks.push(prio, serial)
   // From and To, typed on dotted rules, with the Received stamp beside them
@@ -1156,7 +1158,7 @@ function telegramLayout(ctx: Ctx, env: Env): Layout {
       text: hi ? lab : lab.toUpperCase(), face: hi ? FACE.deva : FACE.print, size: hi ? 28 : 22, weight: '', lh: 30, x: L, y, color: print, kind: 'print', align: 'left', firstIndent: 0, checkable: false, track: hi ? 0 : 3, maxW: 100,
     }))
     const v = makeBlock(ctx, {
-      text: val, face: typed, size: Math.min(40, B * 0.72), weight: '', lh: 46, x: valueX, y, color: ink, kind: 'type', align: 'left', firstIndent: 0, checkable: true, maxW: valueR - valueX,
+      text: val, face: typed, size: Math.min(40, B * 0.72), weight: '', lh: 46, x: valueX, y, color: ink, kind: 'type', align: 'left', firstIndent: 0, checkable: true, maxW: valueR - valueX, field: true,
     })
     blocks.push(v)
     for (let i = 0; i < v.lines.length; i++) rules.push([valueX, v.y + i * v.lh + 12])
@@ -1398,6 +1400,12 @@ function compose(ctx: Ctx, s: SheetSpec, B: number): Layout {
 
 const totalH = (l: Layout) => l.height + FOOT + BOTTOM
 
+export interface TypedKey {
+  /** Page u just past this key's letter: the reveal edge once it is struck. */
+  u: number
+  space: boolean
+}
+
 export interface TypedLine {
   /** Page v (0 top … 1 bottom) of the line's top and bottom. */
   top: number
@@ -1406,6 +1414,28 @@ export interface TypedLine {
   x0: number
   x1: number
   chars: number
+  /** A pre-typed form field (From, To, No.), shown at once. */
+  field: boolean
+  /** Every key struck along the line, in order: letters (a Devanagari cluster counts as one) and spaces. */
+  keys: TypedKey[]
+}
+
+const MARK = /[\u0900-\u0903\u093A-\u094F\u0951-\u0957\u0962\u0963\u200C\u200D]/
+
+/** A word as typewriter keys: each letter, with Devanagari signs and conjuncts kept on their letter. */
+export function keyClusters(word: string): string[] {
+  const out: string[] = []
+  for (const ch of word) {
+    const prev = out[out.length - 1]
+    if (prev !== undefined && (MARK.test(ch) || prev.endsWith('\u094D'))) out[out.length - 1] = prev + ch
+    else out.push(ch)
+  }
+  return out
+}
+
+/** The letter keys (no spaces) a text is typed with, in order. */
+export function typedKeys(text: string): string[] {
+  return text.split(/\s+/).filter(Boolean).flatMap(keyClusters)
 }
 
 export interface SheetMetrics {
@@ -1457,10 +1487,33 @@ export function measureSheet(ctx: Ctx, s: SheetSpec, aspect?: number): SheetMetr
     const typed: TypedLine[] = []
     for (const b of lay.blocks) {
       if (b.kind !== 'type') continue
+      ctx.font = font(b.face, b.size, b.weight)
       b.lines.forEach((line, i) => {
         const y = b.y + i * b.lh
         const x = lineLeft(b, i)
-        typed.push({ top: (y - b.size * 0.95) / H, bottom: (y + b.size * 0.35) / H, x0: (x - 4) / PAGE_W, x1: (x + line.w + 6) / PAGE_W, chars: line.toks.reduce((n, t) => n + t.e - t.s + 1, 0) })
+        // where each key's letter ends, measured the way paintBlock strikes it
+        const keys: TypedKey[] = []
+        line.toks.forEach((t, j) => {
+          if (j > 0) keys.push({ u: (x + t.x - 2) / PAGE_W, space: true })
+          const word = b.text.slice(t.s, t.e)
+          const perChar = !isDeva(word)
+          let prefix = ''
+          let w = 0
+          for (const c of keyClusters(word)) {
+            prefix += c
+            w = perChar ? w + ctx.measureText(c).width : ctx.measureText(prefix).width
+            keys.push({ u: (x + t.x + w + 1.5) / PAGE_W, space: false })
+          }
+        })
+        typed.push({
+          top: (y - b.size * 0.95) / H,
+          bottom: (y + b.size * 0.35) / H,
+          x0: (x - 4) / PAGE_W,
+          x1: (x + line.w + 6) / PAGE_W,
+          chars: keys.length,
+          field: b.field === true,
+          keys,
+        })
       })
     }
     typed.sort((p, q) => p.top - q.top || p.x0 - q.x0)
