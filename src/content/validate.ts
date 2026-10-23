@@ -78,6 +78,10 @@ export function wordLimits(era: Era): string[] {
     if (list.length > max) out.push(`epilogue: ${field} too many paragraphs (${list.length}, max ${max})`)
     list.forEach((p, i) => cap('epilogue', `${field}[${i}]`, p, 28))
   }
+  for (const k of ['caught', 'survived'] as const) {
+    cap(era.id, `endings.${k}.stamp`, era.endings?.[k]?.stamp, 3)
+    cap(era.id, `endings.${k}.title`, era.endings?.[k]?.title, 9)
+  }
   paras('survived', 3)
   paras('caught', 2)
   return out
@@ -221,6 +225,12 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
     refs(r.id, 'receipt', [r.source], true)
   }
 
+  if (era.endings) {
+    for (const k of ['caught', 'survived'] as const) {
+      l10n(era.id, `endings.${k}.stamp`, era.endings[k]?.stamp)
+      l10n(era.id, `endings.${k}.title`, era.endings[k]?.title)
+    }
+  }
   era.epilogue.survived.forEach((p, i) => l10n('epilogue', `survived[${i}]`, p))
   era.epilogue.caught.forEach((p, i) => l10n('epilogue', `caught[${i}]`, p))
   refs('epilogue', 'epilogue', era.epilogue.sources, true)

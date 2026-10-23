@@ -7,7 +7,10 @@ import { hodson, hunter, jl, low, majumdar, mh, sen, trial } from './sources.js'
 // Sen p.113 (trial, exile, death 7 Nov 1862); Trial c. pp.91-98, JL pp.93-94, MH pp.72-73 and
 // Sen p.89 (atrocities on both sides). Sen p.411 and Majumdar p.237 (the debate over the name) stay
 // in the source list for the end card.
-// caught: MH pp.72-73 (reprisals, false witnesses); Low II p.489 (the first batch, "two hundred and
+// caught[0] (one consequence line, neutral about which mistake was made): Sen pp.105-10 and
+// Hodson pp.331-48 (Delhi fell in September); MH pp.72-73 ("the gallows slew those who had escaped
+// the sword"); Low II p.489 and Hunter I pp.283-84 (convicted rebels shipped to Port Blair).
+// caught[1] (optional, behind a tap): Low II p.489 (the first batch, "two hundred and
 // fifty mutineers", sailed from Calcutta on 4 March 1858; over 2,000 by the end of 1858); Hunter I
 // pp.283-84 (the settlement was set up in 1858 because of the Mutiny's life prisoners).
 export const epilogue: Epilogue = {
@@ -27,8 +30,8 @@ export const epilogue: Epilogue = {
   ],
   caught: [
     {
-      en: "Your stamp let a Firangi paper through. After Delhi fell, 'the gallows slew those who had escaped the sword', and 'false witnesses abounded'.",
-      hi: "आपकी मुहर से फ़िरंगी का काग़ज़ आगे निकल गया। दिल्ली गिरी तो 'जो तलवार से बचे, उन्हें फाँसी ने मारा', और 'हर तरफ़ झूठे गवाह थे'।",
+      en: 'Delhi fell in September; its rebels went to the gallows or the Kala Pani.',
+      hi: 'सितंबर में दिल्ली गिरी; उसके बाग़ी फाँसी चढ़े या काला पानी भेजे गए।',
     },
     {
       en: 'Convicts of the rising were shipped to Port Blair, the Kala Pani. The first sailed from Calcutta on 4 March 1858; by year end, over 2,000 were there.',

@@ -87,6 +87,10 @@ const era: Era = {
       source: { id: 's1', loc: 'p. 20' },
     },
   ],
+  endings: {
+    caught: { stamp: { en: 'Caught', hi: 'पकड़े गए' }, title: { en: 'The forger got through', hi: 'जालसाज़ निकल गया' } },
+    survived: { stamp: { en: 'Cleared', hi: 'पास' }, title: { en: 'Every letter checked out', hi: 'हर चिट्ठी परखी गई' } },
+  },
   epilogue: {
     survived: [{ en: 'The city endured.', hi: 'शहर टिका रहा।' }],
     caught: [{ en: 'The forgery was found.', hi: 'जालसाज़ी पकड़ी गई।' }],

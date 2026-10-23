@@ -115,3 +115,6 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - Credits are one small line inside the home card.
 - No modern UI components (gradient buttons, pills, round icon buttons). Every control is a period
   object: paper, ink stamp, brass, wax seal. Bigger on desktop.
+- Opening the site goes straight to one main page: a period paper on the desk with the story, the
+  chapter choice, who you are, the forger, and "how long can you hold out" (7/10/14 days). No
+  separate language, setup or intro screens. Each era has its own ending stamp and heading.

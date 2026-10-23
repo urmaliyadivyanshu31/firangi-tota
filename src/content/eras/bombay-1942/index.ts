@@ -38,6 +38,16 @@ const era: Era = {
   rules,
   messages,
   receipts,
+  endings: {
+    caught: {
+      stamp: { en: 'Raided', hi: 'छापा' },
+      title: { en: 'Police at the door; the transmitter goes dark', hi: 'दरवाज़े पर पुलिस, रेडियो ख़ामोश' },
+    },
+    survived: {
+      stamp: { en: 'Still on air', hi: 'प्रसारण जारी' },
+      title: { en: 'Every word that went out was true', hi: 'जो भी रेडियो पर गया, सच था' },
+    },
+  },
   epilogue,
 }
 

@@ -39,6 +39,18 @@ const era: Era = {
   messages,
   receipts,
   epilogue,
+  // Ending stamp and heading. The caught title holds for any mistake: a forgery passed,
+  // a genuine telegram rejected, or the agarbatti burning out.
+  endings: {
+    caught: {
+      stamp: { en: 'Rumour out', hi: 'अफ़वाह फैली' },
+      title: { en: 'A rumour ran ahead of the truth', hi: 'एक अफ़वाह सच से आगे निकल गई' },
+    },
+    survived: {
+      stamp: { en: 'Truth delivered', hi: 'सच पहुँचा' },
+      title: { en: 'Only true telegrams left your desk', hi: 'आपकी मेज़ से सिर्फ़ सच्चे तार निकले' },
+    },
+  },
 }
 
 export default era

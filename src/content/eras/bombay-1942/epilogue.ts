@@ -17,8 +17,8 @@ export const epilogue: Epilogue = {
   ],
   caught: [
     {
-      en: 'Your stamp put the Firangi Tota on air. The Special Branch came up the stairs, and you were arrested at the set.',
-      hi: 'आपकी मुहर से फ़िरंगी तोता रेडियो पर पहुँच गया। स्पेशल ब्रांच सीढ़ियाँ चढ़ आई, और आप मशीन के पास ही पकड़े गए।',
+      en: 'Police break in. You are arrested at the set and jailed in Yerwada.',
+      hi: 'पुलिस घुस आती है। आप मशीन के पास पकड़े जाते हैं, फिर यरवदा जेल।',
     },
     {
       en: 'So it ended for the real announcer too: Usha Mehta got four years and left Yerwada in April 1946. Over 60,000 were arrested by year’s end.',
