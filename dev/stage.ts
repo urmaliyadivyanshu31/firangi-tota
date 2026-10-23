@@ -2,13 +2,16 @@
 //   ?tier=low|mid|high  force a tier       ?debug     tier, fps, draw calls, triangles, DPR
 //   ?reduced            reduced motion     ?fallback  the 2D fallback
 //   ?shot=stamped|read|caught  script a state for screenshots; sets window.__devDone when settled
+//   ?era=<id>           that era's desk (the sample room for an era without one; ?era=sample forces it)
 import type { EraId } from '../src/content/types'
 import { STAGE_LOST_EVENT, loadStage, mountFallback, type Stage } from '../src/scene/index'
 import { sampleDressing } from '../src/scene/eras/_sample'
+import { dressingFor } from '../src/scene/eras/index'
 
 const q = new URLSearchParams(location.search)
 const el = document.getElementById('stage') as HTMLElement
-const era = (q.get('era') ?? 'delhi-1857') as EraId
+const eraParam = q.get('era') ?? 'delhi-1857'
+const era = (eraParam === 'sample' ? 'delhi-1857' : eraParam) as EraId
 const reduced = q.has('reduced') || matchMedia('(prefers-reduced-motion: reduce)').matches
 const shot = q.get('shot')
 const w = window as unknown as { __devDone?: boolean; __devStage?: Stage }
@@ -34,7 +37,7 @@ async function boot() {
     stage.dispose()
     mountFallback(el, era)
   })
-  stage.setEra(sampleDressing)
+  stage.setEra(eraParam === 'sample' ? sampleDressing : dressingFor(era))
   for (const b of document.querySelectorAll<HTMLButtonElement>('#bar button')) {
     b.onclick = () => {
       const act = b.dataset.act

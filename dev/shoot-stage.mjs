@@ -1,12 +1,14 @@
 // Screenshots of the stage preview at 390×844 (DPR 3) per tier, plus the reading shot, the caught
 // beat, the 2D fallback and a 360×740 desk shot. Start the dev server first:
 //   npx vite --port 5199 --strictPort &   node dev/shoot-stage.mjs
+// ERA=<id> shoots that era's desk; OUT=<dir> and ONLY=<name,...> pick the folder and the shots.
 // Prints the debug stats (draw calls, triangles, DPR) for each tier as JSON.
 import { mkdirSync } from 'node:fs'
 import { chromium } from '@playwright/test'
 
 const BASE = process.env.BASE ?? 'http://localhost:5199'
 const OUT = process.env.OUT ?? 'docs/screens/stage'
+const ERA = process.env.ERA ? `&era=${process.env.ERA}` : ''
 mkdirSync(OUT, { recursive: true })
 
 const browser = await chromium.launch({
@@ -30,6 +32,7 @@ const shots = [
   { name: 'low-read', query: 'tier=low&shot=read' },
   { name: 'fallback-2d', query: 'fallback&shot=1' },
   { name: 'high', query: 'tier=high&shot=stamped', size: [360, 740] },
+  { name: 'low', query: 'tier=low&shot=stamped', size: [360, 740] },
 ]
 
 const only = process.env.ONLY ? process.env.ONLY.split(',') : null
@@ -40,7 +43,7 @@ for (const s of shots.filter((x) => !only || only.includes(x.name))) {
   const errors = []
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
-  await page.goto(`${BASE}/dev/stage.html?debug&${s.query}`)
+  await page.goto(`${BASE}/dev/stage.html?debug&${s.query}${ERA}`)
   await page.waitForFunction(() => window.__devDone === true, null, { timeout: 30000 })
   await page.waitForTimeout(700) // let the debug overlay refresh its numbers
   const key = `${s.name}-${w}x${h}`
