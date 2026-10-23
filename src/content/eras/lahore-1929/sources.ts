@@ -142,6 +142,28 @@ export const sources: Source[] = [
     year: '2016',
     url: 'https://timesofindia.indiatimes.com/blogs/toi-edit-page/a-nation-betrayed/',
   },
+  // Added in the story pass (2026-10-24) for the year's famous moments outside the dossier.
+  {
+    id: 'collett-2005',
+    author: 'The Tribune (Spectrum), introducing excerpts from Nigel Collett',
+    title: "Blood on that Baisakhi, excerpt from The Butcher of Amritsar (The Tribune, Spectrum, 5 June 2005)",
+    year: '2005',
+    url: 'https://www.tribuneindia.com/2005/20050605/spectrum/main1.htm',
+  },
+  {
+    id: 'pubdiv-1928',
+    author: 'Publications Division, Government of India',
+    title: "Gandhi timeline, 1928: 'Simon Go Back' (the Calcutta Congress compromise and the 31 December 1929 deadline)",
+    year: 'n.d.',
+    url: 'https://www.publicationsdivision.nic.in/catalog/view/theme/default/images/new_ngm_final/timeline/pages/page12.html',
+  },
+  {
+    id: 'clpr-purna-swaraj',
+    author: 'Centre for Law and Policy Research (constitutionofindia.net)',
+    title: 'Declaration of Purna Swaraj (Indian National Congress): resolution of the Lahore session, December 1929',
+    year: 'n.d.',
+    url: 'https://www.constitutionofindia.net/historical-constitution/declaration-of-purna-swaraj-indian-national-congress-1930/',
+  },
   {
     id: 'pti-2018',
     author: 'Press Trust of India',
