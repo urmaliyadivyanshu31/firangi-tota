@@ -136,6 +136,13 @@ export const sources: Source[] = [
     url: 'https://mainstreamweekly.net/article6297.html',
   },
   {
+    id: 'vaidik-2016',
+    author: 'Aparna Vaidik',
+    title: 'A nation betrayed? (Times of India, edit page, 25 February 2016)',
+    year: '2016',
+    url: 'https://timesofindia.indiatimes.com/blogs/toi-edit-page/a-nation-betrayed/',
+  },
+  {
     id: 'pti-2018',
     author: 'Press Trust of India',
     title: "Pak displays Bhagat Singh's case file for the first time (Business Standard, 26 March 2018)",

@@ -4,7 +4,8 @@ import type { L10n, Message } from '../../types'
 // Day 5 = Sat 6 Apr, day 6 = Sun 7 Apr, day 7 = Mon 8 Apr, day 8 = Tue 9 Apr,
 // day 9 = Wed 10 Apr, day 10 = Thu 11 Apr, day 11 = Fri 12 Apr, day 14 = Mon 15 Apr.
 // Messages without onDay must hold true on every day of the window, so they never
-// mention the Assembly action or the raid.
+// mention the Assembly action or the raid. Tells a player can only catch through a
+// rulebook rule carry ruleId, so the engine never shows them (or their twin) earlier.
 
 const POST_BOX: L10n = { en: 'Post box', hi: 'पोस्ट बॉक्स' }
 const PUBLIC: L10n = { en: 'The public', hi: 'आम जनता' }
@@ -12,6 +13,7 @@ const VILLAGER: L10n = { en: 'Villager', hi: 'विलेजर' }
 const SWAMI: L10n = { en: 'Swami', hi: 'स्वामी' }
 const DYAL: L10n = { en: 'Dyal', hi: 'दयाल' }
 const PANDITJI: L10n = { en: 'Panditji', hi: 'पंडितजी' }
+const BC: L10n = { en: 'B.C.', hi: 'बी.सी.' }
 const BALRAJ_CIC: L10n = { en: 'Balraj, Commander-in-Chief', hi: 'बलराज, कमांडर-इन-चीफ़' }
 
 const SCHEDULE = { id: 'noorani-1996', loc: 'Ordinance No. III of 1930, Schedule, pp. 295–296' }
@@ -20,16 +22,17 @@ const SAUNDERS_CH = { id: 'noorani-1996', loc: "ch. 'Saunders Murder', pp. 19–
 const IRWIN_PINK = { id: 'noorani-1996', loc: 'p. 45, Irwin to the Secretary of State, 19 April 1929' }
 const ASSEMBLY_CH = { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 43–44" }
 const RAID_CH = { id: 'noorani-1996', loc: "ch. 'Hour of Trial', pp. 57–64" }
+const GHOSH = { id: 'ghosh-1945', loc: 'pp. 34–35' }
 
 const NOTICE_DEC_EN = (sig: string) =>
-  `HINDUSTAN SOCIALIST REPUBLICAN ARMY. NOTICE. J.P. Sunders is dead; Lala Lajpat Rai is avenged … Beware, Ye Tyrants; Beware … Sorry for the death of a man. But in this man has died the representative of an institution which is so cruel, lowly and so base that it must be abolished … 'Long Live The Revolution'! Sd/- ${sig}, Dated 18th December, 1928.`
+  `HINDUSTAN SOCIALIST REPUBLICAN ARMY. NOTICE. J.P. Saunders is dead; Lala Lajpat Rai is avenged … Beware, Ye Tyrants; Beware … Sorry for the death of a man. But in this man has died the representative of an institution which is so cruel, lowly and so base that it must be abolished … 'Long Live The Revolution'! Sd/- ${sig}, Dated 18th December, 1928.`
 const NOTICE_DEC_HI = (sig: string) =>
-  `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। जे.पी. सन्डर्स मर गया; लाला लाजपत राय का बदला ले लिया गया … ज़ालिमो, सावधान; सावधान … एक इंसान की मौत का हमें अफ़सोस है। पर इस इंसान के साथ उस व्यवस्था का एक नुमाइंदा मरा है जो इतनी क्रूर, नीच और घटिया है कि उसे मिटा देना ही चाहिए … 'इंक़लाब ज़िंदाबाद'! दस्तख़त: ${sig}, तारीख़ 18 दिसंबर 1928।`
+  `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। जे.पी. सॉन्डर्स मर गया; लाला लाजपत राय का बदला ले लिया गया … ज़ालिमो, सावधान; सावधान … एक इंसान की मौत का हमें अफ़सोस है। पर इस इंसान के साथ उस व्यवस्था का एक नुमाइंदा मरा है जो इतनी क्रूर, नीच और घटिया है कि उसे मिटा देना ही चाहिए … 'इंक़लाब ज़िंदाबाद'! दस्तख़त: ${sig}, तारीख़ 18 दिसंबर 1928।`
 
 const NOTICE_23_EN = (about: string) =>
   `The Hindustan Socialist Republican Army. Notice. No more secrets No more Special Guess. About ${about} of 17 December. JP Saunders is dead! Lala Lajpat Rai is avenged!! Under the rules and regulations of the H.S.R.A. (Rule 10 B.R.C) it is hereby notified that it was retaliatory action of none but a direct political nature … everybody is hereby requested to abstain from offering any sort of assistance to our enemy the police in finding out our clues. Anybody acting contrary will be severely dealt with. Long Live Revolution. Balraj, Commander-in-chief.`
 const NOTICE_23_HI = (about: string) =>
-  `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। अब कोई राज़ नहीं, अब कोई 'स्पेशल गेस' नहीं। 17 दिसंबर की ${about} के बारे में। जे.पी. सॉन्डर्स मर गया! लाला लाजपत राय का बदला ले लिया गया!! एच.एस.आर.ए. के नियमों (रूल 10 बी.आर.सी.) के तहत बताया जाता है कि यह सीधे-सीधे राजनीतिक बदले की कार्रवाई थी … सबसे गुज़ारिश है कि हमारी दुश्मन पुलिस को हमारे सुराग़ ढूँढने में कोई मदद न दें। जो ऐसा करेगा, उससे सख़्ती से निपटा जाएगा। इंक़लाब ज़िंदाबाद। बलराज, कमांडर-इन-चीफ़।`
+  `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। अब कोई राज़ नहीं, अब कोई 'स्पेशल गेस' नहीं। 17 दिसंबर की ${about} के बारे में। जे.पी. सॉन्डर्स मर गया! लाला लाजपत राय का बदला ले लिया गया!! एच.एस.आर.ए. के नियमों (रूल 10 बी.आर.सी.) के तहत बताया जाता है कि यह सीधे-सीधे राजनीतिक बदले की कार्रवाई थी … सबसे गुज़ारिश है कि हमारी दुश्मन पुलिस को हमारे सुराग़ ढूँढने में कोई मदद न दें। जो इसके ख़िलाफ़ चलेगा, उससे सख़्ती से निपटा जाएगा। इंक़लाब ज़िंदाबाद। बलराज, कमांडर-इन-चीफ़।`
 
 const LEAFLET_EN = (heading: string) =>
   `${heading} (NOTICE). It takes a loud voice to make the deaf hear … the Government is thrusting upon us new repressive measures like the Public Safety and the Trade Disputes Bill … Let the representatives of the people return to their constituencies and prepare the masses for the coming revolution … it is easy to kill individuals but you cannot kill the ideas … Long Live the Revolution. Signed, Balraj, Commander-in-Chief.`
@@ -114,19 +117,19 @@ export const messages: Message[] = [
     tier: 1,
     real: false,
     pair: 'lh-alias-m',
-    from: { en: 'R', hi: 'आर' },
+    from: { en: 'M', hi: 'एम' },
     to: POST_BOX,
     text: {
-      en: 'If a letter comes for me, do not send it on. Keep it until Panditji asks for it. — R',
-      hi: 'अगर मेरे लिए कोई चिट्ठी आए, तो आगे मत भेजना। जब तक पंडितजी न माँगें, अपने पास रखना। — आर',
+      en: 'If a letter comes for me, do not send it on. Keep it until Babuji asks for it. — M',
+      hi: 'अगर मेरे लिए कोई चिट्ठी आए, तो आगे मत भेजना। जब तक बाबूजी न माँगें, अपने पास रखना। — एम',
     },
-    checks: { en: ['— R'], hi: ['— आर'] },
+    checks: { en: ['Babuji'], hi: ['बाबूजी'] },
     tells: [
       {
         kind: 'name',
         explain: {
-          en: "Rajguru's party name was 'M'. The CID simply took the first letter of his name.",
-          hi: "राजगुरु का पार्टी नाम 'एम' था। सीआईडी ने बस उनके नाम का पहला अक्षर उठा लिया।",
+          en: "Azad's party name was 'Panditji'. 'Babuji' is on no list of party names; the forger guessed.",
+          hi: "आज़ाद का पार्टी नाम 'पंडितजी' था। 'बाबूजी' किसी भी सूची में नहीं है; जालसाज़ ने अंदाज़ा लगाया।",
         },
         factId: 'aliases',
         sources: [SCHEDULE],
@@ -214,11 +217,11 @@ export const messages: Message[] = [
       {
         kind: 'date',
         explain: {
-          en: "The shooting was on Monday 17 December 1928. '15 December' is a misprint in a 1972 history book, so this forger studies from careless books.",
-          hi: "गोली 17 दिसंबर 1928, सोमवार को चली थी। '15 दिसंबर' 1972 की एक इतिहास की किताब में ग़लती से छपा है। यह जालसाज़ लापरवाह किताबों से पढ़ता है।",
+          en: 'The shooting was on Monday 17 December 1928, not Saturday the 15th. (Even a 1972 history book prints this wrong date.)',
+          hi: 'गोली 17 दिसंबर 1928, सोमवार को चली थी, 15 तारीख़, शनिवार को नहीं। (1972 की एक इतिहास की किताब में भी यही ग़लत तारीख़ छपी है।)',
         },
         factId: 'saunders',
-        sources: [{ id: 'gupta-1972', loc: 'pp. 114–122' }],
+        sources: [{ id: 'gupta-1972', loc: 'p. 118' }],
       },
     ],
   },
@@ -270,18 +273,18 @@ export const messages: Message[] = [
 
   {
     id: 'lh-notice-dec-g',
-    tier: 3,
+    tier: 2,
     real: true,
     pair: 'lh-notice-dec',
     from: { en: 'Balraj', hi: 'बलराज' },
     to: PUBLIC,
     text: { en: NOTICE_DEC_EN('Balraj'), hi: NOTICE_DEC_HI('बलराज') },
-    checks: { en: ['Sd/- Balraj', '18th December, 1928', 'Sunders'], hi: ['दस्तख़त: बलराज', '18 दिसंबर 1928', 'सन्डर्स'] },
+    checks: { en: ['Sd/- Balraj', '18th December, 1928'], hi: ['दस्तख़त: बलराज', '18 दिसंबर 1928'] },
     document: { sources: [{ id: 'hsra-notice-1928' }] },
     why: {
       text: {
-        en: "This is the real notice the HSRA pasted on Lahore's walls on the night of 18–19 December 1928, in Bhagat Singh's handwriting and signed 'Balraj'. The spelling 'Sunders' is in this transcription; other editions word the notice differently, so a spelling proves nothing either way.",
-        hi: "यह वही असली नोटिस है जो एच.एस.आर.ए. ने 18–19 दिसंबर 1928 की रात लाहौर की दीवारों पर चिपकाया था। यह भगत सिंह की लिखावट में था और इस पर 'बलराज' के दस्तख़त थे। 'सन्डर्स' वाली स्पेलिंग इसी नक़ल में है; दूसरी किताबों में शब्द कुछ अलग हैं, इसलिए स्पेलिंग से कुछ साबित नहीं होता।",
+        en: "This is the real notice the HSRA pasted on Lahore's walls on the night of 18–19 December 1928, in Bhagat Singh's handwriting and signed 'Balraj'. Editions word the notice a little differently; this text follows the shahidbhagatsingh.org transcription.",
+        hi: "यह वही असली नोटिस है जो एच.एस.आर.ए. ने 18–19 दिसंबर 1928 की रात लाहौर की दीवारों पर चिपकाया था। यह भगत सिंह की लिखावट में था और इस पर 'बलराज' के दस्तख़त थे। अलग-अलग किताबों में नोटिस के शब्द थोड़े अलग हैं; यह पाठ shahidbhagatsingh.org की नक़ल से है।",
       },
       sources: [{ id: 'hsra-notice-1928' }, { id: 'noorani-1996', loc: "ch. 'Saunders Murder', p. 23" }],
     },
@@ -303,6 +306,7 @@ export const messages: Message[] = [
           hi: "एच.एस.आर.ए. के नोटिसों पर 'बलराज' के दस्तख़त होते थे। 'बलदेव' मिलता-जुलता है, और जालसाज़ इसी 'मिलते-जुलते' में पकड़े जाते हैं।",
         },
         factId: 'notices',
+        ruleId: 'r-balraj',
         sources: [{ id: 'hsra-notice-1928' }],
       },
     ],
@@ -322,8 +326,8 @@ export const messages: Message[] = [
     checks: { en: ['Feroz Shah Kotla', 'in September'], hi: ['फ़िरोज़शाह कोटला', 'सितंबर में'] },
     why: {
       text: {
-        en: "The HRA renamed itself the Hindustan Socialist Republican Association at a meeting at Feroz Shah Kotla, Delhi, on 8–9 September 1928, on Bhagat Singh's proposal. Panditji was Azad's party name.",
-        hi: "एच.आर.ए. ने 8–9 सितंबर 1928 को दिल्ली के फ़िरोज़शाह कोटला की बैठक में, भगत सिंह के प्रस्ताव पर, अपना नाम हिंदुस्तान सोशलिस्ट रिपब्लिकन एसोसिएशन रखा। 'पंडितजी' आज़ाद का पार्टी नाम था।",
+        en: "The HRA renamed itself the Hindustan Socialist Republican Association at a meeting at Feroz Shah Kotla, Delhi, on 8–9 September 1928. Panditji was Azad's party name.",
+        hi: "एच.आर.ए. ने 8–9 सितंबर 1928 को दिल्ली के फ़िरोज़शाह कोटला की बैठक में अपना नाम हिंदुस्तान सोशलिस्ट रिपब्लिकन एसोसिएशन रखा। 'पंडितजी' आज़ाद का पार्टी नाम था।",
       },
       sources: [{ id: 'chaman-lal-reader', loc: 'introduction' }, { id: 'chaman-lal-2009' }, SCHEDULE],
     },
@@ -344,8 +348,8 @@ export const messages: Message[] = [
       {
         kind: 'date',
         explain: {
-          en: 'The meeting at Feroz Shah Kotla was on 8–9 September 1928. A 1972 history book misprints it as December, and the forger copied the misprint.',
-          hi: 'फ़िरोज़शाह कोटला की बैठक 8–9 सितंबर 1928 को हुई थी। 1972 की एक किताब में ग़लती से दिसंबर छपा है, और जालसाज़ ने वही ग़लती उतार ली।',
+          en: 'The meeting at Feroz Shah Kotla was on 8–9 September 1928. (A 1972 history book makes the same slip and dates the meeting to December.)',
+          hi: 'फ़िरोज़शाह कोटला की बैठक 8–9 सितंबर 1928 को हुई थी। (1972 की एक किताब में भी यही ग़लती है, वहाँ बैठक दिसंबर में बताई गई है।)',
         },
         factId: 'hsra',
         sources: [{ id: 'gupta-1972', loc: 'pp. 114–122' }],
@@ -415,9 +419,9 @@ export const messages: Message[] = [
     why: {
       text: {
         en: "Dyal was one of Sukhdev's party names. Never asking a comrade about his past was the party's code, as Ajoy Ghosh, one of the comrades, later wrote.",
-        hi: "'दयाल' सुखदेव का एक पार्टी नाम था। किसी साथी से उसका अतीत न पूछना पार्टी का नियम था, जैसा बाद में उन्हीं के एक साथी अजय घोष ने लिखा।",
+        hi: "'दयाल' सुखदेव का एक पार्टी नाम था। किसी साथी से उसकी पिछली ज़िंदगी के बारे में न पूछना पार्टी का नियम था, जैसा बाद में उन्हीं के एक साथी अजय घोष ने लिखा।",
       },
-      sources: [SCHEDULE, { id: 'ghosh-1945' }],
+      sources: [SCHEDULE, GHOSH],
     },
   },
   {
@@ -437,9 +441,10 @@ export const messages: Message[] = [
         kind: 'habit',
         explain: {
           en: "The party never asked about a comrade's past. Real name, village, father's name: that is the first line of a police file.",
-          hi: 'पार्टी कभी किसी साथी का अतीत नहीं पूछती थी। असली नाम, गाँव, पिता का नाम: यह तो पुलिस की फ़ाइल की पहली लाइन है।',
+          hi: 'पार्टी कभी किसी साथी से उसकी पिछली ज़िंदगी के बारे में नहीं पूछती थी। असली नाम, गाँव, पिता का नाम: यह तो पुलिस की फ़ाइल की पहली लाइन है।',
         },
-        sources: [{ id: 'ghosh-1945' }, SCHEDULE],
+        ruleId: 'r-past',
+        sources: [GHOSH, SCHEDULE],
       },
     ],
   },
@@ -483,6 +488,7 @@ export const messages: Message[] = [
           en: "A parcel goes only to the person who shows the keys. A 'cousin' with no keys is exactly who that rule was made for.",
           hi: "सामान सिर्फ़ उसी को मिलता है जो चाबियाँ दिखाए। बिना चाबी वाला 'चचेरा भाई' ही तो वह आदमी है जिसके लिए यह नियम बना।",
         },
+        ruleId: 'r-keys',
         sources: [KEYS_EVIDENCE],
       },
     ],
@@ -496,8 +502,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'Since our action in December, constables who know our friend by sight stand at the big railway junctions. Travel only if you must. — Villager',
-      hi: 'दिसंबर वाली हमारी कार्रवाई के बाद से बड़े रेलवे जंक्शनों पर ऐसे सिपाही खड़े हैं जो हमारे दोस्त को पहचानते हैं। बहुत ज़रूरी हो, तभी सफ़र करना। — विलेजर',
+      en: 'Since our action in December, constables who know our friend by sight have been posted at the big railway junctions. Travel only if you must. — Villager',
+      hi: 'दिसंबर वाली हमारी कार्रवाई के बाद से बड़े रेलवे जंक्शनों पर ऐसे सिपाही तैनात किए गए हैं जो हमारे दोस्त को पहचानते हैं। बहुत ज़रूरी हो, तभी सफ़र करना। — विलेजर',
     },
     checks: { en: ['our action', 'big railway junctions'], hi: ['हमारी कार्रवाई', 'बड़े रेलवे जंक्शनों'] },
     why: {
@@ -516,8 +522,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'Since our outrage in December, constables who know our friend by sight stand at the big railway junctions. Travel only if you must. — Villager',
-      hi: 'दिसंबर वाली हमारी वारदात के बाद से बड़े रेलवे जंक्शनों पर ऐसे सिपाही खड़े हैं जो हमारे दोस्त को पहचानते हैं। बहुत ज़रूरी हो, तभी सफ़र करना। — विलेजर',
+      en: 'Since our outrage in December, constables who know our friend by sight have been posted at the big railway junctions. Travel only if you must. — Villager',
+      hi: 'दिसंबर वाली हमारी वारदात के बाद से बड़े रेलवे जंक्शनों पर ऐसे सिपाही तैनात किए गए हैं जो हमारे दोस्त को पहचानते हैं। बहुत ज़रूरी हो, तभी सफ़र करना। — विलेजर',
     },
     checks: { en: ['our outrage'], hi: ['हमारी वारदात'] },
     tells: [
@@ -527,6 +533,7 @@ export const messages: Message[] = [
           en: "No comrade calls his own act an 'outrage'. That was the police and government word; the party said 'action'.",
           hi: "कोई साथी अपने काम को 'वारदात' नहीं कहता। यह पुलिस और सरकार की ज़बान थी; पार्टी 'कार्रवाई' कहती थी।",
         },
+        ruleId: 'r-police-words',
         sources: [{ id: 'chaman-lal-reader', loc: 'document 64' }, ASSEMBLY_CH],
       },
     ],
@@ -540,10 +547,10 @@ export const messages: Message[] = [
     from: PANDITJI,
     to: POST_BOX,
     text: {
-      en: 'Lahore, {weekday}, {date}. Be at the usual place after dark. The man with the keys will find you. — Panditji',
-      hi: 'लाहौर, {weekday}, {date}। अँधेरा होने के बाद रोज़ वाली जगह पहुँचना। चाबियों वाला आदमी तुम्हें ढूँढ लेगा। — पंडितजी',
+      en: 'Dated {weekday}, {date}. Be at the usual place after dark. The man with the keys will find you. — Panditji',
+      hi: 'तारीख़: {weekday}, {date}। अँधेरा होने के बाद हमेशा वाली जगह पहुँचना। चाबियों वाला आदमी तुम्हें ढूँढ लेगा। — पंडितजी',
     },
-    checks: { en: ['Lahore,', 'the keys'], hi: ['लाहौर,', 'चाबियों वाला'] },
+    checks: { en: ['Dated', 'the keys'], hi: ['तारीख़:', 'चाबियों वाला'] },
     why: {
       text: {
         en: "Today's date falls on that weekday, 'Panditji' was Azad's party name, and the keys rule holds. Nothing here is out of place.",
@@ -560,10 +567,10 @@ export const messages: Message[] = [
     from: PANDITJI,
     to: POST_BOX,
     text: {
-      en: 'Lahore, {weekday+1}, {date}. Be at the usual place after dark. The man with the keys will find you. — Panditji',
-      hi: 'लाहौर, {weekday+1}, {date}। अँधेरा होने के बाद रोज़ वाली जगह पहुँचना। चाबियों वाला आदमी तुम्हें ढूँढ लेगा। — पंडितजी',
+      en: 'Dated {weekday+1}, {date}. Be at the usual place after dark. The man with the keys will find you. — Panditji',
+      hi: 'तारीख़: {weekday+1}, {date}। अँधेरा होने के बाद हमेशा वाली जगह पहुँचना। चाबियों वाला आदमी तुम्हें ढूँढ लेगा। — पंडितजी',
     },
-    checks: { en: ['Lahore,'], hi: ['लाहौर,'] },
+    checks: { en: ['Dated'], hi: ['तारीख़:'] },
     tells: [
       {
         kind: 'weekday',
@@ -627,7 +634,7 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: 'The new paper has come: pink, with the heading already printed. Keep it flat and away from the lantern. — Villager',
-      hi: 'नया काग़ज़ आ गया है: गुलाबी, ऊपर हेडिंग पहले से छपी हुई। उसे सीधा रखना और लालटेन से दूर रखना। — विलेजर',
+      hi: 'नया काग़ज़ आ गया है: गुलाबी, ऊपर हेडिंग पहले से छपी हुई। उसे बिना मोड़े रखना और लालटेन से दूर रखना। — विलेजर',
     },
     checks: { en: ['pink', 'printed'], hi: ['गुलाबी', 'छपी हुई'] },
     why: {
@@ -647,7 +654,7 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: 'The new paper has come: plain white, and we will write the heading by hand. Keep it flat and away from the lantern. — Villager',
-      hi: 'नया काग़ज़ आ गया है: सादा सफ़ेद, हेडिंग हम हाथ से लिखेंगे। उसे सीधा रखना और लालटेन से दूर रखना। — विलेजर',
+      hi: 'नया काग़ज़ आ गया है: सादा सफ़ेद, हेडिंग हम हाथ से लिखेंगे। उसे बिना मोड़े रखना और लालटेन से दूर रखना। — विलेजर',
     },
     checks: { en: ['plain white', 'by hand'], hi: ['सादा सफ़ेद', 'हाथ से'] },
     tells: [
@@ -658,6 +665,7 @@ export const messages: Message[] = [
           hi: 'असली नोटिस गुलाबी काग़ज़ पर होते थे और हेडिंग छपी होती थी। सफ़ेद काग़ज़ और हाथ की हेडिंग से हर नक़ल जाली लगती, और सीआईडी यही तो चाहती है।',
         },
         factId: 'notices',
+        ruleId: 'r-pink',
         sources: [IRWIN_PINK],
       },
     ],
@@ -702,6 +710,7 @@ export const messages: Message[] = [
           en: "The real notice says 'the incident of 17 December' and calls it 'action'. 'Outrage' is the police's word; the party never used it about itself.",
           hi: "असली नोटिस में '17 दिसंबर की घटना' लिखा है और इसे 'कार्रवाई' कहा गया है। 'वारदात' पुलिस का शब्द है; पार्टी अपने लिए इसे कभी नहीं लिखती थी।",
         },
+        ruleId: 'r-police-words',
         sources: [{ id: 'chaman-lal-reader', loc: 'document 64' }],
       },
     ],
@@ -747,8 +756,8 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: "Bhagat Singh said the opposite himself: 'We are not the originators of this cry' (letter to the Modern Review, December 1929).",
-          hi: "भगत सिंह ने ख़ुद इसका उल्टा कहा था: 'यह नारा हमने शुरू नहीं किया' (मॉडर्न रिव्यू के संपादक को चिट्ठी, दिसंबर 1929)।",
+          en: "Bhagat Singh said the opposite himself, about this very cry in English, 'Long Live Revolution': 'We are not the originators of this cry' (letter to the Modern Review, December 1929).",
+          hi: "भगत सिंह ने ख़ुद इसका उल्टा कहा था, इसी नारे के अंग्रेज़ी रूप 'लॉन्ग लिव रेवोल्यूशन' के बारे में: 'यह नारा हमने शुरू नहीं किया' (मॉडर्न रिव्यू के संपादक को चिट्ठी, दिसंबर 1929)।",
         },
         sources: [{ id: 'bs-modern-review' }],
       },
@@ -770,8 +779,8 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: "No record from his time says Bhagat Singh wrote this song or called it his. The song the accused are on record singing, in court on 4 October 1929, was a different one: 'Bharat na reh sakega hargiz ghulam khana' (India will never remain a house of slaves).",
-          hi: "उनके समय के किसी रिकॉर्ड में नहीं लिखा कि यह गीत भगत सिंह ने लिखा या इसे अपना कहा। रिकॉर्ड के मुताबिक़ 4 अक्टूबर 1929 को अदालत में आरोपियों ने दूसरा गीत गाया था: 'भारत न रह सकेगा हरगिज़ ग़ुलाम ख़ाना' (भारत कभी ग़ुलामों का घर नहीं रहेगा)।",
+          en: "There is no record from his lifetime that Bhagat Singh wrote this song. The song the accused are on record singing, in court on 4 October 1929, was 'Bharat na reh sakega hargiz ghulam khana' (India will never remain a house of slaves).",
+          hi: "उनके जीवन के किसी रिकॉर्ड में नहीं मिलता कि यह गीत भगत सिंह ने लिखा। रिकॉर्ड के मुताबिक़ 4 अक्टूबर 1929 को अदालत में आरोपियों ने दूसरा गीत गाया था: 'भारत न रह सकेगा हरगिज़ ग़ुलाम ख़ाना' (भारत कभी ग़ुलामों का घर नहीं रहेगा)।",
         },
         sources: [{ id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', p. 101" }],
       },
@@ -780,13 +789,14 @@ export const messages: Message[] = [
 
   // ───────────── Event messages (onDay) ─────────────
 
-  // Day 5, Saturday 6 April: the letter written in Delhi on Friday 5 April reaches Lahore.
+  // Day 8, Tuesday 9 April: the letter written in Delhi on Friday 5 April. Its arrival is
+// undocumented; the letter's own words place receipt after he had gone.
   {
     id: 'lh-letter-g',
     tier: 2,
     real: true,
     pair: 'lh-letter',
-    onDay: 5,
+    onDay: 8,
     from: { en: 'B. S', hi: 'बी. एस' },
     to: { en: 'For Villager', hi: 'विलेजर के लिए' },
     text: {
@@ -797,8 +807,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'bs-letter-sukhdev' }] },
     why: {
       text: {
-        en: "This is Bhagat Singh's real letter to Sukhdev, written on Friday 5 April 1929 at the Sita Ram Bazar house in Delhi. Shiv Verma carried it to Lahore and handed it to Sukhdev, and the police found it on him when they arrested him.",
-        hi: 'यह भगत सिंह की सुखदेव को लिखी असली चिट्ठी है, जो 5 अप्रैल 1929, शुक्रवार को दिल्ली के सीता राम बाज़ार वाले मकान में लिखी गई। शिव वर्मा इसे लाहौर ले गए और सुखदेव को दी। गिरफ़्तारी के वक़्त पुलिस को यह सुखदेव के पास मिली।',
+        en: "This is Bhagat Singh's real letter to Sukhdev, written on Friday 5 April 1929 at the Sita Ram Bazar house in Delhi. Shiv Verma carried it to Lahore for Sukhdev, and the police found it on him when they arrested him.",
+        hi: 'यह भगत सिंह की सुखदेव को लिखी असली चिट्ठी है, जो 5 अप्रैल 1929, शुक्रवार को दिल्ली के सीता राम बाज़ार वाले मकान में लिखी गई। शिव वर्मा इसे सुखदेव के लिए लाहौर ले गए, और गिरफ़्तारी के वक़्त पुलिस को यह सुखदेव के पास मिली।',
       },
       sources: [{ id: 'bs-letter-sukhdev', loc: 'editorial note' }],
     },
@@ -808,7 +818,7 @@ export const messages: Message[] = [
     tier: 1,
     real: false,
     pair: 'lh-letter',
-    onDay: 5,
+    onDay: 8,
     from: { en: 'B. S', hi: 'बी. एस' },
     to: { en: 'For Villager', hi: 'विलेजर के लिए' },
     text: {
@@ -839,14 +849,14 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'Tonight I take Durga, B.C. and Sushila to Delhi, to see our friend for the last time. Keep everything here until I am back. — Villager',
-      hi: 'आज रात मैं दुर्गा, बी.सी. और सुशीला को दिल्ली ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने। मेरे लौटने तक सब कुछ यहीं रखना। — विलेजर',
+      en: 'Tonight I take Durga and Sushila to Delhi, to see our friend for the last time. Keep everything here until I am back. — Villager',
+      hi: 'आज रात मैं दुर्गा और सुशीला को दिल्ली ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने। मेरे लौटने तक सब कुछ यहीं रखना। — विलेजर',
     },
     checks: { en: ['to Delhi', 'the last time'], hi: ['दिल्ली ले जा', 'आख़िरी बार'] },
     why: {
       text: {
-        en: "On the night of Sunday 7 April 1929 Sukhdev took Bhagwati Charan ('B.C.' in the government's list), Durga Devi and Sushila from Lahore to Delhi to see Bhagat Singh 'for the last time'.",
-        hi: "7 अप्रैल 1929, रविवार की रात सुखदेव, भगवती चरण (सरकारी सूची में 'बी.सी.'), दुर्गा देवी और सुशीला को लाहौर से दिल्ली ले गए, ताकि वे भगत सिंह से 'आख़िरी बार' मिल सकें।",
+        en: "On the night of Sunday 7 April 1929 Sukhdev took Durga Devi and Sushila from Lahore to Delhi to see Bhagat Singh 'for the last time'. Villager was Sukhdev's party name.",
+        hi: "7 अप्रैल 1929, रविवार की रात सुखदेव, दुर्गा देवी और सुशीला को लाहौर से दिल्ली ले गए, ताकि वे भगत सिंह से 'आख़िरी बार' मिल सकें। 'विलेजर' सुखदेव का पार्टी नाम था।",
       },
       sources: [{ id: 'chaman-lal-2009' }, { id: 'maclean-durga' }, SCHEDULE],
     },
@@ -860,8 +870,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'Tonight I take Durga, B.C. and Sushila to Lucknow, to see our friend for the last time. Keep everything here until I am back. — Villager',
-      hi: 'आज रात मैं दुर्गा, बी.सी. और सुशीला को लखनऊ ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने। मेरे लौटने तक सब कुछ यहीं रखना। — विलेजर',
+      en: 'Tonight I take Durga and Sushila to Lucknow, to see our friend for the last time. Keep everything here until I am back. — Villager',
+      hi: 'आज रात मैं दुर्गा और सुशीला को लखनऊ ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने। मेरे लौटने तक सब कुछ यहीं रखना। — विलेजर',
     },
     checks: { en: ['to Lucknow'], hi: ['लखनऊ ले जा'] },
     tells: [
@@ -901,25 +911,26 @@ export const messages: Message[] = [
   },
   {
     id: 'lh-hat-f',
-    tier: 3,
+    tier: 1,
     real: false,
     pair: 'lh-hat',
     onDay: 6,
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'This week our friend sat for a photograph at Ramnath\'s in Delhi, in a yellow turban. It is for afterwards. — Villager',
-      hi: 'इस हफ़्ते हमारे दोस्त ने दिल्ली में रामनाथ के यहाँ पीली पगड़ी पहनकर फ़ोटो खिंचवाई। यह बाद के लिए है। — विलेजर',
+      en: 'This week our friend sat for a photograph at Ramnath\'s in Lahore, in a felt hat. It is for afterwards. — Villager',
+      hi: 'इस हफ़्ते हमारे दोस्त ने लाहौर में रामनाथ के यहाँ फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। यह बाद के लिए है। — विलेजर',
     },
-    checks: { en: ['yellow turban'], hi: ['पीली पगड़ी'] },
+    checks: { en: ["Ramnath's in Lahore"], hi: ['लाहौर में रामनाथ'] },
     tells: [
       {
-        kind: 'knowledge',
+        kind: 'place',
         explain: {
-          en: 'No authentic photograph shows Bhagat Singh in a yellow turban. Chaman Lal counts only four original photographs, and the portrait from these days shows a felt hat.',
-          hi: 'किसी असली फ़ोटो में भगत सिंह पीली पगड़ी में नहीं हैं। चमन लाल के मुताबिक़ उनकी सिर्फ़ चार असली तस्वीरें हैं, और इन दिनों की तस्वीर में फ़ेल्ट हैट है।',
+          en: 'Our friend was in Delhi in early April, and Ramnath was a photographer at Kashmere Gate in Delhi. The forger moved the studio to the wrong city.',
+          hi: 'अप्रैल की शुरुआत में हमारा दोस्त दिल्ली में था, और रामनाथ दिल्ली के कश्मीरी गेट के फ़ोटोग्राफ़र थे। जालसाज़ ने दुकान ग़लत शहर में पहुँचा दी।',
         },
-        sources: [{ id: 'chaman-lal-reader', loc: 'introduction' }, { id: 'chaman-lal-2009' }],
+        factId: 'delhi',
+        sources: [{ id: 'chaman-lal-2009' }],
       },
     ],
   },
@@ -944,8 +955,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'hsra-leaflet-1929' }] },
     why: {
       text: {
-        en: "This is the real leaflet that came down from the visitors' gallery of the Central Legislative Assembly on Monday 8 April 1929, as the two bombs went off. 'Balraj' was the pen name Azad signed as Commander-in-Chief, and the Viceroy reported the leaflet was typed on pink paper under the same printed heading as the Lahore notices.",
-        hi: "यह वही असली पर्चा है जो 8 अप्रैल 1929, सोमवार को सेंट्रल लेजिस्लेटिव असेंबली की दर्शक गैलरी से दो बमों के फटते ही नीचे गिरा। 'बलराज' वह नाम था जिससे आज़ाद कमांडर-इन-चीफ़ के तौर पर दस्तख़त करते थे, और वायसराय ने लिखा कि यह पर्चा गुलाबी काग़ज़ पर उसी छपी हेडिंग के नीचे टाइप था जो लाहौर के नोटिसों पर थी।",
+        en: "This is the real leaflet that came down from the visitors' gallery of the Central Legislative Assembly on Monday 8 April 1929, as the two bombs went off. 'Balraj' was the pen name Azad signed as Commander-in-Chief, and the Viceroy reported the leaflet was typed on pink paper under the same printed heading as the Lahore notices. Some editions call it 'the red pamphlet'; the Viceroy's own report says pink.",
+        hi: "यह वही असली पर्चा है जो 8 अप्रैल 1929, सोमवार को सेंट्रल लेजिस्लेटिव असेंबली की दर्शक गैलरी से दो बमों के फटते ही नीचे गिरा। 'बलराज' वह नाम था जिससे आज़ाद कमांडर-इन-चीफ़ के तौर पर दस्तख़त करते थे, और वायसराय ने लिखा कि यह पर्चा गुलाबी काग़ज़ पर उसी छपी हेडिंग के नीचे टाइप था जो लाहौर के नोटिसों पर थी। कुछ किताबें इसे 'लाल पर्चा' कहती हैं; वायसराय की अपनी रिपोर्ट गुलाबी कहती है।",
       },
       sources: [{ id: 'hsra-leaflet-1929' }, IRWIN_PINK, { id: 'yashpal-1955', loc: "'Balraj' as Azad's signature" }],
     },
@@ -971,6 +982,7 @@ export const messages: Message[] = [
           hi: "पार्टी ने सितंबर 1928 में फ़िरोज़शाह कोटला में 'हिंदुस्तान रिपब्लिकन एसोसिएशन' नाम छोड़ दिया था। असली पर्चे की छपी हेडिंग है 'हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी'। सीआईडी की हेडिंग सात महीने पुरानी है।",
         },
         factId: 'hsra',
+        ruleId: 'r-pink',
         sources: [{ id: 'hsra-leaflet-1929' }],
       },
     ],
@@ -986,39 +998,38 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: {
-      en: 'Yesterday, Monday, at about half past twelve, as President Patel rose to give his ruling, two bombs burst in the Council House. Pink leaflets came down from the gallery. Our two friends did not run; they waited to be arrested. — Dyal',
-      hi: 'कल, सोमवार को, करीब साढ़े बारह बजे, जब प्रेसिडेंट पटेल अपना फ़ैसला सुनाने उठे, काउंसिल हाउस में दो बम फटे। गैलरी से गुलाबी पर्चे नीचे गिरे। हमारे दोनों दोस्त भागे नहीं; वे गिरफ़्तारी के इंतज़ार में खड़े रहे। — दयाल',
+      en: 'Yesterday, Monday, at about half past twelve, as President Patel rose to give his ruling, two bombs burst in the Assembly hall. Pink leaflets came down from the gallery. Our two friends did not run; they waited to be arrested. — Dyal',
+      hi: 'कल, सोमवार को, करीब साढ़े बारह बजे, जब प्रेसिडेंट पटेल अपना फ़ैसला सुनाने उठे, असेंबली हॉल में दो बम फटे। गैलरी से गुलाबी पर्चे नीचे गिरे। हमारे दोनों दोस्त भागे नहीं; वे गिरफ़्तारी के इंतज़ार में खड़े रहे। — दयाल',
     },
-    checks: { en: ['Council House', 'half past twelve', 'President Patel'], hi: ['काउंसिल हाउस', 'साढ़े बारह बजे', 'प्रेसिडेंट पटेल'] },
+    checks: { en: ['Yesterday, Monday', 'half past twelve', 'President Patel'], hi: ['कल, सोमवार', 'साढ़े बारह बजे', 'प्रेसिडेंट पटेल'] },
     why: {
       text: {
-        en: "On Monday 8 April 1929, at about 12:30, as President Vithalbhai Patel rose to rule on the Public Safety Bill, Bhagat Singh and B.K. Dutt threw two bombs from the visitors' gallery of the Council House, dropped their leaflets and waited to be arrested.",
-        hi: '8 अप्रैल 1929, सोमवार को करीब साढ़े बारह बजे, जब प्रेसिडेंट विट्ठलभाई पटेल पब्लिक सेफ़्टी बिल पर फ़ैसला सुनाने उठे, भगत सिंह और बटुकेश्वर दत्त ने काउंसिल हाउस की दर्शक गैलरी से दो बम फेंके, पर्चे गिराए और गिरफ़्तारी का इंतज़ार किया।',
+        en: "On Monday 8 April 1929, at about 12:30, as President Vithalbhai Patel rose to rule on the Public Safety Bill, Bhagat Singh and B.K. Dutt threw two bombs from the visitors' gallery of the Central Legislative Assembly in Delhi, dropped their leaflets and waited to be arrested.",
+        hi: '8 अप्रैल 1929, सोमवार को करीब साढ़े बारह बजे, जब प्रेसिडेंट विट्ठलभाई पटेल पब्लिक सेफ़्टी बिल पर फ़ैसला सुनाने उठे, भगत सिंह और बटुकेश्वर दत्त ने दिल्ली में सेंट्रल लेजिस्लेटिव असेंबली की दर्शक गैलरी से दो बम फेंके, पर्चे गिराए और गिरफ़्तारी का इंतज़ार किया।',
       },
       sources: [{ id: 'chaman-lal-2009' }, { id: 'bs-joint-statement' }, IRWIN_PINK],
     },
   },
   {
     id: 'lh-assembly-f',
-    tier: 1,
+    tier: 2,
     real: false,
     pair: 'lh-assembly',
     onDay: 8,
     from: DYAL,
     to: POST_BOX,
     text: {
-      en: 'Yesterday, Monday, at about half past twelve, as President Patel rose to give his ruling, two bombs burst in Parliament House. Pink leaflets came down from the gallery. Our two friends did not run; they waited to be arrested. — Dyal',
-      hi: 'कल, सोमवार को, करीब साढ़े बारह बजे, जब प्रेसिडेंट पटेल अपना फ़ैसला सुनाने उठे, संसद भवन में दो बम फटे। गैलरी से गुलाबी पर्चे नीचे गिरे। हमारे दोनों दोस्त भागे नहीं; वे गिरफ़्तारी के इंतज़ार में खड़े रहे। — दयाल',
+      en: 'Yesterday, Sunday, at about half past twelve, as President Patel rose to give his ruling, two bombs burst in the Assembly hall. Pink leaflets came down from the gallery. Our two friends did not run; they waited to be arrested. — Dyal',
+      hi: 'कल, रविवार को, करीब साढ़े बारह बजे, जब प्रेसिडेंट पटेल अपना फ़ैसला सुनाने उठे, असेंबली हॉल में दो बम फटे। गैलरी से गुलाबी पर्चे नीचे गिरे। हमारे दोनों दोस्त भागे नहीं; वे गिरफ़्तारी के इंतज़ार में खड़े रहे। — दयाल',
     },
-    checks: { en: ['Parliament House'], hi: ['संसद भवन'] },
+    checks: { en: ['Yesterday, Sunday'], hi: ['कल, रविवार'] },
     tells: [
       {
-        kind: 'anachronism',
+        kind: 'weekday',
         explain: {
-          en: "In 1929 the Assembly sat in the Council House. 'Parliament House' is the name that came later; the forger is writing from the future.",
-          hi: "1929 में असेंबली काउंसिल हाउस में बैठती थी। 'संसद भवन' नाम बाद में आया; जालसाज़ भविष्य से लिख रहा है।",
+          en: "Today is Tuesday 9 April, so yesterday was Monday. The bombs fell on Monday 8 April 1929; a note written the next day would not lose a day.",
+          hi: 'आज 9 अप्रैल, मंगलवार है, तो कल सोमवार था। बम 8 अप्रैल 1929, सोमवार को फटे थे; अगले दिन लिखा पर्चा एक दिन नहीं भूलता।',
         },
-        factId: 'assembly',
         sources: [{ id: 'chaman-lal-2009' }],
       },
     ],
@@ -1037,8 +1048,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'dutt-tribune-2005' }] },
     why: {
       text: {
-        en: "The Tribune's banner headline on Wednesday 10 April 1929 really said this. The leaflets were pink and the accused denied firing any pistol, but the paper printed 'Red' and 'fired pistols' all the same. A paper's mistake is not a forgery.",
-        hi: "10 अप्रैल 1929, बुधवार को द ट्रिब्यून की बड़ी सुर्ख़ी सचमुच यही थी। पर्चे गुलाबी थे और आरोपियों ने पिस्तौल चलाने से इनकार किया, फिर भी अख़बार ने 'लाल' और 'पिस्तौलें चलाईं' छापा। अख़बार की ग़लती जालसाज़ी नहीं होती।",
+        en: "The Tribune's front-page report on Wednesday 10 April 1929 really read this. The leaflets were pink, and the accused said neither of them had a pistol when they gave themselves up, but the paper printed 'Red' and 'fired pistols'. A paper's report, right or wrong, is not a forgery.",
+        hi: "10 अप्रैल 1929, बुधवार को द ट्रिब्यून की पहले पन्ने की ख़बर सचमुच यही थी। पर्चे गुलाबी थे, और आरोपियों ने कहा कि गिरफ़्तारी देते वक़्त उनमें से किसी के पास पिस्तौल नहीं थी, फिर भी अख़बार ने 'लाल' और 'पिस्तौलें चलाईं' छापा। अख़बार की ख़बर, सही हो या ग़लत, जालसाज़ी नहीं होती।",
       },
       sources: [{ id: 'dutt-tribune-2005' }, IRWIN_PINK, { id: 'bs-joint-statement' }],
     },
@@ -1055,15 +1066,15 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: "The Times of India today prints Motilal Nehru's statement: 'The choice lies between Gandhi and Balraj.' So Balraj is in the big papers now. — Swami",
-      hi: "आज टाइम्स ऑफ़ इंडिया में मोतीलाल नेहरू का बयान छपा है: 'चुनाव गांधी और बलराज के बीच है।' तो अब बलराज बड़े अख़बारों में है। — स्वामी",
+      hi: "आज टाइम्स ऑफ़ इंडिया में मोतीलाल नेहरू का बयान छपा है: 'फ़ैसला गांधी और बलराज के बीच करना है।' तो अब बलराज बड़े अख़बारों में है। — स्वामी",
     },
     checks: { en: ['Motilal Nehru', 'Gandhi and Balraj'], hi: ['मोतीलाल नेहरू', 'गांधी और बलराज'] },
     why: {
       text: {
         en: "On Wednesday 10 April 1929 the Times of India printed Motilal Nehru's statement with the line 'The choice lies between Gandhi and Balraj', using the name signed on the leaflets.",
-        hi: "10 अप्रैल 1929, बुधवार को टाइम्स ऑफ़ इंडिया ने मोतीलाल नेहरू का बयान छापा, जिसमें लिखा था 'चुनाव गांधी और बलराज के बीच है'। उन्होंने वही नाम लिया जो पर्चों पर दस्तख़त में था।",
+        hi: "10 अप्रैल 1929, बुधवार को टाइम्स ऑफ़ इंडिया ने मोतीलाल नेहरू का बयान छापा, जिसमें लिखा था 'फ़ैसला गांधी और बलराज के बीच करना है'। उन्होंने वही नाम लिया जो पर्चों पर दस्तख़त में था।",
       },
-      sources: [{ id: 'maclean-balraj' }],
+      sources: [{ id: 'maclean-balraj', loc: 'n. 2 (Times of India, 10 April 1929, p. 9)' }],
     },
   },
   {
@@ -1076,7 +1087,7 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: "The Times of India today prints Motilal Nehru's statement: 'The choice lies between Gandhi and Bhagat Singh.' So our friend is in the big papers now. — Swami",
-      hi: "आज टाइम्स ऑफ़ इंडिया में मोतीलाल नेहरू का बयान छपा है: 'चुनाव गांधी और भगत सिंह के बीच है।' तो अब हमारा दोस्त बड़े अख़बारों में है। — स्वामी",
+      hi: "आज टाइम्स ऑफ़ इंडिया में मोतीलाल नेहरू का बयान छपा है: 'फ़ैसला गांधी और भगत सिंह के बीच करना है।' तो अब हमारा दोस्त बड़े अख़बारों में है। — स्वामी",
     },
     checks: { en: ['Gandhi and Bhagat Singh'], hi: ['गांधी और भगत सिंह'] },
     tells: [
@@ -1084,9 +1095,17 @@ export const messages: Message[] = [
         kind: 'knowledge',
         explain: {
           en: "Motilal Nehru wrote 'The choice lies between Gandhi and Balraj'. He used the name signed on the leaflets, the very name your rulebook tells you to look for.",
-          hi: "मोतीलाल नेहरू ने लिखा था 'चुनाव गांधी और बलराज के बीच है'। उन्होंने वही नाम लिया जो पर्चों पर दस्तख़त में था, वही नाम जिसे पहचानना तुम्हारे नियम सिखाते हैं।",
+          hi: "मोतीलाल नेहरू ने लिखा था 'फ़ैसला गांधी और बलराज के बीच करना है'। उन्होंने वही नाम लिया जो पर्चों पर दस्तख़त में था, वही नाम जिसे पहचानना तुम्हारे नियम सिखाते हैं।",
         },
-        sources: [{ id: 'maclean-balraj' }],
+        sources: [{ id: 'maclean-balraj', loc: 'n. 2 (Times of India, 10 April 1929, p. 9)' }],
+      },
+      {
+        kind: 'knowledge',
+        explain: {
+          en: "And on 10 April even The Tribune did not know his name: it called the pair 'two young men, one a Punjabi and the other a Bengali'.",
+          hi: "और 10 अप्रैल तक द ट्रिब्यून को भी उनका नाम नहीं पता था: उसने दोनों को 'दो नौजवान, एक पंजाबी और दूसरा बंगाली' लिखा।",
+        },
+        sources: [{ id: 'dutt-tribune-2005' }],
       },
     ],
   },
@@ -1110,8 +1129,8 @@ export const messages: Message[] = [
     },
     why: {
       text: {
-        en: "On Thursday 11 April 1929 President Vithalbhai Patel moved a motion, passed unanimously, recording the House's 'horror and indignation at the dastardly outrage'. Straight after, he ruled the government's Public Safety Bill motion out of order. The police word is in quotation marks: the comrade reports it, he doesn't use it.",
-        hi: "11 अप्रैल 1929, गुरुवार को प्रेसिडेंट विट्ठलभाई पटेल ने प्रस्ताव रखा, जो सबकी सहमति से पास हुआ, कि सदन को इस 'कायराना वारदात' पर 'दहशत और ग़ुस्सा' है। इसके फ़ौरन बाद उन्होंने सरकार का पब्लिक सेफ़्टी बिल वाला प्रस्ताव नियम के ख़िलाफ़ बताकर रोक दिया। पुलिस वाला शब्द उद्धरण में है: साथी उसे बता रहा है, ख़ुद इस्तेमाल नहीं कर रहा।",
+        en: "On Thursday 11 April 1929 President Vithalbhai Patel moved a motion, passed unanimously, recording the House's 'horror and indignation at the dastardly outrage'. Straight after, he ruled the government's Public Safety Bill motion out of order. The government's word is in quotation marks: the comrade reports it, he doesn't use it.",
+        hi: "11 अप्रैल 1929, गुरुवार को प्रेसिडेंट विट्ठलभाई पटेल ने प्रस्ताव रखा, जो सबकी सहमति से पास हुआ, कि सदन को इस 'कायराना वारदात' पर 'दहशत और ग़ुस्सा' है। इसके फ़ौरन बाद उन्होंने सरकार का पब्लिक सेफ़्टी बिल वाला प्रस्ताव नियम के ख़िलाफ़ बताकर रोक दिया। सरकारी शब्द उद्धरण में है: साथी उसे बता रहा है, ख़ुद इस्तेमाल नहीं कर रहा।",
       },
       sources: [ASSEMBLY_CH],
     },
@@ -1136,6 +1155,7 @@ export const messages: Message[] = [
           en: "A comrade calling his own act 'our outrage' is speaking police.",
           hi: "जो साथी अपने काम को 'हमारी वारदात' कहे, वह पुलिस की ज़बान बोल रहा है।",
         },
+        ruleId: 'r-police-words',
         sources: [ASSEMBLY_CH],
       },
       {
@@ -1160,7 +1180,7 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: 'Today, {weekday}, Bande Mataram prints the photographs of our two friends. Cut them out and keep them flat. — Villager',
-      hi: 'आज, {weekday} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर सीधी रख लेना। — विलेजर',
+      hi: 'आज, {weekday} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर बिना मोड़े रख लेना। — विलेजर',
     },
     checks: { en: ['Today,', 'Bande Mataram'], hi: ['आज,', 'बंदे मातरम अख़बार'] },
     why: {
@@ -1181,7 +1201,7 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: 'Today, {weekday+1}, Bande Mataram prints the photographs of our two friends. Cut them out and keep them flat. — Villager',
-      hi: 'आज, {weekday+1} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर सीधी रख लेना। — विलेजर',
+      hi: 'आज, {weekday+1} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर बिना मोड़े रख लेना। — विलेजर',
     },
     checks: { en: ['Today,'], hi: ['आज,'] },
     tells: [
@@ -1202,17 +1222,17 @@ export const messages: Message[] = [
     real: true,
     pair: 'lh-raid',
     onDay: 14,
-    from: PANDITJI,
+    from: BC,
     to: POST_BOX,
     text: {
-      en: 'Keep away from McLeod Road. The police broke into No. 69 at about seven this morning. Villager and two others are taken. Move nothing, see no one, wait. — Panditji',
-      hi: 'मैक्लोड रोड से दूर रहना। आज सुबह करीब सात बजे पुलिस नंबर 69 में घुस गई। विलेजर और दो और पकड़े गए। कुछ मत हिलाना, किसी से मत मिलना, इंतज़ार करना। — पंडितजी',
+      en: 'Keep away from McLeod Road. The police broke into No. 69 soon after seven this morning. Villager and two others are taken. Move nothing, see no one, wait. — B.C.',
+      hi: 'मैक्लोड रोड से दूर रहना। आज सुबह सात बजे के कुछ देर बाद पुलिस नंबर 69 में घुस गई। विलेजर और दो और पकड़े गए। कुछ भी इधर-उधर मत करना, किसी से मत मिलना, इंतज़ार करना। — बी.सी.',
     },
-    checks: { en: ['No. 69', 'about seven this morning'], hi: ['नंबर 69', 'करीब सात बजे'] },
+    checks: { en: ['No. 69', 'soon after seven this morning'], hi: ['नंबर 69', 'सात बजे के कुछ देर बाद'] },
     why: {
       text: {
-        en: 'Police raided House No. 69, Kashmir Buildings, at about 7 a.m. on Monday 15 April 1929, after a blacksmith\'s tip and sulphur stains on the drain spout. They arrested Sukhdev, Kishori Lal and Jai Gopal.',
-        hi: '15 अप्रैल 1929, सोमवार को सुबह करीब 7 बजे पुलिस ने कश्मीर बिल्डिंग्स के मकान नंबर 69 पर छापा मारा। सुराग़ एक लोहार से मिला था, और नाली के परनाले पर गंधक के दाग़ थे। सुखदेव, किशोरी लाल और जयगोपाल गिरफ़्तार हुए।',
+        en: 'On Monday 15 April 1929, soon after a 7 a.m. phone tip, police raided House No. 69, Kashmir Buildings, which they had traced through a blacksmith and sulphur stains on the drain spout. They arrested Sukhdev, Kishori Lal and Jai Gopal. B.C. (Bhagwati Charan), in whose name the room was rented, was not caught.',
+        hi: '15 अप्रैल 1929, सोमवार को सुबह 7 बजे फ़ोन पर ख़बर मिलने के कुछ देर बाद पुलिस ने कश्मीर बिल्डिंग्स के मकान नंबर 69 पर छापा मारा। सुराग़ एक लोहार से मिला था, और परनाले पर गंधक के दाग़ थे। सुखदेव, किशोरी लाल और जयगोपाल गिरफ़्तार हुए। बी.सी. (भगवती चरण), जिनके नाम पर कमरा था, नहीं पकड़े गए।',
       },
       sources: [RAID_CH],
     },
@@ -1223,11 +1243,11 @@ export const messages: Message[] = [
     real: false,
     pair: 'lh-raid',
     onDay: 14,
-    from: PANDITJI,
+    from: BC,
     to: POST_BOX,
     text: {
-      en: 'Keep away from McLeod Road. The police broke into No. 69 at about seven this morning. A man will come for the zinc handbag within the hour. He has no keys, there was no time. Give it to him. — Panditji',
-      hi: 'मैक्लोड रोड से दूर रहना। आज सुबह करीब सात बजे पुलिस नंबर 69 में घुस गई। एक घंटे के अंदर एक आदमी जस्ते का हैंडबैग लेने आएगा। उसके पास चाबियाँ नहीं हैं, वक़्त ही नहीं था। उसे दे देना। — पंडितजी',
+      en: 'Keep away from McLeod Road. The police broke into No. 69 soon after seven this morning. A man will come for the zinc handbag within the hour. He has no keys, there was no time. Give it to him. — B.C.',
+      hi: 'मैक्लोड रोड से दूर रहना। आज सुबह सात बजे के कुछ देर बाद पुलिस नंबर 69 में घुस गई। एक घंटे के अंदर एक आदमी जस्ते का हैंडबैग लेने आएगा। उसके पास चाबियाँ नहीं हैं, वक़्त ही नहीं था। उसे दे देना। — बी.सी.',
     },
     checks: { en: ['He has no keys'], hi: ['उसके पास चाबियाँ नहीं हैं'] },
     tells: [
@@ -1237,6 +1257,7 @@ export const messages: Message[] = [
           en: 'No keys, no parcel, and a raid is exactly when that rule matters most. The police had just taken three men; now they wanted the bag.',
           hi: 'चाबी नहीं, तो सामान नहीं, और छापे के दिन तो यह नियम सबसे ज़रूरी है। पुलिस अभी तीन लोगों को पकड़ चुकी थी; अब उसे बैग चाहिए था।',
         },
+        ruleId: 'r-keys',
         sources: [KEYS_EVIDENCE, RAID_CH],
       },
     ],

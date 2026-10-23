@@ -28,23 +28,23 @@ export const rules: Rule[] = [
     id: 'r-past',
     text: {
       en: 'Never ask a comrade about his past: his real name, his village, his family. Only the police want those.',
-      hi: 'किसी साथी से उसका अतीत कभी मत पूछो: असली नाम, गाँव, परिवार। ये बातें सिर्फ़ पुलिस को चाहिए।',
+      hi: 'किसी साथी से उसकी पिछली ज़िंदगी के बारे में कभी मत पूछो: असली नाम, गाँव, परिवार। ये बातें सिर्फ़ पुलिस को चाहिए।',
     },
     arrivesOnDay: 2,
   },
   {
     id: 'r-police-words',
     text: {
-      en: "Comrades call what they do an 'action'. Words like 'outrage', 'miscreants', 'culprits' and 'absconders' are police talk.",
-      hi: "साथी अपने काम को 'कार्रवाई' कहते हैं। 'वारदात', 'बदमाश', 'मुजरिम' और 'फ़रार' जैसे शब्द पुलिस की ज़बान हैं।",
+      en: "Comrades call what they do an 'action'. Words like 'outrage', 'miscreants' and 'absconders' are police talk.",
+      hi: "साथी अपने काम को 'कार्रवाई' कहते हैं। 'वारदात', 'बदमाश' और 'फ़रार' जैसे शब्द पुलिस की ज़बान हैं।",
     },
     arrivesOnDay: 3,
   },
   {
     id: 'r-pink',
     text: {
-      en: "Real leaflets are pink, typed under the printed heading 'The Hindustan Socialist Republican Army', and end 'Long Live Revolution'.",
-      hi: "असली पर्चे गुलाबी होते हैं, ऊपर छपी हेडिंग 'हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी' के नीचे टाइप किए हुए, और आख़िर में 'इंक़लाब ज़िंदाबाद'।",
+      en: "Real notices and leaflets are pink, with the heading 'The Hindustan Socialist Republican Army' printed at the top, and they end 'Long Live Revolution'.",
+      hi: "असली नोटिस और पर्चे गुलाबी होते हैं, ऊपर 'हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी' की हेडिंग छपी होती है, और आख़िर में 'इंक़लाब ज़िंदाबाद' लिखा होता है।",
     },
     arrivesOnDay: 5,
   },

@@ -64,21 +64,21 @@ export const facts: Fact[] = [
     id: 'assembly',
     label: { en: 'The Assembly in Delhi', hi: 'दिल्ली की असेंबली' },
     value: {
-      en: 'The Central Legislative Assembly sits in the Council House, Delhi. Its President is Vithalbhai Patel. Before it: the Public Safety Bill and the Trade Disputes Bill.',
-      hi: 'सेंट्रल लेजिस्लेटिव असेंबली दिल्ली के काउंसिल हाउस में बैठती है। इसके प्रेसिडेंट विट्ठलभाई पटेल हैं। इसके सामने हैं पब्लिक सेफ़्टी बिल और ट्रेड डिस्प्यूट्स बिल।',
+      en: 'The Central Legislative Assembly sits in Delhi. Its President is Vithalbhai Patel. In early April it was debating: the Public Safety Bill and the Trade Disputes Bill.',
+      hi: 'सेंट्रल लेजिस्लेटिव असेंबली दिल्ली में बैठती है। इसके प्रेसिडेंट विट्ठलभाई पटेल हैं। अप्रैल की शुरुआत में इसके सामने थे: पब्लिक सेफ़्टी बिल और ट्रेड डिस्प्यूट्स बिल।',
     },
     sources: [
       { id: 'chaman-lal-2009' },
       { id: 'hsra-leaflet-1929' },
-      { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 43–44" },
+      { id: 'noorani-1996', loc: "p. 30; ch. 'Bombs in the Central Assembly', pp. 43–44" },
     ],
   },
   {
     id: 'delhi',
     label: { en: 'Our friend in Delhi', hi: 'दिल्ली में हमारा दोस्त' },
     value: {
-      en: 'In early April 1929 Bhagat Singh is in Delhi, at the Sita Ram Bazar house.',
-      hi: 'अप्रैल 1929 की शुरुआत में भगत सिंह दिल्ली में हैं, सीता राम बाज़ार वाले मकान में।',
+      en: 'In early April 1929 Bhagat Singh was staying at the Sita Ram Bazar house in Delhi.',
+      hi: 'अप्रैल 1929 की शुरुआत में भगत सिंह दिल्ली के सीता राम बाज़ार वाले मकान में ठहरे थे।',
     },
     sources: [{ id: 'bs-letter-sukhdev', loc: 'editorial note' }],
   },
@@ -86,8 +86,8 @@ export const facts: Fact[] = [
     id: 'hsra',
     label: { en: "The party's name", hi: 'पार्टी का नाम' },
     value: {
-      en: "The HRA became the Hindustan Socialist Republican Association at Feroz Shah Kotla, Delhi, on 8–9 September 1928, on Bhagat Singh's proposal.",
-      hi: 'एच.आर.ए. 8–9 सितंबर 1928 को दिल्ली के फ़िरोज़शाह कोटला में भगत सिंह के प्रस्ताव पर हिंदुस्तान सोशलिस्ट रिपब्लिकन एसोसिएशन बनी।',
+      en: 'The HRA became the Hindustan Socialist Republican Association at Feroz Shah Kotla, Delhi, on 8–9 September 1928.',
+      hi: 'एच.आर.ए. 8–9 सितंबर 1928 को दिल्ली के फ़िरोज़शाह कोटला में हिंदुस्तान सोशलिस्ट रिपब्लिकन एसोसिएशन बनी।',
     },
     sources: [
       { id: 'chaman-lal-reader', loc: 'introduction' },
@@ -99,8 +99,8 @@ export const facts: Fact[] = [
     id: 'lajpat-rai',
     label: { en: 'Lala Lajpat Rai', hi: 'लाला लाजपत राय' },
     value: {
-      en: 'The Simon Commission came to Lahore on Tuesday 30 October 1928. Lajpat Rai, at the head of the protest, was beaten by the police. He died on Saturday 17 November 1928.',
-      hi: 'साइमन कमीशन 30 अक्टूबर 1928, मंगलवार को लाहौर आया। विरोध की अगुवाई कर रहे लाजपत राय पर पुलिस ने लाठियाँ चलाईं। 17 नवंबर 1928, शनिवार को उनकी मौत हो गई।',
+      en: 'The Simon Commission came to Lahore on Tuesday 30 October 1928. The police beat many of the protesters, Lajpat Rai among them. He died on Saturday 17 November 1928.',
+      hi: 'साइमन कमीशन 30 अक्टूबर 1928, मंगलवार को लाहौर आया। पुलिस ने कई प्रदर्शनकारियों पर लाठियाँ चलाईं, लाजपत राय पर भी। 17 नवंबर 1928, शनिवार को उनकी मौत हो गई।',
     },
     sources: [{ id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
     hardHidden: true,
