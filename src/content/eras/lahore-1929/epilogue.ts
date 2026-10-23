@@ -2,6 +2,8 @@ import type { Epilogue } from '../../types.js'
 
 // Dossier sections 2c, 4, 8 and 12. No gore; the hanging is "evening", as the dossier
 // advises, because the hour is disputed. Gandhi's part: his repeated appeals, and the debate.
+// caught[0] is the one consequence line on the caught screen; it must fit any mistake
+// (a passed forgery, a rejected genuine note, or too slow). caught[1] sits behind a tap.
 export const epilogue: Epilogue = {
   survived: [
     {
@@ -19,8 +21,8 @@ export const epilogue: Epilogue = {
   ],
   caught: [
     {
-      en: 'One wrong stamp, and the CID learned where the letters go. You are taken in the round-ups after the raid, and held in Lahore jail.',
-      hi: 'एक ग़लत मुहर, और सीआईडी को पता चल गया कि चिट्ठियाँ कहाँ जाती हैं। छापे के बाद की धर-पकड़ में तुम भी पकड़े जाते हो, और लाहौर जेल पहुँचते हो।',
+      en: 'Picked up in the CID round-ups, you join the accused in Lahore jail.',
+      hi: 'सीआईडी की धर-पकड़ में तुम भी पकड़े जाते हो, और आरोपियों के साथ लाहौर जेल पहुँचते हो।',
     },
     {
       en: "The case grew to 24 accused, with about 600 witnesses planned. Seven comrades took pardons; Ajoy Ghosh wrote they were 'unable to stand police torture'.",
