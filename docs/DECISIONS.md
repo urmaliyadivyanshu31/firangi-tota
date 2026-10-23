@@ -78,3 +78,13 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - firangitota.com was bought on Vercel (team oxdivs-projects) and is valid until 24 Oct 2027. The
   owner chose no auto-renew. It points at the production deploy only after the owner approves the
   preview.
+
+## 2026-10-24: Fully immersive, like the reference
+
+- The owner rejected the first wired build as flat: the message sat in a panel over a dark 3D
+  background. The game must live inside the 3D room, the way Politburo or Parrot does: the whole
+  screen is the room; each day opens with an in-world day title; the message arrives in that era's own
+  way and is printed on the 3D paper; the 3D stamp lands on it; the interface is a thin layer of
+  period-styled cards and buttons.
+- It should look Indian and of its era, and be more beautiful than the reference: period paper
+  forms, saffron, indigo and maroon, block-print borders.
