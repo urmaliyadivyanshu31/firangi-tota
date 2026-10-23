@@ -78,7 +78,8 @@ async function boot() {
     }
   }
   const s = sheet()
-  const stampKind = (verdict === 'right') === !!s.documentMark ? 'asli' : 'tota'
+  // the reveal samples are genuine messages: ASLI is the right stamp for them
+  const stampKind = revealKind ? (revealKind === 'right' ? 'asli' : 'tota') : (verdict === 'right') === !!s.documentMark ? 'asli' : 'tota'
   const play = async () => {
     beat('establish')
     await desk.establish()
