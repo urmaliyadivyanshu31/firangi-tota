@@ -289,3 +289,50 @@ describe('the typewriter keeps time with its sound', () => {
     stage.dispose()
   })
 })
+
+describe('reveal: the verdict on the same paper', () => {
+  const verdict = {
+    outcome: 'right' as const,
+    real: true,
+    documentMark: true,
+    highlight: ['Mirza Mughal'],
+    note: 'Mirza Mughal led the army, as the file says',
+    back: { verdictLine: 'Right — this one was genuine', tell: 'The diary records it.', stamp: { text: 'Correct', tone: 'right' as const, style: 'seal' as const }, source: 'Trial of Bahadur Shah (1858), p. 113' },
+    lang: 'en' as const,
+  }
+
+  it('rings the words, turns the paper over and resolves, with the source line findable', async () => {
+    const cues: StageCueName[] = []
+    const { stage } = stageFor(sampleDressing, { cues })
+    await state(stage.showMessage(sheet()), 6000)
+    expect(stage.getSourceRect()).toBeNull()
+    expect(stage.getPaperRect()).not.toBeNull()
+    const p = stage.reveal(verdict)
+    expect(await state(p, 400)).toBe('pending')
+    expect(await state(p, 4000)).toBe('done')
+    expect(cues).toEqual(expect.arrayContaining(['unfold', 'verdictStamp']))
+    const src = stage.getSourceRect()
+    expect(src).not.toBeNull()
+    expect(src?.w).toBeGreaterThan(0)
+    stage.dispose()
+  })
+
+  it('skip finishes it at once', async () => {
+    const { stage } = stageFor(sampleDressing)
+    await state(stage.showMessage(sheet()), 6000)
+    const p = stage.reveal(verdict)
+    await pump(100)
+    stage.skip()
+    expect(await state(p)).toBe('done')
+    expect(stage.getSourceRect()).not.toBeNull()
+    stage.dispose()
+  })
+
+  it('a second call (a language change) redraws at once', async () => {
+    const { stage } = stageFor(sampleDressing)
+    await state(stage.showMessage(sheet()), 6000)
+    await state(stage.reveal(verdict), 4000)
+    expect(await state(stage.reveal({ ...verdict, lang: 'hi', note: 'फ़ौज मिर्ज़ा मुग़ल के हाथ थी' }))).toBe('done')
+    stage.dispose()
+  })
+})

@@ -3,6 +3,7 @@
 //   ?tier=low|mid|high                                 ?reduced        reduced motion
 //   ?fallback      the 2D fallback                     ?sample=<n>     which sample sheet (1929 has a leaflet)
 //   ?verdict=right|wrong   the stamp and flash at the end (default right)
+//   ?reveal=right|wrong|caught   then the verdict on the paper: pencil marks, the turn, the back
 //   ?auto          plays the day on load and marks each beat in window.__beat (for the shoot script)
 //   ?hud           draws stand-ins for the app's top bar and stamp buttons
 //   ?long          a long text, to check the sheet copes
@@ -10,7 +11,7 @@ import type { EraId, Lang } from '../src/content/types'
 import { STAGE_LOST_EVENT, loadStage, mountFallback, type Fallback, type Stage } from '../src/scene/index'
 import { dressingFor } from '../src/scene/eras/index'
 import type { SheetSpec } from '../src/scene/types'
-import { longSheet, sampleSheet, sampleTitle } from './samples'
+import { longSheet, sampleReveal, sampleSheet, sampleTitle, type RevealKind } from './samples'
 
 const q = new URLSearchParams(location.search)
 const el = document.getElementById('stage') as HTMLElement
@@ -18,7 +19,8 @@ const era = (q.get('era') ?? 'delhi-1857') as EraId
 let lang = (q.get('lang') ?? 'en') as Lang
 const reduced = q.has('reduced')
 const sampleIx = Number(q.get('sample') ?? 0)
-const verdict = q.get('verdict') === 'wrong' ? 'wrong' : 'right'
+const revealKind = (['right', 'wrong', 'caught'] as const).find((k) => q.get('reveal') === k) as RevealKind | undefined
+const verdict = revealKind ? (revealKind === 'right' ? 'right' : 'wrong') : q.get('verdict') === 'wrong' ? 'wrong' : 'right'
 const w = window as unknown as { __beat?: string; __devStage?: Stage; __cues?: string[] }
 w.__cues = []
 if (q.has('auto')) document.body.classList.add('shot')
@@ -39,6 +41,8 @@ interface Desk {
   stamp(k: 'asli' | 'tota'): Promise<void>
   flash(k: 'right' | 'wrong'): void
   skip(): void
+  reveal(r: ReturnType<typeof sampleReveal>): Promise<void>
+  getSourceRect(): { x: number; y: number; w: number; h: number } | null
 }
 
 function fromFallback(f: Fallback): Desk {
@@ -50,6 +54,8 @@ function fromFallback(f: Fallback): Desk {
     stamp: (k) => f.stamp(k),
     flash: (k) => f.flash(k),
     skip: () => undefined,
+    reveal: (r) => f.reveal(r),
+    getSourceRect: () => f.getSourceRect(),
   }
 }
 
@@ -87,6 +93,22 @@ async function boot() {
     await desk.stamp(stampKind)
     beat('flash')
     desk.flash(verdict)
+    if (revealKind) {
+      await sleep(250)
+      beat('reveal')
+      await desk.reveal(sampleReveal(era, lang, revealKind, sampleIx))
+      beat('back')
+      // a box where the app would lay its accessible source button
+      const r = desk.getSourceRect()
+      if (r && q.has('hits')) {
+        const box = document.createElement('div')
+        box.style.cssText = `position:fixed;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;outline:2px dashed #3fa9ff;pointer-events:none;z-index:9`
+        document.body.appendChild(box)
+      }
+      await sleep(1500)
+      beat('done')
+      return
+    }
     if (s.documentMark && verdict === 'right') desk.redrawMessage({ ...sheet(), revealed: true })
     await sleep(1700)
     beat('result')

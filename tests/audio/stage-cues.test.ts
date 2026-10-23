@@ -121,11 +121,11 @@ describe('era voices', () => {
 
 describe('cueForStage', () => {
   it('maps every stage cue to a sound, except the stamp the app voices itself', () => {
-    const all: StageCueName[] = ['title', 'flip', 'arrive', 'seal', 'unfold', 'flap', 'key', 'space', 'ding', 'return', 'stamp', 'right', 'wrong']
+    const all: StageCueName[] = ['title', 'flip', 'arrive', 'seal', 'unfold', 'flap', 'key', 'space', 'ding', 'return', 'stamp', 'right', 'wrong', 'verdictStamp']
     const out = Object.fromEntries(all.map((n) => [n, cueForStage(n)]))
     expect(out).toEqual({
       title: 'titleSettle', flip: 'page', arrive: 'arrive', seal: 'sealCrack', unfold: 'paperUnfold', flap: 'envelopeFlap',
-      key: 'typeKey', space: 'typeSpace', ding: 'typeDing', return: 'typeReturn', stamp: null, right: 'correct', wrong: 'caught',
+      key: 'typeKey', space: 'typeSpace', ding: 'typeDing', return: 'typeReturn', stamp: null, right: 'correct', wrong: 'caught', verdictStamp: 'stampAsli',
     })
   })
 })
