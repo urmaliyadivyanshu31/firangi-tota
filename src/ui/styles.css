@@ -269,7 +269,7 @@ a { color: inherit; }
 }
 .doc--note { --paper-c: #f2cbc1; }
 .doc--note::before { content: ''; position: absolute; inset: 12px; z-index: 0; pointer-events: none; border: 3px double rgba(30, 20, 22, .75); }
-.doc--note .doc__body { padding-top: 40px; }
+.doc--note .doc__body { padding-top: 60px; }
 .doc--radio {
   --paper-c: #f2ecda;
   --paper-extra: linear-gradient(90deg, rgba(0, 0, 0, 0) 38px, rgba(184, 44, 40, .5) 38px, rgba(184, 44, 40, .5) 39.5px, rgba(0, 0, 0, 0) 39.5px), repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 29px, rgba(70, 100, 160, .16) 29px 30px);
@@ -277,7 +277,7 @@ a { color: inherit; }
 .doc--radio .doc__body { padding-left: 50px; }
 .doc--telegram { --paper-c: #eee1bf; }
 .doc--telegram::before { content: ''; position: absolute; inset: 12px; z-index: 0; pointer-events: none; border: 1.2px solid rgba(51, 68, 106, .55); box-shadow: inset 0 0 0 3px #eee1bf, inset 0 0 0 4px rgba(51, 68, 106, .35); }
-.doc--telegram .doc__body { padding-top: 42px; }
+.doc--telegram .doc__body { padding-top: 60px; }
 
 .doc__mark { position: absolute; z-index: 1; pointer-events: none; }
 /* the petition's seal sits at its foot, beside the credits line */
@@ -644,7 +644,9 @@ a { color: inherit; }
 
 /* The two rubber stamps: separate, raised wooden mounts with an inked face */
 .stamps { display: flex; gap: 14px; padding: 0 34px; }
-[data-layout='wide'] .stamps { padding: 0; gap: 20px; }
+/* two separate stamps, never full-width bars */
+[data-layout='wide'] .stamps { padding: 0; gap: 28px; justify-content: center; }
+[data-layout='wide'] .stamp { flex: 0 1 320px; }
 .stamp {
   --ink-c: var(--indigo); --wood: #6e4a26;
   position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px;
@@ -934,7 +936,7 @@ a { color: inherit; }
   .screen--main { padding-top: max(84px, env(safe-area-inset-top)); }
   .doc__body { padding: 40px 54px 10px; gap: 12px; }
   .doc--radio .doc__body { padding-left: 76px; }
-  .doc--note .doc__body, .doc--telegram .doc__body { padding-top: 54px; }
+  .doc--note .doc__body, .doc--telegram .doc__body { padding-top: 70px; }
   .doc .home__title { width: 430px; }
   .doc__hook { font-size: 21px; }
   .tabs-era { gap: 14px; }
