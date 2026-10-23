@@ -1,6 +1,16 @@
 import type { Era, Message, Tier } from '../content/types'
 import { DAYS, type Difficulty } from './config'
 
+/** First day this message may appear: when the last rule needed to catch its tells has arrived. */
+export function earliestDay(era: Era, m: Message): number {
+  let day = 1
+  for (const t of m.tells ?? []) {
+    const rule = t.ruleId ? era.rules.find((r) => r.id === t.ruleId) : undefined
+    if (rule) day = Math.max(day, rule.arrivesOnDay)
+  }
+  return day
+}
+
 function tierWeights(d: Difficulty, day: number, days: number): [number, number, number] {
   if (day <= 3) return [1, 0, 0]
   const t = days > 1 ? (day - 1) / (days - 1) : 1
@@ -34,7 +44,7 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
 
   // 1. onDay messages go to their own day: one random eligible candidate per day.
   for (let day = 1; day <= days; day++) {
-    let cands = era.messages.filter((m) => m.onDay === day && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair)))
+    let cands = era.messages.filter((m) => m.onDay === day && earliestDay(era, m) <= day && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair)))
     if (d === 'easy' && day <= 3 && cands.some((m) => m.tier === 1)) cands = cands.filter((m) => m.tier === 1)
     if (cands.length === 0) continue
     const m = cands[Math.floor(rng() * cands.length)]!
@@ -76,7 +86,7 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
 
   // 4. Fill slots in day order, relaxing tier first, then real/forged.
   for (const i of free) {
-    const ok = (m: Message) => m.onDay === undefined && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair))
+    const ok = (m: Message) => m.onDay === undefined && earliestDay(era, m) <= i + 1 && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair))
     const tier = wantTier.get(i)!
     const real = wantReal.get(i)!
     const tiers = ([1, 2, 3] as Tier[]).sort((a, b) => Math.abs(a - tier) - Math.abs(b - tier))
@@ -87,6 +97,9 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
         if (pool.length) break
       }
       if (pool.length) break
+    }
+    if (pool.length === 0) {
+      throw new Error(`Era "${era.id}" has no message that can appear on day ${i + 1} of a ${d} run (rule-gated tells?)`)
     }
     const chosen = pool[Math.floor(rng() * pool.length)]!
     slots[i] = chosen

@@ -57,6 +57,22 @@ describe('validateEra', () => {
     msg(e, 'm2').tells![0]!.factId = 'nope'
     has(e, 'unknown fact')
   })
+  it('flags an unknown rule on a tell', () => {
+    const e = fresh()
+    msg(e, 'm2').tells![0]!.ruleId = 'nope'
+    expect(validateEra(e)).toContain('m2: unknown rule nope')
+  })
+  it('flags an onDay message that precedes its rule', () => {
+    const e = fresh()
+    const rule = e.rules[0]!
+    rule.arrivesOnDay = 6
+    const m = msg(e, 'm2')
+    m.tells![0]!.ruleId = rule.id
+    m.onDay = 3
+    expect(validateEra(e)).toContain('m2: onDay before its rule arrives')
+    m.onDay = 6
+    expect(validateEra(e).some((p) => p.includes('onDay before'))).toBe(false)
+  })
   it('flags a missing hi string', () => {
     const e = fresh()
     e.messages[0]!.from.hi = ''

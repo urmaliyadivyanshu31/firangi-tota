@@ -1,5 +1,6 @@
 import type { Era, L10n, Lang, SourceRef } from './types'
 import { fillTemplate } from '../game/dates'
+import { earliestDay } from '../game/run'
 
 const LANGS: Lang[] = ['en', 'hi']
 
@@ -23,6 +24,7 @@ export function validateEra(era: Era): string[] {
 
   const sourceIds = new Set(era.sources.map((s) => s.id))
   const factIds = new Set(era.facts.map((f) => f.id))
+  const ruleIds = new Set(era.rules.map((r) => r.id))
 
   const refs = (id: string, field: string, list: SourceRef[] | undefined, required: boolean) => {
     if (required && (!list || list.length === 0)) add(id, `${field} needs at least one source`)
@@ -71,6 +73,8 @@ export function validateEra(era: Era): string[] {
     l10n(id, 'text', m.text)
     if (m.onDay !== undefined && !isDay(m.onDay)) add(id, `onDay ${m.onDay} must be an integer from 1 to 14`)
 
+    if (m.onDay !== undefined && isDay(m.onDay) && m.onDay < earliestDay(era, m)) add(id, 'onDay before its rule arrives')
+
     if (m.real) {
       if (m.tells && m.tells.length > 0) add(id, 'genuine message must not have tells')
       if (!m.why) add(id, 'genuine message needs why')
@@ -89,6 +93,7 @@ export function validateEra(era: Era): string[] {
     m.tells?.forEach((t, i) => {
       l10n(id, `tells[${i}].explain`, t.explain)
       if (t.factId !== undefined && !factIds.has(t.factId)) add(id, `tells[${i}] has unknown fact "${t.factId}"`)
+      if (t.ruleId !== undefined && !ruleIds.has(t.ruleId)) add(id, `unknown rule ${t.ruleId}`)
       refs(id, `tells[${i}]`, t.sources, false)
     })
 

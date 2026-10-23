@@ -17,6 +17,7 @@ export function dailyFrom(nowMs: number, eras: Era[]): Daily {
   const number = Math.max(1, days + 1)
   const sorted = [...eras].sort((a, b) => a.order - b.order)
   const era = sorted[(number - 1) % sorted.length]!
+  // The daily puzzle is treated as day 14 for rules: the UI must show ALL of the era's rules, so no tell gating here.
   const rng = mulberry32(seedFrom(isoDate))
 
   // Seeded shuffle of the pool without onDay messages (they depend on a chapter's day), one per pair.

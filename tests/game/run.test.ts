@@ -93,4 +93,23 @@ describe('buildRun', () => {
       }
     })
   })
+
+  it('never places a rule-gated forgery before its rule arrives', () => {
+    const gated = msg('gated', 1, false, { tells: [{ kind: 'knowledge', explain: { en: 'x', hi: 'x' }, ruleId: 'r5' }] })
+    const g: Era = {
+      ...era,
+      rules: [{ id: 'r5', text: { en: 'x', hi: 'x' }, arrivesOnDay: 5 }],
+      messages: [gated, ...era.messages],
+    }
+    let seen = false
+    for (let seed = 1; seed <= 200; seed++) {
+      const run = buildRun(g, 'hard', mulberry32(seed))
+      const i = run.findIndex((m) => m.id === 'gated')
+      if (i >= 0) {
+        seen = true
+        expect(i + 1).toBeGreaterThanOrEqual(5)
+      }
+    }
+    expect(seen).toBe(true)
+  })
 })
