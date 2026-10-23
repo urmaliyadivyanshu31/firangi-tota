@@ -39,17 +39,26 @@ const named = (name: string) => Object.assign(new Error(name), { name })
 afterEach(() => { vi.restoreAllMocks() })
 
 describe('voice client', () => {
-  it('builds the endpoint URL from the request', () => {
+  it('builds the endpoint URL from the request; Dastango is the default and needs no parameter', () => {
     expect(voiceUrl(A)).toBe('/api/voice?era=delhi-1857&id=ev-commanders-real&lang=en&day=2')
-    expect(voiceUrl({ ...A, voice: 'era' })).toBe(voiceUrl(A))
-    expect(voiceUrl({ ...A, voice: 'dastango' })).toBe('/api/voice?era=delhi-1857&id=ev-commanders-real&lang=en&day=2&voice=dastango')
+    expect(voiceUrl({ ...A, voice: 'dastango' })).toBe(voiceUrl(A))
+    expect(voiceUrl({ ...A, voice: 'era' })).toBe(voiceUrl(A)) // old name for the default
+    expect(voiceUrl({ ...A, voice: 'guest' })).toBe('/api/voice?era=delhi-1857&id=ev-commanders-real&lang=en&day=2&voice=guest')
   })
 
-  it('switching the voice for the playing message replays it, it does not stop', async () => {
+  it('the default voice under either name is the same message: a second tap stops it', async () => {
+    const { v, el, states } = setup()
+    await v.play({ ...A, voice: 'era' })
+    await v.play({ ...A, voice: 'dastango' })
+    expect(el().play).toHaveBeenCalledTimes(1)
+    expect(states[states.length - 1]).toBe('idle')
+  })
+
+  it('switching to another voice for the playing message replays it, it does not stop', async () => {
     const { v, el, states } = setup()
     await v.play(A)
-    await v.play({ ...A, voice: 'dastango' })
-    expect(el().src).toContain('voice=dastango')
+    await v.play({ ...A, voice: 'guest' })
+    expect(el().src).toContain('voice=guest')
     expect(states).toEqual(['loading', 'playing', 'idle', 'loading', 'playing'])
   })
 
