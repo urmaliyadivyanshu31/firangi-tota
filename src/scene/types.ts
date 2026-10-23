@@ -106,7 +106,11 @@ export interface EraDressing {
 }
 
 /** Moments the stage marks, for sound: a title lands, a seal cracks, a typewriter dings … */
-export type StageCueName = 'title' | 'flip' | 'arrive' | 'seal' | 'unfold' | 'flap' | 'type' | 'ding' | 'stamp' | 'right' | 'wrong'
+export type StageCueName =
+  | 'title' | 'flip' | 'arrive' | 'seal' | 'unfold' | 'flap'
+  // the typewriter: one 'key' per struck character, 'space' per space, 'ding' near the margin, 'return' per line
+  | 'key' | 'space' | 'ding' | 'return'
+  | 'stamp' | 'right' | 'wrong'
 
 export interface StageOptions {
   reducedMotion: boolean

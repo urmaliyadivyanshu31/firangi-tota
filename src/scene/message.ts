@@ -639,6 +639,7 @@ uniform vec3 uColor;
 uniform float uAmount;
 uniform float uSpread;
 uniform float uInk;
+uniform float uWash;
 uniform float uAspect;
 varying vec2 vUv;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -652,23 +653,27 @@ void main() {
   vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
   float r = length(p) / (0.5 * length(vec2(uAspect, 1.0)));
   float a;
+  vec3 col = uColor;
   if (uInk > 0.5) {
-    // red ink bleeding in from the edges, with a darker rim at its front
+    // the room washes red for a beat, the edges sink to black-red, and red ink bleeds in
     float field = r + (noise(vUv * vec2(uAspect, 1.0) * 5.0) - 0.5) * 0.32 + (noise(vUv * 17.0) - 0.5) * 0.08;
     float front = 1.0 - uSpread * 0.62;
     float inked = smoothstep(front - 0.03, front + 0.02, field);
     float rim = smoothstep(front - 0.03, front, field) - smoothstep(front, front + 0.05, field);
-    a = (inked * 0.5 + rim * 0.28) * uAmount;
+    float vig = smoothstep(0.42, 1.05, r);
+    col = mix(uColor, vec3(0.06, 0.0, 0.0), clamp(vig * 0.85 + rim * 0.4, 0.0, 1.0));
+    a = clamp(uWash * 0.42 + inked * 0.5 + rim * 0.3 + vig * 0.6, 0.0, 0.92) * uAmount;
   } else {
-    // a warm saffron bloom over the room, a little stronger toward the edges
-    a = (0.22 + 0.3 * smoothstep(0.2, 1.1, r)) * uAmount;
+    // a warm saffron-gold bloom over the room, a little stronger toward the edges
+    a = (0.28 + 0.36 * smoothstep(0.2, 1.1, r)) * uAmount;
   }
-  gl_FragColor = vec4(uColor, a);
+  gl_FragColor = vec4(col, a);
 }`
 
 export interface Flash {
   mesh: THREE.Mesh
-  set(kind: 'right' | 'wrong', amount: number, spread: number): void
+  /** `amount` fades the whole effect; `spread` drives the ink; `wash` the red beat over the room. */
+  set(kind: 'right' | 'wrong', amount: number, spread: number, wash?: number): void
   fit(camera: THREE.PerspectiveCamera): void
   dispose(): void
 }
@@ -682,6 +687,7 @@ export function createFlash(): Flash {
       uAmount: { value: 0 },
       uSpread: { value: 0 },
       uInk: { value: 0 },
+      uWash: { value: 0 },
       uAspect: { value: 1 },
     },
     transparent: true,
@@ -698,11 +704,13 @@ export function createFlash(): Flash {
   mesh.position.z = -0.1
   return {
     mesh,
-    set(kind, amount, spread) {
+    set(kind, amount, spread, wash = 0) {
       const u = mat.uniforms
       const ink = kind === 'wrong'
       if (u.uInk) u.uInk.value = ink ? 1 : 0
-      if (u.uColor) (u.uColor.value as THREE.Color).setHex(ink ? 0xa3170e : 0xf2a23a)
+      if (u.uWash) u.uWash.value = wash
+      // (written straight to the screen, so these are display colours)
+      if (u.uColor) (u.uColor.value as THREE.Color).setRGB(ink ? 0.74 : 1.0, ink ? 0.05 : 0.7, ink ? 0.03 : 0.24)
       if (u.uAmount) u.uAmount.value = amount
       if (u.uSpread) u.uSpread.value = spread
       mat.blending = ink ? THREE.NormalBlending : THREE.AdditiveBlending
