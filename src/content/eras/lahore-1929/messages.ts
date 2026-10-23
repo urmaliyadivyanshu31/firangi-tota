@@ -114,24 +114,25 @@ export const messages: Message[] = [
   },
   {
     id: 'lh-alias-m-f',
-    tier: 1,
+    tier: 2,
     real: false,
     pair: 'lh-alias-m',
-    from: { en: 'M', hi: 'एम' },
+    from: { en: 'Shivram Rajguru', hi: 'शिवराम राजगुरु' },
     to: POST_BOX,
     text: {
-      en: 'If a letter comes for me, do not send it on. Keep it until Babuji asks for it. — M',
-      hi: 'अगर मेरे लिए कोई चिट्ठी आए, तो आगे मत भेजना। जब तक बाबूजी न माँगें, अपने पास रखना। — एम',
+      en: 'If a letter comes for me, do not send it on. Keep it until Panditji asks for it. — Shivram Rajguru',
+      hi: 'अगर मेरे लिए कोई चिट्ठी आए, तो आगे मत भेजना। जब तक पंडितजी न माँगें, अपने पास रखना। — शिवराम राजगुरु',
     },
-    checks: { en: ['Babuji'], hi: ['बाबूजी'] },
+    checks: { en: ['Shivram Rajguru'], hi: ['शिवराम राजगुरु'] },
     tells: [
       {
         kind: 'name',
         explain: {
-          en: "Azad's party name was 'Panditji'. 'Babuji' is on no list of party names; the forger guessed.",
-          hi: "आज़ाद का पार्टी नाम 'पंडितजी' था। 'बाबूजी' किसी भी सूची में नहीं है; जालसाज़ ने अंदाज़ा लगाया।",
+          en: "Comrades never sign with their full real names. Rajguru signed as 'M'; a note signed 'Shivram Rajguru' is the CID's idea of him.",
+          hi: "साथी अपने पूरे असली नाम से कभी दस्तख़त नहीं करते। राजगुरु 'एम' लिखते थे; 'शिवराम राजगुरु' के दस्तख़त वाला पर्चा सीआईडी का बनाया है।",
         },
         factId: 'aliases',
+        ruleId: 'r-party-names',
         sources: [SCHEDULE],
       },
     ],
@@ -1234,7 +1235,7 @@ export const messages: Message[] = [
         en: 'On Monday 15 April 1929, soon after a 7 a.m. phone tip, police raided House No. 69, Kashmir Buildings, which they had traced through a blacksmith and sulphur stains on the drain spout. They arrested Sukhdev, Kishori Lal and Jai Gopal. B.C. (Bhagwati Charan), in whose name the room was rented, was not caught.',
         hi: '15 अप्रैल 1929, सोमवार को सुबह 7 बजे फ़ोन पर ख़बर मिलने के कुछ देर बाद पुलिस ने कश्मीर बिल्डिंग्स के मकान नंबर 69 पर छापा मारा। सुराग़ एक लोहार से मिला था, और परनाले पर गंधक के दाग़ थे। सुखदेव, किशोरी लाल और जयगोपाल गिरफ़्तार हुए। बी.सी. (भगवती चरण), जिनके नाम पर कमरा था, नहीं पकड़े गए।',
       },
-      sources: [RAID_CH],
+      sources: [RAID_CH, { id: 'noorani-1996', loc: "ch. 'Hour of Trial', p. 52 (absconders)" }],
     },
   },
   {
