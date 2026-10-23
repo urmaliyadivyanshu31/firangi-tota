@@ -32,11 +32,13 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
     if (m.pair) usedPairs.add(m.pair)
   }
 
-  // 1. onDay messages go to their own day (later conflicts are skipped).
-  for (const m of era.messages) {
-    if (m.onDay === undefined || m.onDay > days || slots[m.onDay - 1]) continue
-    if (m.pair && usedPairs.has(m.pair)) continue
-    slots[m.onDay - 1] = m
+  // 1. onDay messages go to their own day: one random eligible candidate per day.
+  for (let day = 1; day <= days; day++) {
+    let cands = era.messages.filter((m) => m.onDay === day && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair)))
+    if (d === 'easy' && day <= 3 && cands.some((m) => m.tier === 1)) cands = cands.filter((m) => m.tier === 1)
+    if (cands.length === 0) continue
+    const m = cands[Math.floor(rng() * cands.length)]!
+    slots[day - 1] = m
     take(m)
   }
 
