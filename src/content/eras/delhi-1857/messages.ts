@@ -38,10 +38,10 @@ const NO63 = 'Petition No. 63, 22 May 1857, p.33'
 const PETITIONS = 'petitions, e.g. Nos. 60-68, pp.32-35'
 const PERSIAN = "'Authentic News', 23 March 1857, and Delhi newspapers of August-September 1857, c. pp.128-31"
 // Mangal Pandey: the attack of 29 March at Barrackpore (Sen pp.49-50; Majumdar pp.46-47) and the
-// hanging on 8 April (Cave-Browne I p.21).
-const PANDEY = [sen('pp.49-50'), majumdar('pp.46-47'), caveBrowne('p.21')]
-// Nana Sahib guarded the Kanpur treasury for the English from about 22 May (Sen pp.131-33);
-// Kanpur rose late on 4 June (Sen p.136).
+// hanging on 8 April (Cave-Browne I p.21; Kaye I, 9th ed., p.548).
+const PANDEY = [sen('pp.49-50'), majumdar('pp.46-47'), caveBrowne('p.21'), { id: 'kaye-1880', loc: 'p.548' }]
+// Nana Sahib guarded the Kanpur treasury for the English in May (Sen pp.131-33); Kanpur rose
+// late on 4 June (Sen p.136). nana-forged is false on every day of the window.
 const NANA = [sen('pp.131-33'), sen('p.136')]
 
 const eventMessages: Message[] = [
@@ -396,51 +396,26 @@ const eventMessages: Message[] = [
     ],
   },
 
-  // ── Day 12, Thu 28 May: news from Kanpur. Nana Sahib still serves the English, for one more week ──
+  // ── Day 12, Thu 28 May: the Gwalior men taken for English spies ──
   {
-    id: 'nana-real',
-    tier: 3,
+    id: 'gwalior-real',
+    tier: 2,
     real: true,
-    pair: 'nana',
     onDay: 12,
-    from: NEWSWRITER,
+    from: COURT_NEWS,
     to: OFFICE,
     text: {
-      en: 'News from Kanpur: Nana Sahib of Bithur is guarding the English treasury there, with his own men and two guns.',
-      hi: 'कानपुर से ख़बर: बिठूर के नाना साहब अपने आदमियों और दो तोपों के साथ वहाँ अंग्रेज़ों के ख़ज़ाने की रखवाली कर रहे हैं।',
+      en: '28th May. Two hundred men of the Gwalior Contingent came to enlist. Their kit was in such good order that a story spread they were an English advance-guard in disguise.',
+      hi: '28 मई। ग्वालियर कंटिंजेंट के दो सौ आदमी भर्ती होने आए। उनका साज़-सामान इतना ठीक-ठाक था कि अफ़वाह फैल गई कि वे भेस बदले अंग्रेज़ी फ़ौज का अगला दस्ता हैं।',
     },
-    checks: { en: ['guarding the English treasury'], hi: ['अंग्रेज़ों के ख़ज़ाने की रखवाली'] },
+    checks: { en: ['Gwalior Contingent'], hi: ['ग्वालियर कंटिंजेंट'] },
     why: {
       text: {
-        en: 'Odd but true: in May the English trusted Nana Sahib; Kanpur rose 4 June.',
-        hi: 'अजीब पर सच: मई में अंग्रेज़ नाना साहब पर भरोसा करते थे; कानपुर 4 जून को उठा।',
+        en: 'Jiwan Lal, 28 May: their neat uniforms started the rumour. Spy fever had begun.',
+        hi: 'जीवन लाल, 28 मई: साफ़-सुथरी वर्दियों से यह अफ़वाह उड़ी। जासूसों का डर शुरू हो चुका था।',
       },
-      sources: NANA,
+      sources: [jl('pp.105-06')],
     },
-  },
-  {
-    id: 'nana-forged',
-    tier: 3,
-    real: false,
-    pair: 'nana',
-    onDay: 12,
-    from: NEWSWRITER,
-    to: OFFICE,
-    text: {
-      en: 'News from Kanpur: Nana Sahib of Bithur has risen against the English and besieges them in their camp there.',
-      hi: 'कानपुर से ख़बर: बिठूर के नाना साहब अंग्रेज़ों के ख़िलाफ़ उठ खड़े हुए हैं और उन्हें उनकी छावनी में घेर रखा है।',
-    },
-    checks: { en: ['has risen against the English'], hi: ['अंग्रेज़ों के ख़िलाफ़ उठ खड़े हुए हैं'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'Kanpur rose on 4 June; in May Nana Sahib still guarded the English treasury.',
-          hi: 'कानपुर 4 जून को उठा; मई में नाना साहब अंग्रेज़ों का ख़ज़ाना सँभाल रहे थे।',
-        },
-        sources: NANA,
-      },
-    ],
   },
 
   // ── Day 13, Fri 29 May: a "spy" in a fortune-teller's dress ──
@@ -1005,8 +980,8 @@ const datelessMessages: Message[] = [
     from: { en: 'Seized at the bridge', hi: 'पुल पर पकड़ी गई चिट्ठी' },
     to: { en: 'Addressee torn off', hi: 'पता फटा हुआ' },
     text: {
-      en: '(In English.) The 3rd Light Cavalry and the 11th and 20th Native Infantry rose at Meerut on Sunday the 10th. Our Commander-in-Chief must be told.',
-      hi: '(अंग्रेज़ी में) तीसरी घुड़सवार पलटन और 11वीं व 20वीं पैदल पलटनें 10 तारीख़, रविवार को मेरठ में उठ खड़ी हुईं। हमारे कमांडर-इन-चीफ़ को ख़बर दी जाए।',
+      en: '(In English.) The 3rd Light Cavalry and the 11th and 20th Native Infantry rose at Meerut on Sunday the 10th. Our English Commander-in-Chief must be told.',
+      hi: '(अंग्रेज़ी में) तीसरी घुड़सवार पलटन और 11वीं व 20वीं पैदल पलटनें 10 तारीख़, रविवार को मेरठ में उठ खड़ी हुईं। हमारे अंग्रेज़ कमांडर-इन-चीफ़ को ख़बर दी जाए।',
     },
     checks: { en: ['rose at Meerut on Sunday the 10th'], hi: ['10 तारीख़, रविवार को मेरठ में'] },
     why: {
@@ -1189,8 +1164,8 @@ const datelessMessages: Message[] = [
     checks: { en: ['hanged at Barrackpore on 8 April'], hi: ['बैरकपुर में फाँसी'] },
     why: {
       text: {
-        en: 'True: Mangal Pandey attacked his officers at Barrackpore on 29 March; hanged 8 April.',
-        hi: 'सच: मंगल पांडे ने 29 मार्च को बैरकपुर में अफ़सरों पर हमला किया; 8 अप्रैल को फाँसी हुई।',
+        en: 'Many books say 29 March: that was his attack. He was hanged 8 April.',
+        hi: 'कई किताबें 29 मार्च बताती हैं: उस दिन उन्होंने हमला किया था। फाँसी 8 अप्रैल को हुई।',
       },
       sources: [...PANDEY, sen('pp.58-60')],
     },
@@ -1222,6 +1197,7 @@ const datelessMessages: Message[] = [
     id: 'rani-forged',
     tier: 3,
     real: false,
+    pair: 'rani',
     from: NEWSWRITER,
     to: OFFICE,
     text: {
@@ -1233,13 +1209,190 @@ const datelessMessages: Message[] = [
       {
         kind: 'anachronism',
         explain: {
-          en: "That line is Subhadra Kumari Chauhan's, printed in 1930. Jhansi rose in June.",
-          hi: 'यह पंक्ति सुभद्रा कुमारी चौहान की है, 1930 में छपी। झाँसी जून में उठी।',
+          en: "That line is Subhadra Kumari Chauhan's (born 1904), collected in her Mukul in 1930.",
+          hi: "यह पंक्ति सुभद्रा कुमारी चौहान (जन्म 1904) की है, जो 1930 में उनके 'मुकुल' संग्रह में आई।",
         },
         sources: [
-          { id: 'sudha-chauhan-1981', loc: 'jacket blurb (1904-1948); p.33 (Mukul, 1930)' },
-          { id: 'chauhan-1930', loc: "'Jhansi ki Rani'" },
-          sen('p.271'),
+          { id: 'sudha-chauhan-1981', loc: 'jacket (1904-1948); p.33 (Mukul collected 1930)' },
+          { id: 'chauhan-1930', loc: "first-edition preface dated 13 Nov 1930; 'Jhansi ki Rani'" },
+        ],
+      },
+      {
+        kind: 'knowledge',
+        explain: { en: 'And Jhansi rose in June, not May.', hi: 'और झाँसी जून में उठी, मई में नहीं।' },
+        sources: [sen('p.271')],
+      },
+    ],
+  },
+
+  // nana-forged: dateless and unpaired (false on any day of the window).
+  {
+    id: 'nana-forged',
+    tier: 3,
+    real: false,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: 'News from Kanpur: Nana Sahib of Bithur has risen against the English and besieges them in their camp there.',
+      hi: 'कानपुर से ख़बर: बिठूर के नाना साहब अंग्रेज़ों के ख़िलाफ़ उठ खड़े हुए हैं और उन्हें उनकी छावनी में घेर रखा है।',
+    },
+    checks: { en: ['has risen against the English'], hi: ['अंग्रेज़ों के ख़िलाफ़ उठ खड़े हुए हैं'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: "Kanpur rose on 4 June; till then Nana Sahib even guarded the Company's treasury.",
+          hi: 'कानपुर 4 जून को ही उठा; तब तक नाना साहब कंपनी का ख़ज़ाना तक सँभालते थे।',
+        },
+        sources: NANA,
+      },
+    ],
+  },
+
+  // ── Where were they in May 1857? (docs/research/people-and-moments.md, 1A and 1C) ──
+  {
+    id: 'zinat-real',
+    tier: 2,
+    real: true,
+    pair: 'zinat',
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Sunday 17 May. The King told the soldiers to trust his physician Ahsanullah Khan, Mahbub Ali Khan and Queen Zinat Mahal.',
+      hi: 'रविवार 17 मई। बादशाह ने सिपाहियों से कहा कि वे उनके हकीम अहसनुल्लाह ख़ान, महबूब अली ख़ान और मलिका ज़ीनत महल पर भरोसा रखें।',
+    },
+    checks: { en: ['Queen Zinat Mahal', 'Sunday 17 May'], hi: ['मलिका ज़ीनत महल', 'रविवार 17 मई'] },
+    why: {
+      text: {
+        en: 'Chuni Lal, Sunday 17 May: the King vouched for his physician, minister and queen.',
+        hi: 'चुन्नी लाल, रविवार 17 मई: बादशाह ने अपने हकीम, वज़ीर और मलिका की ज़मानत दी।',
+      },
+      sources: [trial(CHUNI_17)],
+    },
+  },
+  {
+    id: 'zinat-forged',
+    tier: 3,
+    real: false,
+    pair: 'zinat',
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Sunday 17 May. The King told the soldiers to trust his physician Ahsanullah Khan, Mahbub Ali Khan and Queen Hazrat Mahal.',
+      hi: 'रविवार 17 मई। बादशाह ने सिपाहियों से कहा कि वे उनके हकीम अहसनुल्लाह ख़ान, महबूब अली ख़ान और मलिका हज़रत महल पर भरोसा रखें।',
+    },
+    checks: { en: ['Queen Hazrat Mahal'], hi: ['मलिका हज़रत महल'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: "Zafar's queen was Zinat Mahal; Hazrat Mahal was a Begum of Awadh, at Lucknow.",
+          hi: 'ज़फ़र की मलिका ज़ीनत महल थीं; हज़रत महल अवध की बेगम थीं, लखनऊ में।',
+        },
+        sources: [trial(CHUNI_17), sen('pp.209-10')],
+      },
+    ],
+  },
+  {
+    id: 'kunwar-forged',
+    tier: 3,
+    real: false,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: 'News from Bihar: old Kunwar Singh of Jagdishpur, eighty years of age, has risen and taken Arrah.',
+      hi: 'बिहार से ख़बर: जगदीशपुर के बूढ़े कुँवर सिंह, अस्सी बरस की उम्र में, उठ खड़े हुए हैं और आरा ले लिया है।',
+    },
+    checks: { en: ['Kunwar Singh of Jagdishpur'], hi: ['जगदीशपुर के बूढ़े कुँवर सिंह'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'Kunwar Singh joined only in late July, at Arrah; Sen puts him near seventy.',
+          hi: 'कुँवर सिंह जुलाई के आख़िर में ही, आरा में, शामिल हुए; सेन उन्हें सत्तर के क़रीब बताते हैं।',
+        },
+        sources: [sen('pp.254-55')],
+      },
+    ],
+  },
+  {
+    id: 'faizabad-forged',
+    tier: 3,
+    real: false,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: 'News from Awadh: Maulvi Ahmadullah Shah of Faizabad has raised his men and is marching on Lucknow.',
+      hi: 'अवध से ख़बर: फ़ैज़ाबाद के मौलवी अहमदुल्लाह शाह ने अपने आदमी जुटा लिए हैं और लखनऊ की ओर बढ़ रहे हैं।',
+    },
+    checks: { en: ['Maulvi Ahmadullah Shah of Faizabad'], hi: ['फ़ैज़ाबाद के मौलवी अहमदुल्लाह शाह'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'In May the Maulvi was a prisoner in army custody at Faizabad.',
+          hi: 'मई में मौलवी फ़ैज़ाबाद में फ़ौज की क़ैद में थे।',
+        },
+        sources: [sen('pp.186-87')],
+      },
+    ],
+  },
+
+  // ── Two myths Nehru believed (Glimpses pp.414-15; Discovery p.384), with Sen and Majumdar as the record ──
+  {
+    id: 'plan-forged',
+    tier: 3,
+    real: false,
+    from: { en: 'A subahdar, in confidence', hi: 'एक सूबेदार, चुपके से' },
+    to: OFFICE,
+    text: {
+      en: 'In confidence: every regiment was to rise together on Sunday 31 May. Meerut rose three weeks early and spoiled the plan.',
+      hi: 'चुपके से: हर पलटन को रविवार 31 मई को एक साथ उठना था। मेरठ तीन हफ़्ते पहले उठ गया और योजना बिगाड़ दी।',
+    },
+    checks: { en: ['rise together on Sunday 31 May'], hi: ['रविवार 31 मई को एक साथ उठना था'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'No fixed date is proven: Nehru believed in one; Sen and Majumdar did not.',
+          hi: 'तय तारीख़ का कोई सबूत नहीं; नेहरू ने यह माना, पर सेन और मजूमदार ने नहीं।',
+        },
+        sources: [
+          sen('pp.56-57, 59'),
+          majumdar('pp.205-06'),
+          { id: 'nehru-1934', loc: "p.414 ('Apparently a date was fixed')" },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'rani-girl-forged',
+    tier: 3,
+    real: false,
+    pair: 'rani',
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: "News from Jhansi: the Rani, 'a girl-widow, twenty years of age', has declared war on the English.",
+      hi: "झाँसी से ख़बर: रानी, 'बीस बरस की एक विधवा लड़की', ने अंग्रेज़ों के ख़िलाफ़ जंग छेड़ दी है।",
+    },
+    checks: { en: ['a girl-widow, twenty years of age'], hi: ['बीस बरस की एक विधवा लड़की'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'Jhansi was quiet in May; its sepoys rose only on 5 June.', hi: 'मई में झाँसी शांत थी; वहाँ के सिपाही 5 जून को ही उठे।' },
+        sources: [sen('p.271')],
+      },
+      {
+        kind: 'anachronism',
+        explain: {
+          en: "Those words are Nehru's (Glimpses, 1934); Sen says her birth date is unknown.",
+          hi: 'ये शब्द नेहरू के हैं (1934 की किताब); सेन कहते हैं उनकी जन्म-तारीख़ पता नहीं।',
+        },
+        sources: [
+          { id: 'nehru-1934', loc: 'p.415' },
+          { id: 'nehru-1946', loc: 'p.384' },
+          sen('pp.269-70'),
         ],
       },
     ],

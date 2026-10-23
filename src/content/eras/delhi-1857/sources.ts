@@ -76,9 +76,30 @@ export const sources: Source[] = [
   {
     id: 'chauhan-1930',
     author: 'Subhadra Kumari Chauhan',
-    title: "Mukul (poems, with 'Jhansi ki Rani'), Patna: M. N. Varman and Co.",
+    title: "Mukul (3rd ed., Patna: M. N. Varman and Co.; first ed. Prayag: Ojha-Bandhu-Ashram, preface dated 13 Nov 1930), with 'Jhansi ki Rani'",
     year: '1930',
     url: 'https://archive.org/details/zQGk_mukul-by-subhadra-kumari-chauhan-1930-patna-m.-n.-varman-and-co',
+  },
+  {
+    id: 'kaye-1880',
+    author: 'J. W. Kaye',
+    title: 'A History of the Sepoy War in India, 1857-1858, Vol. I (9th ed.)',
+    year: '1880',
+    url: 'https://archive.org/details/cu31924021098441',
+  },
+  {
+    id: 'nehru-1934',
+    author: 'Jawaharlal Nehru',
+    title: 'Glimpses of World History (Allahabad: Kitabistan)',
+    year: '1934',
+    url: 'https://archive.org/details/in.ernet.dli.2015.211233',
+  },
+  {
+    id: 'nehru-1946',
+    author: 'Jawaharlal Nehru',
+    title: 'The Discovery of India (Calcutta: Signet Press)',
+    year: '1946',
+    url: 'https://archive.org/details/in.ernet.dli.2015.537133',
   },
   {
     id: 'hunter-1885',
