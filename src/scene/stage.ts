@@ -579,7 +579,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     // a phone is width-bound: look nearly straight down. A wide screen is height-bound: lean back
     // a little, so the sheet foreshortens and can be drawn larger, as when reading at a desk
     const dir = new THREE.Vector3(0, 1, aspect < 0.9 ? 0.3 : 0.62).normalize()
-    return fitPose({ points: pts, dir, aspect, box: box(0.04) })
+    // a phone is width-bound: a thinner margin buys a 360 px screen its 17 px body text
+    return fitPose({ points: pts, dir, aspect, box: box(aspect < 0.9 ? 0.018 : 0.04) })
   }
   const typewriterPose = (w: World): PoseFn | null => {
     const t = w.hooks.typewriter
@@ -608,6 +609,28 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   }
   rig.override('desk', deskPose)
 
+  // ------------------------------------------------------------ the HUD insets
+
+  /** The app publishes its HUD's footprint as --ft-hud-* on the mount; a change re-fits the shot. */
+  let insetKey = ''
+  const insetSignature = () => {
+    const i = readInsets(el, cssW, cssH)
+    return `${Math.round(i.top)}|${Math.round(i.right)}|${Math.round(i.bottom)}|${Math.round(i.left)}|${cssW}x${cssH}`
+  }
+  let insetFrames = 0
+  const watchInsets = () => {
+    if (++insetFrames < 12) return
+    insetFrames = 0
+    const key = insetSignature()
+    if (key === insetKey) return
+    const first = insetKey === ''
+    insetKey = key
+    if (first) return
+    rig.refresh()
+    // ease into the new framing from wherever the camera is
+    void rig.go(rig.shot(), reduced ? 0 : 450, ease.inOut)
+  }
+
   // ------------------------------------------------------------ loop
 
   let running = false
@@ -631,6 +654,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     tweens.tick(step)
     const pxPerUnit = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))
     w.update(clock, pxPerUnit)
+    watchInsets()
     const glance = parallax.step(step)
     rig.setParallax(glance.yaw, glance.pitch)
     rig.update(step, clock)
@@ -1084,7 +1108,10 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     liftCaught()
     w.sheet.setGlow(1)
     rig.setParallaxScale(0.06)
-    if (rig.shot() !== 'custom') void rig.goTo(readPose, reduced ? 0 : 650, ease.inOut)
+    // always re-fit: the verdict's buttons may have changed the HUD since the lean-in
+    insetKey = insetSignature()
+    rig.refresh()
+    void rig.goTo(readPose, reduced ? 0 : 650, ease.inOut)
     if (again || reduced) {
       paintReveal(w, r, 1, true, true)
       w.sheet.setFlip(1)

@@ -17,8 +17,8 @@ export const MIN_ASPECT = 4 / 3
 export const MAX_ASPECT = 1.8
 /** The sheet keeps to this shape while the text can shrink toward BODY instead. */
 const PREF_ASPECT = 1.45
-/** Body size in page units (17.5 px on a 359 px wide sheet). */
-export const BODY = 49
+/** Body size floor in page units: 17.3 px even on a 360 px phone (a 340 px sheet). */
+export const BODY = 51
 const BODY_MAX = 66
 const BODY_MIN = 41
 /** The stamp imprint's diameter as a share of the sheet's width. */
