@@ -1,7 +1,8 @@
 import type { Era, Lang } from '../../content/types'
 import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
-import type { SheetSpec, VoiceState, VoiceStyle } from '../contract'
+import type { VoiceState } from '../../audio/voice'
+import type { SheetSpec } from '../../scene/index'
 import { announce, h, mount } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isWide, onLayoutChange } from '../layout'
@@ -37,8 +38,9 @@ export interface DayProps {
   soundOn: boolean
   /** Read-aloud is available (the era voices are loaded), and what it is doing now. */
   voice?: VoiceState
-  /** Which voice reads. Defaults to the era voice. */
-  voiceStyle?: VoiceStyle
+  /** The voices on offer (the dastango, and a guest once enabled) and the one that reads. */
+  voices?: VoiceOption[]
+  voiceStyle?: string
   /** The Aaj ka Taar number: the mode chip names the puzzle instead of the difficulty. */
   daily?: number
   /** Show every rule, none tagged new (the daily puzzle plays with the whole rulebook). */
@@ -49,8 +51,8 @@ export interface DayHandlers {
   stamp(v: Verdict): void
   /** Listen: play the message aloud, or stop it while it plays. */
   listen(): void
-  /** The player picked the era voice or the dastango. */
-  voiceStyle?(s: VoiceStyle): void
+  /** The player picked a voice (only offered when there is more than one). */
+  voiceStyle?(id: string): void
   tab(t: Tab): void
   next(): void
   /** A tap during an animation: finish it now. */
@@ -59,6 +61,13 @@ export interface DayHandlers {
   lang(): void
   /** Leave for home. When given, a home button shows in the top bar. */
   quit?(): void
+}
+
+export interface VoiceOption {
+  id: string
+  label: string
+  /** Shown whenever this voice is selected (a voice used with someone's permission). */
+  credit?: string
 }
 
 const MODE_LABEL = { easy: 'modeEasy', medium: 'modeMedium', hard: 'modeHard' } as const
@@ -296,7 +305,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
         h('span', { class: 'stamp__hint' }, t(v === 'asli' ? 'asliHint' : 'totaHint', lang)),
         h('kbd', { class: 'stamp__key', 'aria-hidden': 'true' }, `${arrow} ${key}`)))
 
-  // Listen, with a chevron (or a long press) for the choice of voice
+  // Listen; with more than one voice, a chevron (or a long press) picks the voice
   let listenGroup: HTMLElement | null = null
   let picker: HTMLElement | null = null
   let more: HTMLButtonElement | null = null
@@ -315,6 +324,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       },
       onpointerdown: () => {
         longPressed = false
+        if (!picker) return
         pressTimer = window.setTimeout(() => {
           longPressed = true
           setPicker(true)
@@ -326,18 +336,25 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     h('span', { class: 'listen__icon' }, micIcon(), h('span', { class: 'listen__spin', 'aria-hidden': 'true' })),
     h('span', { class: 'listen__label' }, t('listen', lang)))
     applyVoice(listenBtn, p.voice, lang)
-    const style = p.voiceStyle ?? 'era'
-    const option = (s: VoiceStyle) =>
-      h('button', { class: 'voice-opt', type: 'button', role: 'radio', 'aria-checked': String(style === s), 'data-style': s,
-        onclick: () => {
-          for (const o of picker?.querySelectorAll('.voice-opt') ?? []) o.setAttribute('aria-checked', String((o as HTMLElement).dataset.style === s))
-          setPicker(false)
-          on.voiceStyle?.(s)
-        } }, t(s === 'era' ? 'voiceEra' : 'voiceDastango', lang))
-    picker = h('div', { class: 'voice-picker', role: 'radiogroup', 'aria-label': t('voiceStyle', lang) }, option('era'), option('dastango'))
-    more = h('button', { class: 'listen__more', type: 'button', 'data-action': 'voice-style', 'aria-label': t('voiceStyle', lang), title: t('voiceStyle', lang),
-      'aria-expanded': 'false', onclick: () => setPicker(!picker?.classList.contains('is-open')) }, chevronIcon())
-    listenGroup = h('div', { class: 'listen-group' }, listenBtn, more, picker)
+    const voices = p.voices ?? []
+    const chosen = voices.find((v) => v.id === p.voiceStyle) ?? voices[0]
+    const credit = h('p', { class: 'voice-credit' }, chosen?.credit ?? '')
+    credit.hidden = !chosen?.credit
+    if (voices.length > 1) {
+      const option = (v: VoiceOption) =>
+        h('button', { class: 'voice-opt', type: 'button', role: 'radio', 'aria-checked': String(chosen?.id === v.id), 'data-style': v.id,
+          onclick: () => {
+            for (const o of picker?.querySelectorAll('.voice-opt') ?? []) o.setAttribute('aria-checked', String((o as HTMLElement).dataset.style === v.id))
+            credit.textContent = v.credit ?? ''
+            credit.hidden = !v.credit
+            setPicker(false)
+            on.voiceStyle?.(v.id)
+          } }, v.label)
+      picker = h('div', { class: 'voice-picker', role: 'radiogroup', 'aria-label': t('voiceStyle', lang) }, voices.map(option))
+      more = h('button', { class: 'listen__more', type: 'button', 'data-action': 'voice-style', 'aria-label': t('voiceStyle', lang), title: t('voiceStyle', lang),
+        'aria-expanded': 'false', onclick: () => setPicker(!picker?.classList.contains('is-open')) }, chevronIcon())
+    }
+    listenGroup = h('div', { class: `listen-group${picker ? ' has-picker' : ''}` }, listenBtn, more, picker, credit)
   }
 
   const controls = revealed ? null : h('footer', { class: 'day__controls' },

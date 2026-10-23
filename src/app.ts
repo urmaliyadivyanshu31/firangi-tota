@@ -15,11 +15,14 @@ import { createChapter, nextDay, stamp, type ChapterState, type Verdict } from '
 import { store } from './game/storage'
 import { getLang, hasLang, setLang } from './i18n/lang'
 import { strings, t } from './i18n/strings'
-import { STAGE_LOST_EVENT, loadStage, mountFallback, type EraDressing, type Fallback, type QualityTier, type Stage, type StampKind } from './scene/index'
-import type { DayTitle, FlashKind, ImmersiveFallback, ImmersiveStage, SheetSpec, VoicePlayer, VoiceState, VoiceStyle } from './ui/contract'
+import type { Voice, VoiceState } from './audio/voice'
+import { DEFAULT_VOICE, VOICES, voiceChoices, type VoiceChoice } from './content/voices'
+import {
+  STAGE_LOST_EVENT, loadStage, mountFallback,
+  type DayTitle, type EraDressing, type Fallback, type FlashKind, type QualityTier, type SheetSpec, type Stage, type StageCueName, type StampKind,
+} from './scene/index'
 import { h } from './ui/h'
 import { buildSheet, dayTitleFor } from './ui/message'
-import { createFx, type Fx } from './ui/overlay'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
 import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
@@ -34,14 +37,13 @@ export interface AppEnv {
   now(): number
   random(): number
   url: URL
-  /** Read-aloud. Defaults to the era voices when the build sets VITE_VOICE=on; tests pass a stub. */
-  voice?: VoicePlayer
+  /** Read-aloud. Defaults to the voice module when the build sets VITE_VOICE=on; tests pass a stub. */
+  voice?: Voice
 }
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
 const LOW_TIME = 0.3 // under this share of the agarbatti, it ticks every second
 const MAX_FRAME_MS = 1000 // one long frame (a stall, a resume) never burns more than this
-const STAMP_IMPACT_MS = 720 // raise 200 + move 360 + hover 70 + press 90 (animateStamp in scene/props.ts)
 const ANIM_GUARD_MS = 3500 // a stage animation that never settles must not stall the game
 const STAGE_WAIT_MS = 6000 // a day waits this long for the 3D stage before using the 2D desk
 const TIERS: QualityTier[] = ['low', 'mid', 'high']
@@ -61,13 +63,10 @@ interface Desk {
   skip(): void
   setPaused(p: boolean): void
   dispose(): void
-  /** When the stamp hits the paper, for the thunk and the flash. */
-  impactMs: number
+  /** The desk names its own beats (arrival, stamp impact) through onCue; the flat desk does not. */
+  cues: boolean
 }
 
-/** The stage as it is today plus whatever of the immersive API it already has. */
-type AnyStage = Stage & Partial<ImmersiveStage>
-type AnyFallback = Fallback & Partial<ImmersiveFallback>
 
 type Play =
   | { kind: 'chapter'; era: Era; difficulty: Difficulty; state: ChapterState }
@@ -98,16 +97,20 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let muted = store.get<unknown>('muted', false) === true
 
   // the desk (3D stage or 2D fallback), and what it should show
-  const fx: Fx = createFx(root.stage, reducedMotion)
   let desk: Desk | null = null
   let deskEra: EraId | null = suggestedEra(ERAS, bests())?.id ?? null
   let deskDirty = false // a paper, a stamp or the caught dimming is on it
   let stageLoad: Promise<void> | null = null
 
   // read-aloud
-  let voice: VoicePlayer | null = null
+  let voice: Voice | null = null
   let voiceState: VoiceState = 'idle'
-  let voiceStyle: VoiceStyle = store.get<unknown>('voiceStyle', 'era') === 'dastango' ? 'dastango' : 'era'
+  // any stored value but an enabled voice falls back to the dastango (the old 'era' included)
+  const storedVoice = store.get<unknown>('voiceStyle', DEFAULT_VOICE)
+  let voiceStyle: VoiceChoice = voiceChoices().find((id) => id === storedVoice) ?? DEFAULT_VOICE
+
+  // the stamp whose thunk waits for the stage's impact beat
+  let pendingThunk: StampKind | null = null
 
   // the agarbatti
   let timerArmed = false
@@ -130,6 +133,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   const unlock = () => audio.unlock()
   for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, unlock, { capture: true, passive: true })
   document.addEventListener('visibilitychange', syncPause)
+  let insetTimer = 0
+  window.addEventListener('resize', () => {
+    // after the layout settles (the 900 px switch moves the case file), tell the stage again
+    window.clearTimeout(insetTimer)
+    insetTimer = window.setTimeout(() => alive() && screen === 'day' && !revealed && syncHudInsets(), 60)
+  })
 
   root.stage.addEventListener(STAGE_LOST_EVENT, (e) => {
     // The WebGL context is gone: swap in the 2D desk. The day on screen carries on untouched.
@@ -174,7 +183,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       stageLoad = Promise.all([loadStage(), import('./scene/eras/index')])
         .then(([mod, eras]) => {
           if (!alive()) return
-          const s = mod.createStage(root.stage, { reducedMotion, forceTier })
+          const s = mod.createStage(root.stage, { reducedMotion, forceTier, onCue })
           attach(s ? stageDesk(s, eras.dressingFor) : null)
         })
         .catch((err: unknown) => {
@@ -207,46 +216,75 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     syncPause()
   }
 
-  function stageDesk(s: AnyStage, dressingFor: (id: EraId) => EraDressing): Desk {
+  function stageDesk(s: Stage, dressingFor: (id: EraId) => EraDressing): Desk {
     return {
       setEra: (id) => s.setEra(dressingFor(id)),
-      establish: () => (s.establish ? s.establish() : Promise.resolve()),
-      dayTitle: (x) => (s.dayTitle ? s.dayTitle(x) : Promise.resolve()),
-      showMessage: (x) => {
-        if (s.showMessage) return s.showMessage(x)
-        s.showPaper({ lean: true })
-        return Promise.resolve()
-      },
-      redrawMessage: (x) => s.redrawMessage?.(x),
+      establish: () => s.establish(),
+      dayTitle: (x) => s.dayTitle(x),
+      showMessage: (x) => s.showMessage(x),
+      redrawMessage: (x) => s.redrawMessage(x),
       stamp: (k) => s.stamp(k),
-      flash: (k) => s.flash?.(k),
+      flash: (k) => s.flash(k),
       caught: () => s.caught(),
-      skip: () => s.skip?.(),
+      skip: () => s.skip(),
       setPaused: (p) => s.setPaused(p),
       dispose: () => s.dispose(),
-      impactMs: reducedMotion ? 0 : STAMP_IMPACT_MS,
+      cues: true,
     }
   }
 
-  /** The flat desk draws the same sheet; the title, the flash and the ink come from the DOM layer. */
-  function fallbackDesk(f: AnyFallback): Desk {
+  /** The flat desk: the same sheet, title, imprint and flash, drawn on one canvas. */
+  function fallbackDesk(f: Fallback): Desk {
     return {
       setEra: (id) => f.setEra(id),
       establish: () => Promise.resolve(),
-      dayTitle: (x) => fx.title(x),
-      showMessage: (x) => (f.showMessage ? f.showMessage(x) : Promise.resolve()),
-      redrawMessage: (x) => f.redrawMessage?.(x),
-      stamp: (k) => {
-        fx.imprint(k)
-        return Promise.resolve()
-      },
-      flash: (k) => (f.flash ? f.flash(k) : fx.flash(k)),
+      dayTitle: (x) => f.dayTitle(x),
+      showMessage: (x) => f.showMessage(x),
+      redrawMessage: (x) => f.redrawMessage(x),
+      stamp: (k) => f.stamp(k),
+      flash: (k) => f.flash(k),
       caught: () => Promise.resolve(),
-      skip: () => fx.skip(),
+      skip: () => undefined,
       setPaused: () => undefined,
       dispose: () => f.dispose(),
-      impactMs: 0,
+      cues: false,
     }
+  }
+
+  /** The stage's beats, as sound. Right and wrong are cued by the game itself, on every desk. */
+  function onCue(name: StageCueName): void {
+    if (name === 'arrive') audio.cue('arrive')
+    else if (name === 'flip' || name === 'unfold' || name === 'flap' || name === 'seal') audio.cue('page')
+    else if (name === 'stamp') thunk()
+  }
+
+  function thunk(): void {
+    const k = pendingThunk
+    pendingThunk = null
+    if (k) audio.cue(k === 'asli' ? 'stampAsli' : 'stampTota')
+  }
+
+  /**
+   * Tells the stage where the overlay sits, so the lean-in keeps the paper clear of it: the top bar,
+   * the tabs and stamps below, and in landscape the pinned cards on the left.
+   */
+  function syncHudInsets(): void {
+    const el = root.stage
+    const H = window.innerHeight || document.documentElement.clientHeight
+    const W = window.innerWidth || document.documentElement.clientWidth
+    const rect = (sel: string) => {
+      const r = ui.querySelector(sel)?.getBoundingClientRect()
+      return r && r.height > 0 && r.width > 0 ? r : null
+    }
+    const hud = rect('.hud')
+    const below = ['.day__controls .tabs', '.day__controls .stamps'].map(rect).filter((r): r is DOMRect => r !== null)
+    const wide = ui.querySelector<HTMLElement>('.screen--day')?.dataset.layout === 'wide'
+    const dossier = wide ? rect('.dossier') : null
+    if (!hud && !below.length) return
+    el.style.setProperty('--ft-hud-top', `${Math.ceil(hud ? hud.bottom + 6 : 0)}px`)
+    el.style.setProperty('--ft-hud-bottom', `${Math.ceil(below.length ? H - Math.min(...below.map((r) => r.top)) + 6 : 0)}px`)
+    el.style.setProperty('--ft-hud-left', `${Math.ceil(dossier ? dossier.right + 12 : 0)}px`)
+    el.style.setProperty('--ft-hud-right', `${Math.ceil(hud && wide ? Math.max(0, W - hud.right) : 0)}px`)
   }
 
   /** Shows an era's desk. A desk with a paper or the caught dimming on it is rebuilt clean. */
@@ -259,7 +297,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   /** The wide shot of the room, behind the cards. */
   function establish(): void {
-    fx.clear()
     if (desk) void desk.establish()
   }
 
@@ -280,7 +317,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   // ------------------------------------------------------------------ read-aloud
 
-  function bindVoice(v: VoicePlayer): void {
+  function bindVoice(v: Voice): void {
     voice = v
     v.onState((s) => {
       voiceState = s
@@ -299,15 +336,23 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (!voice || !p || !msg || !readable || revealed) return
     if (voiceState === 'loading' || voiceState === 'playing') return voice.stop()
     // play() starts inside this tap (iOS); the day is the chapter day whose date is on screen
-    const req = { era: p.era.id, id: msg.id, lang: getLang(), day: dateDay(p), voice: voiceStyle }
-    voice.play(req).catch(() => undefined)
+    voice.play({ era: p.era.id, id: msg.id, lang: getLang(), day: dateDay(p), voice: voiceStyle }).catch(() => undefined)
   }
 
-  function chooseVoice(s: VoiceStyle): void {
-    if (s === voiceStyle) return
-    voiceStyle = s
-    store.set('voiceStyle', s)
+  function chooseVoice(id: string): void {
+    const next = voiceChoices().find((v) => v === id)
+    if (!next || next === voiceStyle) return
+    voiceStyle = next
+    store.set('voiceStyle', next)
     stopVoice()
+  }
+
+  /** The voices a picker offers; with only the dastango there is nothing to pick. */
+  function voiceList(lang: 'en' | 'hi'): { id: string; label: string; credit?: string }[] {
+    return voiceChoices().map((id) => {
+      const credit = VOICES[id].credit
+      return { id, label: VOICES[id].label[lang], ...(credit ? { credit } : {}) }
+    })
   }
 
   // ------------------------------------------------------------------ the agarbatti
@@ -469,12 +514,13 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     return dayDate(p.era, dateDay(p))
   }
 
-  /** What the paper shows today. */
+  /** What the paper shows today. Only after the stamp may it carry its real-document tag (R30b). */
   function sheetFor(p: Play, lang = getLang()): SheetSpec {
     const msg = currentMessage(p)
     if (!msg) throw new Error(`No message for day ${p.state.day}`)
     const pencil = p.kind === 'daily' ? false : pencilOn(p.state.difficulty, p.state.day)
-    return buildSheet({ era: p.era, msg, isoDate: isoDateFor(p), lang, pencil })
+    const sheet = buildSheet({ era: p.era, msg, isoDate: isoDateFor(p), lang, pencil })
+    return revealed ? { ...sheet, documentMark: !!msg.document, revealed: true } : sheet
   }
 
   function beginDay(): void {
@@ -486,7 +532,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     revealed = false
     busy = false
     deskDirty = true
-    fx.clear()
     timerArmed = false
     timeLeft = timeTotal = TIMER_S[p.state.difficulty]
     syncPause()
@@ -504,7 +549,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const lang = getLang()
     await guard(desk ? desk.dayTitle(dayTitleFor(p.state.day, isoDateFor(p), lang)) : Promise.resolve())
     if (stale()) return
-    audio.cue('arrive')
+    if (!desk?.cues) audio.cue('arrive') // the stage cues it when the paper actually arrives
+    syncHudInsets()
     const d = desk
     await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve())
     if (stale()) return
@@ -533,7 +579,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       readable,
       revealed,
       soundOn: !muted,
-      ...(voice ? { voice: voiceState, voiceStyle } : {}),
+      ...(voice ? { voice: voiceState, voiceStyle, voices: voiceList(lang) } : {}),
       ...(p.kind === 'daily' ? { daily: p.daily.number, allRules: true } : {}),
     }, {
       stamp: (v) => void onStamp(v),
@@ -551,6 +597,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       },
       quit: showHome,
     })
+    if (!revealed) syncHudInsets()
   }
 
   async function onStamp(v: Verdict): Promise<void> {
@@ -569,11 +616,13 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // The stamps stop taking taps while the desk plays the stamp, or the caught beat when the
     // agarbatti burnt out. A tap on the room finishes the animation.
     setStamping(ui, v)
-    const flash: FlashKind = correct ? 'right' : 'wrong'
     if (v !== 'timeout') {
-      await stampDesk(v, flash)
+      await stampDesk(v)
       if (token !== gen) return
-    } else desk?.flash(flash)
+    }
+    // the room flashes and the camera eases back to the desk for the card (caught() overrides it)
+    const flash: FlashKind = correct ? 'right' : 'wrong'
+    desk?.flash(flash)
     if (correct) audio.cue('correct')
     else {
       audio.cue('caught')
@@ -583,22 +632,14 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     revealed = true
     busy = false
     drawDay()
+    if (currentMessage(p)?.document) desk?.redrawMessage(sheetFor(p)) // the paper may show its tag now
   }
 
-  /** The stamp comes down; the thunk and the room's flash land on impact. */
-  async function stampDesk(kind: StampKind, flash: FlashKind): Promise<void> {
-    const d = desk
-    let hit = false
-    const impact = () => {
-      if (hit) return
-      hit = true
-      audio.cue(kind === 'asli' ? 'stampAsli' : 'stampTota')
-      d?.flash(flash)
-    }
-    const timer = setTimeout(impact, d ? d.impactMs : 0)
-    await guard(d ? d.stamp(kind) : Promise.resolve())
-    clearTimeout(timer)
-    impact()
+  /** The stamp comes down; its thunk lands on the stage's impact beat (or when it is done). */
+  async function stampDesk(kind: StampKind): Promise<void> {
+    pendingThunk = kind
+    await guard(desk ? desk.stamp(kind) : Promise.resolve())
+    thunk()
   }
 
   function onNext(): void {

@@ -9,12 +9,14 @@ import { chapterShareText, shareText } from '../src/game/share'
 import { createChapter } from '../src/game/state'
 import { setLang } from '../src/i18n/lang'
 import { strings } from '../src/i18n/strings'
-import type { ImmersiveStage, SheetSpec, VoicePlayer, VoiceState } from '../src/ui/contract'
+import type { Voice, VoiceState } from '../src/audio/voice'
+import { VOICES } from '../src/content/voices'
+import type { SheetSpec, Stage, StageCueName } from '../src/scene/index'
 
 // ---------------------------------------------------------------- mocks: content, stage, audio
 
 const m = vi.hoisted(() => {
-  // A typed stand-in for the immersive Stage API (src/ui/contract.ts).
+  // A stand-in for the stage (src/scene/types.ts Stage), checked against it below.
   const fakeStage = () => ({
     setEra: vi.fn(),
     showPaper: vi.fn(),
@@ -34,7 +36,12 @@ const m = vi.hoisted(() => {
     stage: fakeStage(),
     createStage: vi.fn(),
     loadStage: vi.fn(),
-    fallback: { setEra: vi.fn(), dispose: vi.fn() },
+    fallback: {
+      setEra: vi.fn(), dispose: vi.fn(), redrawMessage: vi.fn(), flash: vi.fn(),
+      showMessage: vi.fn((_s: SheetSpec) => Promise.resolve()),
+      dayTitle: vi.fn((_t: { big: string; small: string }) => Promise.resolve()),
+      stamp: vi.fn((_k: string) => Promise.resolve()),
+    },
     mountFallback: vi.fn(),
     audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn() },
   }
@@ -80,7 +87,7 @@ async function flush(): Promise<void> {
   for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0))
 }
 
-function boot(search = '', now = NOW, voice?: VoicePlayer): { ui: HTMLElement; stage: HTMLElement } {
+function boot(search = '', now = NOW, voice?: Voice): { ui: HTMLElement; stage: HTMLElement } {
   document.body.innerHTML = '<div id="stage"></div><div id="ui"></div>'
   const stage = document.getElementById('stage')!
   const ui = document.getElementById('ui')!
@@ -88,8 +95,8 @@ function boot(search = '', now = NOW, voice?: VoicePlayer): { ui: HTMLElement; s
   return { ui, stage }
 }
 
-/** The fake must keep matching the contract the app codes against. */
-const _typed: Omit<ImmersiveStage, 'setEra'> = { ...m.fakeStage() }
+/** The fake must keep matching the real Stage API. */
+const _typed: Omit<Stage, 'setEra'> = { ...m.fakeStage() }
 
 /** Under reduced motion the 2D desk's DOM day title is instant. */
 function reduceMotion(): void {
@@ -220,7 +227,6 @@ describe('a chapter', () => {
     expect(m.stage.caught).not.toHaveBeenCalled()
     expect(m.stage.setPaused).toHaveBeenLastCalledWith(false)
     expect(m.audio.ambience).toHaveBeenCalledWith('delhi-1857')
-    expect(m.audio.cue).toHaveBeenCalledWith('arrive')
     expect(m.audio.cue).toHaveBeenCalledWith(msg.real ? 'stampAsli' : 'stampTota')
     expect(m.audio.cue).toHaveBeenCalledWith('correct')
 
@@ -729,7 +735,7 @@ describe('Listen: the era voice reads the message', () => {
     const btn = () => $(ui, '[data-action="listen"]')!
     expect(btn().textContent).toBe(strings.en.listen)
     click(ui, '[data-action="listen"]')
-    expect(voice.play).toHaveBeenCalledWith({ era: 'delhi-1857', id: q[0]!.id, lang: 'en', day: 1, voice: 'era' })
+    expect(voice.play).toHaveBeenCalledWith({ era: 'delhi-1857', id: q[0]!.id, lang: 'en', day: 1, voice: 'dastango' })
     expect(btn().dataset.state).toBe('playing')
     click(ui, '[data-action="listen"]')
     expect(voice.stop).toHaveBeenCalled()
@@ -749,26 +755,55 @@ describe('Listen: the era voice reads the message', () => {
     expect(voice.stop).toHaveBeenCalled() // leaving
   })
 
-  it('remembers the choice of the era voice or the dastango, and reads with it', async () => {
+  it('reads in the dastango everywhere, with no picker while the guest voice is off', async () => {
+    localStorage.setItem('ft:voiceStyle', '"era"') // an old choice falls back to the dastango
     const voice = fakeVoice()
-    let { ui } = boot('?lang=en&seed=3', NOW, voice)
+    const { ui } = boot('?lang=en&seed=3', NOW, voice)
     await toDay1(ui)
-    click(ui, '[data-action="voice-style"]')
-    click(ui, '.voice-opt[data-style="dastango"]')
-    expect(localStorage.getItem('ft:voiceStyle')).toBe('"dastango"')
+    expect($(ui, '[data-action="voice-style"]')).toBeNull()
+    expect($(ui, '.voice-picker')).toBeNull()
     click(ui, '[data-action="listen"]')
     expect(voice.play).toHaveBeenLastCalledWith(expect.objectContaining({ voice: 'dastango' }))
-    ;({ ui } = boot('?lang=en&seed=3', NOW, voice))
-    await toDay1(ui)
-    expect($(ui, '.voice-opt[data-style="dastango"]')!.getAttribute('aria-checked')).toBe('true')
   })
 
-  it('leaves the Listen button out entirely without VITE_VOICE=on', async () => {
+  it('offers Dastango and the guest once the guest voice is enabled, and remembers the pick', async () => {
+    const guest = VOICES.guest as { enabled: boolean; label: { en: string; hi: string }; credit?: string }
+    const saved = { ...guest }
+    Object.assign(guest, { enabled: true, label: { en: 'Piyush Mishra', hi: 'पीयूष मिश्रा' }, credit: 'Voice: Piyush Mishra (with permission)' })
+    try {
+      const voice = fakeVoice()
+      let { ui } = boot('?lang=hi&seed=3', NOW, voice)
+      await toDay1(ui)
+      click(ui, '[data-action="voice-style"]')
+      expect([...ui.querySelectorAll('.voice-opt')].map((o) => o.textContent)).toEqual(['दास्तानगो', 'पीयूष मिश्रा'])
+      click(ui, '.voice-opt[data-style="guest"]')
+      expect(localStorage.getItem('ft:voiceStyle')).toBe('"guest"')
+      expect($(ui, '.voice-credit')!.hidden).toBe(false)
+      click(ui, '[data-action="listen"]')
+      expect(voice.play).toHaveBeenLastCalledWith(expect.objectContaining({ voice: 'guest' }))
+      ;({ ui } = boot('?lang=hi&seed=3', NOW, voice))
+      await toDay1(ui)
+      expect($(ui, '.voice-opt[data-style="guest"]')!.getAttribute('aria-checked')).toBe('true')
+    } finally {
+      Object.assign(guest, saved)
+    }
+  })
+
+  it('leaves the Listen button out entirely unless the build sets VITE_VOICE=on', async () => {
+    vi.stubEnv('VITE_VOICE', '')
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     expect($(ui, '[data-action="listen"]')).toBeNull()
     expect($(ui, '.listen-group')).toBeNull()
     expect($(ui, '.hud [data-action="sound"]')).not.toBeNull() // game sound is a separate control
+  })
+
+  it('loads the voice module and shows Listen with VITE_VOICE=on', async () => {
+    vi.stubEnv('VITE_VOICE', 'on')
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    for (let i = 0; i < 20 && !$(ui, '[data-action="listen"]'); i++) await flush()
+    expect($(ui, '[data-action="listen"]')).not.toBeNull()
   })
 
   it('says when the voice could not play, and plays even with game sound off', async () => {
@@ -784,32 +819,86 @@ describe('Listen: the era voice reads the message', () => {
 })
 
 describe('the 2D desk mirrors the stage', () => {
-  it('draws the same sheet, titles the day in the DOM, flashes and inks the stamp', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  it('titles the day, draws the same sheet, stamps it and flashes on its own canvas', async () => {
+    m.createStage.mockImplementation(() => null)
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const f = m.fallback
+    expect(f.dayTitle).toHaveBeenCalledWith({ big: 'Day 1', small: 'Sunday, 17 May 1857' })
+    expect(f.showMessage).toHaveBeenCalledTimes(1)
+    expect(f.showMessage.mock.calls[0]![0].body).toBe($(ui, '.day__message .msg__body')!.textContent)
+    expect(m.audio.cue).toHaveBeenCalledWith('arrive') // the flat desk has no beats of its own
+    const msg = queueFor('delhi-1857', 'easy', 3)[0]!
+    click(ui, `[data-stamp="${wrong(msg)}"]`)
+    await flush()
+    expect(f.stamp).toHaveBeenCalledWith(wrong(msg))
+    expect(f.flash).toHaveBeenCalledWith('wrong')
+    expect(m.audio.cue).toHaveBeenCalledWith(wrong(msg) === 'asli' ? 'stampAsli' : 'stampTota')
+    expect($(ui, '.reveal--wrong')).not.toBeNull()
+  })
+})
+
+describe('the stage, wired', () => {
+  it('turns the stage beats into sound: the arrival, paper and the stamp landing', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const onCue = (m.createStage.mock.calls[0]![1] as { onCue: (n: StageCueName) => void }).onCue
+    expect(m.audio.cue).not.toHaveBeenCalledWith('arrive') // the stage times it
+    onCue('arrive')
+    onCue('unfold')
+    expect(m.audio.cue).toHaveBeenCalledWith('arrive')
+    expect(m.audio.cue).toHaveBeenCalledWith('page')
+    const stamping = deferred()
+    m.stage.stamp.mockImplementation(() => stamping.promise)
+    const msg = queueFor('delhi-1857', 'easy', 3)[0]!
+    click(ui, `[data-stamp="${right(msg)}"]`)
+    const thunkCue = right(msg) === 'asli' ? 'stampAsli' : 'stampTota'
+    expect(m.audio.cue).not.toHaveBeenCalledWith(thunkCue)
+    onCue('stamp') // the impact
+    expect(m.audio.cue.mock.calls.filter(([c]) => c === thunkCue)).toHaveLength(1)
+    expect(m.stage.flash).not.toHaveBeenCalled() // the flash comes after the stamp
+    stamping.resolve()
+    await flush()
+    expect(m.audio.cue.mock.calls.filter(([c]) => c === thunkCue)).toHaveLength(1) // no second thunk
+    expect(m.stage.flash).toHaveBeenCalledWith('right')
+  })
+
+  it('tells the stage where the overlay sits before the paper comes in', async () => {
+    const { ui, stage } = boot('?lang=en&seed=3')
+    const box = (top: number, bottom: number, left = 0, right = 390) =>
+      ({ top, bottom, left, right, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) }) as DOMRect
+    const real = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+      if (this.classList.contains('hud')) return box(8, 96)
+      if (this.classList.contains('tabs')) return box(700, 748)
+      if (this.classList.contains('stamps')) return box(756, 824)
+      return real.call(this)
+    }
     try {
-      const flat = { setEra: vi.fn(), dispose: vi.fn(), showMessage: vi.fn((_s: SheetSpec) => Promise.resolve()), redrawMessage: vi.fn(), flash: vi.fn() }
-      m.mountFallback.mockImplementation(() => flat)
-      m.createStage.mockImplementation(() => null)
-      const { ui, stage } = boot('?lang=en&seed=3')
-      click(ui, '[data-era="delhi-1857"]')
-      click(ui, '[data-mode="easy"]')
-      click(ui, '[data-action="next"]')
-      click(ui, '[data-action="next"]')
-      await vi.advanceTimersByTimeAsync(10)
-      expect(stage.querySelector('.fx-title')!.textContent).toBe('Day 1Sunday, 17 May 1857')
-      expect(flat.showMessage).not.toHaveBeenCalled()
-      await vi.advanceTimersByTimeAsync(1600)
-      expect(stage.querySelector('.fx-title')).toBeNull()
-      expect(flat.showMessage).toHaveBeenCalledTimes(1)
-      expect(flat.showMessage.mock.calls[0]![0].body).toBe($(ui, '.day__message .msg__body')!.textContent)
-      const msg = queueFor('delhi-1857', 'easy', 3)[0]!
-      click(ui, `[data-stamp="${wrong(msg)}"]`)
-      await vi.advanceTimersByTimeAsync(10)
-      expect(flat.flash).toHaveBeenCalledWith('wrong')
-      expect(stage.querySelector(`.fx-imprint--${wrong(msg)}`)).not.toBeNull()
-      expect($(ui, '.reveal--wrong')).not.toBeNull()
+      vi.stubGlobal('innerHeight', 844)
+      await toDay1(ui)
+      expect(stage.style.getPropertyValue('--ft-hud-top')).toBe('102px')
+      expect(stage.style.getPropertyValue('--ft-hud-bottom')).toBe('150px')
+      expect(stage.style.getPropertyValue('--ft-hud-left')).toBe('0px')
     } finally {
-      vi.useRealTimers()
+      HTMLElement.prototype.getBoundingClientRect = real
+    }
+  })
+
+  it('lets the paper show its real-document tag only after the stamp (R30b)', async () => {
+    for (const r of eraById('delhi-1857').messages) if (r.real) r.document = { sources: [{ id: 's1' }] }
+    try {
+      const { ui } = boot('?lang=en&seed=3')
+      await toDay1(ui)
+      const msg = queueFor('delhi-1857', 'easy', 3)[0]!
+      expect(m.stage.showMessage.mock.calls[0]![0]).toMatchObject({ documentMark: false })
+      expect(m.stage.showMessage.mock.calls[0]![0].revealed).toBeUndefined()
+      click(ui, `[data-stamp="${right(msg)}"]`)
+      await flush()
+      if (msg.real) expect(m.stage.redrawMessage).toHaveBeenLastCalledWith(expect.objectContaining({ documentMark: true, revealed: true }))
+      else expect(m.stage.redrawMessage).not.toHaveBeenCalled()
+    } finally {
+      for (const r of eraById('delhi-1857').messages) delete r.document
     }
   })
 })

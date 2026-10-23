@@ -1,7 +1,7 @@
 import type { Channel, Era, Lang, Message } from '../content/types'
 import { fillTemplate } from '../game/dates'
 import { t, tf, type Strings } from '../i18n/strings'
-import type { DayTitle, SheetSpec } from './contract'
+import type { DayTitle, SheetSpec } from '../scene/index'
 
 // What the paper says, built from content. The paper's own chrome adds no facts that could hide
 // or fake a tell: priorities, numbers and slogans stay in the message text, where the rules apply.

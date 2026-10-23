@@ -228,30 +228,47 @@ describe('renderDay: Listen', () => {
 })
 
 describe('renderDay: the choice of voice', () => {
-  it('opens a two-option picker from the chevron and reports the pick', () => {
+  const two = [
+    { id: 'dastango', label: 'दास्तानगो' },
+    { id: 'guest', label: 'पीयूष मिश्रा', credit: 'Voice: Piyush Mishra (with permission)' },
+  ]
+
+  it('shows no picker when the dastango is the only voice', () => {
+    const root = mount()
+    const e = era()
+    renderDay(root, props(e, chapter(e), { voice: 'idle', voices: [two[0]!], voiceStyle: 'dastango' }), handlers())
+    expect(root.querySelector('[data-action="listen"]')).not.toBeNull()
+    expect(root.querySelector('[data-action="voice-style"]')).toBeNull()
+    expect(root.querySelector('.voice-picker')).toBeNull()
+  })
+
+  it('opens a two-option picker from the chevron, reports the pick and shows the guest credit', () => {
     const root = mount()
     const e = era()
     const on = { ...handlers(), voiceStyle: vi.fn() }
-    renderDay(root, props(e, chapter(e), { lang: 'hi', voice: 'idle', voiceStyle: 'era' }), on)
+    renderDay(root, props(e, chapter(e), { lang: 'hi', voice: 'idle', voices: two, voiceStyle: 'dastango' }), on)
     const picker = root.querySelector<HTMLElement>('.voice-picker')!
     const more = root.querySelector<HTMLButtonElement>('[data-action="voice-style"]')!
-    expect(picker.classList.contains('is-open')).toBe(false)
+    const credit = root.querySelector<HTMLElement>('.voice-credit')!
+    expect(credit.hidden).toBe(true)
     more.click()
     expect(picker.classList.contains('is-open')).toBe(true)
     expect(more.getAttribute('aria-expanded')).toBe('true')
     const opts = [...picker.querySelectorAll<HTMLButtonElement>('.voice-opt')]
-    expect(opts.map((o) => o.textContent)).toEqual(['युग की आवाज़', 'दास्तानगो'])
+    expect(opts.map((o) => o.textContent)).toEqual(['दास्तानगो', 'पीयूष मिश्रा'])
     expect(opts.map((o) => o.getAttribute('aria-checked'))).toEqual(['true', 'false'])
     opts[1]!.click()
-    expect(on.voiceStyle).toHaveBeenCalledWith('dastango')
+    expect(on.voiceStyle).toHaveBeenCalledWith('guest')
     expect(opts.map((o) => o.getAttribute('aria-checked'))).toEqual(['false', 'true'])
     expect(picker.classList.contains('is-open')).toBe(false)
+    expect(credit.hidden).toBe(false)
+    expect(credit.textContent).toBe(two[1]!.credit)
   })
 
   it('closes the picker with Escape before anything else', () => {
     const root = mount()
     const e = era()
-    renderDay(root, props(e, chapter(e), { voice: 'idle' }), handlers())
+    renderDay(root, props(e, chapter(e), { voice: 'idle', voices: two }), handlers())
     root.querySelector<HTMLButtonElement>('[data-action="voice-style"]')!.click()
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(root.querySelector('.voice-picker')!.classList.contains('is-open')).toBe(false)

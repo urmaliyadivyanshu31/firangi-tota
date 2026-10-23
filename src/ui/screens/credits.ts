@@ -1,6 +1,7 @@
 import creditsMd from '../../../CREDITS.md?raw'
 import { getLang } from '../../i18n/lang'
 import { t } from '../../i18n/strings'
+import { VOICES, voiceChoices } from '../../content/voices'
 import { backButton, card } from '../card'
 import { h, mount, type Child } from '../h'
 
@@ -17,6 +18,7 @@ export function renderCredits(root: HTMLElement, on: { back(): void }): void {
       h('li', null, t('creditsText', lang)),
       h('li', null, t('creditsFonts', lang))),
     h('p', null, t('creditsAssets', lang)),
+    ...voiceChoices().map((id) => VOICES[id].credit).filter(Boolean).map((c) => h('p', { class: 'credits__voice' }, c)),
     creditsDoc(creditsMd),
   ]
   mount(root, h('div', { class: 'screen screen--credits screen--card', lang },
