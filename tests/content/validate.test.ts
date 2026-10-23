@@ -185,4 +185,27 @@ describe('validateEra', () => {
       expect(validateEra(e, { surfaceTells: false }).some((p) => p.startsWith('surface'))).toBe(false)
     })
   })
+
+  describe('endings', () => {
+    it('are optional', () => {
+      const e = fresh()
+      delete e.endings
+      expect(validateEra(e)).toEqual([])
+    })
+    it('require both languages', () => {
+      const e = fresh()
+      e.endings!.caught.stamp.hi = ''
+      has(e, 'endings.caught.stamp missing hi')
+    })
+    it('enforce word limits, with Hindi at 1.5x', () => {
+      const e = fresh()
+      e.endings!.survived.stamp = { en: 'one two three four', hi: 'एक दो तीन चार पाँच' }
+      e.endings!.caught.title = { en: 'a b c d e f g h i j', hi: 'a b c d e f g h i j k l m n o' }
+      const p = validateEra(e)
+      expect(p).toContain('delhi-1857: endings.survived.stamp too long (4 words, max 3) [en]')
+      expect(p.some((x) => x.includes('endings.survived.stamp') && x.includes('[hi]'))).toBe(false)
+      expect(p).toContain('delhi-1857: endings.caught.title too long (10 words, max 9) [en]')
+      expect(p).toContain('delhi-1857: endings.caught.title too long (15 words, max 14) [hi]')
+    })
+  })
 })
