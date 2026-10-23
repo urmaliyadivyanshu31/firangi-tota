@@ -532,8 +532,8 @@ export const messages: Message[] = [
     from: FILE,
     to: ANN,
     text: {
-      en: 'This is Congress Radio calling from Bombay, on 42.34. The entire world is aware that a ban has been laid on the publication of news nowadays.',
-      hi: 'यह कांग्रेस रेडियो है, बंबई से, 42.34 पर बोल रहा है। पूरी दुनिया जानती है कि आजकल ख़बरें छापने पर पाबंदी लगी है।',
+      en: 'This is Congress Radio calling from Bombay, on 42.34. … The entire world is aware that a ban has been laid on the publication of news nowadays.',
+      hi: 'यह कांग्रेस रेडियो है, बंबई से, 42.34 पर बोल रहा है। … पूरी दुनिया जानती है कि आजकल ख़बरें छापने पर पाबंदी लगी है।',
     },
     checks: { en: ['calling from Bombay'], hi: ['बंबई से'] },
     tells: [
@@ -613,8 +613,8 @@ export const messages: Message[] = [
     from: LEAFLET,
     to: ANN,
     text: {
-      en: 'Mr. Gandhi’s last message, left at his arrest: keep the disturbances within the law and wait at home.',
-      hi: 'मिस्टर गांधी का आख़िरी संदेश, जो वे गिरफ़्तारी के वक़्त छोड़ गए: गड़बड़ियों को क़ानून के अंदर रखो और घर बैठो।',
+      en: 'Mr. Gandhi’s last message, left at his arrest: keep the disturbances within the law… and wait at home.',
+      hi: 'मिस्टर गांधी का आख़िरी संदेश, जो वे गिरफ़्तारी के वक़्त छोड़ गए: गड़बड़ियों को क़ानून के अंदर रखो… और घर बैठो।',
     },
     checks: { en: ['Mr. Gandhi', 'the disturbances'], hi: ['मिस्टर गांधी', 'गड़बड़ियों'] },
     tells: [
@@ -831,7 +831,7 @@ export const messages: Message[] = [
     tells: [
       {
         kind: 'habit',
-        explain: { en: 'We never speak for Japan; that is the line the government wanted.', hi: 'हम जापान की तरफ़ से कभी नहीं बोलते; सरकार यही चाहती थी।' },
+        explain: { en: 'We never speak for Japan; that would brand us a fifth column.', hi: 'हम जापान की तरफ़ से कभी नहीं बोलते; इससे हम दुश्मन के साथी कहलाते।' },
         ruleId: 'r-axis',
         sources: [{ id: 'huacuja-2023', loc: 'judgment; Iyengar testimony' }],
       },
@@ -873,8 +873,8 @@ export const messages: Message[] = [
     from: MORNING,
     to: ANN_AM,
     text: {
-      en: 'Let the whole country resound with a million voices. This morning Babubhai Khakhar and Vithalbhai Jhaveri, who run this station, thank every listener.',
-      hi: 'पूरा देश दस लाख आवाज़ों से गूँज उठे। आज सुबह इस स्टेशन को चलाने वाले बाबूभाई खाखर और विट्ठलभाई झवेरी हर सुनने वाले का शुक्रिया करते हैं।',
+      en: 'Let the whole country resound with a million voices… This morning Babubhai Khakhar and Vithalbhai Jhaveri, who run this station, thank every listener.',
+      hi: 'पूरा देश दस लाख आवाज़ों से गूँज उठे… आज सुबह इस स्टेशन को चलाने वाले बाबूभाई खाखर और विट्ठलभाई झवेरी हर सुनने वाले का शुक्रिया करते हैं।',
     },
     checks: {
       en: ['Babubhai Khakhar and Vithalbhai Jhaveri'],
@@ -1186,8 +1186,8 @@ export const messages: Message[] = [
     checks: { en: ['41.78 metres'], hi: ['41.78 मीटर'] },
     why: {
       text: {
-        en: 'Police record: 41.78 m on 27 August. Usha Mehta remembered 42.34. Both real.',
-        hi: 'पुलिस रिकॉर्ड: 27 अगस्त को 41.78 मीटर। उषा मेहता को 42.34 याद था। दोनों असली।',
+        en: 'Police: 41.78 m on 27 August. Usha Mehta: 42.34 from the start. Both real.',
+        hi: 'पुलिस: 27 अगस्त को 41.78 मीटर। उषा मेहता: शुरू से 42.34। दोनों असली।',
       },
       sources: [
         { id: 'chatterjee-1989', loc: 'Home Dept record (on air 27 Aug 1942 on 41.78 m); transcript of 20 Oct 1942' },

@@ -7,8 +7,8 @@ export const epilogue: Epilogue = {
       hi: 'असली स्टेशन फिर भी धोखे से पकड़ा गया। 12 नवंबर को उसके पैसे लेकर काम करने वाले इंजीनियर नरीमन प्रिंटर पुलिस को पारेख वाड़ी ले आया: तीन दरवाज़े टूटे, फ़्यूज़ कटा, कमरे में अँधेरा।',
     },
     {
-      en: 'Usha Mehta said Vande Mataram was still playing: “We did not oblige them.” The court found the fuse cut before entry, the needle off the record.',
-      hi: 'उषा मेहता ने कहा, वंदे मातरम् बज रहा था: “हमने उनकी बात नहीं मानी।” अदालत ने माना कि फ़्यूज़ पहले ही कट चुका था, सुई रिकॉर्ड से हटी थी।',
+      en: 'Usha Mehta: Vande Mataram played on when police ordered it stopped. “We did not oblige them.” Court: fuse cut before entry, needle off the record.',
+      hi: 'उषा मेहता: पुलिस ने रिकॉर्ड बंद करने को कहा, पर वंदे मातरम् बजता रहा। “हमने उनकी बात नहीं मानी।” अदालत: फ़्यूज़ पहले ही कटा था, सुई रिकॉर्ड से हटी थी।',
     },
     {
       en: 'Babubhai Khakhar got five years, Usha Mehta four, Chandrakant Jhaveri one; Vithalbhai Jhaveri was acquitted. Printer turned witness. Usha Mehta left Yerwada in April 1946.',
