@@ -1,100 +1,69 @@
 import type { Fact } from '../../types'
 import { fanshawe, jl, majumdar, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources'
 
-// The case file. Two lines are hardHidden: Hard mode blanks them, so only a history buff
-// can use them.
+// The case file: one short line each. Two lines are hardHidden (blank in Hard mode).
+// The calendar now lives in the weekdays rule, and the titles in the english-titles rule.
 export const facts: Fact[] = [
   {
     id: 'court',
-    label: { en: 'The court', hi: 'दरबार' },
-    value: {
-      en: "King Bahadur Shah, pen-name Zafar. His 1857 coins call him 'Siraj-ud-din, the brave' (Metcalfe spells it Suraj-u-din). His chief men are Hakim Ahsanullah Khan, his physician, and Nawab Mahbub Ali Khan. His chosen heir is Mirza Jawan Bakht.",
-      hi: "बादशाह बहादुर शाह, जो 'ज़फ़र' नाम से शायरी करते हैं। 1857 के सिक्कों पर उनका शाही नाम 'सिराजुद्दीन, बहादुर' है। उनके ख़ास आदमी हैं उनके हकीम, हकीम अहसनुल्लाह ख़ान, और नवाब महबूब अली ख़ान। उनके चुने हुए वारिस मिर्ज़ा जवाँ बख़्त हैं।",
-    },
+    label: { en: 'The King', hi: 'बादशाह' },
+    value: { en: 'Bahadur Shah Zafar; coins: Siraj-ud-din', hi: 'बहादुर शाह ज़फ़र; सिक्कों पर: सिराजुद्दीन' },
     sources: [jl('pp.96-97'), mh('p.59'), sen('p.95')],
   },
   {
     id: 'commanders',
-    label: { en: 'Army commands (from 18 May)', hi: 'फ़ौज की कमान (18 मई से)' },
-    value: {
-      en: 'Mirza Mughal is Commander-in-Chief. Mirza Khizr Sultan, Mirza Abu Bakr and Mirza Abdullah also hold chief commands.',
-      hi: 'मिर्ज़ा मुग़ल कमांडर-इन-चीफ़ हैं। मिर्ज़ा ख़िज़्र सुल्तान, मिर्ज़ा अबू बक्र और मिर्ज़ा अब्दुल्ला के पास भी बड़ी कमानें हैं।',
-    },
+    label: { en: 'Commander-in-Chief', hi: 'कमांडर-इन-चीफ़' },
+    value: { en: 'Mirza Mughal, from 18 May', hi: 'मिर्ज़ा मुग़ल, 18 मई से' },
     sources: [jl('p.96'), trial(CHUNI_18)],
   },
   {
     id: 'regiments',
-    label: { en: 'Regiments in the city', hi: 'शहर की पलटनें' },
-    value: {
-      en: 'From Meerut: the 3rd Light Cavalry and the 11th and 20th Native Infantry. From Delhi: the 38th, 54th and 74th Native Infantry.',
-      hi: 'मेरठ से: तीसरी घुड़सवार पलटन, और 11वीं व 20वीं पैदल पलटन। दिल्ली की: 38वीं, 54वीं और 74वीं पैदल पलटन।',
-    },
+    label: { en: 'Regiments', hi: 'पलटनें' },
+    value: { en: '3rd Cavalry; Infantry 11/20/38/54/74', hi: 'तीसरी घुड़सवार; पैदल 11/20/38/54/74' },
     sources: [sen('pp.59-62'), mh('p.53')],
   },
   {
-    id: 'gates',
-    label: { en: 'Gates', hi: 'दरवाज़े' },
-    value: {
-      en: "North wall: Kashmiri and Mori Gates. West wall: Kabul, Lahore, Farash Khana and Ajmeri Gates. South wall: Turkman and Delhi Gates. The Chandni Chowk, with the Lahore Bazar beyond the Fatehpuri Masjid, runs from the city's Lahore Gate to the Fort's own Lahore Gate: two different gates. The road from Ballabhgarh comes in at the Delhi Gate.",
-      hi: 'उत्तर की दीवार: कश्मीरी और मोरी दरवाज़े। पश्चिम की दीवार: काबुली, लाहौरी, फ़राशख़ाना और अजमेरी दरवाज़े। दक्षिण की दीवार: तुर्कमान और दिल्ली दरवाज़े। चाँदनी चौक, फ़तेहपुरी मस्जिद के आगे लाहौरी बाज़ार के साथ, शहर के लाहौरी दरवाज़े से क़िले के अपने लाहौरी दरवाज़े तक जाता है: ये दो अलग दरवाज़े हैं। बल्लभगढ़ से आने वाली सड़क दिल्ली दरवाज़े पर पहुँचती है।',
-    },
-    sources: [fanshawe('pp.5-6'), fanshawe('p.53'), mh('p.61'), trial('Petition No. 63, 22 May 1857, p.33')],
+    id: 'lahore-gates',
+    label: { en: 'Lahore Gates', hi: 'लाहौरी दरवाज़े' },
+    value: { en: "Two: the city's (west), the Fort's", hi: 'दो: शहर का (पश्चिम), क़िले का' },
+    sources: [fanshawe('pp.5-6'), fanshawe('p.53'), mh('p.61')],
+  },
+  {
+    id: 'ballabhgarh-road',
+    label: { en: 'Ballabhgarh road', hi: 'बल्लभगढ़ की सड़क' },
+    value: { en: 'Enters at the Delhi Gate (south)', hi: 'दक्षिण के दिल्ली दरवाज़े पर' },
+    sources: [trial('Petition No. 63, 22 May 1857, p.33'), fanshawe('pp.5-6')],
   },
   {
     id: 'money',
-    label: { en: 'Money and pay', hi: 'पैसा और तनख़्वाह' },
-    value: {
-      en: "1 rupee = 16 annas; 1 anna = 4 pice. A gold mohur is worth about 15 to 16 rupees. The King's perwanahs promise any regiment that joins him Rs 30 a month for each foot soldier and Rs 50 for each trooper.",
-      hi: '1 रुपया = 16 आने; 1 आना = 4 पैसे। सोने की एक मोहर लगभग 15 से 16 रुपये की होती है। बादशाह के परवाने आ मिलने वाली पलटन के हर पैदल सिपाही को 30 रुपये महीना और हर सवार को 50 रुपये महीना देने का वादा करते हैं।',
-    },
-    sources: [yule('s.v. Anna, p.31'), yule('s.v. Pice'), yule('s.v. Mohur, Gold, pp.573-74'), mh('p.60')],
+    label: { en: 'Money', hi: 'पैसा' },
+    value: { en: '16 annas make one rupee', hi: '16 आने का एक रुपया' },
+    sources: [yule('s.v. Anna, p.31'), yule('s.v. Pice'), yule('s.v. Mohur, Gold, pp.573-74')],
   },
   {
-    id: 'officials',
-    label: { en: 'The English side', hi: 'अंग्रेज़ों की तरफ़' },
-    value: {
-      en: 'Lord Canning is Governor-General. Sir John Lawrence is Chief Commissioner of the Punjab, which is ruled from Lahore; this May he is at Rawalpindi. Mr. Colvin is Lieutenant-Governor of the North-Western Provinces, at Agra.',
-      hi: 'लॉर्ड कैनिंग गवर्नर-जनरल हैं। सर जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर हैं, जिसकी हुकूमत लाहौर से चलती है; इस मई वे रावलपिंडी में हैं। मिस्टर कॉल्विन उत्तर-पश्चिमी सूबों के लेफ़्टिनेंट-गवर्नर हैं, आगरा में।',
-    },
+    id: 'pay',
+    label: { en: 'Perwanah pay', hi: 'परवाने की तनख़्वाह' },
+    value: { en: 'Foot Rs 30, trooper Rs 50', hi: 'पैदल 30 रुपये, सवार 50' },
+    sources: [mh('p.60')],
+  },
+  {
+    id: 'governor-general',
+    label: { en: 'Governor-General', hi: 'गवर्नर-जनरल' },
+    value: { en: 'Lord Canning', hi: 'लॉर्ड कैनिंग' },
     sources: [majumdar('p.71'), sen('p.77'), sen('p.327'), sen('pp.321-22'), mh('p.59')],
-  },
-  {
-    id: 'calendar',
-    label: { en: 'Calendar', hi: 'तारीख़ें' },
-    value: {
-      en: 'Your first day, 17 May 1857, is a Sunday. 24 May is the 29th of Ramzan: the Eid moon is seen that evening. Eid is on Monday 25 May.',
-      hi: 'आपका पहला दिन, 17 मई 1857, रविवार है। 24 मई को रमज़ान की 29 तारीख़ है: उसी शाम ईद का चाँद दिखता है। ईद सोमवार 25 मई को है।',
-    },
-    sources: [jl('p.102'), trial('Petition No. 64, 24 May 1857, p.34'), trial(CHUNI_17)],
-  },
-  {
-    id: 'may-11',
-    hardHidden: true,
-    label: { en: 'What happened on 11 May', hi: '11 मई को क्या हुआ' },
-    value: {
-      en: "Commissioner Simon Fraser was killed at the palace gate. Sir Theophilus Metcalfe (Jiwan Lal calls him 'Sir John') escaped, hid in a house in the suburbs three miles out, and got away to Jhajjar.",
-      hi: "कमिश्नर साइमन फ़्रेज़र महल के दरवाज़े पर मारे गए। सर थियोफ़िलस मेटकाफ़ (जीवन लाल उन्हें 'सर जॉन' कहते हैं) बच निकले, शहर से तीन मील दूर बाहरी बस्ती के एक घर में छिपे, और फिर झज्जर पहुँच गए।",
-    },
-    sources: [jl('pp.80-81'), mh('pp.43-46, 57'), jl('p.95')],
   },
   {
     id: 'bakht-khan',
     hardHidden: true,
     label: { en: 'Bakht Khan', hi: 'बख़्त ख़ान' },
-    value: {
-      en: 'An artillery subahdar of the Bareilly brigade. He reaches Delhi only on 1-2 July 1857, and is made Commander-in-Chief then.',
-      hi: 'बरेली ब्रिगेड के तोपख़ाने का एक सूबेदार। वह 1-2 जुलाई 1857 को ही दिल्ली पहुँचता है, और तभी कमांडर-इन-चीफ़ बनता है।',
-    },
+    value: { en: 'Reaches Delhi 1-2 July', hi: '1-2 जुलाई को दिल्ली पहुँचते हैं' },
     sources: [jl('pp.133-35'), sen('pp.83-84')],
   },
   {
     id: 'english-force',
     hardHidden: true,
-    label: { en: 'The English force', hi: 'अंग्रेज़ी फ़ौज' },
-    value: {
-      en: 'In May it gathers at Ambala, Karnal and Meerut, and only at the very end of the month fights its way towards Delhi. It takes the Ridge outside the city only on 8 June, after the battle of Badli-ki-Serai.',
-      hi: 'मई में वह अंबाला, करनाल और मेरठ में जमा होती है, और महीने के बिल्कुल आख़िर में ही दिल्ली की ओर लड़ते हुए बढ़ती है। शहर के बाहर की रिज (पहाड़ी) पर वह 8 जून को ही क़ब्ज़ा करती है, बादली की सराय की लड़ाई के बाद।',
-    },
+    label: { en: 'English army', hi: 'अंग्रेज़ी फ़ौज' },
+    value: { en: 'Takes the Ridge on 8 June', hi: 'रिज पर 8 जून को क़ब्ज़ा' },
     sources: [sen('p.79'), trial(CHUNI_17), jl('pp.107-08')],
   },
 ]
