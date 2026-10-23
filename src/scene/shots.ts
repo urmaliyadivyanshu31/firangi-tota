@@ -115,16 +115,17 @@ const px = (el: Element, name: string): number | null => {
 }
 
 /**
- * The HUD insets from `--ft-hud-top/right/bottom/left` on the mount, else defaults: a top bar,
- * and the stamp buttons along the bottom (taller in portrait, where they span the width).
+ * The HUD insets from `--ft-hud-top/right/bottom/left` on the mount, else the app's layout: on a
+ * wide screen (900 px and up, landscape) the case file and rulebook are pinned in the left 366 px
+ * under a one-row top bar; otherwise a two-row top bar and the stamp buttons across the bottom.
  */
 export function readInsets(el: Element, w: number, h: number): Insets {
-  const portrait = w / h < 0.8
+  const wide = w >= 900 && w > h
   return {
-    top: px(el, '--ft-hud-top') ?? (portrait ? 70 : 62),
+    top: px(el, '--ft-hud-top') ?? (wide ? 96 : 90),
     right: px(el, '--ft-hud-right') ?? 0,
-    bottom: px(el, '--ft-hud-bottom') ?? (portrait ? 140 : 120),
-    left: px(el, '--ft-hud-left') ?? 0,
+    bottom: px(el, '--ft-hud-bottom') ?? (wide ? 128 : 150),
+    left: px(el, '--ft-hud-left') ?? (wide ? 366 : 0),
   }
 }
 

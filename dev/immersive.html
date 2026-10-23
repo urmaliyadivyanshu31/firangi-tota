@@ -10,8 +10,17 @@
       /* stand-ins for the HUD the app draws, so the shots keep clear of it */
       .hud { position: fixed; left: 0; right: 0; pointer-events: none; display: none; }
       body.hudon .hud { display: block; }
-      #hud-top { top: 0; height: var(--ft-hud-top, 70px); background: linear-gradient(rgba(10, 6, 4, 0.82), rgba(10, 6, 4, 0.55)); border-bottom: 1px solid rgba(255, 220, 160, 0.18); }
-      #hud-bottom { bottom: 0; height: var(--ft-hud-bottom, 140px); background: linear-gradient(rgba(10, 6, 4, 0.2), rgba(10, 6, 4, 0.85)); border-top: 1px solid rgba(255, 220, 160, 0.12); }
+      /* the app's layout: a two-row top bar and the stamps (narrow); a thin top bar, the case
+         file pinned in the left 366 px and the stamps to its right (wide, 900 px and up) */
+      #hud-top { top: 0; height: 90px; background: linear-gradient(rgba(10, 6, 4, 0.82), rgba(10, 6, 4, 0.55)); border-bottom: 1px solid rgba(255, 220, 160, 0.18); }
+      #hud-bottom { bottom: 0; height: 150px; background: linear-gradient(rgba(10, 6, 4, 0.2), rgba(10, 6, 4, 0.85)); border-top: 1px solid rgba(255, 220, 160, 0.12); }
+      #hud-left { display: none; }
+      @media (min-width: 900px) and (orientation: landscape) {
+        #hud-top { height: 96px; }
+        #hud-bottom { height: 128px; left: 366px; }
+        body.hudon #hud-left { display: block; top: 96px; bottom: 18px; left: 18px; right: auto; width: 330px; border-radius: 4px;
+          background: rgba(214, 190, 140, 0.16); border: 1px solid rgba(255, 220, 160, 0.2); }
+      }
       #bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px;
         justify-content: center; font: 13px system-ui, sans-serif; z-index: 5; }
       #bar button { min-height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid #6b4a2a; background: #2a1a10; color: #f3dcb6; }
@@ -23,6 +32,7 @@
     <div id="stage"></div>
     <div class="hud" id="hud-top"></div>
     <div class="hud" id="hud-bottom"></div>
+    <div class="hud" id="hud-left"></div>
     <div id="bar">
       <button data-act="day">Play day</button>
       <button data-act="establish">Wide</button>

@@ -1009,7 +1009,7 @@ const delhi1947: EraDressing = {
       },
       hooks: {
         // the day title glows on the rain-streaked window; the countdown calendar flips beside it
-        title: { pos: [(WIN.x0 + WIN.x1) / 2, 0.6, FRAME_Z + 0.03], w: 0.5, tone: 'glass' },
+        title: { pos: [(WIN.x0 + WIN.x1) / 2, 0.6, FRAME_Z + 0.03], w: 0.58, tone: 'glass' },
         titleFrame: [
           [CAL.x - CAL.w / 2, CAL.y - CAL.h / 2, BACK_Z],
           [CAL.x + CAL.w / 2, CAL.y + CAL.h / 2, BACK_Z],

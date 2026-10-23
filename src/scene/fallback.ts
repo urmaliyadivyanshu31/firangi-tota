@@ -169,10 +169,11 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
 
 /** The message's paper, as big as the screen allows between the HUD bars, turned a hair. */
 function drawPaper(g: CanvasRenderingContext2D, W: number, H: number, s: SheetSpec, stamp: SheetStamp | null, el: Element): void {
-  const portrait = W / H < 0.8
-  const top = insetPx(el, '--ft-hud-top', portrait ? 70 : 62)
-  const bottom = insetPx(el, '--ft-hud-bottom', portrait ? 140 : 120)
-  const left = insetPx(el, '--ft-hud-left', 0)
+  // the app's layout (as in shots.ts): wide screens pin the case file in the left 366 px
+  const wide = W >= 900 && W > H
+  const top = insetPx(el, '--ft-hud-top', wide ? 96 : 90)
+  const bottom = insetPx(el, '--ft-hud-bottom', wide ? 128 : 150)
+  const left = insetPx(el, '--ft-hud-left', wide ? 366 : 0)
   const right = insetPx(el, '--ft-hud-right', 0)
   const aspect = measureSheet(g, s).aspect
   const freeW = W - left - right
@@ -204,7 +205,7 @@ function drawTitleOver(g: CanvasRenderingContext2D, W: number, H: number, t: Day
   const w = Math.min(W * (portrait ? 0.86 : 0.5), 640)
   g.save()
   g.translate((W - w) / 2, H * (portrait ? 0.14 : 0.1))
-  drawDayTitle(g, w, w / 2, t, TITLE_TONE[era])
+  drawDayTitle(g, w, w / 2, t, TITLE_TONE[era], false)
   g.restore()
 }
 

@@ -490,7 +490,14 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   }
   /** The desk shot: authored on landscape; on portrait, the desk low and the wall above it. */
   const deskPose: PoseFn = (aspect) => {
-    if (aspect >= 0.9 || !dressing) return frameShot(dressing?.camera ?? { pos: [0, 0.98, 0.92], look: [0, -0.12, 0.06] }, aspect)
+    if (!dressing) return frameShot({ pos: [0, 0.98, 0.92], look: [0, -0.12, 0.06] }, aspect)
+    if (aspect >= 0.9) {
+      // landscape: the authored shot, unless the HUD pins something at the side (the case file),
+      // then the same view fitted into what is left
+      const ins = readInsets(el, cssW, cssH)
+      if (ins.left + ins.right < 1) return frameShot(dressing.camera, aspect)
+      return fitPose({ points: framePoints(), dir: deskDir(), aspect, box: box(0.05) })
+    }
     const pts = [...framePoints(), ...deskFront()]
     const b = { ...box(0.02), y1: 0.98 }
     const dir = deskDir().lerp(new THREE.Vector3(0, 0.62, 1).normalize(), 0.45).normalize()
@@ -519,7 +526,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const pts = rectOnWall(c, h.w * 0.84, h.w * 0.3, h.yaw ?? 0)
     for (const p of world?.hooks.titleFrame ?? []) pts.push(new THREE.Vector3(...p))
     const portrait = aspect < 0.9
-    const b = portrait ? { x0: -0.86, x1: 0.86, y0: -0.25, y1: 0.62 } : { x0: -0.5, x1: 0.5, y0: -0.25, y1: 0.55 }
+    // centred in what the HUD leaves free (on a wide screen the case file covers the left)
+    const free = box(0.04)
+    const cx = (free.x0 + free.x1) / 2
+    const hw = portrait ? 0.86 : Math.min(0.66, ((free.x1 - free.x0) / 2) * 0.86)
+    const b = portrait ? { x0: -hw, x1: hw, y0: -0.25, y1: 0.62 } : { x0: cx - hw, x1: cx + hw, y0: -0.25, y1: 0.55 }
     const dir = new THREE.Vector3(Math.sin(h.yaw ?? 0) * 0.9, 0.16, Math.cos(h.yaw ?? 0)).normalize()
     return fitPose({ points: pts, dir, aspect, box: b })
   }
@@ -535,7 +546,10 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     if (!w) return deskPose(aspect)
     const r = sheetRest(w)
     const pts = rectOnDesk(r.pos, SHEET_W, w.sheet.h(), r.yaw, 0.003)
-    return fitPose({ points: pts, dir: new THREE.Vector3(0, 1, 0.3).normalize(), aspect, box: box(0.04) })
+    // a phone is width-bound: look nearly straight down. A wide screen is height-bound: lean back
+    // a little, so the sheet foreshortens and can be drawn larger, as when reading at a desk
+    const dir = new THREE.Vector3(0, 1, aspect < 0.9 ? 0.3 : 0.62).normalize()
+    return fitPose({ points: pts, dir, aspect, box: box(0.04) })
   }
   const typewriterPose = (w: World): PoseFn | null => {
     const t = w.hooks.typewriter
@@ -547,10 +561,19 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       const h = w.sheet.h()
       const lean = t.lean
       const top = (k: number) => at(0, t.platen[1] + Math.cos(lean) * h * k, t.platen[2] - Math.sin(lean) * h * k)
-      const pts = [at(-0.15, 0, 0.1), at(0.15, 0, 0.1), at(-0.16, t.platen[1], t.platen[2]), at(0.16, t.platen[1], t.platen[2]), top(0.55)]
+      // the platen and the sheet rising out of it, with a little of the keys below
+      // (the carriage carries the sheet up to 9 cm either way, so leave room at the sides)
+      const pts = [
+        at(-0.17, t.platen[1], t.platen[2]),
+        at(0.17, t.platen[1], t.platen[2]),
+        at(-0.11, 0.1, 0.0),
+        at(0.11, 0.1, 0.0),
+        top(0.62).add(new THREE.Vector3(-0.16, 0, 0).applyQuaternion(yawQ)),
+        top(0.62).add(new THREE.Vector3(0.16, 0, 0).applyQuaternion(yawQ)),
+      ]
       const facing = new THREE.Vector3(Math.sin(t.yaw), 0, Math.cos(t.yaw))
-      const dir = facing.multiplyScalar(1).add(new THREE.Vector3(-0.25, 0.75, 0)).normalize()
-      return fitPose({ points: pts, dir, aspect, box: box(0.06) })
+      const dir = facing.add(new THREE.Vector3(-0.12, 0.62, 0)).normalize()
+      return fitPose({ points: pts, dir, aspect, box: box(0.05) })
     }
   }
   rig.override('desk', deskPose)
@@ -928,10 +951,12 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     w.sheet.setStamp(null)
     w.sheet.setGlow(0.15)
     drawMessage(w, s, m)
+    w.sheet.setOutside(s.to, s.lang, s.channel === 'petition')
     void hideTitle(w)
     rig.setSway(1)
     rig.refresh()
     const rest = sheetRest(w)
+    let leaned = false
     const ctx: ArrivalCtx = {
       tw: tweens,
       rig,
@@ -945,6 +970,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       cue,
       shake: (a, down) => rig.shake(a, down),
       leanIn: (ms) => {
+        leaned = true
         void tweens.run(reduced ? 0 : ms, (k) => w.sheet.setGlow(0.15 + 0.85 * k), ease.inOut)
         if (reduced) {
           rig.jumpTo(readPose)
@@ -958,7 +984,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     await arrive(s.channel, ctx)
     if (gen !== worldGen) return
-    if (reduced || rig.shot() !== 'custom') await ctx.leanIn(reduced ? 0 : 900)
+    // an arrival that stopped short still ends over the paper
+    if (!leaned) await ctx.leanIn(reduced ? 0 : 900)
     w.sheet.setGlow(1)
   }
 

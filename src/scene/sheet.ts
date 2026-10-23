@@ -1517,10 +1517,13 @@ export const TITLE_TONE: Record<EraId, TitleTone> = {
   'delhi-1947': 'glass',
 }
 
-/** The day's title lettering on a transparent w × h canvas (2:1 works well). */
-export function drawDayTitle(ctx: Ctx, w: number, h: number, t: DayTitle, tone: TitleTone): void {
+/**
+ * The day's title lettering in a w × h region (2:1 works well). `clear` wipes the region first, for
+ * a transparent texture; the 2D fallback draws straight over its painted room instead.
+ */
+export function drawDayTitle(ctx: Ctx, w: number, h: number, t: DayTitle, tone: TitleTone, clear = true): void {
   ctx.save()
-  ctx.clearRect(0, 0, w, h)
+  if (clear) ctx.clearRect(0, 0, w, h)
   const bigFace = isDeva(t.big) ? FACE.deva : tone === 'cream' ? FACE.type : FACE.print
   const smallFace = isDeva(t.small) ? FACE.deva : tone === 'cream' ? FACE.type : FACE.print
   let big = h * 0.4

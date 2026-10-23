@@ -1,5 +1,6 @@
 // Sample sheets and day titles for the dev pages: one short message per era in both languages,
 // written to the minimal brief (15–30 words), plus one long text to check that the sheet copes.
+// Every date line is the era's day 1, the same day the title shows.
 import type { EraId, Lang } from '../src/content/types'
 import type { DayTitle, SheetSpec } from '../src/scene/types'
 
@@ -11,12 +12,12 @@ const SAMPLES: Record<EraId, { channel: SheetSpec['channel']; pairs: Pair[] }> =
     pairs: [
       {
         en: {
-          from: 'Chuni Lal, news-writer', to: "The King's office", dateLine: 'Monday, 18 May 1857',
+          from: 'Chuni Lal, news-writer', to: "The King's office", dateLine: 'Sunday, 17 May 1857',
           body: 'The King took his seat on the throne, in state. Mirza Mughal was made Commander-in-Chief of the whole of the Forces.',
           checks: ['Mirza Mughal', 'Commander-in-Chief'], documentMark: true,
         },
         hi: {
-          from: 'चुन्नी लाल, ख़बरनवीस', to: 'बादशाह का दफ़्तर', dateLine: 'सोमवार, 18 मई 1857',
+          from: 'चुन्नी लाल, ख़बरनवीस', to: 'बादशाह का दफ़्तर', dateLine: 'रविवार, 17 मई 1857',
           body: 'बादशाह शान से तख़्त पर बैठे। मिर्ज़ा मुग़ल को पूरी फ़ौज का कमांडर-इन-चीफ़ बनाया गया।',
           checks: ['मिर्ज़ा मुग़ल', 'कमांडर-इन-चीफ़'], documentMark: true,
         },
@@ -40,12 +41,12 @@ const SAMPLES: Record<EraId, { channel: SheetSpec['channel']; pairs: Pair[] }> =
       },
       {
         en: {
-          from: 'Balraj', to: 'The public', dateLine: '9 April 1929',
+          from: 'Balraj', to: 'The public', dateLine: 'Tuesday, 2 April 1929',
           body: 'HINDUSTAN SOCIALIST REPUBLICAN ARMY. NOTICE. It takes a loud voice to make the deaf hear. Long Live the Revolution. Signed, Balraj, Commander-in-Chief.',
           checks: ['Balraj, Commander-in-Chief'],
         },
         hi: {
-          from: 'बलराज', to: 'आम जनता', dateLine: '9 अप्रैल 1929',
+          from: 'बलराज', to: 'आम जनता', dateLine: 'मंगलवार, 2 अप्रैल 1929',
           body: 'हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। बहरों को सुनाने के लिए ऊँची आवाज़ चाहिए। इंक़लाब ज़िंदाबाद। दस्तख़त: बलराज, कमांडर-इन-चीफ़।',
           checks: ['बलराज, कमांडर-इन-चीफ़'],
         },

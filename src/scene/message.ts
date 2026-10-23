@@ -48,6 +48,8 @@ export interface MessageSheet {
   setGlow(k: number): void
   /** The red wax seal on the folded petition; `crack` 0..1 splits it. */
   setSeal(visible: boolean, crack?: number): void
+  /** Writes the address on the outside of the folded paper (ink for a petition, else pencil). */
+  setOutside(text: string, lang: 'en' | 'hi', ink: boolean): void
   /** World point on the (flat) sheet at (u, v). */
   pointAt(u: number, v: number): THREE.Vector3
   /** The decal textures are drawn with the sheet fonts; call again once they load. */
@@ -102,7 +104,10 @@ function fillPanel(p: Panel, z0: number, z1: number, v0: number, v1: number, cur
       const nz = halfH > 0 ? z / halfH : 0
       const lift = curl * (0.0022 * Math.pow(Math.abs(nx), 4) + 0.0018 * Math.pow(Math.max(0, nz), 6))
       pos.setXYZ(i, x, lift - (back ? 0.00025 : 0), z)
-      uv.setXY(i, x / SHEET_W + 0.5, 1 - (v0 + (v1 - v0) * t))
+      // the back shows the outside of the fold (the address): each panel maps the whole label,
+      // with its top at the hinge, so it reads upright on the folded packet
+      if (back) uv.setXY(i, x / SHEET_W + 0.5, t)
+      else uv.setXY(i, x / SHEET_W + 0.5, 1 - (v0 + (v1 - v0) * t))
     }
     pos.needsUpdate = true
     uv.needsUpdate = true
@@ -142,10 +147,61 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\tif (ftHidden() > 0.5) totalEmissiveRadiance = emissive * uPaper;')
   }
   frontMat.customProgramCacheKey = () => 'ft-message-sheet'
-  const backMat = material(o.tier, { color: mix(o.paper, 0x6b5a40, 0.18), shininess: 3 })
+  // the outside of the fold: plain paper with the address on it
+  const backCanvas = document.createElement('canvas')
+  backCanvas.width = o.tier === 'low' ? 256 : 512
+  backCanvas.height = backCanvas.width / 2
+  const backTex = toTexture(backCanvas)
+  const backMat = material(o.tier, { map: backTex, color: 0xe6dccb, shininess: 3 })
+  const paperHex = `#${mix(o.paper, 0xffffff, 0.08).toString(16).padStart(6, '0')}`
+  const drawOutside = (text: string, lang: 'en' | 'hi', ink: boolean) => {
+    try {
+      const g = backCanvas.getContext('2d')
+      if (!g) return
+      const W = backCanvas.width
+      const Hc = backCanvas.height
+      g.fillStyle = paperHex
+      g.fillRect(0, 0, W, Hc)
+      for (let i = 0; i < 160; i++) {
+        g.fillStyle = `rgba(110,80,45,${(0.03 + ((i * 37) % 11) / 160).toFixed(3)})`
+        g.fillRect(((i * 97) % W) + 0.5, ((i * 61) % Hc) + 0.5, 1.5, 1.5)
+      }
+      if (!text) return
+      g.save()
+      g.translate(W / 2, Hc * 0.56)
+      g.rotate(-0.03)
+      g.textAlign = 'center'
+      g.textBaseline = 'middle'
+      g.fillStyle = ink ? 'rgba(44,26,15,0.9)' : 'rgba(52,54,62,0.85)'
+      let size = Hc * 0.2
+      const face = lang === 'hi' ? FACE.deva : FACE.hand
+      g.font = `${size}px ${face}`
+      while (g.measureText(text).width > W * 0.8 && size > 8) {
+        size *= 0.92
+        g.font = `${size}px ${face}`
+      }
+      g.fillText(text, 0, 0)
+      if (ink) {
+        // a looping flourish under the address, as a munshi would sign off the outside
+        g.strokeStyle = 'rgba(125,32,22,0.7)'
+        g.lineWidth = Math.max(1, Hc * 0.012)
+        g.beginPath()
+        g.moveTo(-W * 0.22, size * 0.75)
+        g.bezierCurveTo(-W * 0.05, size * 1.15, W * 0.05, size * 0.35, W * 0.22, size * 0.8)
+        g.stroke()
+      }
+      g.restore()
+    } catch {
+      // decorative: never let it stop an arrival
+    } finally {
+      backTex.needsUpdate = true
+    }
+  }
+  drawOutside('', 'en', false)
   const segX = o.tier === 'low' ? 4 : 6
   const segZ = o.tier === 'low' ? 4 : 8
-  const panels = [makePanel(frontMat, backMat, segX, segZ), makePanel(frontMat, backMat, segX, segZ), makePanel(frontMat, backMat, segX, segZ)] as const
+  const plainBack = material(o.tier, { color: mix(o.paper, 0x6b5a40, 0.12), shininess: 3 })
+  const panels = [makePanel(frontMat, backMat, segX, segZ), makePanel(frontMat, plainBack, segX, segZ), makePanel(frontMat, plainBack, segX, segZ)] as const
   const group = new THREE.Group()
   group.name = 'message-sheet'
   const body = new THREE.Group()
@@ -330,9 +386,11 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
       return body.localToWorld(new THREE.Vector3((u - 0.5) * SHEET_W, 0.0006, (v - 0.5) * H()))
     },
     drawDecals,
+    setOutside: drawOutside,
     dispose() {
       disposeTree(group)
       texture.dispose()
+      backTex.dispose()
       decals.asli.dispose()
       decals.tota.dispose()
     },
