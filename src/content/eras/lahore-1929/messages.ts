@@ -55,10 +55,10 @@ const LEAFLET_HI = (heading: string) =>
 const LETTER_OPEN_EN = 'Dear Brother, By the time you receive this letter I will be gone'
 const LETTER_OPEN_HI = 'प्यारे भाई, जब तक यह चिट्ठी तुम्हें मिलेगी, मैं जा चुका होऊँगा'
 
-const ASSEMBLY_EN = (day: string) =>
-  `Yesterday, ${day}, about half past twelve, as President Patel rose, two bombs burst in the Assembly. Our two friends waited to be arrested.`
-const ASSEMBLY_HI = (day: string) =>
-  `कल, ${day} को, करीब साढ़े बारह बजे, जब प्रेसिडेंट पटेल उठे, असेंबली में दो बम फटे। हमारे दोनों दोस्त गिरफ़्तारी के इंतज़ार में खड़े रहे।`
+const ASSEMBLY_EN = (day: string, president = 'Vithalbhai') =>
+  `Yesterday, ${day}, about half past twelve, as President ${president} Patel rose, two bombs burst in the Assembly. Our two friends waited to be arrested.`
+const ASSEMBLY_HI = (day: string, president = 'विट्ठलभाई') =>
+  `कल, ${day} को, करीब साढ़े बारह बजे, जब प्रेसिडेंट ${president} पटेल उठे, असेंबली में दो बम फटे। हमारे दोनों दोस्त गिरफ़्तारी के इंतज़ार में खड़े रहे।`
 
 export const messages: Message[] = [
   // ───────────── Tier 1: catchable from the case file ─────────────
@@ -843,6 +843,52 @@ export const messages: Message[] = [
     ],
   },
 
+  // Ajit Singh: 'deported, together with Lala Lajpat Rai, in 1907. For many years he had been an
+  // exile abroad' (Nehru). He came back only in the 1940s (Tribune 2010: 1946; others say 1947).
+  {
+    id: 'lh-ajit-g',
+    tier: 3,
+    real: true,
+    pair: 'lh-ajit',
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: "Our friend's uncle, Ajit Singh, deported with Lalaji in 1907, still lives in exile abroad. If a stranger brings 'word from him', say nothing.",
+      hi: "हमारे दोस्त के चाचा अजीत सिंह, जो 1907 में लालाजी के साथ देश से निकाले गए थे, आज भी विदेश में हैं। कोई अजनबी 'उनका संदेसा' लाए, तो कुछ मत कहना।",
+    },
+    checks: { en: ['Ajit Singh', 'in exile abroad'], hi: ['अजीत सिंह', 'विदेश में'] },
+    why: {
+      text: {
+        en: 'Nehru: Ajit Singh, deported with Lajpat Rai in 1907, was long an exile abroad.',
+        hi: 'नेहरू: अजीत सिंह 1907 में लाजपत राय के साथ देश से निकाले गए, बरसों विदेश में रहे।',
+      },
+      sources: [{ id: 'nehru-1936', loc: 'pp. 193–194' }, { id: 'tribune-2010' }],
+    },
+  },
+  {
+    id: 'lh-ajit-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-ajit',
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: "Our friend's uncle, Ajit Singh, deported with Lalaji in 1907, is back in Lahore. Take the zinc handbag to him at Bhati Gate tonight.",
+      hi: 'हमारे दोस्त के चाचा अजीत सिंह, जो 1907 में लालाजी के साथ देश से निकाले गए थे, लाहौर लौट आए हैं। आज रात जस्ते का हैंडबैग भाटी गेट पर उन्हें दे आना।',
+    },
+    checks: { en: ['is back in Lahore'], hi: ['लाहौर लौट आए हैं'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'Ajit Singh was still in exile abroad; he came home only in the 1940s.',
+          hi: 'अजीत सिंह तब भी विदेश में थे; वे 1940 के दशक में ही घर लौटे।',
+        },
+        sources: [{ id: 'nehru-1936', loc: 'pp. 193–194' }, { id: 'tribune-2010' }],
+      },
+    ],
+  },
+
   // ───────────── Event messages (onDay) ─────────────
 
   // Day 6, Sunday 7 April: Sukhdev takes Durga Devi and Sushila to Delhi that night.
@@ -999,7 +1045,7 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: { en: ASSEMBLY_EN('Monday'), hi: ASSEMBLY_HI('सोमवार') },
-    checks: { en: ['Yesterday, Monday', 'half past twelve', 'President Patel'], hi: ['कल, सोमवार', 'साढ़े बारह बजे', 'प्रेसिडेंट पटेल'] },
+    checks: { en: ['Yesterday, Monday', 'half past twelve', 'President Vithalbhai Patel'], hi: ['कल, सोमवार', 'साढ़े बारह बजे', 'प्रेसिडेंट विट्ठलभाई पटेल'] },
     why: {
       text: {
         en: 'Monday 8 April 1929, about 12:30; the two gave themselves up.',
@@ -1023,6 +1069,30 @@ export const messages: Message[] = [
         kind: 'weekday',
         explain: { en: 'Yesterday was Monday 8 April, not Sunday.', hi: 'कल 8 अप्रैल, सोमवार था, रविवार नहीं।' },
         sources: [{ id: 'chaman-lal-2009' }],
+      },
+    ],
+  },
+
+  // Day 8: the President was Vithalbhai Patel (case file); Vallabhbhai is a different man.
+  {
+    id: 'lh-assembly-f2',
+    tier: 1,
+    real: false,
+    pair: 'lh-assembly',
+    onDay: 8,
+    from: DYAL,
+    to: POST_BOX,
+    text: { en: ASSEMBLY_EN('Monday', 'Vallabhbhai'), hi: ASSEMBLY_HI('सोमवार', 'वल्लभभाई') },
+    checks: { en: ['President Vallabhbhai Patel'], hi: ['प्रेसिडेंट वल्लभभाई पटेल'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: 'The President was Vithalbhai Patel, not Vallabhbhai.',
+          hi: 'प्रेसिडेंट विट्ठलभाई पटेल थे, वल्लभभाई नहीं।',
+        },
+        factId: 'assembly',
+        sources: [CHAMAN, { id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
       },
     ],
   },
@@ -1175,6 +1245,53 @@ export const messages: Message[] = [
     ],
   },
 
+  // Day 9, Wednesday 10 April: Gandhi is touring Andhra (6 April – 21 May), at Bezwada today.
+  {
+    id: 'lh-gandhi-g',
+    tier: 3,
+    real: true,
+    pair: 'lh-gandhi',
+    onDay: 9,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: 'Gandhi is far from Delhi, touring Andhra; today he speaks at a public meeting in Bezwada. Watch what he says about Monday.',
+      hi: 'गांधी दिल्ली से बहुत दूर, आंध्र के दौरे पर हैं; आज वे बेज़वाड़ा में एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
+    },
+    checks: { en: ['touring Andhra', 'Bezwada'], hi: ['आंध्र के दौरे', 'बेज़वाड़ा'] },
+    why: {
+      text: {
+        en: "Gandhi's Andhra tour: a public meeting at Bezwada on 10 April 1929.",
+        hi: 'गांधी का आंध्र दौरा: 10 अप्रैल 1929 को बेज़वाड़ा में आम सभा।',
+      },
+      sources: [{ id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
+    },
+  },
+  {
+    id: 'lh-gandhi-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-gandhi',
+    onDay: 9,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: 'Gandhi is in Delhi this week, near the Assembly; today he speaks at a public meeting there. Watch what he says about Monday.',
+      hi: 'गांधी इस हफ़्ते दिल्ली में, असेंबली के पास हैं; आज वे वहीं एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
+    },
+    checks: { en: ['in Delhi this week'], hi: ['इस हफ़्ते दिल्ली में'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'Gandhi was touring Andhra; on 10 April he spoke at Bezwada.',
+          hi: 'गांधी आंध्र के दौरे पर थे; 10 अप्रैल को वे बेज़वाड़ा में बोले।',
+        },
+        sources: [{ id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
+      },
+    ],
+  },
+
   // Day 10, Thursday 11 April: the Assembly meets again.
   {
     id: 'lh-motion-g',
@@ -1280,6 +1397,54 @@ export const messages: Message[] = [
     ],
   },
 
+  // Day 11, Friday 12 April: Young India of Thursday 11 April printed Sarojini Naidu's letter
+  // from her American lecture tour ("a wandering singer with a spirit in my feet").
+  {
+    id: 'lh-sarojini-g',
+    tier: 3,
+    real: true,
+    pair: 'lh-sarojini',
+    onDay: 11,
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: "Sarojini Naidu is lecturing across America. This week's Young India prints her letter; she calls herself 'a wandering singer'.",
+      hi: "सरोजिनी नायडू अमेरिका में घूम-घूमकर भाषण दे रही हैं। इस हफ़्ते के यंग इंडिया में उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
+    },
+    checks: { en: ['lecturing across America', 'a wandering singer'], hi: ['अमेरिका में', 'घुमक्कड़ गायिका'] },
+    why: {
+      text: {
+        en: 'Young India printed her letter from the USA on 11 April 1929.',
+        hi: 'यंग इंडिया ने 11 अप्रैल 1929 को अमेरिका से आई उनकी चिट्ठी छापी।',
+      },
+      sources: [{ id: 'naidu-1929' }],
+    },
+  },
+  {
+    id: 'lh-sarojini-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-sarojini',
+    onDay: 11,
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: "Sarojini Naidu watched Monday's bombs from the visitors' gallery. This week's Young India prints her letter; she calls herself 'a wandering singer'.",
+      hi: "सरोजिनी नायडू ने सोमवार के बम विज़िटर्स गैलरी से देखे। इस हफ़्ते के यंग इंडिया में उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
+    },
+    checks: { en: ["from the visitors' gallery"], hi: ['विज़िटर्स गैलरी से'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'She was lecturing in America; Young India printed her letter from there.',
+          hi: 'वे अमेरिका में भाषण दे रही थीं; यंग इंडिया ने वहीं से आई चिट्ठी छापी।',
+        },
+        sources: [{ id: 'naidu-1929' }],
+      },
+    ],
+  },
+
   // Day 11, Friday 12 April: Bande Mataram prints the photographs.
   {
     id: 'lh-papers-g',
@@ -1369,6 +1534,55 @@ export const messages: Message[] = [
           hi: 'जलियाँवाला बाग़ 13 अप्रैल 1919 को हुआ: दस साल, ग्यारह नहीं।',
         },
         sources: [{ id: 'collett-2005' }],
+      },
+    ],
+  },
+
+  // Day 13, Sunday 14 April: Durga Bhabhi's 8 April. Maclean (Scroll): Bhagwati Charan, Durga Devi
+  // and Sushila 'hired a tonga, and began to circle the Assembly'; 'As the police were taking
+  // Bhagat Singh away, young Sachi recognised him and impulsively called out Lamba Chacha!'
+  {
+    id: 'lh-durga-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-durga',
+    onDay: 13,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: "On Monday Durga Bhabhi and Sushila Didi circled the Assembly in a tonga. As police led our friend away, little Sachi called out, 'Lamba Chacha!'",
+      hi: "सोमवार को दुर्गा भाभी और सुशीला दीदी तांगे में असेंबली के चक्कर लगाती रहीं। पुलिस हमारे दोस्त को ले जा रही थी, तो नन्हे शची ने पुकारा, 'लंबा चाचा!'",
+    },
+    checks: { en: ['in a tonga', 'Lamba Chacha'], hi: ['तांगे में', 'लंबा चाचा'] },
+    why: {
+      text: {
+        en: "They circled the Assembly in a tonga; Sachi called out 'Lamba Chacha!'",
+        hi: "वे तांगे में असेंबली के चक्कर लगा रही थीं; शची ने पुकारा 'लंबा चाचा!'",
+      },
+      sources: [{ id: 'maclean-durga' }, CHAMAN],
+    },
+  },
+  {
+    id: 'lh-durga-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-durga',
+    onDay: 13,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: "On Monday Durga Bhabhi and Sushila Didi sat in the visitors' gallery beside our friend. As police led him away, little Sachi called out, 'Lamba Chacha!'",
+      hi: "सोमवार को दुर्गा भाभी और सुशीला दीदी विज़िटर्स गैलरी में हमारे दोस्त के पास बैठी थीं। पुलिस उसे ले जा रही थी, तो नन्हे शची ने पुकारा, 'लंबा चाचा!'",
+    },
+    checks: { en: ["sat in the visitors' gallery"], hi: ['विज़िटर्स गैलरी में'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'They circled outside in a tonga; they were not in the gallery.',
+          hi: 'वे बाहर तांगे में चक्कर लगा रही थीं; गैलरी में नहीं थीं।',
+        },
+        sources: [{ id: 'maclean-durga' }],
       },
     ],
   },
