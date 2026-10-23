@@ -276,6 +276,8 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   function setOpen(next: Tab | null): void {
     open = next
     applyLayout()
+    // a sheet that slides up takes the focus, so keyboard and screen-reader users land in it
+    if (next && !wide) panels[next].querySelector<HTMLElement>('.sheet__close')?.focus({ preventScroll: true })
   }
 
   // ---- the controls: tabs and stamps, a skip chip during animations
