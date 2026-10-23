@@ -7,6 +7,9 @@ const LANGS: Lang[] = ['en', 'hi']
 /** Minimalism limits (see .superpowers/sdd/.../minimal-brief.md). Flip per era in tests as cuts merge. */
 export const ENFORCE_WORD_LIMITS = true
 
+/** Surface patterns must not reveal genuine vs forged (ellipsis share, message length). */
+export const ENFORCE_SURFACE_TELLS = true
+
 const HI_FACTOR = 1.5
 const ABBREVIATIONS = new Set(['no', 'mr', 'mrs', 'ms', 'dr', 'st', 'sri', 'shri', 'smt', 'vs', 'etc', 'col', 'gen', 'lt', 'capt', 'sir', 'jr', 'sr', 'mt', 'rs', 'e.g', 'i.e', 'viz', 'approx'])
 
@@ -88,7 +91,34 @@ const isIsoDate = (s: string): boolean => {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s
 }
 
-export function validateEra(era: Era, opts: { wordLimits?: boolean } = {}): string[] {
+export function surfaceTells(era: Era): string[] {
+  const out: string[] = []
+  for (const lang of LANGS) {
+    const texts = (real: boolean) =>
+      era.messages.filter((m) => m.real === real).map((m) => fillTemplate(m.text?.[lang] ?? '', era.windowStart, lang))
+    const genuine = texts(true)
+    const forged = texts(false)
+    if (genuine.length === 0 || forged.length === 0) continue
+
+    const share = (list: string[]) => list.filter((t) => t.includes('…') || t.includes('...')).length / list.length
+    const g = share(genuine)
+    const f = share(forged)
+    if (g > 0 && f < 0.6 * g) {
+      out.push(`surface: ellipsis gives away genuine (${Math.round(g * 100)}% genuine vs ${Math.round(f * 100)}% forged) [${lang}]`)
+    }
+
+    const mean = (list: string[]) => list.reduce((n, t) => n + words(t).length, 0) / list.length
+    const gm = mean(genuine)
+    const fm = mean(forged)
+    if (Math.abs(fm - gm) > 0.25 * gm) {
+      const r = (n: number) => Math.round(n * 10) / 10
+      out.push(`surface: length gives away (${r(gm)} vs ${r(fm)} words) [${lang}]`)
+    }
+  }
+  return out
+}
+
+export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells?: boolean } = {}): string[] {
   const problems: string[] = []
   const add = (id: string, msg: string) => problems.push(id ? `${id}: ${msg}` : msg)
 
@@ -196,6 +226,8 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean } = {}): stri
   refs('epilogue', 'epilogue', era.epilogue.sources, true)
 
   if (opts.wordLimits ?? ENFORCE_WORD_LIMITS) problems.push(...wordLimits(era))
+
+  if (opts.surfaceTells ?? ENFORCE_SURFACE_TELLS) problems.push(...surfaceTells(era))
 
   return problems
 }

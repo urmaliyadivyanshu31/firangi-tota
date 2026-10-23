@@ -10,10 +10,11 @@ describe('registered eras', () => {
   for (const era of ERAS) {
     describe(era.id, () => {
       it('passes the validator', () => {
-        expect(validateEra(era, { wordLimits: false })).toEqual([])
+        expect(validateEra(era, { wordLimits: false, surfaceTells: false })).toEqual([])
       })
       // Flip to a real test (validateEra(era) with limits) as each era's minimalist cut merges.
       it.todo(`${era.id} meets the minimalist word limits`)
+      it.todo(`${era.id} has no surface giveaways (ellipsis, length)`)
       it('has enough messages with a good mix', () => {
         const real = era.messages.filter((m) => m.real).length
         const forged = era.messages.length - real

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fixture from '../../src/content/eras/_fixture'
-import { countSentences, validateEra } from '../../src/content/validate'
+import { countSentences, surfaceTells, validateEra } from '../../src/content/validate'
 import type { Era } from '../../src/content/types'
 
 const fresh = (): Era => structuredClone(fixture)
@@ -124,7 +124,7 @@ describe('validateEra', () => {
     it('lets Hindi use 1.5x, rounded up', () => {
       const e = fresh()
       msg(e, 'm1').text.hi = long(45)
-      expect(validateEra(e).some((p) => p.includes('[hi]'))).toBe(false)
+      expect(validateEra(e).some((p) => p.includes('too long') && p.includes('[hi]'))).toBe(false)
       msg(e, 'm1').text.hi = long(46)
       expect(validateEra(e)).toContain('m1: text too long (46 words, max 45) [hi]')
     })
@@ -149,6 +149,40 @@ describe('validateEra', () => {
       expect(problems).toContain('f1: value too long (7 words, max 6) [en]')
       expect(problems).toContain('epilogue: caught too many paragraphs (3, max 2)')
       expect(validateEra(e, { wordLimits: false }).some((p) => p.includes('too long'))).toBe(false)
+    })
+  })
+
+  describe('surface tells', () => {
+    const withTexts = (genuine: string[], forged: string[]): Era => {
+      const e = fresh()
+      const g = msg(e, 'm1')
+      const f = msg(e, 'm2')
+      e.messages = [
+        ...genuine.map((t, i) => ({ ...structuredClone(g), id: `g${i}`, text: { en: t, hi: t } })),
+        ...forged.map((t, i) => ({ ...structuredClone(f), id: `f${i}`, text: { en: t, hi: t } })),
+      ]
+      return e
+    }
+    it('accepts the untouched fixture', () => {
+      expect(surfaceTells(fresh())).toEqual([])
+    })
+    it('flags an ellipsis that only genuine messages use', () => {
+      const e = withTexts(['Send word now … quickly please', 'Come at dawn today please'], ['Send word now quickly please', 'Come at dawn today please'])
+      expect(validateEra(e, { wordLimits: false })).toContain('surface: ellipsis gives away genuine (50% genuine vs 0% forged) [en]')
+    })
+    it('accepts ellipses used on both sides', () => {
+      const e = withTexts(['Send word now … quickly', 'Come at dawn today'], ['Send word … quickly now', 'Come at dawn today'])
+      expect(surfaceTells(e).some((p) => p.includes('ellipsis'))).toBe(false)
+    })
+    it('flags a length gap beyond 25%', () => {
+      const e = withTexts(['one two three four'], ['one two three four five six'])
+      expect(surfaceTells(e)).toContain('surface: length gives away (4 vs 6 words) [en]')
+      const near = withTexts(['one two three four'], ['one two three four five'])
+      expect(surfaceTells(near)).toEqual([])
+    })
+    it('can be switched off', () => {
+      const e = withTexts(['one two three four'], ['one two three four five six'])
+      expect(validateEra(e, { surfaceTells: false }).some((p) => p.startsWith('surface'))).toBe(false)
     })
   })
 })
