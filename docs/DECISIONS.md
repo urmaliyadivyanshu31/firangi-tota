@@ -1,0 +1,62 @@
+# Decisions
+
+The project owner's decisions, in the order they were made. When something here conflicts with
+older notes, the newest entry wins. This file is public; it explains why the game is the way it is.
+
+## 2026-10-23: Starting the project
+
+**Credit and originality**
+- Firangi Tota is *inspired by* [Politburo or Parrot](https://github.com/atomiquest/Politburo-or-Parrot)
+  by atomiquest ([play it](https://atomiquest.github.io/Politburo-or-Parrot/)). The README and the
+  game's credits screen say so, with a link.
+- That repository has no licence, so none of its code, text, images or sounds are copied. Only the
+  idea of the game loop is shared, and every line here is written from scratch.
+- Every third-party asset (fonts, sounds, archival images) must be CC0, public domain or properly
+  licensed, and is listed in `CREDITS.md` with its source and licence.
+- No shortcuts that would embarrass an open-source project: no scraped or unlicensed material, no
+  secrets in the repo, no tracking that identifies players.
+
+**What the game is**
+- A browser game about moments in Indian history. A message arrives each day; some are forged by
+  the **Firangi Tota**, an agent for the British who copies the voice but slips on facts. You check
+  each one against your case file and stamp it real or forged.
+- The first version covers four moments, starting from 1857: **Delhi 1857**, **Bhagat Singh
+  1928–31**, **Quit India 1942** (the secret Congress Radio) and **August 1947**.
+- In each era the forger is grounded in real history (informers, approvers, police plants).
+
+**Truth**
+- Every fact needs a source, read from books and papers rather than taken from summaries. The game
+  shows the source after each stamp.
+- Fiction is allowed only where it is clearly game fiction (the player's character, the forged
+  messages), and is never presented as a historical claim.
+
+**Tone and humour**
+- Serious, with light wit. The game stands with India and with the people who fought for freedom.
+- The humour lands on everyone who helped the British or sat out, from any side, then or now:
+  informers, title-holders, princes, organisations and British red tape. Each joke is backed by a
+  documented quote shown on screen. No side is spared, so no one can call it propaganda.
+- Never aimed at a religion or a community. Partition's victims are treated with dignity.
+
+**Difficulty**
+- Some forgeries are easy (the case file catches them); some are hard and only someone who knows the
+  history will spot them. Easy (7 days), Medium (10) and Hard (14).
+- One wrong stamp ends the chapter, in every mode.
+
+**Who it's for**
+- Anyone in India, including a kid in a village on a cheap Android phone with a weak network: a
+  small download, offline after the first visit, simple Hindi, big buttons.
+- English and Hindi, switchable at any time. A 🔊 button reads the message aloud using the phone's
+  built-in voice.
+
+**Look and sound**
+- A 3D desk scene like the reference, drawn in code, that adjusts its quality to the phone and falls
+  back to 2D when 3D isn't available. It must run on an iPhone 14 and on low-end Android.
+- Sound on: Indian and period sounds for each era.
+
+**Scope**
+- MVP only: the four chapters plus a daily puzzle ("Aaj ka Taar", the same messages for everyone
+  that day, with a share card). Everything else comes later, step by step.
+- All four chapters are open from the start, with a suggested chronological order.
+
+**Where it lives**
+- A public GitHub repo, hosted on Vercel, at firangitota.com.
