@@ -73,6 +73,9 @@ interface Desk {
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
+// The paper's arrival. The 1947 telegram types itself out over 5-6 s by design, so the arrival gets
+// the long guard: with the short one the stamps woke before the telegram could be read.
+const ARRIVAL_GUARD_MS = 9000
 
 
 type Play =
@@ -128,6 +131,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   // the stamp whose thunk waits for the stage's impact beat
   let pendingThunk: StampKind | null = null
+  // the verdict on the paper: null before the stamp, else whether the chapter's end buttons show
+  let verdictEnd: boolean | null = null
+  // a phone on its side: the width of the controls beside the paper, kept for the verdict
+  let sideInset = 0
   // the verdict as the paper's back shows it, and whether it ends the chapter
   let paper: { spec: RevealSpec; end?: 'caught' | 'survived' } | null = null
 
@@ -156,7 +163,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   window.addEventListener('resize', () => {
     // after the layout settles (the 900 px switch moves the case file), tell the stage again
     window.clearTimeout(insetTimer)
-    insetTimer = window.setTimeout(() => alive() && screen === 'day' && !revealed && syncHudInsets(), 60)
+    insetTimer = window.setTimeout(() => alive() && screen === 'day' && syncHudInsets(), 60)
   })
 
   root.stage.addEventListener(STAGE_LOST_EVENT, (e) => {
@@ -182,6 +189,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       get play() { return play },
       get revealed() { return revealed },
       get readable() { return readable },
+      /** 'stage' (3D), 'fallback' (2D) or null while neither has arrived. */
+      get desk() { return desk ? (desk.cues ? 'stage' : 'fallback') : null },
+      /** Where the paper is on screen (CSS px), for layout checks. */
+      paperRect: () => desk?.getPaperRect() ?? null,
     }
   }
 
@@ -295,26 +306,47 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   }
 
   /**
-   * Tells the stage where the overlay sits, so the lean-in keeps the paper clear of it: the top bar,
-   * the tabs and stamps below, and in landscape the pinned cards on the left.
+   * Tells the stage where the overlay sits, so the lean-in keeps the paper clear of it: the top bar;
+   * the tabs and stamps below (beside the paper on a phone on its side); in landscape the pinned
+   * cards on the left; and once the verdict is on the paper, the buttons under or beside it.
    */
   function syncHudInsets(): void {
     const el = root.stage
     const H = window.innerHeight || document.documentElement.clientHeight
     const W = window.innerWidth || document.documentElement.clientWidth
-    const rect = (sel: string) => {
-      const r = ui.querySelector(sel)?.getBoundingClientRect()
+    const rectOf = (node: Element | null) => {
+      const r = node?.getBoundingClientRect()
       return r && r.height > 0 && r.width > 0 ? r : null
     }
+    const rect = (sel: string) => rectOf(ui.querySelector(sel))
+    const all = (sels: string[]) => sels.flatMap((sel) => [...ui.querySelectorAll(sel)].map(rectOf)).filter((r): r is DOMRect => r !== null)
+    const day = ui.querySelector<HTMLElement>('.screen--day')
     const hud = rect('.hud')
-    const below = ['.day__controls .tabs', '.day__controls .stamps'].map(rect).filter((r): r is DOMRect => r !== null)
-    const wide = ui.querySelector<HTMLElement>('.screen--day')?.dataset.layout === 'wide'
+    if (!day || !hud) return
+    const wide = day.dataset.layout === 'wide'
+    const short = day.hasAttribute('data-short')
+    let bottom = 0
+    let side = 0 // a phone on its side: what stands beside the paper, kept equal both sides
+    if (short) {
+      const lefts = all(['.tab--file', '.stamp--asli'])
+      const rights = all(['.tab--rules', '.stamp--tota', '.listen-group', '.paper-result__actions > *'])
+      const l = lefts.length ? Math.max(...lefts.map((r) => r.right)) : 0
+      const r = rights.length ? W - Math.min(...rights.map((x) => x.left)) : 0
+      if (l || r) sideInset = Math.max(l, r) + 8
+      side = sideInset
+      bottom = 8
+    } else if (verdictEnd !== null) {
+      const acts = all(['.paper-result__actions > *'])
+      bottom = acts.length ? H - Math.min(...acts.map((r) => r.top)) + 8 : verdictEnd ? 230 : 110
+    } else {
+      const below = all(['.day__controls .tabs', '.day__controls .stamps'])
+      bottom = below.length ? H - Math.min(...below.map((r) => r.top)) + 6 : 0
+    }
     const dossier = wide ? rect('.dossier') : null
-    if (!hud && !below.length) return
-    el.style.setProperty('--ft-hud-top', `${Math.ceil(hud ? hud.bottom + 6 : 0)}px`)
-    el.style.setProperty('--ft-hud-bottom', `${Math.ceil(below.length ? H - Math.min(...below.map((r) => r.top)) + 6 : 0)}px`)
-    el.style.setProperty('--ft-hud-left', `${Math.ceil(dossier ? dossier.right + 12 : 0)}px`)
-    el.style.setProperty('--ft-hud-right', `${Math.ceil(hud && wide ? Math.max(0, W - hud.right) : 0)}px`)
+    el.style.setProperty('--ft-hud-top', `${Math.ceil(hud.bottom + 6)}px`)
+    el.style.setProperty('--ft-hud-bottom', `${Math.ceil(bottom)}px`)
+    el.style.setProperty('--ft-hud-left', `${Math.ceil(dossier ? dossier.right + 12 : side)}px`)
+    el.style.setProperty('--ft-hud-right', `${Math.ceil(wide ? Math.max(0, W - hud.right) : side)}px`)
   }
 
   /** Shows an era's desk. A desk with a paper or the caught dimming on it is rebuilt clean. */
@@ -560,6 +592,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     revealed = false
     busy = false
     paper = null
+    verdictEnd = null
     deskDirty = true
     timerArmed = false
     timeLeft = timeTotal = TIMER_S[p.state.difficulty]
@@ -581,7 +614,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (!desk?.cues) audio.cue('arrive') // the 3D stage cues it when the paper actually moves
     syncHudInsets()
     const d = desk
-    await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve())
+    await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve(), ARRIVAL_GUARD_MS)
     if (stale()) return
     if (desk && desk !== d) {
       // the desk changed under the arrival (a lost context): show the paper on the new one
@@ -645,7 +678,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       },
     })
     controls.hidden = true
-    if (!revealed) syncHudInsets()
+    syncHudInsets()
   }
 
   /** What the DOM keeps while the verdict is on the paper: a mirror, the source button and the end's receipts. */
@@ -699,8 +732,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const end = p.kind !== 'chapter' ? undefined : !correct ? 'caught' : p.state.day >= p.state.days ? 'survived' : undefined
     if (desk && msg) {
       const spec = buildReveal({ era: p.era, msg, verdict: v, lang: getLang(), ...(end ? { end } : {}) })
-      // the buttons below the paper's back take more room than the stamps did at the chapter's end
-      root.stage.style.setProperty('--ft-hud-bottom', `${end ? 230 : 110}px`)
+      // the buttons below (or beside) the paper's back take more room than the stamps did at the end
+      verdictEnd = !!end
+      syncHudInsets()
       if (end && p.era.channel === 'telegram') audio.cue('endTelegram') // the ending comes off the teleprinter
       await guard(desk.reveal(spec), REVEAL_GUARD_MS)
       if (token !== gen) return

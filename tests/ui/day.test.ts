@@ -288,6 +288,27 @@ describe('renderDay: case file and rulebook', () => {
     for (const k of ['file', 'rules']) expect(root.querySelector(`[data-panel="${k}"]`)!.getAttribute('aria-hidden')).toBe('false')
   })
 
+  it('on a phone on its side (short landscape, even 900 px wide) keeps the tabs and marks the screen short', () => {
+    const listeners: (() => void)[] = []
+    let short = true
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      get matches() { return query.includes('min-width: 900px') ? true : query.includes('max-height') ? short : false },
+      addEventListener: (_: string, fn: () => void) => listeners.push(fn),
+      removeEventListener: () => undefined,
+    }))
+    const root = mount()
+    const e = era()
+    renderDay(root, props(e, chapter(e)), handlers())
+    const screen = root.querySelector<HTMLElement>('.screen--day')!
+    expect(screen.dataset.layout).toBe('narrow')
+    expect(screen.hasAttribute('data-short')).toBe(true)
+    expect(root.querySelector('button[data-tab="file"]')).not.toBeNull()
+    short = false // turned upright on a tablet: wide again
+    for (const fn of listeners) fn()
+    expect(screen.dataset.layout).toBe('wide')
+    expect(screen.hasAttribute('data-short')).toBe(false)
+  })
+
   it('keeps them in sheets behind two tabs below 900 px, and switches when the width changes', () => {
     const width = stubWidth(false)
     const root = mount()
@@ -472,5 +493,39 @@ describe('renderDay: the verdict on the paper', () => {
     expect(pop.hidden).toBe(true)
     // without a rect from the stage, the source is a small slip among the buttons
     expect(root.querySelector('.paper-result__actions [data-action="source"]')!.textContent).toBe(strings.en.source)
+  })
+
+  it('closes the source and receipts cards by touch: their close slip or a tap on the shade', () => {
+    const e = era()
+    const root = mount()
+    renderDay(root, props(e, chapter(e, { day: 1, phase: 'caught', lastCorrect: false, lastVerdict: 'tota' }), {
+      revealed: true,
+      onPaper: { mirror: 'Wrong', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 14' }], end: { receipts: e.receipts } },
+    }), { ...handlers(), again: vi.fn(), home: vi.fn(), share: vi.fn() })
+    const src = root.querySelector<HTMLButtonElement>('[data-action="source"]')!
+    const source = root.querySelector<HTMLElement>('#ft-source-pop')!
+    const receipts = root.querySelector<HTMLElement>('#ft-receipts-pop')!
+    const shade = root.querySelector<HTMLElement>('.pop-scrim')!
+    expect(shade.hidden).toBe(true)
+
+    src.click()
+    expect(source.hidden).toBe(false)
+    expect(shade.hidden).toBe(false)
+    expect(src.getAttribute('aria-expanded')).toBe('true')
+    expect(document.activeElement).toBe(source.querySelector('[data-action="close-source"]'))
+    source.querySelector<HTMLButtonElement>('[data-action="close-source"]')!.click()
+    expect(source.hidden).toBe(true)
+    expect(shade.hidden).toBe(true)
+    expect(src.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(src) // focus goes back to what opened it
+
+    root.querySelector<HTMLButtonElement>('[data-action="receipts"]')!.click()
+    expect(receipts.hidden).toBe(false)
+    src.click() // one card at a time
+    expect(receipts.hidden).toBe(true)
+    expect(source.hidden).toBe(false)
+    shade.click()
+    expect(source.hidden).toBe(true)
+    expect(shade.hidden).toBe(true)
   })
 })
