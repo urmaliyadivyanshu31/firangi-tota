@@ -13,8 +13,8 @@ export const receipts: Receipt[] = [
     },
     joke: { en: 'A People’s War, minus the people in the streets', hi: 'जनता की जंग, बस सड़कों वाली जनता के बिना' },
     theirSide: {
-      en: 'Their side: its September 1942 resolution demanded “Release Mahatma Gandhi and the National leaders.”',
-      hi: 'उनकी बात: सितंबर 1942 के उसके प्रस्ताव ने माँगा, “महात्मा गांधी और राष्ट्रीय नेताओं को रिहा करो।”',
+      en: 'Their side: “People’s War” against Hitler; it still demanded “Release Mahatma Gandhi and the National leaders.”',
+      hi: 'उनकी बात: हिटलर के ख़िलाफ़ “जनता की जंग”; फिर भी माँग की, “महात्मा गांधी और राष्ट्रीय नेताओं को रिहा करो।”',
     },
     source: { id: 'cpi-open-letter-1942', loc: 'open letter, July 1942 (Joshi 1945, App. I, pp. 291–3); theirSide: CC resolution, Sept 1942' },
   },
@@ -30,8 +30,8 @@ export const receipts: Receipt[] = [
       hi: '“आम, शांत ज़िंदगी”? सिंध के अल्लाह बख़्श ने ख़िताब लौटा दिए',
     },
     theirSide: {
-      en: 'Their side: Muslims are “not a whit less insistent on freedom”, but feared “Hindu raj”.',
-      hi: 'उनकी बात: आज़ादी पर मुसलमानों का ज़ोर “ज़रा भी कम नहीं”, पर उन्हें “हिंदू राज” का डर था।',
+      en: 'Their side: Muslims want freedom “not a whit less”, the League said, but feared “Hindu raj”.',
+      hi: 'उनकी बात: लीग ने कहा, आज़ादी पर मुसलमानों का ज़ोर “ज़रा भी कम नहीं”, पर उसे “हिंदू राज” का डर था।',
     },
     source: { id: 'top-ii-1971', loc: 'No. 598, pp. 772–4' },
   },
@@ -44,8 +44,8 @@ export const receipts: Receipt[] = [
     },
     joke: { en: 'Quit India? Not before the shift ends', hi: 'भारत छोड़ो? पहले ड्यूटी तो पूरी कर लें' },
     theirSide: {
-      en: 'His side: “responsive co-operation”, “from unconditional co-operation to an armed resistance” (8 April 1942, Historic Statements).',
-      hi: 'उनकी बात: “जवाबी सहयोग”, “बिना शर्त सहयोग से हथियारबंद विरोध तक” (8 अप्रैल 1942, ‘हिस्टॉरिक स्टेटमेंट्स’)।',
+      en: 'His side: “responsive co-operation”: Hindus trained in the forces serve Hindu interests (8 April 1942).',
+      hi: 'उनकी बात: “जवाबी सहयोग”: फ़ौज में सीखे हिंदू हिंदुओं के हित में काम आएँगे (8 अप्रैल 1942)।',
     },
     source: {
       id: 'iar-1942',
