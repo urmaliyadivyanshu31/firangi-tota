@@ -2,7 +2,7 @@
 // written to the minimal brief (15–30 words), plus one long text to check that the sheet copes.
 // Every date line is the era's day 1, the same day the title shows.
 import type { EraId, Lang } from '../src/content/types'
-import type { DayTitle, SheetSpec } from '../src/scene/types'
+import type { DayTitle, RevealSpec, RevealStamp, SheetSpec } from '../src/scene/types'
 
 type Pair = Record<Lang, Omit<SheetSpec, 'lang' | 'era' | 'channel' | 'pencil'>>
 
@@ -120,4 +120,73 @@ const TITLES: Record<EraId, Record<Lang, DayTitle>> = {
 export function sampleTitle(era: EraId, lang: Lang, day = 1): DayTitle {
   const t = TITLES[era][lang]
   return { big: t.big.replace('1', String(day)), small: t.small }
+}
+
+// ---------------------------------------------------------------- the verdict on the paper
+
+export type RevealKind = 'right' | 'wrong' | 'caught'
+
+interface EraVerdict {
+  style: RevealStamp['style']
+  /** The sample sheets are genuine: what checks out, and why. */
+  note: Record<Lang, string>
+  tell: Record<Lang, string>
+  source: string
+  ending: Record<Lang, string>
+}
+
+const VERDICTS: Record<EraId, EraVerdict> = {
+  'delhi-1857': {
+    style: 'seal',
+    note: { en: 'Mirza Mughal led the army, as the file says', hi: 'फ़ौज मिर्ज़ा मुग़ल के हाथ थी, जैसा फ़ाइल में है' },
+    tell: { en: "Chuni Lal's news diary for 18 May records the very words.", hi: 'चुन्नी लाल की 18 मई की डायरी में यही दर्ज है।' },
+    source: 'Trial of Bahadur Shah (1858), p. 113',
+    ending: { en: 'Delhi falls, September 1857. The court is emptied, and so is your desk.', hi: 'सितंबर 1857 में दिल्ली गिरी। दरबार ख़ाली हुआ, और तुम्हारी मेज़ भी।' },
+  },
+  'lahore-1929': {
+    style: 'police',
+    note: { en: 'only the person with both keys', hi: 'सिर्फ़ दोनों चाबियों वाले को' },
+    tell: { en: "Sukhdev's own rule, in Jai Gopal's evidence: no keys, no parcel.", hi: 'सुखदेव का अपना नियम, जय गोपाल की गवाही में: चाबी नहीं, तो सामान नहीं।' },
+    source: 'Noorani, The Trial of Bhagat Singh (1996), p. 141',
+    ending: { en: 'The CID raids the post box room. Your name is on their list.', hi: 'सीआईडी ने पोस्ट बॉक्स वाले कमरे पर छापा मारा। तुम्हारा नाम उनकी सूची में है।' },
+  },
+  'bombay-1942': {
+    style: 'raided',
+    note: { en: 'the right wavelength: 42.34 metres', hi: 'सही वेवलेंथ: 42.34 मीटर' },
+    tell: { en: 'Congress Radio called on 42.34 metres, as its own broadcasts said.', hi: 'कांग्रेस रेडियो 42.34 मीटर पर बोलता था, जैसा उसके प्रसारण कहते थे।' },
+    source: 'Usha Mehta, Congress Radio (1969), p. 12',
+    ending: { en: 'Police find the transmitter on 12 November. The station goes silent.', hi: '12 नवंबर को पुलिस ने ट्रांसमीटर पकड़ लिया। रेडियो चुप हो गया।' },
+  },
+  'delhi-1947': {
+    style: 'telegraph',
+    note: { en: 'the award waits till after the 15th', hi: 'फ़ैसला 15 के बाद ही आएगा' },
+    tell: { en: 'The boundary award was held back and published on 17 August.', hi: 'सीमा का फ़ैसला रोका गया, और 17 अगस्त को छपा।' },
+    source: 'Transfer of Power, vol. XII (1983), p. 579',
+    ending: { en: 'The Viceroy reads the wrong cable. Your post is given away.', hi: 'वायसराय ने ग़लत तार पढ़ा। तुम्हारी कुर्सी किसी और को मिल गई।' },
+  },
+}
+
+/** A verdict for the dev page's sample sheet: right (stamped ASLI), wrong, or caught (the ending). */
+export function sampleReveal(era: EraId, lang: Lang, kind: RevealKind, i = 0): RevealSpec {
+  const v = VERDICTS[era]
+  const s = sampleSheet(era, lang, i)
+  const right = kind === 'right'
+  const hi = lang === 'hi'
+  const verdictLine = right ? (hi ? 'सही — यह संदेश असली था' : 'Right — this one was genuine') : hi ? 'ग़लत — यह संदेश असली था' : 'Wrong — this one was genuine'
+  const stampText = kind === 'caught' ? (hi ? 'पकड़े गए' : 'Caught') : right ? (hi ? 'सही' : 'Correct') : hi ? 'ग़लत' : 'Wrong'
+  return {
+    outcome: right ? 'right' : 'wrong',
+    real: true,
+    documentMark: s.documentMark === true,
+    highlight: s.checks,
+    note: v.note[lang],
+    back: {
+      verdictLine,
+      tell: v.tell[lang],
+      ...(kind === 'caught' ? { consequence: v.ending[lang] } : {}),
+      stamp: { text: stampText, tone: kind === 'caught' ? 'caught' : right ? 'right' : 'wrong', style: v.style },
+      source: v.source,
+    },
+    lang,
+  }
 }

@@ -292,30 +292,43 @@ function paintBlock(ctx: Ctx, b: Block, rng: () => number): void {
 }
 
 /** Pencil squiggles under the checked words of a block. Returns how many it drew. */
-function paintChecks(ctx: Ctx, b: Block, checks: readonly string[], rng: () => number): number {
-  if (!b.checkable) return 0
-  const ranges = findChecks(b.text, checks)
-  if (!ranges.length) return 0
+interface Segment {
+  xa: number
+  xb: number
+  /** The line's baseline. */
+  y: number
+  size: number
+}
+
+/** Where a character range of a block sits, one segment per line it spans (page units). */
+function segments(ctx: Ctx, b: Block, a: number, z: number): Segment[] {
   ctx.save()
   ctx.font = font(b.face, b.size, b.weight)
   const measure = (t: string) => ctx.measureText(t).width + (b.track && ascii(t) ? b.track * t.length : 0)
-  let n = 0
+  const out: Segment[] = []
   b.lines.forEach((line, i) => {
     const x0 = lineLeft(b, i)
-    const y = b.y + i * b.lh + b.size * 0.2
-    for (const [a, z] of ranges) {
-      const hit = line.toks.filter((t) => t.e > a && t.s < z)
-      const first = hit[0]
-      const last = hit[hit.length - 1]
-      if (!first || !last) continue
-      const xa = x0 + first.x + measure(b.text.slice(first.s, Math.max(a, first.s)))
-      const xb = x0 + last.x + measure(b.text.slice(last.s, Math.min(z, last.e)))
-      if (xb - xa < 4) continue
-      pencilLine(ctx, xa - 3, xb + 3, y, b.size, rng)
-      n++
-    }
+    const hit = line.toks.filter((t) => t.e > a && t.s < z)
+    const first = hit[0]
+    const last = hit[hit.length - 1]
+    if (!first || !last) return
+    const xa = x0 + first.x + measure(b.text.slice(first.s, Math.max(a, first.s)))
+    const xb = x0 + last.x + measure(b.text.slice(last.s, Math.min(z, last.e)))
+    if (xb - xa >= 4) out.push({ xa, xb, y: b.y + i * b.lh, size: b.size })
   })
   ctx.restore()
+  return out
+}
+
+function paintChecks(ctx: Ctx, b: Block, checks: readonly string[], rng: () => number): number {
+  if (!b.checkable) return 0
+  let n = 0
+  for (const [a, z] of findChecks(b.text, checks)) {
+    for (const sg of segments(ctx, b, a, z)) {
+      pencilLine(ctx, sg.xa - 3, sg.xb + 3, sg.y + sg.size * 0.2, sg.size, rng)
+      n++
+    }
+  }
   return n
 }
 
@@ -1449,6 +1462,8 @@ export interface SheetMetrics {
   tint: number
   /** Every typed line, top to bottom: the typewriter strikes these one by one. */
   typed: TypedLine[]
+  /** Page v where the writing ends (the free paper below is for the stamp and notes). */
+  bodyEnd: number
 }
 
 /**
@@ -1517,7 +1532,7 @@ export function measureSheet(ctx: Ctx, s: SheetSpec, aspect?: number): SheetMetr
       })
     }
     typed.sort((p, q) => p.top - q.top || p.x0 - q.x0)
-    return { aspect: a, body: B, stampAt: [0.71, Math.min(0.9, Math.max(0.3, v))], tint: lay.tint, typed }
+    return { aspect: a, body: B, stampAt: [0.71, Math.min(0.9, Math.max(0.3, v))], tint: lay.tint, typed, bodyEnd: lay.bodyEnd / H }
   } finally {
     ctx.restore()
   }
@@ -1653,4 +1668,393 @@ export function drawDayTitle(ctx: Ctx, w: number, h: number, t: DayTitle, tone: 
   ctx.fillRect(w * 0.36, h * 0.645, w * 0.28, Math.max(1, h * 0.008))
   drawLine(t.small, smallFace, small, sy, 0, tone === 'gilt' ? '#f1d79a' : fill)
   ctx.restore()
+}
+
+// ---------------------------------------------------------------- the verdict on the paper
+
+/** A rectangle on the page in fractions: u across from the left, v down from the top. */
+export interface PageRect {
+  u0: number
+  v0: number
+  u1: number
+  v1: number
+}
+
+export interface Highlight {
+  text: string
+  /** One rectangle per line the text runs across (empty when it is not on the paper). */
+  rects: PageRect[]
+}
+
+/** Where each highlight substring sits on the sheet, from the same layout drawSheet uses. */
+export function highlightRects(ctx: Ctx, s: SheetSpec, strings: readonly string[], aspect?: number): Highlight[] {
+  const m = measureSheet(ctx, s, aspect)
+  const lay = compose(ctx, s, m.body)
+  const H = m.aspect * PAGE_W
+  return strings.map((text) => {
+    const rects: PageRect[] = []
+    for (const b of lay.blocks) {
+      if (!b.checkable) continue
+      for (const [a, z] of findChecks(b.text, [text])) {
+        for (const sg of segments(ctx, b, a, z)) {
+          rects.push({ u0: (sg.xa - 4) / PAGE_W, u1: (sg.xb + 4) / PAGE_W, v0: (sg.y - sg.size * 0.9) / H, v1: (sg.y + sg.size * 0.32) / H })
+        }
+      }
+    }
+    return { text, rects }
+  })
+}
+
+/** Pencil colours: red for the slip in a forgery, indigo for the details of a genuine message. */
+export const MARK_COLORS = { slip: 'rgba(176,32,24,0.9)', verified: 'rgba(38,58,140,0.88)' } as const
+
+export interface MarkOptions {
+  color: string
+  note: string
+  lang: Lang
+  /** Body size in page units (the note is set from it). */
+  body: number
+  /** Page v where the writing ends: the note goes in the free paper below it. */
+  bodyEnd: number
+  /** 0..1: rings drawn first, one after another, then the note writes itself. */
+  progress: number
+  /** Draw over what is there (the 2D fallback's paper) instead of clearing a transparent layer. */
+  keep?: boolean
+}
+
+/**
+ * The verdict's pencil work on a transparent w × h canvas laid over the sheet: a hand-drawn ring
+ * round each short highlight (a double stroke under a long one), and the margin note.
+ */
+export function drawRevealMarks(ctx: Ctx, w: number, h: number, marks: Highlight[], o: MarkOptions): void {
+  const k = w / PAGE_W
+  const H = h / k
+  ctx.save()
+  if (!o.keep) ctx.clearRect(0, 0, w, h)
+  ctx.scale(k, k)
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = o.color
+  ctx.fillStyle = o.color
+  const segs = marks.flatMap((m) => m.rects)
+  const n = Math.max(1, segs.length)
+  const ringsEnd = segs.length ? 0.6 : 0
+  segs.forEach((r, i) => {
+    const p0 = (i / n) * ringsEnd
+    const p = Math.max(0, Math.min(1, (o.progress - p0) / (ringsEnd / n + 0.12)))
+    if (p <= 0) return
+    const rng = mulberry32(seedFrom(`${i}${r.u0.toFixed(3)}`))
+    const x0 = r.u0 * PAGE_W
+    const x1 = r.u1 * PAGE_W
+    const y0 = r.v0 * H
+    const y1 = r.v1 * H
+    if (x1 - x0 < PAGE_W * 0.48) {
+      // a quick loop round the words, starting at the left and overshooting where it closes
+      const cx = (x0 + x1) / 2
+      const cy = (y0 + y1) / 2
+      const rx = (x1 - x0) / 2 + 12
+      const ry = (y1 - y0) / 2 + 9
+      for (let pass = 0; pass < 2; pass++) {
+        ctx.lineWidth = pass ? 2.4 : 4.4
+        ctx.globalAlpha = pass ? 0.5 : 0.95
+        ctx.beginPath()
+        const start = Math.PI * (0.9 + rng() * 0.2)
+        const sweep = Math.PI * 2 * 1.1 * p
+        const steps = 48
+        for (let j = 0; j <= steps; j++) {
+          const a = start + (sweep * j) / steps
+          const wob = 1 + 0.05 * Math.sin(a * 3 + pass) + (j / steps) * 0.06
+          const x = cx + Math.cos(a) * rx * wob
+          const y = cy + Math.sin(a) * ry * wob - (j / steps) * 3
+          if (j === 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        }
+        ctx.stroke()
+      }
+    } else {
+      // a long one is struck under twice
+      for (let pass = 0; pass < 2; pass++) {
+        ctx.lineWidth = pass ? 2.6 : 4
+        ctx.globalAlpha = pass ? 0.55 : 0.92
+        ctx.beginPath()
+        const yy = y1 + 3 + pass * 6
+        const xe = x0 + (x1 - x0) * p
+        for (let x = x0; x <= xe; x += 12) {
+          const y = yy + Math.sin(x * 0.05 + pass) * 2.5
+          if (x === x0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        }
+        ctx.stroke()
+      }
+    }
+  })
+  ctx.globalAlpha = 1
+  // the margin note, written in after the rings
+  const np = Math.max(0, Math.min(1, (o.progress - ringsEnd) / (1 - ringsEnd || 1)))
+  if (o.note && np > 0) {
+    const hi = o.lang === 'hi'
+    const size = Math.min(58, o.body * (hi ? 0.84 : 0.92))
+    ctx.font = font(hi ? FACE.deva : FACE.hand, size)
+    const lines = wrapText(ctx, o.note, PAGE_W * 0.56)
+    const keys = typedKeys(o.note).length
+    let left = Math.round(keys * np)
+    const top = Math.min(H - 190, Math.max(o.bodyEnd * H + size * 1.3, H * 0.5))
+    ctx.save()
+    ctx.translate(92, top)
+    ctx.rotate(-0.03)
+    ctx.textBaseline = 'alphabetic'
+    lines.forEach((line, i) => {
+      if (left <= 0) return
+      let text = ''
+      for (const t of line.toks) {
+        const word = o.note.slice(t.s, t.e)
+        const cl = keyClusters(word)
+        if (left <= 0) break
+        const take = cl.slice(0, left).join('')
+        left -= Math.min(cl.length, left)
+        text += (text ? ' ' : '') + take
+      }
+      ctx.fillText(text, 0, i * size * 1.25)
+    })
+    ctx.restore()
+  }
+  ctx.restore()
+}
+
+const STAMP_TONES: Record<RevealStampTone, string> = { caught: '#981b13', wrong: '#a8261a', right: '#1d6a3a', survived: '#21458a' }
+type RevealStampTone = 'caught' | 'survived' | 'right' | 'wrong'
+
+/** The era's rubber stamp: a Mughal seal, a police stamp, RAIDED, a telegraph office stamp. */
+export function drawEraStamp(
+  ctx: Ctx,
+  cx: number,
+  cy: number,
+  size: number,
+  st: { text: string; tone: RevealStampTone; style: 'seal' | 'police' | 'raided' | 'telegraph' },
+  o: { lang: Lang; date: string; paper: string; seed: number },
+): void {
+  const rng = mulberry32(o.seed)
+  const col = STAMP_TONES[st.tone]
+  const hi = o.lang === 'hi'
+  const face = hi ? FACE.deva : FACE.print
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.rotate(st.style === 'raided' ? -0.14 : -0.06 + rng() * 0.08)
+  setMultiply(ctx)
+  ctx.globalAlpha = 0.9
+  ctx.strokeStyle = col
+  ctx.fillStyle = col
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const fit = (text: string, max: number, px: number, weight = '') => {
+    let p = px
+    ctx.font = font(face, p, weight)
+    while (ctx.measureText(text).width > max && p > 8) {
+      p *= 0.93
+      ctx.font = font(face, p, weight)
+    }
+    return p
+  }
+  const label = hi ? st.text : st.text.toUpperCase()
+  if (st.style === 'raided') {
+    const w = size * 1.25
+    const h = size * 0.5
+    ctx.lineWidth = size * 0.05
+    ctx.strokeRect(-w / 2, -h / 2, w, h)
+    ctx.lineWidth = size * 0.015
+    ctx.strokeRect(-w / 2 + size * 0.05, -h / 2 + size * 0.05, w - size * 0.1, h - size * 0.1)
+    const p = fit(label, w * 0.82, size * 0.24)
+    ctx.fillText(label, 0, 0)
+    ctx.lineWidth = p * 0.04
+    ctx.strokeText(label, 0, 0)
+  } else if (st.style === 'police') {
+    const rx = size * 0.62
+    const ry = size * 0.38
+    ctx.lineWidth = size * 0.04
+    ctx.beginPath()
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.lineWidth = size * 0.013
+    ctx.beginPath()
+    ctx.ellipse(0, 0, rx - size * 0.06, ry - size * 0.06, 0, 0, Math.PI * 2)
+    ctx.stroke()
+    fit(label, rx * 1.5, size * 0.17)
+    ctx.fillText(label, 0, size * 0.02)
+    for (const sx of [-1, 1]) {
+      star(ctx, sx * rx * 0.78, 0, size * 0.04, 5, 0.45)
+      ctx.fill()
+    }
+    ctx.font = font(face, size * 0.075)
+    ctx.fillText(o.date, 0, ry * 0.62)
+  } else if (st.style === 'telegraph') {
+    const r = size * 0.48
+    ctx.lineWidth = size * 0.035
+    ctx.beginPath()
+    ctx.arc(0, 0, r, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.lineWidth = size * 0.012
+    ctx.beginPath()
+    ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2)
+    ctx.stroke()
+    // the date bar across the middle
+    ctx.fillRect(-r * 0.8, -size * 0.07, r * 1.6, size * 0.012)
+    ctx.fillRect(-r * 0.8, size * 0.07, r * 1.6, size * 0.012)
+    fit(o.date, r * 1.45, size * 0.085)
+    ctx.fillText(o.date, 0, 0)
+    fit(label, r * 1.3, size * 0.12)
+    ctx.fillText(label, 0, -r * 0.4)
+    ctx.font = font(face, size * 0.07)
+    ctx.fillText(hi ? 'तार घर' : 'TELEGRAPH OFFICE', 0, r * 0.4)
+  } else {
+    // the Mughal seal: rings, a band of strokes, the words at the heart
+    const r = size * 0.48
+    ctx.lineWidth = size * 0.04
+    ctx.beginPath()
+    ctx.arc(0, 0, r, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.lineWidth = size * 0.013
+    ctx.beginPath()
+    ctx.arc(0, 0, r * 0.84, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.lineWidth = size * 0.02
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2
+      ctx.beginPath()
+      ctx.arc(Math.cos(a) * r * 0.73, Math.sin(a) * r * 0.73, size * 0.025, a, a + 2)
+      ctx.stroke()
+    }
+    fit(label, r * 1.1, size * 0.13)
+    ctx.fillText(label, 0, 0)
+  }
+  // worn ink
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.fillStyle = o.paper
+  for (let i = 0; i < 220; i++) {
+    ctx.globalAlpha = 0.25 + rng() * 0.55
+    const rr = Math.sqrt(rng()) * size * 0.62
+    const a = rng() * Math.PI * 2
+    const sz = size * (0.004 + rng() * 0.01)
+    ctx.fillRect(Math.cos(a) * rr, Math.sin(a) * rr * 0.8, sz, sz)
+  }
+  ctx.restore()
+}
+
+export interface BackLayout {
+  /** The source line on the back, for an accessible link laid over it. */
+  source: PageRect
+}
+
+/**
+ * The paper's back after the verdict, in the same form typography as its front: the verdict line,
+ * the tell, the consequence when caught, the era stamp and a small source line. Returns where the
+ * source line sits.
+ */
+export function drawSheetBack(
+  ctx: Ctx,
+  w: number,
+  h: number,
+  s: SheetSpec,
+  r: { outcome: 'right' | 'wrong' | 'timeout'; back: { verdictLine: string; tell: string; consequence?: string; stamp?: { text: string; tone: RevealStampTone; style: 'seal' | 'police' | 'raided' | 'telegraph' }; source: string } },
+  o: { stamp: boolean },
+): BackLayout {
+  const k = w / PAGE_W
+  const H = h / k
+  const hi = s.lang === 'hi'
+  const leaf = splitLeaflet(s)
+  const tint = s.channel === 'petition' ? 0xeedfba : s.channel === 'telegram' ? 0xf1e5bf : s.channel === 'radio' ? 0xf3eedb : leaf ? 0xefc6c0 : 0xf0ebdc
+  const rng = mulberry32(seedFrom(`back|${s.era}|${r.back.verdictLine}`))
+  const B = 54
+  const L = 104
+  const R = PAGE_W - 104
+  const good = r.outcome === 'right'
+  const ink = '#241a14'
+  const verdictCol = good ? '#1d5c36' : '#a3261a'
+  const printFace = hi ? FACE.deva : s.channel === 'telegram' || s.channel === 'radio' ? FACE.type : FACE.print
+  const bodyF = hi ? FACE.deva : s.channel === 'note' ? FACE.hand : s.channel === 'petition' ? FACE.print : FACE.type
+  ctx.save()
+  ctx.scale(k, k)
+  paperBase(ctx, H, tint, rng, 0.6)
+  // the same furniture as the front, so it reads as the same paper
+  if (s.channel === 'petition') floralBorder(ctx, H, rng)
+  else if (s.channel === 'telegram') {
+    ctx.save()
+    setMultiply(ctx)
+    ctx.strokeStyle = '#33446a'
+    ctx.lineWidth = 2.5
+    ctx.strokeRect(28, 28, PAGE_W - 56, H - 56)
+    ctx.restore()
+  } else if (s.channel === 'radio') {
+    ctx.save()
+    ctx.strokeStyle = 'rgba(190,60,55,0.55)'
+    ctx.lineWidth = 2.2
+    ctx.beginPath()
+    ctx.moveTo(PAGE_W - 168, 0)
+    ctx.lineTo(PAGE_W - 168, H)
+    ctx.stroke()
+    ctx.restore()
+  } else crease(ctx, 0, H / 2, PAGE_W, H / 2)
+  const verdict = makeBlock(ctx, {
+    text: r.back.verdictLine, face: printFace, size: B * 1.12, weight: '', lh: B * 1.36, x: L, y: 150, color: verdictCol, kind: 'print', align: 'left', firstIndent: 0, checkable: false, bold: 0.025, maxW: R - L,
+  })
+  let y = blockBottom(verdict) + B * 0.5
+  const ruleY = y
+  y += B * 1.2
+  const tell = makeBlock(ctx, {
+    text: r.back.tell, face: bodyF, size: B * (hi ? 1.0 : 0.96), weight: '', lh: B * (hi ? 1.5 : 1.42), x: L, y, color: ink, kind: s.channel === 'note' ? 'hand' : 'print', align: 'left', firstIndent: 0, checkable: false, maxW: R - L,
+  })
+  y = blockBottom(tell)
+  let cons: Block | null = null
+  if (r.back.consequence) {
+    cons = makeBlock(ctx, {
+      text: r.back.consequence, face: hi ? FACE.deva : FACE.print, size: B * 0.82, weight: '', lh: B * 1.25, x: L, y: y + B * 1.25, color: '#6e1d14', kind: 'print', align: 'left', firstIndent: 0, checkable: false, maxW: R - L,
+    })
+    y = blockBottom(cons)
+  }
+  for (const b of [verdict, tell, ...(cons ? [cons] : [])]) paintBlock(ctx, b, rng)
+  ctx.save()
+  setMultiply(ctx)
+  ctx.strokeStyle = verdictCol
+  ctx.globalAlpha = 0.6
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(L, ruleY)
+  ctx.lineTo(L + (R - L) * 0.6, ruleY)
+  ctx.stroke()
+  ctx.restore()
+  // the source, small, at the foot, underlined like a reference to follow
+  const label = hi ? 'स्रोत: ' : 'Source: '
+  const srcSize = 30
+  ctx.font = font(hi ? FACE.deva : FACE.print, srcSize)
+  const srcLines = wrapText(ctx, label + r.back.source, R - L)
+  const srcTop = H - 70 - (srcLines.length - 1) * srcSize * 1.3
+  ctx.fillStyle = '#3a4a6a'
+  ctx.textBaseline = 'alphabetic'
+  let srcW = 0
+  srcLines.forEach((line, i) => {
+    const text = (label + r.back.source).slice(line.toks[0]?.s ?? 0, line.toks[line.toks.length - 1]?.e ?? 0)
+    ctx.fillText(text, L, srcTop + i * srcSize * 1.3)
+    srcW = Math.max(srcW, line.w)
+  })
+  ctx.strokeStyle = 'rgba(58,74,106,0.5)'
+  ctx.setLineDash([3, 5])
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  const lastY = srcTop + (srcLines.length - 1) * srcSize * 1.3 + 6
+  ctx.moveTo(L, lastY)
+  ctx.lineTo(L + srcW, lastY)
+  ctx.stroke()
+  ctx.setLineDash([])
+  // the stamp, in the free paper between the words and the source
+  if (o.stamp && r.back.stamp) {
+    const free0 = y + B * 0.6
+    const free1 = srcTop - srcSize * 1.4
+    const size = Math.max(150, Math.min(330, free1 - free0, PAGE_W * 0.4))
+    const cy = Math.max(free0 + size * 0.45, (free0 + free1) / 2)
+    drawEraStamp(ctx, PAGE_W * 0.64, cy, size, r.back.stamp, { lang: s.lang, date: s.dateLine, paper: hex(tint), seed: seedFrom(r.back.stamp.text) })
+  }
+  ctx.restore()
+  return { source: { u0: L / PAGE_W, u1: (L + srcW) / PAGE_W, v0: (srcTop - srcSize) / H, v1: (lastY + 8) / H } }
 }

@@ -57,7 +57,7 @@ import {
   saveTier,
   startTier,
 } from './quality'
-import { MAX_ASPECT, TITLE_TONE, drawSheet, loadSheetFonts, measureSheet, type SheetMetrics } from './sheet'
+import { MARK_COLORS, MAX_ASPECT, TITLE_TONE, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, type BackLayout, type SheetMetrics } from './sheet'
 import { fitPose, readInsets, rectOnDesk, rectOnWall, safeBox, type NdcBox } from './shots'
 import { createTweens, ease, lerp } from './tween'
 import {
@@ -67,6 +67,8 @@ import {
   type EraDressing,
   type FlashKind,
   type QualityTier,
+  type RevealSpec,
+  type ScreenRect,
   type SheetSpec,
   type Stage,
   type StageOptions,
@@ -246,6 +248,27 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   let skipping = false
   let msgToken = 0
 
+  // the verdict on the paper: what was revealed for which message, and where its source line is
+  let revealState: { spec: RevealSpec; token: number; back: BackLayout | null } | null = null
+  // the pencil layer and the paper's back: the stage's too, reused for every verdict
+  let overlayCanvas: HTMLCanvasElement | null = null
+  let backCanvas: HTMLCanvasElement | null = null
+  const revealCanvases = (t: QualityTier) => {
+    const ow = t === 'low' ? 384 : 512
+    const bw = SHEET_PX[t]
+    if (!overlayCanvas || overlayCanvas.width !== ow) {
+      overlayCanvas ??= document.createElement('canvas')
+      overlayCanvas.width = ow
+      overlayCanvas.height = Math.ceil(ow * MAX_ASPECT)
+    }
+    if (!backCanvas || backCanvas.width !== bw) {
+      backCanvas ??= document.createElement('canvas')
+      backCanvas.width = bw
+      backCanvas.height = Math.ceil(bw * MAX_ASPECT)
+    }
+    return { overlayCanvas, backCanvas }
+  }
+
   // the sheet canvas is the stage's, reused for every message and across world rebuilds
   let sheetCanvas: HTMLCanvasElement | null = null
   const sheetCanvasFor = (t: QualityTier): HTMLCanvasElement => {
@@ -292,7 +315,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       rng: prng,
       reducedMotion: reduced,
     })
-    const sheet = createMessageSheet({ tier: t, canvas: sheetCanvasFor(t), paper: pal.paper })
+    const sheet = createMessageSheet({ tier: t, canvas: sheetCanvasFor(t), paper: pal.paper, ...revealCanvases(t) })
     sheet.group.visible = false
     const envelope = createEnvelope(t)
     envelope.group.visible = false
@@ -385,6 +408,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       w.sheet.setGlow(rig.shot() === 'custom' ? 1 : 0.3)
     }
     if (w.calendar && calDays !== null) w.calendar.show(calDays)
+    if (msg?.shown && revealState && revealState.token === msgToken) paintReveal(w, revealState.spec, 1, true, true)
   }
 
   /** Returns false when the dressing failed to build; the stage then falls back like a lost context. */
@@ -818,6 +842,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     g.visible = false
     w.sheet.setStamp(null)
+    w.sheet.setFlip(0)
+    w.sheet.setOverlay(false)
+    revealState = null
   }
 
   const doStamp = async (kind: StampKind) => {
@@ -955,6 +982,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const m = measure(s)
     if (!m || gen !== worldGen) return
     msg = { spec: s, m, shown: true, stamp: null }
+    revealState = null
+    w.sheet.setFlip(0)
+    w.sheet.setOverlay(false)
     w.sheet.setStamp(null)
     w.sheet.setGlow(0.15)
     drawMessage(w, s, m)
@@ -999,6 +1029,109 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     w.sheet.setGlow(1)
   }
 
+  /** Draws the verdict's pencil layer (at `progress`) and the back (with or without its stamp). */
+  const paintReveal = (w: World, r: RevealSpec, progress: number, withBack: boolean, stamped: boolean) => {
+    if (!msg) return
+    const g = w.sheet.canvas.getContext('2d')
+    const oc = overlayCanvas
+    const bc = backCanvas
+    if (!g || !oc || !bc) return
+    const hl = highlightRects(g, msg.spec, r.highlight, msg.m.aspect)
+    const og = oc.getContext('2d')
+    if (og && w.sheet.overlay) {
+      og.setTransform(1, 0, 0, 1, 0, 0)
+      og.clearRect(0, 0, oc.width, oc.height)
+      drawRevealMarks(og, oc.width, Math.round(oc.width * msg.m.aspect), hl, {
+        color: r.real ? MARK_COLORS.verified : MARK_COLORS.slip,
+        note: r.note,
+        lang: r.lang,
+        body: msg.m.body,
+        bodyEnd: msg.m.bodyEnd,
+        progress,
+      })
+      w.sheet.overlay.needsUpdate = true
+      w.sheet.setOverlay(true)
+    }
+    if (!withBack) return
+    const bg = bc.getContext('2d')
+    if (bg && w.sheet.reverse) {
+      bg.setTransform(1, 0, 0, 1, 0, 0)
+      const used = Math.round(bc.width * msg.m.aspect)
+      const layout = drawSheetBack(bg, bc.width, used, msg.spec, r, { stamp: stamped })
+      bg.fillStyle = '#e9dcc0'
+      bg.fillRect(0, used, bc.width, bc.height - used)
+      w.sheet.reverse.needsUpdate = true
+      if (revealState) revealState.back = layout
+    }
+  }
+
+  const runReveal = async (r: RevealSpec) => {
+    const w = world
+    if (!w || !msg?.shown || lost || disposed) return
+    const gen = worldGen
+    const again = !!revealState && revealState.token === msgToken
+    revealState = { spec: r, token: msgToken, back: revealState?.back ?? null }
+    // the real-document tag may show now, after the stamp (R30b)
+    const front: SheetSpec = { ...msg.spec, documentMark: r.documentMark, revealed: true }
+    if (front.documentMark !== msg.spec.documentMark || msg.spec.revealed !== true) {
+      msg.spec = front
+      drawMessage(w, front, msg.m)
+    }
+    liftCaught()
+    w.sheet.setGlow(1)
+    rig.setParallaxScale(0.06)
+    if (rig.shot() !== 'custom') void rig.goTo(readPose, reduced ? 0 : 650, ease.inOut)
+    if (again || reduced) {
+      paintReveal(w, r, 1, true, true)
+      w.sheet.setFlip(1)
+      return
+    }
+    // 1. the pencil rings the words, then the note writes itself in the margin
+    paintReveal(w, r, 0, true, false)
+    let last = -1
+    await tweens.run(1400, (k) => {
+      const q = Math.round(k * 14) / 14
+      if (q !== last && gen === worldGen) {
+        last = q
+        paintReveal(w, r, q, false, false)
+      }
+    })
+    if (gen !== worldGen) return
+    paintReveal(w, r, 1, false, false)
+    await tweens.wait(320)
+    // 2. the paper lifts toward you and turns over, like a page
+    cue('unfold')
+    await tweens.run(reduced ? 0 : 950, (k) => w.sheet.setFlip(k), ease.inOut)
+    w.sheet.setFlip(1)
+    // 3. the era's stamp comes down on the back
+    await tweens.wait(160)
+    if (gen !== worldGen) return
+    paintReveal(w, r, 1, true, true)
+    cue('verdictStamp')
+    rig.shake(0.007, 0.004)
+    await tweens.wait(300)
+  }
+
+  /** The screen box (CSS px) round some world points, or null off screen. */
+  const screenRect = (pts: THREE.Vector3[]): ScreenRect | null => {
+    camera.updateMatrixWorld()
+    let x0 = Infinity
+    let y0 = Infinity
+    let x1 = -Infinity
+    let y1 = -Infinity
+    for (const p of pts) {
+      const v = p.clone().project(camera)
+      if (v.z > 1) return null
+      const x = ((v.x + 1) / 2) * cssW
+      const y = ((1 - v.y) / 2) * cssH
+      x0 = Math.min(x0, x)
+      y0 = Math.min(y0, y)
+      x1 = Math.max(x1, x)
+      y1 = Math.max(y1, y)
+    }
+    return Number.isFinite(x0) ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null
+  }
+
   const stage: Stage = {
     setEra(d) {
       if (disposed) return
@@ -1007,6 +1140,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       stamped = null
       caughtState = false
       msg = null
+      revealState = null
       calDays = null
       msgToken++
       exposureTok++
@@ -1147,12 +1281,26 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
           }, ease.linear)
           .then(() => fx.set('wrong', 0, 0))
       }
-      // the result card sits over the room: ease back to the desk with the stamped paper on it
-      w.sheet.setGlow(0.35)
-      rig.setParallaxScale(1)
-      void tweens.wait(reduced ? 0 : 280).then(() => {
-        if (world === w && !caughtState) return rig.go('desk', reduced ? 0 : 1100, ease.inOut)
-      })
+      // (the camera stays on the paper: the verdict plays out on it, see reveal)
+    },
+    reveal(r) {
+      if (lost) return fallback ? fallback.reveal(r) : Promise.resolve()
+      if (disposed || !world) return Promise.resolve()
+      return run(() => runReveal(r))
+    },
+    getSourceRect() {
+      if (lost) return fallback?.getSourceRect() ?? null
+      const w = world
+      const src = revealState?.back?.source
+      if (!w || !src || w.sheet.flip() < 0.999 || !w.sheet.group.visible) return null
+      return screenRect([[src.u0, src.v0], [src.u1, src.v0], [src.u1, src.v1], [src.u0, src.v1]].map(([u = 0, v = 0]) => w.sheet.backPointAt(u, v)))
+    },
+    getPaperRect() {
+      if (lost) return fallback?.getPaperRect() ?? null
+      const w = world
+      if (!w || !msg?.shown || !w.sheet.group.visible) return null
+      const flipped = w.sheet.flip() > 0.5
+      return screenRect([[0, 0], [1, 0], [1, 1], [0, 1]].map(([u = 0, v = 0]) => (flipped ? w.sheet.backPointAt(u, v) : w.sheet.pointAt(u, v))))
     },
     skip() {
       if (disposed || lost) return

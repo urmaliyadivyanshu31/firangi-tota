@@ -16,15 +16,21 @@ const LANGS = list(process.env.LANGS, ['en', 'hi'])
 const VIDEO = process.env.VIDEO !== '0'
 const EXTRA = process.env.EXTRA ? `&${process.env.EXTRA}` : ''
 // beats to photograph, with a delay after the beat starts (ms)
-const SHOTS = [
-  ['establish', 1300],
-  ['title', 1150],
-  ['arrival', 900],
-  ['read', 700],
-  ['stamp', 520],
-  ['flash', 260],
-  ['result', 300],
-]
+const SHOTS = process.env.EXTRA?.includes('reveal=')
+  ? [
+      ['read', 700],
+      ['reveal', 1300],
+      ['back', 400],
+    ]
+  : [
+      ['establish', 1300],
+      ['title', 1150],
+      ['arrival', 900],
+      ['read', 700],
+      ['stamp', 520],
+      ['flash', 260],
+      ['result', 300],
+    ]
 const BEATS = list(process.env.BEATS, SHOTS.map((s) => s[0]))
 mkdirSync(OUT, { recursive: true })
 mkdirSync(`${OUT}/video`, { recursive: true })
@@ -53,7 +59,7 @@ for (const era of ERAS) {
         await page.goto(`${BASE}/dev/immersive.html?auto&hud&era=${era}&lang=${lang}&tier=${tier}${EXTRA}`)
         for (const [beat, delay] of SHOTS) {
           await page.waitForFunction((b) => {
-            const order = ['establish', 'title', 'arrival', 'read', 'stamp', 'flash', 'result', 'done']
+            const order = ['establish', 'title', 'arrival', 'read', 'stamp', 'flash', 'reveal', 'back', 'result', 'done']
             const cur = window.__beat ?? ''
             return order.indexOf(cur) >= order.indexOf(b)
           }, beat, { timeout: 40000 })
