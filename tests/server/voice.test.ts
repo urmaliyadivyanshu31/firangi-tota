@@ -1,5 +1,8 @@
 // @vitest-environment node
+// handleVoice tests, run against the ElevenLabs provider with a mocked SDK client.
+// Fish Audio and provider selection are covered in providers.test.ts.
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { elevenLabsSynth } from '../../server/providers'
 import { ERAS } from '../../src/content/registry'
 import type { EraId, Lang, Message } from '../../src/content/types'
 import { dayDate, fillTemplate } from '../../src/game/dates'
@@ -15,7 +18,7 @@ import {
   type VoiceQuery,
   type VoiceResult,
 } from '../../server/voice'
-import { ERA_VOICES, MODEL_ID, OUTPUT_FORMAT } from '../../server/voices'
+import { ALT_VOICES, ERA_VOICES, MODEL_ID, OUTPUT_FORMAT } from '../../server/voices'
 
 const BYTES = [new Uint8Array([0x49, 0x44, 0x33]), new Uint8Array([1, 2, 3, 4])]
 
@@ -33,6 +36,9 @@ function mockClient(impl?: () => Promise<ReadableStream<Uint8Array>>) {
   const client: TtsClient = { textToSpeech: { convert } }
   return { client, convert }
 }
+
+/** Deps for the ElevenLabs provider; null means no key is configured. */
+const el = (client: TtsClient | null) => ({ provider: 'elevenlabs' as const, synth: client ? elevenLabsSynth(client) : null })
 
 const PLACEHOLDER = /\{(?:date|weekday)(?:\+\d+)?\}/
 function find(pred: (m: Message) => boolean): { era: EraId; msg: Message } {
@@ -57,9 +63,9 @@ function location(r: VoiceResult): Record<string, string> {
 
 /** Follow the redirect to the canonical, cacheable URL. */
 async function fetchClip(query: VoiceQuery, client: TtsClient | null): Promise<VoiceResult> {
-  const first = await handleVoice(query, { client })
+  const first = await handleVoice(query, el(client))
   if (first.status !== 307) return first
-  return handleVoice(location(first), { client })
+  return handleVoice(location(first), el(client))
 }
 
 afterEach(() => { vi.restoreAllMocks() })
@@ -87,7 +93,7 @@ describe('handleVoice: bad and unknown params', () => {
   ]
   for (const [name, query] of cases) {
     it(`400: ${name}`, async () => {
-      const r = await handleVoice(query, { client })
+      const r = await handleVoice(query, el(client))
       expect(r.status).toBe(400)
       expect(r.headers['Cache-Control']).toBe('no-store')
       expect(JSON.parse(String(r.body))).toEqual({ error: 'bad_request' })
@@ -95,25 +101,25 @@ describe('handleVoice: bad and unknown params', () => {
   }
 
   it('404: unknown era', async () => {
-    const r = await handleVoice(q('agra-1600', id, 'en', 1), { client })
+    const r = await handleVoice(q('agra-1600', id, 'en', 1), el(client))
     expect(r.status).toBe(404)
     expect(JSON.parse(String(r.body))).toEqual({ error: 'not_found' })
   })
 
   it('404: unknown message id in a real era', async () => {
-    const r = await handleVoice(q(plain.era, 'no-such-message', 'en', 1), { client })
+    const r = await handleVoice(q(plain.era, 'no-such-message', 'en', 1), el(client))
     expect(r.status).toBe(404)
   })
 
   it('404: a real id from a different era', async () => {
     const other = Object.values(SERVER_ERAS).find((e) => e.id !== plain.era && !e.messages.some((m) => m.id === id))!
-    const r = await handleVoice(q(other.id, id, 'en', 1), { client })
+    const r = await handleVoice(q(other.id, id, 'en', 1), el(client))
     expect(r.status).toBe(404)
   })
 
   it('bad params are refused before the key is checked, and never reach ElevenLabs', async () => {
-    expect((await handleVoice(q(plain.era, id, 'fr', 1), { client: null })).status).toBe(400)
-    expect((await handleVoice(q('agra-1600', id, 'en', 1), { client: null })).status).toBe(404)
+    expect((await handleVoice(q(plain.era, id, 'fr', 1), el(null))).status).toBe(400)
+    expect((await handleVoice(q('agra-1600', id, 'en', 1), el(null))).status).toBe(404)
     expect(convert).not.toHaveBeenCalled()
   })
 })
@@ -121,11 +127,11 @@ describe('handleVoice: bad and unknown params', () => {
 describe('handleVoice: text resolution and canonical URLs', () => {
   it('a text without placeholders ignores the day and normalises it to 1', async () => {
     const { client, convert } = mockClient()
-    const a = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 9), { client }))
-    const b = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 2), { client }))
+    const a = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 9), el(client)))
+    const b = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 2), el(client)))
     expect(a.day).toBe('1')
     expect(a).toEqual(b) // one cache entry for every day
-    const r = await handleVoice(a, { client })
+    const r = await handleVoice(a, el(client))
     expect(r.status).toBe(200)
     expect(convert).toHaveBeenCalledTimes(1)
     expect(convert.mock.calls[0]![1].text).toBe(plain.msg.text.en.trim())
@@ -134,12 +140,12 @@ describe('handleVoice: text resolution and canonical URLs', () => {
   it('a text with placeholders is filled with that day’s date', async () => {
     const { client, convert } = mockClient()
     const era = SERVER_ERAS[dated.era]
-    const loc3 = location(await handleVoice(q(dated.era, dated.msg.id, 'en', 3), { client }))
-    const loc4 = location(await handleVoice(q(dated.era, dated.msg.id, 'en', 4), { client }))
+    const loc3 = location(await handleVoice(q(dated.era, dated.msg.id, 'en', 3), el(client)))
+    const loc4 = location(await handleVoice(q(dated.era, dated.msg.id, 'en', 4), el(client)))
     expect(loc3.day).toBe('3')
     expect(loc4.day).toBe('4')
     expect(loc3.v).not.toBe(loc4.v)
-    await handleVoice(loc3, { client })
+    await handleVoice(loc3, el(client))
     const text = convert.mock.calls[0]![1].text
     expect(text).toBe(fillTemplate(dated.msg.text.en, dayDate(era, 3), 'en').trim())
     expect(text).not.toMatch(/[{}]/)
@@ -155,7 +161,7 @@ describe('handleVoice: text resolution and canonical URLs', () => {
 
   it('a request with a stale version is redirected, not synthesised', async () => {
     const { client, convert } = mockClient()
-    const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { v: '00000000' }), { client })
+    const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { v: '00000000' }), el(client))
     expect(r.status).toBe(307)
     expect(r.headers['Cache-Control']).toBe(REDIRECT_CACHE)
     expect(convert).not.toHaveBeenCalled()
@@ -166,7 +172,7 @@ describe('handleVoice: text resolution and canonical URLs', () => {
       for (const m of era.messages) {
         for (const lang of ['en', 'hi'] as Lang[]) {
           for (let day = 1; day <= MAX_DAY; day++) {
-            const clip = resolveClip(q(era.id, m.id, lang, day))
+            const clip = resolveClip(q(era.id, m.id, lang, day), "elevenlabs")
             if ('status' in clip) throw new Error(`${era.id}/${m.id}/${lang}/${day} -> ${clip.status}`)
             expect(clip.text.length).toBeLessThanOrEqual(MAX_TEXT_CHARS)
             expect(clip.text).not.toMatch(PLACEHOLDER)
@@ -227,8 +233,8 @@ describe('handleVoice: audio response', () => {
     let release: () => void = () => {}
     const gate = new Promise<void>((r) => { release = r })
     const { client, convert } = mockClient(() => gate.then(() => streamOf(BYTES)))
-    const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), { client }))
-    const both = Promise.all([handleVoice(canon, { client }), handleVoice(canon, { client })])
+    const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
+    const both = Promise.all([handleVoice(canon, el(client)), handleVoice(canon, el(client))])
     release()
     const [a, b] = await both
     expect(a.status).toBe(200)
@@ -237,9 +243,79 @@ describe('handleVoice: audio response', () => {
   })
 })
 
+describe('alternate voice: Dastango', () => {
+  it('voice=dastango gets its own canonical URL and hash', async () => {
+    const { client } = mockClient()
+    const era = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
+    const dg = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'dastango' }), el(client)))
+    expect(era.voice).toBeUndefined()
+    expect(dg.voice).toBe('dastango')
+    expect(dg.v).not.toBe(era.v) // a different cache key for the same message
+  })
+
+  it('reads with the Dastango voice in any chapter', async () => {
+    for (const eraId of Object.keys(SERVER_ERAS) as EraId[]) {
+      const { client, convert } = mockClient()
+      const msg = SERVER_ERAS[eraId].messages[0]!
+      expect((await fetchClip(q(eraId, msg.id, 'hi', 1, { voice: 'dastango' }), client)).status).toBe(200)
+      const [voiceId, req] = convert.mock.calls[0]!
+      expect(voiceId).toBe(ALT_VOICES.dastango.elevenlabs!.voiceId)
+      expect(req.voiceSettings).toEqual(ALT_VOICES.dastango.elevenlabs!.settings)
+      expect(req.languageCode).toBe('hi')
+    }
+  })
+
+  it('an explicit voice=era is redirected to the URL without it', async () => {
+    const { client, convert } = mockClient()
+    const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
+    const r = await handleVoice({ ...canon, voice: 'era' }, el(client))
+    expect(location(r)).toEqual(canon)
+    expect(convert).not.toHaveBeenCalled()
+  })
+
+  const badVoices: [string, unknown][] = [
+    ['unknown voice', 'narrator'],
+    ['empty voice', ''],
+    ['upper case', 'DASTANGO'],
+    ['repeated voice', ['dastango', 'era']],
+    ['too long', 'd'.repeat(40)],
+  ]
+  for (const [name, value] of badVoices) {
+    it(`400: ${name}`, async () => {
+      const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: value }), el(null))
+      expect(r.status).toBe(400)
+    })
+  }
+
+  it('era and Dastango clips of one message do not share an in-flight call', async () => {
+    const { client, convert } = mockClient()
+    const a = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
+    const b = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'dastango' }), el(client)))
+    await Promise.all([handleVoice(a, el(client)), handleVoice(b, el(client))])
+    expect(convert).toHaveBeenCalledTimes(2)
+  })
+
+  it('every enabled alternate voice has labels, a voice per provider and valid settings', () => {
+    for (const v of Object.values(ALT_VOICES)) {
+      expect(v.label.en && v.label.hi).toBeTruthy()
+      if (!v.enabled) continue
+      expect(v.elevenlabs?.voiceId).toMatch(/^[A-Za-z0-9]{20}$/)
+      expect(v.fish?.referenceId).toMatch(/^[0-9a-f]{32}$/)
+      for (const n of Object.values(v.elevenlabs!.settings)) expect(n >= 0 && n <= 1).toBe(true)
+      if (v.credit !== undefined) expect(v.credit.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('the guest slot stays off until it has a voice and a credit, and is refused', async () => {
+    expect(ALT_VOICES.guest.enabled).toBe(false)
+    const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'guest' }), el(null))
+    expect(r.status).toBe(400)
+  })
+})
+
 describe('era voices', () => {
   it('pins one voice id per era', () => {
-    expect(Object.fromEntries(Object.entries(ERA_VOICES).map(([era, v]) => [era, v.voiceId]))).toEqual({
+    expect(Object.fromEntries(Object.entries(ERA_VOICES).map(([era, v]) => [era, v.elevenlabs.voiceId]))).toEqual({
       'delhi-1857': 'r3CPEby3BZ6hrPxHG8h2',
       'lahore-1929': 'RxnH5jCRKb1ez2lcmQC1',
       'bombay-1942': 'HSdLdxNgP1KF3yQK3IkB',
@@ -253,7 +329,7 @@ describe('era voices', () => {
       const msg = SERVER_ERAS[era].messages[0]!
       expect((await fetchClip(q(era, msg.id, 'en', 1), client)).status).toBe(200)
       const [voiceId, req, opts] = convert.mock.calls[0]!
-      const voice = ERA_VOICES[era]
+      const voice = ERA_VOICES[era].elevenlabs
       expect(voiceId).toBe(voice.voiceId)
       expect(req).toMatchObject({
         modelId: MODEL_ID,
@@ -273,11 +349,11 @@ describe('era voices', () => {
   })
 
   it('1942 goes through the old-radio filter', () => {
-    expect(ERA_VOICES['bombay-1942'].effects?.filterPresetId).toBe('old_radio')
+    expect(ERA_VOICES["bombay-1942"].elevenlabs.effects?.filterPresetId).toBe('old_radio')
   })
 
   it('v4 settings stay in range (v4 only takes stability and similarity boost)', () => {
-    for (const v of Object.values(ERA_VOICES)) {
+    for (const { elevenlabs: v } of Object.values(ERA_VOICES)) {
       expect(Object.keys(v.settings).sort()).toEqual(['similarityBoost', 'stability'])
       for (const n of Object.values(v.settings)) expect(n >= 0 && n <= 1).toBe(true)
     }

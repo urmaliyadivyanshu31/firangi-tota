@@ -5,6 +5,10 @@
 // - It ignores the game-sound mute: the player asked for this by tapping.
 // - There is no speechSynthesis fallback. If the clip cannot play, the state becomes 'error'.
 import type { EraId, Lang } from '../content/types'
+import type { VoiceChoice } from '../content/voices'
+
+export type { VoiceChoice } from '../content/voices'
+// Labels and credits for a voice picker: ALT_VOICES in src/content/voices.ts.
 
 export type VoiceState = 'idle' | 'loading' | 'playing' | 'error'
 
@@ -14,6 +18,8 @@ export interface VoiceRequest {
   lang: Lang
   /** Chapter day whose date fills the message: dayDate(era, day) must be the date on screen. */
   day: number
+  /** 'era' (default) is the chapter's own voice; otherwise an alternate such as 'dastango'. */
+  voice?: VoiceChoice
 }
 
 export interface Voice {
@@ -32,11 +38,14 @@ export interface VoiceOptions {
 
 export function voiceUrl(req: VoiceRequest, endpoint = '/api/voice'): string {
   const p = new URLSearchParams({ era: req.era, id: req.id, lang: req.lang, day: String(req.day) })
+  const choice = req.voice ?? 'era'
+  if (choice !== 'era') p.set('voice', choice)
   return `${endpoint}?${p.toString()}`
 }
 
 const same = (a: VoiceRequest | null, b: VoiceRequest) =>
-  !!a && a.era === b.era && a.id === b.id && a.lang === b.lang && a.day === b.day
+  !!a && a.era === b.era && a.id === b.id && a.lang === b.lang && a.day === b.day &&
+  (a.voice ?? 'era') === (b.voice ?? 'era')
 
 export function createVoice(opts: VoiceOptions = {}): Voice {
   const endpoint = opts.endpoint ?? '/api/voice'

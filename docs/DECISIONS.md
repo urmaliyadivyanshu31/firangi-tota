@@ -104,3 +104,5 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   never imitates a real person's voice without their permission.
 - Voices are generated with Fish Audio's free model for now; ElevenLabs stays as an option. Only
   original or designed voices are used: no community-uploaded clones of real people.
+- The owner listened to the five Fish Audio samples and chose to keep these library voices. The
+  read-aloud button is switched on now that the free model works.
