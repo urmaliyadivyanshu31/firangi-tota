@@ -1,4 +1,4 @@
-import type { Rule } from '../../types'
+import type { Rule } from '../../types.js'
 
 // The station's rulebook, from the record (spec "Rules from the record", dossier §6–7).
 export const rules: Rule[] = [

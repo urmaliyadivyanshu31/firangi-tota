@@ -1,5 +1,5 @@
-import type { Receipt } from '../../types'
-import { mh, sen } from './sources'
+import type { Receipt } from '../../types.js'
+import { mh, sen } from './sources.js'
 
 // Receipt cards: documented words about people who sided with the British. People and their acts
 // only, never a community. Facts in the jokes and theirSide lines are sourced in the comments.

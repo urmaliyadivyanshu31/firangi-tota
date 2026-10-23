@@ -1,4 +1,4 @@
-import type { Fact } from '../../types'
+import type { Fact } from '../../types.js'
 
 // The announcer-operator's case file (dossier §4): one short line each. Three are hardHidden.
 export const facts: Fact[] = [

@@ -1,5 +1,5 @@
-import type { Epilogue } from '../../types'
-import { hodson, hunter, jl, low, majumdar, mh, sen, trial } from './sources'
+import type { Epilogue } from '../../types.js'
+import { hodson, hunter, jl, low, majumdar, mh, sen, trial } from './sources.js'
 
 // survived: Sen p.79 (Ridge, 8 June); JL pp.133-35 and Sen pp.83-84 (Bakht Khan); Sen pp.105-07 and
 // Hodson pp.331-32 (assault, 14 Sept); Sen p.110 and Hodson pp.340-48 (surrender 21 Sept, Macdowell's

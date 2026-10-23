@@ -1,4 +1,4 @@
-import type { Source } from '../../types'
+import type { Source } from '../../types.js'
 
 // Every source the delhi-1947 content cites. Primary records first.
 export const sources: Source[] = [

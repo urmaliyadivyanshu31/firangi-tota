@@ -1,4 +1,4 @@
-import type { L10n, Message } from '../../types'
+import type { L10n, Message } from '../../types.js'
 
 // Message pool for Bombay 1942. Genuine messages are written for the game unless they carry
 // `document` (real broadcast or leaflet words from dossier §5, trimmed with "…"). Every forgery

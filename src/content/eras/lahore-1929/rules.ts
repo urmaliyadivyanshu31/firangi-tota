@@ -1,4 +1,4 @@
-import type { Rule } from '../../types'
+import type { Rule } from '../../types.js'
 
 // The party's rules, from the record (dossier sections 3, 6 and 7):
 // - Balraj signs the notices: the notices themselves; Yashpal, Simhavalokan.
