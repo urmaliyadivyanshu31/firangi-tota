@@ -246,11 +246,12 @@ describe('a chapter', () => {
     expect(spec).toMatchObject({ outcome: 'right', real: msg.real, highlight: msg.checks!.en, lang: 'en' })
     expect(spec.back.verdictLine).toBe(`${strings.en.right} · ${msg.real ? strings.en.wasGenuine : strings.en.wasForged}`)
     expect(spec.back.tell).toBe(msg.real ? msg.why!.text.en : msg.tells![0]!.explain.en)
-    expect(spec.back.source).toBe(msg.real ? `A. Author, First Book (1900), ${msg.why!.sources[0]!.loc}` : `B. Author, Second Book (1950), ${msg.tells![0]!.sources![0]!.loc}`)
+    expect(spec.back.source).toBe(msg.real ? `First Book, 1900, ${msg.why!.sources[0]!.loc}` : `Second Book, 1950, ${msg.tells![0]!.sources![0]!.loc}`)
     expect(spec.back.consequence).toBeUndefined()
     // the DOM keeps a mirror, the citations behind the source button, and Next
     expect(mirror(ui)).toContain(spec.back.tell)
-    expect($(ui, '#ft-source-pop')!.textContent).toContain(spec.back.source)
+    // the paper says it short; the source button opens the full citation
+    expect($(ui, '#ft-source-pop')!.textContent).toContain(msg.real ? `A. Author, First Book (1900), ${msg.why!.sources[0]!.loc}` : `B. Author, Second Book (1950), ${msg.tells![0]!.sources![0]!.loc}`)
     expect(ui.querySelector('.reveal, .wire')).toBeNull() // no DOM result card, no telegram
     expect(m.stage.setEra).toHaveBeenCalledWith(expect.objectContaining({ id: 'delhi-1857' }))
     expect(m.stage.setPaused).toHaveBeenLastCalledWith(false)
@@ -286,7 +287,7 @@ describe('a chapter', () => {
     expect($(ui, '[data-action="next"]')).toBeNull()
     expect($(ui, '[data-action="again"]')).not.toBeNull()
     expect($(ui, '[data-action="home"]')).not.toBeNull()
-    expect(ui.querySelectorAll('.paper-receipts .receipt')).toHaveLength(2) // behind the Receipts tap
+    expect(ui.querySelectorAll('#ft-receipts-pop .receipt')).toHaveLength(2) // behind the Receipts tap
     expect(text(ui)).toContain('I kept my title.')
     expect(text(ui)).toContain('A. Author, First Book (1900), p. 20')
   })

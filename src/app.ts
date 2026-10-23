@@ -701,6 +701,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       const spec = buildReveal({ era: p.era, msg, verdict: v, lang: getLang(), ...(end ? { end } : {}) })
       // the buttons below the paper's back take more room than the stamps did at the chapter's end
       root.stage.style.setProperty('--ft-hud-bottom', `${end ? 230 : 110}px`)
+      if (end && p.era.channel === 'telegram') audio.cue('endTelegram') // the ending comes off the teleprinter
       await guard(desk.reveal(spec), REVEAL_GUARD_MS)
       if (token !== gen) return
       paper = { spec, ...(end ? { end } : {}) }

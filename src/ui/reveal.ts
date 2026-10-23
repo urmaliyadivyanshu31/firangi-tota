@@ -12,6 +12,24 @@ export function formatSource(ref: SourceRef, era: Era): string {
   return s ? `${s.author}, ${s.title} (${s.year})${loc}` : `${ref.id}${loc}`
 }
 
+const SHORT_MAX = 60
+
+/**
+ * The citation short enough for the paper's back (about 60 characters): the title or the author,
+ * the year and the page, e.g. "Proceedings on the Trial of Muhammad Bahadur Shah, 1858, p.33".
+ */
+export function shortSource(ref: SourceRef, era: Era): string {
+  const s = era.sources.find((x) => x.id === ref.id)
+  if (!s) return ref.id
+  const title = s.title.split(/:| \(|, /)[0]!.trim()
+  const who = s.author.replace(/\s*\([^)]*\)/g, '').split(/,|;/)[0]!.trim()
+  const surname = /^([A-Z]\.\s*)+\S+/.test(who) ? who.split(/\s+/).pop()! : who
+  const loc = ref.loc?.split(/[,;]/)[0]?.trim()
+  const join = (...parts: (string | undefined)[]) => parts.filter(Boolean).join(', ')
+  const pick = [join(title, s.year, loc), join(surname, s.year, loc), join(surname, s.year)].find((x) => x.length <= SHORT_MAX)
+  return pick ?? `${join(surname, s.year).slice(0, SHORT_MAX - 1)}…`
+}
+
 export function sourceItem(ref: SourceRef, era: Era): HTMLElement {
   const label = formatSource(ref, era)
   const url = era.sources.find((x) => x.id === ref.id)?.url
@@ -106,7 +124,7 @@ export function buildReveal(p: {
       tell: note,
       ...(consequence ? { consequence } : {}),
       stamp,
-      source: first ? formatSource(first, era) : '',
+      source: first ? shortSource(first, era) : '',
     },
     lang,
   }

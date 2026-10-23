@@ -81,7 +81,7 @@ async function day(lang, size, era) {
     await page.waitForSelector('.paper-result', { timeout: 15000 }).catch(() => null)
     await sleep(900)
     await shot('end-on-paper')
-    await page.click('.paper-receipts summary').catch(() => null)
+    await page.click('[data-action="receipts"]').catch(() => null)
     await sleep(600)
     await shot('end-receipts')
   }
