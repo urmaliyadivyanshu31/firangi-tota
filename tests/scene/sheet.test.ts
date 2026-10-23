@@ -5,9 +5,11 @@ import {
   PAGE_W,
   drawDayTitle,
   drawSheet,
+  drawRevealMarks,
   drawSheetBack,
   findChecks,
   highlightRects,
+  stampBox,
   measureSheet,
   splitLeaflet,
   splitSignature,
@@ -211,5 +213,20 @@ describe('the verdict on the paper', () => {
     for (const w of ['Wrong', 'genuine', 'published', 'given', 'CAUGHT', 'Source']) expect(all).toContain(w)
     expect(out.source.u1).toBeGreaterThan(out.source.u0)
     expect(out.source.v0).toBeGreaterThan(0.8) // at the foot of the paper
+  })
+})
+
+describe('the margin note', () => {
+  const note = 'फ़ौज मिर्ज़ा मुग़ल के हाथ थी, जैसा फ़ाइल में है'
+  it('writes whole words only, never a word cut part-way, in at most three lines', () => {
+    const words = note.split(' ')
+    for (const progress of [0.7, 0.85, 1]) {
+      const { ctx, texts } = fake2d()
+      drawRevealMarks(ctx, 512, 683, [], { color: 'blue', note, lang: 'hi', body: 60, bodyEnd: 0.55, progress, avoid: [stampBox(0.71, 0.8, 4 / 3)] })
+      for (const t of texts) expect(words).toContain(t.text)
+      const lines = new Set(texts.map((t) => Math.round(t.y)))
+      expect(lines.size).toBeLessThanOrEqual(3)
+      if (progress === 1) expect(texts.map((t) => t.text).join(' ')).toBe(note)
+    }
   })
 })

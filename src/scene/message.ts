@@ -59,6 +59,9 @@ export interface MessageSheet {
   backPointAt(u: number, v: number): THREE.Vector3
   /** Writes the address on the outside of the folded paper (ink for a petition, else pencil). */
   setOutside(text: string, lang: 'en' | 'hi', ink: boolean): void
+  /** Keeps the soft contact shadow under the sheet (on the desk, fading as the paper lifts). */
+  updateShadow(deskY?: number): void
+  shadow: THREE.Mesh
   /** World point on the (flat) sheet at (u, v). */
   pointAt(u: number, v: number): THREE.Vector3
   /** The decal textures are drawn with the sheet fonts; call again once they load. */
@@ -298,6 +301,33 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
   }
   let flipK = 0
 
+  // the contact shadow: a soft-edged rectangle a little larger than the sheet, on the desk
+  const shadowCanvas = document.createElement('canvas')
+  shadowCanvas.width = 64
+  shadowCanvas.height = 64
+  try {
+    const g = shadowCanvas.getContext('2d')
+    if (g) {
+      g.filter = 'blur(6px)'
+      g.fillStyle = 'rgba(0,0,0,1)'
+      g.fillRect(14, 14, 36, 36)
+      g.filter = 'none'
+    }
+  } catch {
+    /* a missing shadow is only less grounded */
+  }
+  const shadowTex = toTexture(shadowCanvas)
+  const shadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, opacity: 0, color: 0x000000 }),
+  )
+  shadow.name = 'message-shadow'
+  shadow.renderOrder = 1
+  shadow.visible = false
+  const tmpN = new THREE.Vector3()
+  const tmpP = new THREE.Vector3()
+  const tmpQ = new THREE.Quaternion()
+
   let aspect = 4 / 3
   let mode: FoldMode = 'flat'
   let feed = 1
@@ -453,10 +483,35 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
     },
     drawDecals,
     setOutside: drawOutside,
+    shadow,
+    updateShadow(deskY = 0) {
+      if (!group.visible || !group.parent) {
+        shadow.visible = false
+        return
+      }
+      body.updateWorldMatrix(true, false)
+      body.getWorldQuaternion(tmpQ)
+      tmpN.set(0, 1, 0).applyQuaternion(tmpQ)
+      body.getWorldPosition(tmpP)
+      const lift = Math.max(0, tmpP.y - deskY)
+      // flat and low: a firm shadow; standing up or high in the air: none
+      const k = Math.abs(tmpN.y) * Math.max(0, 1 - lift / 0.18)
+      shadow.visible = k > 0.02
+      if (!shadow.visible) return
+      const folded = mode === 'letter' ? 1 / 3 : mode === 'half' ? 0.5 : 1
+      const h = H() * (mode === 'flat' ? feed : folded)
+      shadow.position.set(tmpP.x + lift * 0.18, deskY + 0.0012, tmpP.z + lift * 0.25 + (mode === 'half' ? H() / 4 : 0))
+      tmpN.set(0, 0, 1).applyQuaternion(tmpQ)
+      shadow.rotation.y = Math.atan2(tmpN.x, tmpN.z)
+      const spread = 1 + lift * 3
+      shadow.scale.set(SHEET_W * 1.7 * spread, 1, h * 1.7 * spread)
+      ;(shadow.material as THREE.MeshBasicMaterial).opacity = 0.42 * k / spread
+    },
     dispose() {
       disposeTree(group)
       texture.dispose()
       backTex.dispose()
+      disposeTree(shadow)
       overlayTex?.dispose()
       reverseTex?.dispose()
       decals.asli.dispose()
