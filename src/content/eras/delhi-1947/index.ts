@@ -11,7 +11,7 @@ const era: Era = {
   id: 'delhi-1947',
   order: 4,
   title: { en: 'Delhi 1947', hi: 'दिल्ली 1947' },
-  place: { en: 'Government House, New Delhi', hi: 'गवर्नमेंट हाउस, नई दिल्ली' },
+  place: { en: "Viceroy's House, New Delhi", hi: 'वायसराय हाउस, नई दिल्ली' },
   year: '1947',
   persona: {
     en: "an Indian cipher-and-telegraph clerk at the Viceroy's House, New Delhi, which becomes Government House on 15 August",

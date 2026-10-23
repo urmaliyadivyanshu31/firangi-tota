@@ -5,16 +5,16 @@ export const rules: Rule[] = [
   {
     id: 'priority',
     text: {
-      en: "Priorities are written IMMEDIATE or MOST IMMEDIATE. Numbers look like 'No. 3408-S', or the telegram says UNNUMBERED. 'URGENT', exclamation marks and 'Ref:' numbers are not used.",
-      hi: "प्राथमिकता IMMEDIATE या MOST IMMEDIATE लिखी जाती है। नंबर 'No. 3408-S' जैसा होता है, या तार पर UNNUMBERED लिखा होता है। 'URGENT', '!' के निशान और 'Ref:' वाले नंबर नहीं चलते।",
+      en: "Priorities are written IMPORTANT, IMMEDIATE or MOST IMMEDIATE. Numbers look like 'No. 3408-S', or the telegram says UNNUMBERED. 'URGENT', exclamation marks and 'Ref:' numbers are not used.",
+      hi: "प्राथमिकता IMPORTANT, IMMEDIATE या MOST IMMEDIATE लिखी जाती है। नंबर 'No. 3408-S' जैसा होता है, या तार पर UNNUMBERED लिखा होता है। 'URGENT', '!' के निशान और 'Ref:' वाले नंबर नहीं चलते।",
     },
     arrivesOnDay: 1,
   },
   {
     id: 'begins-ends',
     text: {
-      en: "A cipher text sits between 'Begins.' and 'Ends.', with no greeting or slogan. A garbled group is marked [group corrupt].",
-      hi: "साइफ़र का संदेश 'Begins.' और 'Ends.' के बीच होता है, उसमें कोई सलाम या नारा नहीं होता। जो हिस्सा बिगड़ जाए, उस पर [group corrupt] लिखा जाता है।",
+      en: "Text passed on in a telegram sits between 'Begins.' and 'Ends.', with no greeting or slogan. A garbled group is marked [group corrupt].",
+      hi: "तार में आगे भेजा गया संदेश 'Begins.' और 'Ends.' के बीच होता है, उसमें कोई सलाम या नारा नहीं होता। जो हिस्सा बिगड़ जाए, उस पर [group corrupt] लिखा जाता है।",
     },
     arrivesOnDay: 1,
   },
@@ -45,8 +45,8 @@ export const rules: Rule[] = [
   {
     id: 'london-time',
     text: {
-      en: "India Office 'Received' stamps show London time, which is behind Delhi. A London stamp can show an earlier hour than the sending time.",
-      hi: "इंडिया ऑफ़िस की 'Received' मुहर पर लंदन का समय होता है, जो दिल्ली से पीछे है। इसलिए लंदन की मुहर पर भेजने के समय से पहले का समय भी हो सकता है।",
+      en: "London 'Received' stamps show London time, which is behind Delhi. A London stamp can show an earlier hour than the sending time.",
+      hi: "लंदन की 'Received' मुहर पर वहाँ का समय होता है, जो दिल्ली से पीछे है। इसलिए लंदन की मुहर पर भेजने के समय से पहले का समय भी हो सकता है।",
     },
     arrivesOnDay: 7,
   },

@@ -82,8 +82,8 @@ export const sources: Source[] = [
   {
     id: 'nayar-1971',
     author: 'Kuldip Nayar',
-    title: 'Interview with Sir Cyril Radcliffe (1971), from Scoop!, republished by Brown Pundits',
-    year: '1971',
+    title: 'Scoop! Inside Stories from the Partition to the Present (2006), with his 1971 interview of Sir Cyril Radcliffe; excerpt republished by Brown Pundits',
+    year: '2006',
     url: 'https://www.brownpundits.com/2020/06/23/interview-with-radcliffe/',
   },
   {
