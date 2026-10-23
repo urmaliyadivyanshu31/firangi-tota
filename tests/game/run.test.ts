@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildRun } from '../../src/game/run'
-import { DAYS, type Difficulty } from '../../src/game/config'
+import { DAYS, EVENT_CHANCE, type Difficulty } from '../../src/game/config'
 import { mulberry32 } from '../../src/game/rng'
 import { fixtureEra, msg } from './fixture'
 import type { Era } from '../../src/content/types'
@@ -75,14 +75,16 @@ describe('buildRun', () => {
         msg('ev-f', 2, false, { onDay: 5, pair: 'ev' }),
       ],
     }
-    it('picks either twin, never both, exactly one on day 5', () => {
+    it('picks either twin, never both, at most one and only on day 5', () => {
       const seen = new Set<string>()
       for (let seed = 1; seed <= 200; seed++) {
         const run = buildRun(twin, 'medium', mulberry32(seed))
         const ev = run.filter((m) => m.id.startsWith('ev-'))
-        expect(ev).toHaveLength(1)
-        expect(run[4]!.id).toBe(ev[0]!.id)
-        seen.add(ev[0]!.id)
+        expect(ev.length).toBeLessThanOrEqual(1)
+        if (ev[0]) {
+          expect(run[4]!.id).toBe(ev[0].id)
+          seen.add(ev[0].id)
+        }
       }
       expect(seen).toEqual(new Set(['ev-r', 'ev-f']))
     })
@@ -131,5 +133,16 @@ describe('buildRun', () => {
       }
     }
     expect(seen).toBe(true)
+  })
+
+  it('shows an event on its day in about EVENT_CHANCE of runs', () => {
+    let hits = 0
+    for (let seed = 1; seed <= 500; seed++) {
+      const run = buildRun(era, 'hard', mulberry32(seed))
+      if (run[4]!.id === 'day5') hits++
+      for (const m of run) if (m.onDay !== undefined) expect(run.indexOf(m) + 1).toBe(m.onDay)
+    }
+    expect(hits / 500).toBeGreaterThan(EVENT_CHANCE - 0.07)
+    expect(hits / 500).toBeLessThan(EVENT_CHANCE + 0.07)
   })
 })

@@ -1,5 +1,5 @@
 import type { Era, Message, Tier } from '../content/types'
-import { DAYS, type Difficulty } from './config'
+import { DAYS, EVENT_CHANCE, type Difficulty } from './config'
 
 /**
  * First day this message may appear: when the last rule needed to catch the tells of the message,
@@ -48,11 +48,11 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
     if (m.pair) usedPairs.add(m.pair)
   }
 
-  // 1. onDay messages go to their own day: one random eligible candidate per day.
+  // 1. onDay messages go to their own day: with probability EVENT_CHANCE, one random eligible candidate per day.
   for (let day = 1; day <= days; day++) {
     let cands = era.messages.filter((m) => m.onDay === day && earliestDay(era, m) <= day && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair)))
     if (d === 'easy' && day <= 3 && cands.some((m) => m.tier === 1)) cands = cands.filter((m) => m.tier === 1)
-    if (cands.length === 0) continue
+    if (cands.length === 0 || rng() >= EVENT_CHANCE) continue
     const m = cands[Math.floor(rng() * cands.length)]!
     slots[day - 1] = m
     take(m)

@@ -16,3 +16,6 @@ export function pencilOn(d: Difficulty, day: number): boolean {
   if (d === 'medium') return day <= PENCIL_MEDIUM_DAYS
   return false
 }
+
+/** Chance that a day with event (onDay) candidates actually shows its event, for replay variety. */
+export const EVENT_CHANCE = 0.6
