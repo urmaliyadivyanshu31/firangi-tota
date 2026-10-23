@@ -90,7 +90,7 @@ export const sources: Source[] = [
   {
     id: 'nehru-1934',
     author: 'Jawaharlal Nehru',
-    title: 'Glimpses of World History (Allahabad: Kitabistan)',
+    title: 'Glimpses of World History (4th ed., London: Lindsay Drummond, 1949; first published 1934-35)',
     year: '1934',
     url: 'https://archive.org/details/in.ernet.dli.2015.211233',
   },

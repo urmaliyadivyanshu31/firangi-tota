@@ -1264,8 +1264,8 @@ const datelessMessages: Message[] = [
     checks: { en: ['Queen Zinat Mahal', 'Sunday 17 May'], hi: ['मलिका ज़ीनत महल', 'रविवार 17 मई'] },
     why: {
       text: {
-        en: 'Chuni Lal, Sunday 17 May: the King vouched for his physician, minister and queen.',
-        hi: 'चुन्नी लाल, रविवार 17 मई: बादशाह ने अपने हकीम, वज़ीर और मलिका की ज़मानत दी।',
+        en: 'Chuni Lal, 17 May: the King vouched for Ahsanullah, Mahbub Ali and his queen.',
+        hi: 'चुन्नी लाल, 17 मई: बादशाह ने अहसनुल्लाह, महबूब अली और अपनी मलिका की ज़मानत दी।',
       },
       sources: [trial(CHUNI_17)],
     },
@@ -1300,18 +1300,18 @@ const datelessMessages: Message[] = [
     from: NEWSWRITER,
     to: OFFICE,
     text: {
-      en: 'News from Bihar: old Kunwar Singh of Jagdishpur, eighty years of age, has risen and taken Arrah.',
-      hi: 'बिहार से ख़बर: जगदीशपुर के बूढ़े कुँवर सिंह, अस्सी बरस की उम्र में, उठ खड़े हुए हैं और आरा ले लिया है।',
+      en: 'News from Bihar: old Kunwar Singh of Jagdishpur has risen and taken Arrah.',
+      hi: 'बिहार से ख़बर: जगदीशपुर के बूढ़े कुँवर सिंह उठ खड़े हुए हैं और आरा ले लिया है।',
     },
     checks: { en: ['Kunwar Singh of Jagdishpur'], hi: ['जगदीशपुर के बूढ़े कुँवर सिंह'] },
     tells: [
       {
         kind: 'knowledge',
         explain: {
-          en: 'Kunwar Singh joined only in late July, at Arrah; Sen puts him near seventy.',
-          hi: 'कुँवर सिंह जुलाई के आख़िर में ही, आरा में, शामिल हुए; सेन उन्हें सत्तर के क़रीब बताते हैं।',
+          en: 'Kunwar Singh joined the rising only in late July, at Arrah.',
+          hi: 'कुँवर सिंह जुलाई के आख़िर में ही, आरा में, बग़ावत से जुड़े।',
         },
-        sources: [sen('pp.254-55')],
+        sources: [sen('p.255'), majumdar('p.206')],
       },
     ],
   },
@@ -1338,7 +1338,7 @@ const datelessMessages: Message[] = [
     ],
   },
 
-  // ── Two myths Nehru believed (Glimpses pp.414-15; Discovery p.384), with Sen and Majumdar as the record ──
+  // ── Two views Nehru repeated (Glimpses pp.414-15, 4th ed.; Discovery p.384); Sen and Majumdar give the record ──
   {
     id: 'plan-forged',
     tier: 3,
@@ -1354,13 +1354,15 @@ const datelessMessages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'No fixed date is proven: Nehru believed in one; Sen and Majumdar did not.',
-          hi: 'तय तारीख़ का कोई सबूत नहीं; नेहरू ने यह माना, पर सेन और मजूमदार ने नहीं।',
+          en: "Nehru thought a date 'apparently' fixed; Sen and Majumdar found no proof.",
+          hi: "नेहरू ने लिखा कि 'शायद' तारीख़ तय थी; सेन और मजूमदार को इसका कोई सबूत नहीं मिला।",
         },
         sources: [
-          sen('pp.56-57, 59'),
+          sen('p.56'),
+          sen('p.59'),
+          sen('pp.401-02'),
           majumdar('pp.205-06'),
-          { id: 'nehru-1934', loc: "p.414 ('Apparently a date was fixed')" },
+          { id: 'nehru-1934', loc: "p.414 (4th ed., 1949): 'Apparently a date was fixed'" },
         ],
       },
     ],
@@ -1386,11 +1388,11 @@ const datelessMessages: Message[] = [
       {
         kind: 'anachronism',
         explain: {
-          en: "Those words are Nehru's (Glimpses, 1934); Sen says her birth date is unknown.",
-          hi: 'ये शब्द नेहरू के हैं (1934 की किताब); सेन कहते हैं उनकी जन्म-तारीख़ पता नहीं।',
+          en: "Those words are Nehru's, from the 1930s; Sen says her birth date is unknown.",
+          hi: 'ये शब्द 1930 के दशक में नेहरू ने लिखे; सेन कहते हैं उनकी जन्म-तारीख़ पता नहीं।',
         },
         sources: [
-          { id: 'nehru-1934', loc: 'p.415' },
+          { id: 'nehru-1934', loc: 'p.415 (4th ed., 1949)' },
           { id: 'nehru-1946', loc: 'p.384' },
           sen('pp.269-70'),
         ],
