@@ -640,6 +640,42 @@ describe('the 3D stage (Ruling R10)', () => {
       vi.useRealTimers()
     }
   })
+
+  it('keeps the stamps asleep through a slow arrival (the 1947 telegram types for ~6 s)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      m.stage.showMessage.mockImplementation(() => new Promise<void>((r) => setTimeout(r, 6000)))
+      const { ui } = boot('?lang=en&seed=3')
+      click(ui, '[data-era="delhi-1947"]')
+      click(ui, '[data-mode="easy"]')
+      click(ui, '[data-action="begin"]')
+      await vi.advanceTimersByTimeAsync(10)
+      expect(m.stage.showMessage).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(5000) // past the old 3.5 s guard
+      expect(stampBtn(ui, 'asli').disabled && stampBtn(ui, 'tota').disabled).toBe(true)
+      expect($(ui, '.screen--day.is-arriving')).not.toBeNull()
+      await vi.advanceTimersByTimeAsync(1000) // the telegram is typed out
+      expect(stampBtn(ui, 'asli').disabled || stampBtn(ui, 'tota').disabled).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('still wakes the stamps when an arrival never settles, after the long guard', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      m.stage.showMessage.mockImplementation(() => new Promise<void>(() => undefined))
+      const { ui } = boot('?lang=en&seed=3')
+      click(ui, '[data-mode="easy"]')
+      click(ui, '[data-action="begin"]') // not toDay1: its flush() waits on the faked setTimeout
+      await vi.advanceTimersByTimeAsync(8500)
+      expect(stampBtn(ui, 'asli').disabled).toBe(true)
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(stampBtn(ui, 'asli').disabled).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe('the immersive day', () => {

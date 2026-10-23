@@ -73,6 +73,9 @@ interface Desk {
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
+// The paper's arrival. The 1947 telegram types itself out over 5-6 s by design, so the arrival gets
+// the long guard: with the short one the stamps woke before the telegram could be read.
+const ARRIVAL_GUARD_MS = 9000
 
 
 type Play =
@@ -581,7 +584,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (!desk?.cues) audio.cue('arrive') // the 3D stage cues it when the paper actually moves
     syncHudInsets()
     const d = desk
-    await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve())
+    await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve(), ARRIVAL_GUARD_MS)
     if (stale()) return
     if (desk && desk !== d) {
       // the desk changed under the arrival (a lost context): show the paper on the new one
