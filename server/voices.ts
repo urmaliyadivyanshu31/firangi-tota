@@ -1,33 +1,31 @@
 // Era voices for read-aloud. Server only: nothing here may be imported by browser code.
 // Voice ids are public ElevenLabs Voice Library ids, not secrets, so they live in the repo.
 // The key never does: the SDK reads ELEVENLABS_API_KEY on the server.
+// Alternate voices for every chapter (Dastango, and any later licensed voice) live in
+// src/content/voices.ts, because the game shows their labels and credits.
 import type { EraId } from '../src/content/types.js'
+import { ALT_VOICES, type VoiceChoice, type VoiceSpec } from '../src/content/voices.js'
 
-/** One model for every era: it speaks Hindi and English with the same voice. */
+export { ALT_VOICES }
+
+/** One model for every voice: it speaks Hindi and English with the same voice. */
 export const MODEL_ID = 'eleven_v4'
 
 /** Small MP3s keep phones fast; speech does not need more than 64 kbps. */
 export const OUTPUT_FORMAT = 'mp3_44100_64'
 
-export interface EraVoice {
+/**
+ * Effects ids come from GET /v1/audio-effects/catalog (checked 2026-10-24):
+ * filters old_radio, phone, cheap_microphone...; environments small_room, big_room, hall...
+ */
+export interface EraVoice extends VoiceSpec {
   /** Who the listener should hear. */
   character: string
-  /** ElevenLabs voice id (Voice Library). */
-  voiceId: string
-  /** Library name, so a reader of this file knows which voice it is without an API call. */
-  voiceName: string
-  /** Eleven v4 only takes stability and similarity boost (no style or speed). */
-  settings: { stability: number; similarityBoost: number }
-  /**
-   * Optional audio effects. Ids come from GET /v1/audio-effects/catalog (checked 2026-10-24):
-   * filters old_radio, phone, cheap_microphone...; environments small_room, big_room, hall...
-   */
-  effects?: {
-    filterPresetId?: string
-    environmentId?: string
-    sendLevel?: number
-    distance?: number
-  }
+}
+
+/** The voice that reads `era` when the player picked `choice`. */
+export function voiceFor(era: EraId, choice: VoiceChoice): VoiceSpec {
+  return choice === 'era' ? ERA_VOICES[era] : ALT_VOICES[choice]
 }
 
 export const ERA_VOICES: Record<EraId, EraVoice> = {

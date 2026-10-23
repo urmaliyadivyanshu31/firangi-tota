@@ -15,7 +15,7 @@ import {
   type VoiceQuery,
   type VoiceResult,
 } from '../../server/voice'
-import { ERA_VOICES, MODEL_ID, OUTPUT_FORMAT } from '../../server/voices'
+import { ALT_VOICES, ERA_VOICES, MODEL_ID, OUTPUT_FORMAT } from '../../server/voices'
 
 const BYTES = [new Uint8Array([0x49, 0x44, 0x33]), new Uint8Array([1, 2, 3, 4])]
 
@@ -234,6 +234,68 @@ describe('handleVoice: audio response', () => {
     expect(a.status).toBe(200)
     expect(b.status).toBe(200)
     expect(convert).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('alternate voice: Dastango', () => {
+  it('voice=dastango gets its own canonical URL and hash', async () => {
+    const { client } = mockClient()
+    const era = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), { client }))
+    const dg = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'dastango' }), { client }))
+    expect(era.voice).toBeUndefined()
+    expect(dg.voice).toBe('dastango')
+    expect(dg.v).not.toBe(era.v) // a different cache key for the same message
+  })
+
+  it('reads with the Dastango voice in any chapter', async () => {
+    for (const eraId of Object.keys(SERVER_ERAS) as EraId[]) {
+      const { client, convert } = mockClient()
+      const msg = SERVER_ERAS[eraId].messages[0]!
+      expect((await fetchClip(q(eraId, msg.id, 'hi', 1, { voice: 'dastango' }), client)).status).toBe(200)
+      const [voiceId, req] = convert.mock.calls[0]!
+      expect(voiceId).toBe(ALT_VOICES.dastango.voiceId)
+      expect(req.voiceSettings).toEqual(ALT_VOICES.dastango.settings)
+      expect(req.languageCode).toBe('hi')
+    }
+  })
+
+  it('an explicit voice=era is redirected to the URL without it', async () => {
+    const { client, convert } = mockClient()
+    const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), { client }))
+    const r = await handleVoice({ ...canon, voice: 'era' }, { client })
+    expect(location(r)).toEqual(canon)
+    expect(convert).not.toHaveBeenCalled()
+  })
+
+  const badVoices: [string, unknown][] = [
+    ['unknown voice', 'narrator'],
+    ['empty voice', ''],
+    ['upper case', 'DASTANGO'],
+    ['repeated voice', ['dastango', 'era']],
+    ['too long', 'd'.repeat(40)],
+  ]
+  for (const [name, value] of badVoices) {
+    it(`400: ${name}`, async () => {
+      const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: value }), { client: null })
+      expect(r.status).toBe(400)
+    })
+  }
+
+  it('era and Dastango clips of one message do not share an in-flight call', async () => {
+    const { client, convert } = mockClient()
+    const a = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), { client }))
+    const b = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'dastango' }), { client }))
+    await Promise.all([handleVoice(a, { client }), handleVoice(b, { client })])
+    expect(convert).toHaveBeenCalledTimes(2)
+  })
+
+  it('every alternate voice has labels in both languages and valid settings', () => {
+    for (const v of Object.values(ALT_VOICES)) {
+      expect(v.label.en && v.label.hi).toBeTruthy()
+      expect(v.voiceId).toMatch(/^[A-Za-z0-9]{20}$/)
+      for (const n of Object.values(v.settings)) expect(n >= 0 && n <= 1).toBe(true)
+      if (v.credit !== undefined) expect(v.credit.length).toBeGreaterThan(0)
+    }
   })
 })
 
