@@ -1,12 +1,12 @@
 import type { Era, Lang } from '../../content/types'
 import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
-import type { SheetSpec, VoiceState } from '../contract'
+import type { SheetSpec, VoiceState, VoiceStyle } from '../contract'
 import { announce, h, mount } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
-import { closeIcon, jaali, skipIcon } from '../ornament'
+import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
 import { relatedFacts } from '../pencil'
 import { proofFold, tellLines, truthEl } from '../reveal'
 
@@ -37,6 +37,8 @@ export interface DayProps {
   soundOn: boolean
   /** Read-aloud is available (the era voices are loaded), and what it is doing now. */
   voice?: VoiceState
+  /** Which voice reads. Defaults to the era voice. */
+  voiceStyle?: VoiceStyle
   /** The Aaj ka Taar number: the mode chip names the puzzle instead of the difficulty. */
   daily?: number
   /** Show every rule, none tagged new (the daily puzzle plays with the whole rulebook). */
@@ -47,6 +49,8 @@ export interface DayHandlers {
   stamp(v: Verdict): void
   /** Listen: play the message aloud, or stop it while it plays. */
   listen(): void
+  /** The player picked the era voice or the dastango. */
+  voiceStyle?(s: VoiceStyle): void
   tab(t: Tab): void
   next(): void
   /** A tap during an animation: finish it now. */
@@ -290,17 +294,53 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
         h('span', { class: 'stamp__hint' }, t(v === 'asli' ? 'asliHint' : 'totaHint', lang)),
         h('kbd', { class: 'stamp__key', 'aria-hidden': 'true' }, `${arrow} ${key}`)))
 
-  let listenBtn: HTMLButtonElement | null = null
+  // Listen, with a chevron (or a long press) for the choice of voice
+  let listenGroup: HTMLElement | null = null
+  let picker: HTMLElement | null = null
+  let more: HTMLButtonElement | null = null
+  const setPicker = (show: boolean) => {
+    picker?.classList.toggle('is-open', show)
+    more?.setAttribute('aria-expanded', String(show))
+  }
   if (p.voice) {
-    listenBtn = h('button', { class: 'listen', type: 'button', 'data-action': 'listen', disabled: waiting, onclick: () => on.listen() },
-      h('span', { class: 'listen__icon' }, micIcon(), h('span', { class: 'listen__spin', 'aria-hidden': 'true' })),
-      h('span', { class: 'listen__label' }, t('listen', lang)))
+    let pressTimer = 0
+    let longPressed = false
+    const listenBtn = h('button', { class: 'listen', type: 'button', 'data-action': 'listen', disabled: waiting,
+      onclick: () => {
+        if (longPressed) return void (longPressed = false)
+        setPicker(false)
+        on.listen()
+      },
+      onpointerdown: () => {
+        longPressed = false
+        pressTimer = window.setTimeout(() => {
+          longPressed = true
+          setPicker(true)
+        }, 550)
+      },
+      onpointerup: () => window.clearTimeout(pressTimer),
+      onpointerleave: () => window.clearTimeout(pressTimer),
+      oncontextmenu: (e: Event) => e.preventDefault() },
+    h('span', { class: 'listen__icon' }, micIcon(), h('span', { class: 'listen__spin', 'aria-hidden': 'true' })),
+    h('span', { class: 'listen__label' }, t('listen', lang)))
     applyVoice(listenBtn, p.voice, lang)
+    const style = p.voiceStyle ?? 'era'
+    const option = (s: VoiceStyle) =>
+      h('button', { class: 'voice-opt', type: 'button', role: 'radio', 'aria-checked': String(style === s), 'data-style': s,
+        onclick: () => {
+          for (const o of picker?.querySelectorAll('.voice-opt') ?? []) o.setAttribute('aria-checked', String((o as HTMLElement).dataset.style === s))
+          setPicker(false)
+          on.voiceStyle?.(s)
+        } }, t(s === 'era' ? 'voiceEra' : 'voiceDastango', lang))
+    picker = h('div', { class: 'voice-picker', role: 'radiogroup', 'aria-label': t('voiceStyle', lang) }, option('era'), option('dastango'))
+    more = h('button', { class: 'listen__more', type: 'button', 'data-action': 'voice-style', 'aria-label': t('voiceStyle', lang), title: t('voiceStyle', lang),
+      'aria-expanded': 'false', onclick: () => setPicker(!picker?.classList.contains('is-open')) }, chevronIcon())
+    listenGroup = h('div', { class: 'listen-group' }, listenBtn, more, picker)
   }
 
   const controls = revealed ? null : h('footer', { class: 'day__controls' },
     h('button', { class: 'day__skip', type: 'button', 'data-action': 'skip', onclick: () => on.skip() }, h('span', null, t('skip', lang)), skipIcon()),
-    h('div', { class: 'tabs' }, tab('file', t('caseFile', lang), null), tab('rules', t('rulebook', lang), anyNew ? newTag() : null), listenBtn),
+    h('div', { class: 'tabs' }, tab('file', t('caseFile', lang), null), tab('rules', t('rulebook', lang), anyNew ? newTag() : null), listenGroup),
     h('div', { class: 'stamps' }, stampBtn('asli', '←', '1'), stampBtn('tota', '→', '2')))
 
   // ---- the result card
@@ -339,7 +379,13 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     applyLayout()
   })
 
-  active = { root, screen, on, props: { ...p }, close: () => (!wide && open ? (setOpen(null), true) : false) }
+  active = {
+    root, screen, on, props: { ...p },
+    close: () => {
+      if (picker?.classList.contains('is-open')) return setPicker(false), true
+      return !wide && open ? (setOpen(null), true) : false
+    },
+  }
   if (!keysBound) {
     document.addEventListener('keydown', onKey)
     keysBound = true

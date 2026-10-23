@@ -729,7 +729,7 @@ describe('Listen: the era voice reads the message', () => {
     const btn = () => $(ui, '[data-action="listen"]')!
     expect(btn().textContent).toBe(strings.en.listen)
     click(ui, '[data-action="listen"]')
-    expect(voice.play).toHaveBeenCalledWith({ era: 'delhi-1857', id: q[0]!.id, lang: 'en', day: 1 })
+    expect(voice.play).toHaveBeenCalledWith({ era: 'delhi-1857', id: q[0]!.id, lang: 'en', day: 1, voice: 'era' })
     expect(btn().dataset.state).toBe('playing')
     click(ui, '[data-action="listen"]')
     expect(voice.stop).toHaveBeenCalled()
@@ -747,6 +747,28 @@ describe('Listen: the era voice reads the message', () => {
     voice.stop.mockClear()
     click(ui, '[data-action="quit"]')
     expect(voice.stop).toHaveBeenCalled() // leaving
+  })
+
+  it('remembers the choice of the era voice or the dastango, and reads with it', async () => {
+    const voice = fakeVoice()
+    let { ui } = boot('?lang=en&seed=3', NOW, voice)
+    await toDay1(ui)
+    click(ui, '[data-action="voice-style"]')
+    click(ui, '.voice-opt[data-style="dastango"]')
+    expect(localStorage.getItem('ft:voiceStyle')).toBe('"dastango"')
+    click(ui, '[data-action="listen"]')
+    expect(voice.play).toHaveBeenLastCalledWith(expect.objectContaining({ voice: 'dastango' }))
+    ;({ ui } = boot('?lang=en&seed=3', NOW, voice))
+    await toDay1(ui)
+    expect($(ui, '.voice-opt[data-style="dastango"]')!.getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('leaves the Listen button out entirely without VITE_VOICE=on', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    expect($(ui, '[data-action="listen"]')).toBeNull()
+    expect($(ui, '.listen-group')).toBeNull()
+    expect($(ui, '.hud [data-action="sound"]')).not.toBeNull() // game sound is a separate control
   })
 
   it('says when the voice could not play, and plays even with game sound off', async () => {

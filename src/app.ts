@@ -16,7 +16,7 @@ import { store } from './game/storage'
 import { getLang, hasLang, setLang } from './i18n/lang'
 import { strings, t } from './i18n/strings'
 import { STAGE_LOST_EVENT, loadStage, mountFallback, type EraDressing, type Fallback, type QualityTier, type Stage, type StampKind } from './scene/index'
-import type { DayTitle, FlashKind, ImmersiveFallback, ImmersiveStage, SheetSpec, VoicePlayer, VoiceState } from './ui/contract'
+import type { DayTitle, FlashKind, ImmersiveFallback, ImmersiveStage, SheetSpec, VoicePlayer, VoiceState, VoiceStyle } from './ui/contract'
 import { h } from './ui/h'
 import { buildSheet, dayTitleFor } from './ui/message'
 import { createFx, type Fx } from './ui/overlay'
@@ -34,7 +34,7 @@ export interface AppEnv {
   now(): number
   random(): number
   url: URL
-  /** Read-aloud. Defaults to the era voices module when it is in the build. */
+  /** Read-aloud. Defaults to the era voices when the build sets VITE_VOICE=on; tests pass a stub. */
   voice?: VoicePlayer
 }
 
@@ -47,10 +47,6 @@ const STAGE_WAIT_MS = 6000 // a day waits this long for the 3D stage before usin
 const TIERS: QualityTier[] = ['low', 'mid', 'high']
 const IST_OFFSET_MS = 330 * 60_000
 const DAY_MS = 86_400_000
-
-// The era voices land in src/audio/voice.ts. Until that module is in the build this finds nothing
-// and the Listen button stays away; nothing here breaks either way.
-const VOICE_MODULE = import.meta.glob<{ voice: VoicePlayer }>('./audio/voice.ts')
 
 /** What the controller needs from a desk: the 3D stage or the 2D fallback. */
 interface Desk {
@@ -111,6 +107,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // read-aloud
   let voice: VoicePlayer | null = null
   let voiceState: VoiceState = 'idle'
+  let voiceStyle: VoiceStyle = store.get<unknown>('voiceStyle', 'era') === 'dastango' ? 'dastango' : 'era'
 
   // the agarbatti
   let timerArmed = false
@@ -143,10 +140,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     attach(null)
   })
 
+  // Read-aloud is off until the voice plan allows it: only VITE_VOICE=on at build time loads the era
+  // voices and shows the Listen button. Any other value leaves the module out of the build.
   if (env.voice) bindVoice(env.voice)
-  else {
-    const load = VOICE_MODULE['./audio/voice.ts']
-    if (load) load().then((m) => alive() && bindVoice(m.voice), (err: unknown) => console.warn('[app] read-aloud could not load', err))
+  else if (import.meta.env.VITE_VOICE === 'on') {
+    import('./audio/voice').then((m) => alive() && bindVoice(m.voice), (err: unknown) => console.warn('[app] read-aloud could not load', err))
   }
 
   // ?inspect exposes the game state to test scripts without the stage's ?debug overlay.
@@ -300,7 +298,16 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const msg = p && currentMessage(p)
     if (!voice || !p || !msg || !readable || revealed) return
     if (voiceState === 'loading' || voiceState === 'playing') return voice.stop()
-    voice.play({ era: p.era.id, id: msg.id, lang: getLang(), day: p.state.day }).catch(() => undefined)
+    // play() starts inside this tap (iOS); the day is the chapter day whose date is on screen
+    const req = { era: p.era.id, id: msg.id, lang: getLang(), day: dateDay(p), voice: voiceStyle }
+    voice.play(req).catch(() => undefined)
+  }
+
+  function chooseVoice(s: VoiceStyle): void {
+    if (s === voiceStyle) return
+    voiceStyle = s
+    store.set('voiceStyle', s)
+    stopVoice()
   }
 
   // ------------------------------------------------------------------ the agarbatti
@@ -453,10 +460,13 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     return p.state.queue[p.state.day - 1]
   }
 
-  /** The chapter's real date; the daily puzzle plays on the window's last days, when every rule is known. */
+  /** The chapter day whose date is on screen; the daily puzzle plays on the window's last days, when every rule is known. */
+  function dateDay(p: Play): number {
+    return p.kind === 'chapter' ? p.state.day : DAYS.hard - p.state.days + p.state.day
+  }
+
   function isoDateFor(p: Play): string {
-    if (p.kind === 'chapter') return dayDate(p.era, p.state.day)
-    return dayDate(p.era, DAYS.hard - p.state.days + p.state.day)
+    return dayDate(p.era, dateDay(p))
   }
 
   /** What the paper shows today. */
@@ -523,11 +533,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       readable,
       revealed,
       soundOn: !muted,
-      ...(voice ? { voice: voiceState } : {}),
+      ...(voice ? { voice: voiceState, voiceStyle } : {}),
       ...(p.kind === 'daily' ? { daily: p.daily.number, allRules: true } : {}),
     }, {
       stamp: (v) => void onStamp(v),
       listen: toggleVoice,
+      voiceStyle: chooseVoice,
       tab: () => audio.cue('page'),
       next: onNext,
       skip: () => desk?.skip(),

@@ -87,3 +87,9 @@ export function homeIcon(): SVGSVGElement {
   <path d="M6.5 10v9h4v-5h3v5h4v-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
 </svg>`)
 }
+
+export function chevronIcon(): SVGSVGElement {
+  return svg(`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M7 14.5l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`)
+}

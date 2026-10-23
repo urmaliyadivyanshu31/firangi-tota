@@ -61,6 +61,9 @@ const en = {
   listen: 'Listen',
   listenStop: 'Stop',
   voiceError: 'Voice unavailable',
+  voiceStyle: 'Choose the voice',
+  voiceEra: 'Era voice',
+  voiceDastango: 'Dastango',
   timerLabel: 'Agarbatti, time left',
   fieldFrom: 'From',
   fieldTo: 'To',
@@ -157,6 +160,9 @@ const hi: Strings = {
   listen: 'सुनो',
   listenStop: 'रोको',
   voiceError: 'आवाज़ नहीं आ पाई',
+  voiceStyle: 'आवाज़ चुनें',
+  voiceEra: 'युग की आवाज़',
+  voiceDastango: 'दास्तानगो',
   timerLabel: 'अगरबत्ती, बचा हुआ समय',
   fieldFrom: 'भेजने वाला',
   fieldTo: 'पाने वाला',
@@ -212,6 +218,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'langShort', 'premise', 'dailyScore', 'dailyTomorrow', 'dailyNext', 'shareGrid', 'dayLabel',
   'dayTitle', 'skip', 'blankFact', 'sheetPetitionHead', 'sheetRadioHead',
   'sheetTelegramHead', 'tellLabel', 'whyLabel', 'source', 'sound', 'listen', 'listenStop', 'voiceError',
+  'voiceStyle', 'voiceEra', 'voiceDastango',
 ]
 
 export function t(key: keyof Strings, lang: Lang): string {

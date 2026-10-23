@@ -227,6 +227,37 @@ describe('renderDay: Listen', () => {
   })
 })
 
+describe('renderDay: the choice of voice', () => {
+  it('opens a two-option picker from the chevron and reports the pick', () => {
+    const root = mount()
+    const e = era()
+    const on = { ...handlers(), voiceStyle: vi.fn() }
+    renderDay(root, props(e, chapter(e), { lang: 'hi', voice: 'idle', voiceStyle: 'era' }), on)
+    const picker = root.querySelector<HTMLElement>('.voice-picker')!
+    const more = root.querySelector<HTMLButtonElement>('[data-action="voice-style"]')!
+    expect(picker.classList.contains('is-open')).toBe(false)
+    more.click()
+    expect(picker.classList.contains('is-open')).toBe(true)
+    expect(more.getAttribute('aria-expanded')).toBe('true')
+    const opts = [...picker.querySelectorAll<HTMLButtonElement>('.voice-opt')]
+    expect(opts.map((o) => o.textContent)).toEqual(['युग की आवाज़', 'दास्तानगो'])
+    expect(opts.map((o) => o.getAttribute('aria-checked'))).toEqual(['true', 'false'])
+    opts[1]!.click()
+    expect(on.voiceStyle).toHaveBeenCalledWith('dastango')
+    expect(opts.map((o) => o.getAttribute('aria-checked'))).toEqual(['false', 'true'])
+    expect(picker.classList.contains('is-open')).toBe(false)
+  })
+
+  it('closes the picker with Escape before anything else', () => {
+    const root = mount()
+    const e = era()
+    renderDay(root, props(e, chapter(e), { voice: 'idle' }), handlers())
+    root.querySelector<HTMLButtonElement>('[data-action="voice-style"]')!.click()
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(root.querySelector('.voice-picker')!.classList.contains('is-open')).toBe(false)
+  })
+})
+
 describe('renderDay: case file and rulebook', () => {
   it('pins both cards on the left at 900 px and wider, with no tabs', () => {
     stubWidth(true)

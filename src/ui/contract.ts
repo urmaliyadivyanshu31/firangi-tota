@@ -44,14 +44,11 @@ export interface ImmersiveStage {
   skip(): void
 }
 
-export type VoiceState = 'idle' | 'loading' | 'playing' | 'error'
+/** Read-aloud with the era's recorded voices. Plays even when sound is off. */
+export type { Voice as VoicePlayer, VoiceState } from '../audio/voice'
 
-/** Read-aloud with the era's recorded voices (src/audio/voice.ts). Plays even when sound is off. */
-export interface VoicePlayer {
-  play(p: { era: EraId; id: string; lang: Lang; day: number }): Promise<void>
-  stop(): void
-  onState(cb: (s: VoiceState) => void): () => void
-}
+/** Which voice reads: the era's own, or the dastango, a theatrical storyteller. */
+export type VoiceStyle = 'era' | 'dastango'
 
 /** The 2D fallback: the same sheet, drawn flat. */
 export interface ImmersiveFallback {
