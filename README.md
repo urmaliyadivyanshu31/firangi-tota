@@ -27,11 +27,11 @@ npm run dev
 Other commands: `npm run build`, `npm run preview`, `npm test`, `npm run typecheck`,
 `npm run check-secrets`.
 
-### Era voices (optional)
+### Read-aloud voice (optional)
 
-The speaker button reads each message aloud in a voice of its era. The default provider is Fish
-Audio (model `s2.1-pro-free`); ElevenLabs also works. The game works without either; the button
-just shows an error.
+The speaker button reads each message aloud in one storyteller voice, the Dastango, in every era.
+The default provider is Fish Audio (model `s2.1-pro-free`); ElevenLabs also works. The game works
+without either; the button just shows an error.
 
 1. Copy `.env.example` to `.env.local` and put your Fish Audio key after `FISH_API_KEY=`
    (keys: https://fish.audio/app/api-keys). For ElevenLabs instead, set

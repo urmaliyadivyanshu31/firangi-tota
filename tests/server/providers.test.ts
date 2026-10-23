@@ -4,7 +4,7 @@ import type { Message } from '../../src/content/types'
 import { SERVER_ERAS } from '../../server/eras'
 import { FISH_TTS_URL, fishRequestBody, fishSynth, UpstreamError, type Synth } from '../../server/providers'
 import { handleVoice, type VoiceResult } from '../../server/voice'
-import { ALT_VOICES, ERA_VOICES, FISH_MODEL, parseProvider } from '../../server/voices'
+import { FISH_MODEL, parseProvider, VOICES } from '../../server/voices'
 
 const streamOf = (bytes: number[]) =>
   new ReadableStream<Uint8Array>({ start(c) { c.enqueue(new Uint8Array(bytes)); c.close() } })
@@ -33,7 +33,7 @@ describe('Fish Audio request', () => {
   it('posts JSON to /v1/tts with the free model, the voice and small MP3s', async () => {
     const { impl, calls } = mockFetch([{ status: 200, bytes: [9, 8, 7] }])
     const synth = fishSynth(key, impl)
-    const voice = ERA_VOICES['delhi-1857'].fish
+    const voice = VOICES.dastango.fish!
     const audio = await synth.synthesize(voice as never, 'नमस्ते', 'hi')
     expect(Array.from(audio)).toEqual([9, 8, 7])
     expect(calls).toHaveLength(1)
@@ -72,9 +72,8 @@ describe('Fish Audio request', () => {
     expect(denied.calls).toHaveLength(1)
   })
 
-  it('every era and every enabled alternate voice has a Fish model', () => {
-    for (const v of Object.values(ERA_VOICES)) expect(v.fish.referenceId).toMatch(/^[0-9a-f]{32}$/)
-    for (const v of Object.values(ALT_VOICES)) if (v.enabled) expect(v.fish?.referenceId).toMatch(/^[0-9a-f]{32}$/)
+  it('every enabled voice has a Fish model', () => {
+    for (const v of Object.values(VOICES)) if (v.enabled) expect(v.fish?.referenceId).toMatch(/^[0-9a-f]{32}$/)
   })
 })
 
@@ -98,19 +97,22 @@ describe('provider and cache key', () => {
     expect(synthesize).not.toHaveBeenCalled()
   })
 
-  it('Fish serves the canonical URL with the era voice, and Dastango with its own', async () => {
-    const synthesize = vi.fn(async () => new Uint8Array([4, 5]))
-    const deps = fishDeps({ provider: 'fish', synthesize } as Synth)
-    const canon = location(await handleVoice(query, deps))
-    const ok = await handleVoice(canon, deps)
-    expect(ok.status).toBe(200)
-    expect(ok.headers['Cache-Control']).toBe('public, max-age=31536000, s-maxage=31536000, immutable')
-    expect(synthesize).toHaveBeenLastCalledWith(ERA_VOICES['delhi-1857'].fish, msg.text.hi.trim(), 'hi')
+  it('Fish serves the canonical URL with the Dastango model in every era', async () => {
+    for (const e of Object.values(SERVER_ERAS)) {
+      const synthesize = vi.fn(async () => new Uint8Array([4, 5]))
+      const deps = fishDeps({ provider: 'fish', synthesize } as Synth)
+      const m = e.messages[0]!
+      const canon = location(await handleVoice({ era: e.id, id: m.id, lang: 'en', day: '1' }, deps))
+      const ok = await handleVoice(canon, deps)
+      expect(ok.status).toBe(200)
+      expect(ok.headers['Cache-Control']).toBe('public, max-age=31536000, s-maxage=31536000, immutable')
+      expect(synthesize).toHaveBeenCalledWith(VOICES.dastango.fish, expect.any(String), 'en')
+    }
+  })
 
-    const dg = location(await handleVoice({ ...query, voice: 'dastango' }, deps))
-    expect(dg.v).not.toBe(canon.v)
-    await handleVoice(dg, deps)
-    expect(synthesize).toHaveBeenLastCalledWith(ALT_VOICES.dastango.fish, msg.text.hi.trim(), 'hi')
+  it('the guest voice answers 404 on Fish too while disabled', async () => {
+    const r = await handleVoice({ ...query, voice: 'guest' }, fishDeps(null))
+    expect(r.status).toBe(404)
   })
 
   it('a synthesizer for the wrong provider is not used', async () => {

@@ -14,11 +14,13 @@ import {
   REDIRECT_CACHE,
   handleVoice,
   resolveClip,
+  revision,
   type TtsClient,
   type VoiceQuery,
   type VoiceResult,
 } from '../../server/voice'
-import { ALT_VOICES, ERA_VOICES, MODEL_ID, OUTPUT_FORMAT } from '../../server/voices'
+import { MODEL_ID, OUTPUT_FORMAT, VOICES } from '../../server/voices'
+import { voiceChoices } from '../../src/content/voices'
 
 const BYTES = [new Uint8Array([0x49, 0x44, 0x33]), new Uint8Array([1, 2, 3, 4])]
 
@@ -243,41 +245,45 @@ describe('handleVoice: audio response', () => {
   })
 })
 
-describe('alternate voice: Dastango', () => {
-  it('voice=dastango gets its own canonical URL and hash', async () => {
-    const { client } = mockClient()
-    const era = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
-    const dg = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'dastango' }), el(client)))
-    expect(era.voice).toBeUndefined()
-    expect(dg.voice).toBe('dastango')
-    expect(dg.v).not.toBe(era.v) // a different cache key for the same message
-  })
-
-  it('reads with the Dastango voice in any chapter', async () => {
+describe('one voice: Dastango everywhere, guest slot off', () => {
+  it('every era is read by the Dastango voice', async () => {
     for (const eraId of Object.keys(SERVER_ERAS) as EraId[]) {
       const { client, convert } = mockClient()
       const msg = SERVER_ERAS[eraId].messages[0]!
-      expect((await fetchClip(q(eraId, msg.id, 'hi', 1, { voice: 'dastango' }), client)).status).toBe(200)
+      expect((await fetchClip(q(eraId, msg.id, 'hi', 1), client)).status).toBe(200)
       const [voiceId, req] = convert.mock.calls[0]!
-      expect(voiceId).toBe(ALT_VOICES.dastango.elevenlabs!.voiceId)
-      expect(req.voiceSettings).toEqual(ALT_VOICES.dastango.elevenlabs!.settings)
+      expect(voiceId).toBe(VOICES.dastango.elevenlabs!.voiceId)
+      expect(req.voiceSettings).toEqual(VOICES.dastango.elevenlabs!.settings)
       expect(req.languageCode).toBe('hi')
     }
   })
 
-  it('an explicit voice=era is redirected to the URL without it', async () => {
+  it('Dastango is the default: the canonical URL has no voice parameter', async () => {
     const { client, convert } = mockClient()
     const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
-    const r = await handleVoice({ ...canon, voice: 'era' }, el(client))
+    expect(canon.voice).toBeUndefined()
+    // An explicit voice=dastango redirects to the same plain URL.
+    const r = await handleVoice({ ...canon, voice: 'dastango' }, el(client))
     expect(location(r)).toEqual(canon)
     expect(convert).not.toHaveBeenCalled()
   })
 
+  it('the guest voice answers 404 while it is disabled', async () => {
+    expect(VOICES.guest.enabled).toBe(false)
+    expect(VOICES.guest.fish).toBeUndefined()
+    expect(VOICES.guest.elevenlabs).toBeUndefined()
+    const { client, convert } = mockClient()
+    const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'guest' }), el(client))
+    expect(r.status).toBe(404)
+    expect(convert).not.toHaveBeenCalled()
+  })
+
   const badVoices: [string, unknown][] = [
+    ['the old era voice', 'era'],
     ['unknown voice', 'narrator'],
     ['empty voice', ''],
     ['upper case', 'DASTANGO'],
-    ['repeated voice', ['dastango', 'era']],
+    ['repeated voice', ['dastango', 'guest']],
     ['too long', 'd'.repeat(40)],
   ]
   for (const [name, value] of badVoices) {
@@ -287,75 +293,31 @@ describe('alternate voice: Dastango', () => {
     })
   }
 
-  it('era and Dastango clips of one message do not share an in-flight call', async () => {
-    const { client, convert } = mockClient()
-    const a = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
-    const b = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'dastango' }), el(client)))
-    await Promise.all([handleVoice(a, el(client)), handleVoice(b, el(client))])
-    expect(convert).toHaveBeenCalledTimes(2)
+  it('the cache hash includes the voice', () => {
+    const voice = VOICES.dastango.elevenlabs!
+    const a = revision('elevenlabs', 'dastango', voice, 'en', 'same text')
+    const b = revision('elevenlabs', 'guest', voice, 'en', 'same text')
+    const c = revision('elevenlabs', 'dastango', { ...voice, voiceId: 'x'.repeat(20) }, 'en', 'same text')
+    expect(a).toMatch(/^[0-9a-f]{8}$/)
+    expect(b).not.toBe(a) // a different voice name
+    expect(c).not.toBe(a) // a different model behind the same name
   })
 
-  it('every enabled alternate voice has labels, a voice per provider and valid settings', () => {
-    for (const v of Object.values(ALT_VOICES)) {
-      expect(v.label.en && v.label.hi).toBeTruthy()
-      if (!v.enabled) continue
-      expect(v.elevenlabs?.voiceId).toMatch(/^[A-Za-z0-9]{20}$/)
-      expect(v.fish?.referenceId).toMatch(/^[0-9a-f]{32}$/)
-      for (const n of Object.values(v.elevenlabs!.settings)) expect(n >= 0 && n <= 1).toBe(true)
-      if (v.credit !== undefined) expect(v.credit.length).toBeGreaterThan(0)
-    }
+  it('offers only enabled voices to a picker', () => {
+    expect(voiceChoices()).toEqual(['dastango'])
   })
 
-  it('the guest slot stays off until it has a voice and a credit, and is refused', async () => {
-    expect(ALT_VOICES.guest.enabled).toBe(false)
-    const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'guest' }), el(null))
-    expect(r.status).toBe(400)
-  })
-})
-
-describe('era voices', () => {
-  it('pins one voice id per era', () => {
-    expect(Object.fromEntries(Object.entries(ERA_VOICES).map(([era, v]) => [era, v.elevenlabs.voiceId]))).toEqual({
-      'delhi-1857': 'r3CPEby3BZ6hrPxHG8h2',
-      'lahore-1929': 'RxnH5jCRKb1ez2lcmQC1',
-      'bombay-1942': 'HSdLdxNgP1KF3yQK3IkB',
-      'delhi-1947': 'l1CrgWMeEfm3xvPbn4YE',
-    })
+  it('Dastango has a model on both providers, with valid settings', () => {
+    const v = VOICES.dastango
+    expect(v.label.en && v.label.hi).toBeTruthy()
+    expect(v.elevenlabs?.voiceId).toMatch(/^[A-Za-z0-9]{20}$/)
+    expect(v.fish?.referenceId).toMatch(/^[0-9a-f]{32}$/)
+    expect(Object.keys(v.elevenlabs!.settings).sort()).toEqual(['similarityBoost', 'stability'])
+    for (const n of Object.values(v.elevenlabs!.settings)) expect(n >= 0 && n <= 1).toBe(true)
   })
 
-  for (const era of Object.keys(SERVER_ERAS) as EraId[]) {
-    it(`${era}: calls ElevenLabs with its voice, eleven_v4 and the agreed options`, async () => {
-      const { client, convert } = mockClient()
-      const msg = SERVER_ERAS[era].messages[0]!
-      expect((await fetchClip(q(era, msg.id, 'en', 1), client)).status).toBe(200)
-      const [voiceId, req, opts] = convert.mock.calls[0]!
-      const voice = ERA_VOICES[era].elevenlabs
-      expect(voiceId).toBe(voice.voiceId)
-      expect(req).toMatchObject({
-        modelId: MODEL_ID,
-        languageCode: 'en',
-        applyTextNormalization: 'on',
-        outputFormat: OUTPUT_FORMAT,
-        voiceSettings: voice.settings,
-      })
-      expect(req.audioEffects).toEqual(voice.effects)
-      expect(opts).toMatchObject({ maxRetries: 1 })
-    })
-  }
-
-  it('uses eleven_v4 and small MP3s', () => {
+  it('uses eleven_v4 and small MP3s on ElevenLabs', () => {
     expect(MODEL_ID).toBe('eleven_v4')
     expect(OUTPUT_FORMAT).toBe('mp3_44100_64')
-  })
-
-  it('1942 goes through the old-radio filter', () => {
-    expect(ERA_VOICES["bombay-1942"].elevenlabs.effects?.filterPresetId).toBe('old_radio')
-  })
-
-  it('v4 settings stay in range (v4 only takes stability and similarity boost)', () => {
-    for (const { elevenlabs: v } of Object.values(ERA_VOICES)) {
-      expect(Object.keys(v.settings).sort()).toEqual(['similarityBoost', 'stability'])
-      for (const n of Object.values(v.settings)) expect(n >= 0 && n <= 1).toBe(true)
-    }
   })
 })
