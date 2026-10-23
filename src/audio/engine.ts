@@ -2,9 +2,14 @@
 // Everything is a safe no-op until unlock() succeeds, or when Web Audio is missing.
 import type { EraId } from '../content/types'
 import { startAmbience, type AmbienceHandle } from './ambience'
-import { playCue, type Cue } from './synth'
+import { createSampler, type SampleName, type Sampler } from './samples'
+import { playCue, type Cue, type CueOptions } from './synth'
 
 export type { Cue } from './synth'
+export { cueForStage } from './stage-cues'
+
+/** The cues played from the recorded typewriter sprite once it has loaded. */
+const SAMPLED: Partial<Record<Cue, SampleName>> = { typeKey: 'key', typeSpace: 'space', typeDing: 'ding', typeReturn: 'return' }
 
 const MASTER_LEVEL = 0.8
 
@@ -18,7 +23,8 @@ function contextCtor(): Ctor | null {
 export interface AudioEngine {
   unlock(): void
   setMuted(m: boolean): void
-  cue(c: Cue): void
+  /** `level` (0..1) is for the tension tick: how close the agarbatti is to burning out. */
+  cue(c: Cue, o?: { level?: number }): void
   ambience(id: EraId | null): void
 }
 
@@ -28,6 +34,7 @@ export function createAudioEngine(): AudioEngine {
   let muted = false
   let wanted: EraId | null = null
   let current: AmbienceHandle | null = null
+  let sampler: Sampler | null = null
   const beds = new Map<string, Promise<AudioBuffer | null>>()
 
   function applyMute(): void {
@@ -67,6 +74,8 @@ export function createAudioEngine(): AudioEngine {
         master = ctx.createGain()
         master.connect(ctx.destination)
         applyMute()
+        // decode the typewriter sprite now, so the first key of a telegram is already instant
+        sampler = createSampler(ctx, master, loadBed)
         restartAmbience()
       } catch {
         ctx = null
@@ -77,9 +86,15 @@ export function createAudioEngine(): AudioEngine {
       muted = m
       applyMute()
     },
-    cue(c: Cue): void {
+    cue(c: Cue, o?: { level?: number }): void {
       if (!ctx || !master || muted) return
-      try { playCue(ctx, master, c) } catch { /* never break the game over a sound */ }
+      try {
+        const s = SAMPLED[c]
+        if (s && sampler?.play(s)) return
+        // the day title settles in the voice of the era whose room is playing
+        const opts: CueOptions = { era: wanted, level: o?.level }
+        playCue(ctx, master, c, opts)
+      } catch { /* never break the game over a sound */ }
     },
     ambience(id: EraId | null): void {
       wanted = id

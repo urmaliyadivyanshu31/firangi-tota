@@ -877,6 +877,10 @@ export interface CameraRig {
   refresh(): void
   /** How far the camera sways (1 = the normal slow breath). */
   setSway(k: number): void
+  /** The pointer's additive turn this frame (radians); see parallax.ts. */
+  setParallax(yaw: number, pitch: number): void
+  /** How much of the pointer turn reaches the camera (eased): near 0 while reading, 1 elsewhere. */
+  setParallaxScale(k: number): void
   shot(): ShotName
   shake(amount: number, downward?: number): void
   update(dtMs: number, tMs: number): void
@@ -895,6 +899,13 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
   let sway = 1
   let swayNow = 1
   let customFn: PoseFn | null = null
+  let pYaw = 0
+  let pPitch = 0
+  let pScale = 1
+  let pScaleNow = 1
+  const tmpDir = new THREE.Vector3()
+  const tmpRight = new THREE.Vector3()
+  const UP_Y = new THREE.Vector3(0, 1, 0)
   const overrides = new Map<ShotName, PoseFn>()
   const from: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 }
   const cur: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 }
@@ -992,6 +1003,13 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
     setSway(k) {
       sway = k
     },
+    setParallax(yaw, pitch) {
+      pYaw = yaw
+      pPitch = pitch
+    },
+    setParallaxScale(k) {
+      pScale = k
+    },
     aspect: () => aspect,
     shot: () => current,
     shake(amount, downward = 0) {
@@ -1026,6 +1044,18 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
           tmpLook.y += (Math.random() - 0.5) * shakeAmp * 0.5
           shakeAmp *= Math.pow(0.004, dt / 1000)
         }
+      }
+      pScaleNow += (pScale - pScaleNow) * (1 - Math.exp(-dt / 350))
+      const py = pYaw * pScaleNow
+      const pp = pPitch * pScaleNow
+      if (!o.reducedMotion && (Math.abs(py) > 1e-5 || Math.abs(pp) > 1e-5)) {
+        // turn the view toward the pointer around the camera: a glance, not a move
+        tmpDir.copy(tmpLook).sub(camera.position)
+        tmpDir.applyAxisAngle(UP_Y, -py)
+        tmpRight.crossVectors(tmpDir, UP_Y).normalize()
+        tmpDir.applyAxisAngle(tmpRight, pp)
+        tmpLook.copy(camera.position).add(tmpDir)
+        camera.position.addScaledVector(tmpRight, py * 0.02)
       }
       camera.lookAt(tmpLook)
       if (Math.abs(camera.fov - cur.fov) > 1e-4) {

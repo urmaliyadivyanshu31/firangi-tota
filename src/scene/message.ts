@@ -48,6 +48,15 @@ export interface MessageSheet {
   setGlow(k: number): void
   /** The red wax seal on the folded petition; `crack` 0..1 splits it. */
   setSeal(visible: boolean, crack?: number): void
+  /** The verdict's pencil layer over the front (its canvas is drawn by the stage). */
+  overlay: THREE.CanvasTexture | null
+  setOverlay(visible: boolean): void
+  /** The paper's back (its canvas is drawn by the stage), and the turn over to it: 0 front … 1 back. */
+  reverse: THREE.CanvasTexture | null
+  setFlip(k: number): void
+  flip(): number
+  /** A body-local point on the back at page (u, v), for hit rectangles. */
+  backPointAt(u: number, v: number): THREE.Vector3
   /** Writes the address on the outside of the folded paper (ink for a petition, else pencil). */
   setOutside(text: string, lang: 'en' | 'hi', ink: boolean): void
   /** World point on the (flat) sheet at (u, v). */
@@ -119,7 +128,7 @@ function fillPanel(p: Panel, z0: number, z1: number, v0: number, v1: number, cur
  * The message sheet. One canvas (reused for every message) holds the page; the page is drawn into
  * its top part and the texture's repeat shows only that part.
  */
-export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasElement; paper: number }): MessageSheet {
+export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasElement; paper: number; overlayCanvas?: HTMLCanvasElement; backCanvas?: HTMLCanvasElement }): MessageSheet {
   const s = TIER_SETTINGS[o.tier]
   const texture = toTexture(o.canvas, { anisotropy: s.anisotropy })
   const frontMat = material(o.tier, { map: texture, shininess: 5, specular: 0x0b0b0b }) as THREE.MeshLambertMaterial
@@ -258,6 +267,37 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
   decal.renderOrder = 2
   body.add(decal)
 
+  // the verdict: a transparent pencil layer over the front, and the back face, used flat only
+  const overlayTex = o.overlayCanvas ? toTexture(o.overlayCanvas) : null
+  const overlay = overlayTex
+    ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: overlayTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -6, toneMapped: true }))
+    : null
+  if (overlay) {
+    // above the curl of the sheet's edges (2.2 mm at the corners), or the edges would hide the pencil
+    overlay.position.y = 0.0028
+    overlay.renderOrder = 3
+    overlay.visible = false
+    body.add(overlay)
+  }
+  const reverseTex = o.backCanvas ? toTexture(o.backCanvas, { anisotropy: s.anisotropy }) : null
+  let reverse: THREE.Mesh | null = null
+  if (reverseTex) {
+    const geo = new THREE.PlaneGeometry(1, 1, 1, 1).rotateX(Math.PI / 2)
+    // facing down until the sheet turns over about its long axis; then it reads upright and unmirrored
+    const pos = geo.getAttribute('position') as THREE.BufferAttribute
+    const uv = geo.getAttribute('uv') as THREE.BufferAttribute
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, 0.5 - pos.getX(i), 0.5 - pos.getZ(i))
+    const mat = material(o.tier, { map: reverseTex, shininess: 5, specular: 0x0b0b0b }) as THREE.MeshLambertMaterial
+    mat.emissiveMap = reverseTex
+    mat.emissive.setRGB(0.3, 0.3, 0.3)
+    reverse = new THREE.Mesh(geo, mat)
+    reverse.position.y = -0.0003
+    reverse.receiveShadow = true
+    reverse.visible = false
+    body.add(reverse)
+  }
+  let flipK = 0
+
   let aspect = 4 / 3
   let mode: FoldMode = 'flat'
   let feed = 1
@@ -326,6 +366,14 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
     const used = Math.min(1, (aspect * o.canvas.width) / o.canvas.height)
     texture.repeat.set(1, used)
     texture.offset.set(0, 1 - used)
+    for (const [t, c] of [[overlayTex, o.overlayCanvas], [reverseTex, o.backCanvas]] as const) {
+      if (!t || !c) continue
+      const u = Math.min(1, (aspect * c.width) / c.height)
+      t.repeat.set(1, u)
+      t.offset.set(0, 1 - u)
+    }
+    overlay?.scale.set(SHEET_W, 1, SHEET_W * aspect)
+    reverse?.scale.set(SHEET_W, 1, SHEET_W * aspect)
   }
   setRepeat()
   layout()
@@ -385,12 +433,32 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
       group.updateWorldMatrix(true, true)
       return body.localToWorld(new THREE.Vector3((u - 0.5) * SHEET_W, 0.0006, (v - 0.5) * H()))
     },
+    overlay: overlayTex,
+    setOverlay(visible) {
+      if (overlay) overlay.visible = visible && mode === 'flat'
+    },
+    reverse: reverseTex,
+    setFlip(k) {
+      flipK = clamp01(k)
+      // lifted toward the camera, turned over about its long axis like a page, and laid down
+      body.rotation.z = Math.PI * flipK
+      body.position.y = SHEET_Y + Math.sin(Math.PI * flipK) * 0.13
+      body.position.x = Math.sin(Math.PI * flipK) * 0.012
+      if (reverse) reverse.visible = flipK > 0.001
+    },
+    flip: () => flipK,
+    backPointAt(u, v) {
+      group.updateWorldMatrix(true, true)
+      return body.localToWorld(new THREE.Vector3((0.5 - u) * SHEET_W, -0.0006, (v - 0.5) * H()))
+    },
     drawDecals,
     setOutside: drawOutside,
     dispose() {
       disposeTree(group)
       texture.dispose()
       backTex.dispose()
+      overlayTex?.dispose()
+      reverseTex?.dispose()
       decals.asli.dispose()
       decals.tota.dispose()
     },
@@ -639,6 +707,7 @@ uniform vec3 uColor;
 uniform float uAmount;
 uniform float uSpread;
 uniform float uInk;
+uniform float uWash;
 uniform float uAspect;
 varying vec2 vUv;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -652,23 +721,27 @@ void main() {
   vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
   float r = length(p) / (0.5 * length(vec2(uAspect, 1.0)));
   float a;
+  vec3 col = uColor;
   if (uInk > 0.5) {
-    // red ink bleeding in from the edges, with a darker rim at its front
+    // the room washes red for a beat, the edges sink to black-red, and red ink bleeds in
     float field = r + (noise(vUv * vec2(uAspect, 1.0) * 5.0) - 0.5) * 0.32 + (noise(vUv * 17.0) - 0.5) * 0.08;
     float front = 1.0 - uSpread * 0.62;
     float inked = smoothstep(front - 0.03, front + 0.02, field);
     float rim = smoothstep(front - 0.03, front, field) - smoothstep(front, front + 0.05, field);
-    a = (inked * 0.5 + rim * 0.28) * uAmount;
+    float vig = smoothstep(0.42, 1.05, r);
+    col = mix(uColor, vec3(0.06, 0.0, 0.0), clamp(vig * 0.85 + rim * 0.4, 0.0, 1.0));
+    a = clamp(uWash * 0.42 + inked * 0.5 + rim * 0.3 + vig * 0.6, 0.0, 0.92) * uAmount;
   } else {
-    // a warm saffron bloom over the room, a little stronger toward the edges
-    a = (0.22 + 0.3 * smoothstep(0.2, 1.1, r)) * uAmount;
+    // a warm saffron-gold bloom over the room, a little stronger toward the edges
+    a = (0.28 + 0.36 * smoothstep(0.2, 1.1, r)) * uAmount;
   }
-  gl_FragColor = vec4(uColor, a);
+  gl_FragColor = vec4(col, a);
 }`
 
 export interface Flash {
   mesh: THREE.Mesh
-  set(kind: 'right' | 'wrong', amount: number, spread: number): void
+  /** `amount` fades the whole effect; `spread` drives the ink; `wash` the red beat over the room. */
+  set(kind: 'right' | 'wrong', amount: number, spread: number, wash?: number): void
   fit(camera: THREE.PerspectiveCamera): void
   dispose(): void
 }
@@ -682,6 +755,7 @@ export function createFlash(): Flash {
       uAmount: { value: 0 },
       uSpread: { value: 0 },
       uInk: { value: 0 },
+      uWash: { value: 0 },
       uAspect: { value: 1 },
     },
     transparent: true,
@@ -698,11 +772,13 @@ export function createFlash(): Flash {
   mesh.position.z = -0.1
   return {
     mesh,
-    set(kind, amount, spread) {
+    set(kind, amount, spread, wash = 0) {
       const u = mat.uniforms
       const ink = kind === 'wrong'
       if (u.uInk) u.uInk.value = ink ? 1 : 0
-      if (u.uColor) (u.uColor.value as THREE.Color).setHex(ink ? 0xa3170e : 0xf2a23a)
+      if (u.uWash) u.uWash.value = wash
+      // (written straight to the screen, so these are display colours)
+      if (u.uColor) (u.uColor.value as THREE.Color).setRGB(ink ? 0.74 : 1.0, ink ? 0.05 : 0.7, ink ? 0.03 : 0.24)
       if (u.uAmount) u.uAmount.value = amount
       if (u.uSpread) u.uSpread.value = spread
       mat.blending = ink ? THREE.NormalBlending : THREE.AdditiveBlending

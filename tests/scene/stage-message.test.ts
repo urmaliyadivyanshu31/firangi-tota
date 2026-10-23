@@ -131,8 +131,9 @@ describe('showMessage', () => {
       const p = stage.showMessage(sheet({ channel }))
       expect(await state(p, 300)).toBe('pending')
       expect(await state(p, 6000)).toBe('done')
-      expect(cues).toContain('arrive')
-      if (channel === 'telegram') expect(cues).toContain('ding')
+      // (the typewriter's arrival is its platen ratchet and keys, not a slide)
+      if (channel !== 'telegram') expect(cues).toContain('arrive')
+      if (channel === 'telegram') expect(cues).toEqual(expect.arrayContaining(['key', 'space', 'return']))
       if (channel === 'petition') expect(cues).toContain('seal')
       if (channel === 'radio') expect(cues).toContain('flap')
       stage.dispose()
@@ -230,5 +231,108 @@ describe('establish and the day title', () => {
     expect(dayNumber('दिन ११')).toBe(11)
     expect(dayNumber('दिन 7')).toBe(7)
     expect(dayNumber('Today')).toBeNull()
+  })
+})
+
+describe('the typewriter keeps time with its sound', () => {
+  const telegram = (body: string): SheetSpec =>
+    sheet({ era: 'delhi-1947', channel: 'telegram', from: 'Secretary of State', to: 'Viceroy', dateLine: '5 Aug 1947', serial: '3408-S', body, checks: [] })
+
+  it('cues one key per struck letter and one space per space, in the order they appear', async () => {
+    const { measureSheet, typedKeys } = await import('../../src/scene/sheet')
+    const body = 'Your 1662-S. Cabinet agrees the boundary award is published only after 15 August. Repeat: after 15 August.'
+    const cues: StageCueName[] = []
+    const { stage } = stageFor(delhi1947, { cues })
+    const p = stage.showMessage(telegram(body))
+    expect(await state(p, 9000)).toBe('done')
+    const struck = cues.filter((c) => c === 'key' || c === 'space')
+    // exactly one key per non-space character of the typed message
+    expect(typedKeys(body)).toHaveLength(body.replace(/\s/g, '').length)
+    expect(struck.filter((c) => c === 'key')).toHaveLength(typedKeys(body).length)
+    // in the order the layout strikes them (the same measure the reveal uses)
+    const lines = measureSheet(fake2d().ctx, telegram(body)).typed.filter((l) => !l.field)
+    expect(lines.length).toBeGreaterThan(1)
+    expect(struck).toEqual(lines.flatMap((l) => l.keys.map((k) => (k.space ? 'space' : 'key'))))
+    // the platen's ratchet as the form rolls in, then one return between lines
+    expect(cues.filter((c) => c === 'return')).toHaveLength(lines.length)
+    stage.dispose()
+  })
+
+  it('cues each key on the frame its letter appears, never in a burst', async () => {
+    const cues: StageCueName[] = []
+    const { stage } = stageFor(delhi1947, { cues })
+    const p = stage.showMessage(telegram('Cabinet agrees the boundary award is published after 15 August.'))
+    let maxPerFrame = 0
+    let frames = 0
+    for (let i = 0; i < 600; i++) {
+      const before = cues.filter((c) => c === 'key').length
+      await pump(16)
+      const n = cues.filter((c) => c === 'key').length - before
+      if (n > 0) frames++
+      maxPerFrame = Math.max(maxPerFrame, n)
+      if ((await state(p)) === 'done') break
+    }
+    expect(frames).toBeGreaterThan(20)
+    expect(maxPerFrame).toBeLessThanOrEqual(2)
+    stage.dispose()
+  })
+
+  it('stays silent when the typing is skipped', async () => {
+    const cues: StageCueName[] = []
+    const { stage } = stageFor(delhi1947, { cues })
+    const p = stage.showMessage(telegram('Cabinet agrees the boundary award is published after 15 August.'))
+    await pump(500)
+    const before = cues.filter((c) => c === 'key').length
+    stage.skip()
+    expect(await state(p)).toBe('done')
+    expect(cues.filter((c) => c === 'key').length).toBe(before)
+    stage.dispose()
+  })
+})
+
+describe('reveal: the verdict on the same paper', () => {
+  const verdict = {
+    outcome: 'right' as const,
+    real: true,
+    documentMark: true,
+    highlight: ['Mirza Mughal'],
+    note: 'Mirza Mughal led the army, as the file says',
+    back: { verdictLine: 'Right — this one was genuine', tell: 'The diary records it.', stamp: { text: 'Correct', tone: 'right' as const, style: 'seal' as const }, source: 'Trial of Bahadur Shah (1858), p. 113' },
+    lang: 'en' as const,
+  }
+
+  it('rings the words, turns the paper over and resolves, with the source line findable', async () => {
+    const cues: StageCueName[] = []
+    const { stage } = stageFor(sampleDressing, { cues })
+    await state(stage.showMessage(sheet()), 6000)
+    expect(stage.getSourceRect()).toBeNull()
+    expect(stage.getPaperRect()).not.toBeNull()
+    const p = stage.reveal(verdict)
+    expect(await state(p, 400)).toBe('pending')
+    expect(await state(p, 4000)).toBe('done')
+    expect(cues).toEqual(expect.arrayContaining(['unfold', 'verdictStamp']))
+    const src = stage.getSourceRect()
+    expect(src).not.toBeNull()
+    expect(src?.w).toBeGreaterThan(0)
+    stage.dispose()
+  })
+
+  it('skip finishes it at once', async () => {
+    const { stage } = stageFor(sampleDressing)
+    await state(stage.showMessage(sheet()), 6000)
+    const p = stage.reveal(verdict)
+    await pump(100)
+    stage.skip()
+    expect(await state(p)).toBe('done')
+    expect(stage.getSourceRect()).not.toBeNull()
+    stage.dispose()
+  })
+
+  it('a second call (a language change) redraws at once', async () => {
+    const { stage } = stageFor(sampleDressing)
+    await state(stage.showMessage(sheet()), 6000)
+    await state(stage.reveal(verdict), 4000)
+    expect(await state(stage.reveal({ ...verdict, lang: 'hi', note: 'फ़ौज मिर्ज़ा मुग़ल के हाथ थी' }))).toBe('done')
+    stage.dispose()
   })
 })
