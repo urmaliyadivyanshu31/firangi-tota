@@ -19,6 +19,8 @@ const MAP: Record<StageCueName, Cue | null> = {
   wrong: 'caught',
   // the stamp's own thunk depends on which stamp, so the app plays stampAsli or stampTota itself
   stamp: null,
+  // the era's stamp coming down on the back of the paper after the verdict
+  verdictStamp: 'stampAsli',
 }
 
 /** The sound for a stage cue, or null when the stage moment has no sound of its own. */
