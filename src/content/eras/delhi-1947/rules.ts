@@ -56,6 +56,6 @@ export const rules: Rule[] = [
       en: 'A garbled cipher group is written [group corrupt].',
       hi: 'बिगड़े साइफ़र ग्रुप पर [group corrupt] लिखा जाता है।',
     },
-    arrivesOnDay: 9,
+    arrivesOnDay: 1,
   },
 ]

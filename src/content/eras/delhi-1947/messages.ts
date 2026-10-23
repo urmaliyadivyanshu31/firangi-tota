@@ -45,8 +45,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 377' }] },
     why: {
       text: {
-        en: "The line gave Ferozepore and Zira to Pakistan; the award didn't. Why is disputed.",
-        hi: 'इस लकीर में फ़िरोज़पुर और ज़ीरा पाकिस्तान में थे; फ़ैसले में नहीं। क्यों, इस पर बहस है।',
+        en: "This line gave Pakistan Ferozepore and Zira tahsils; the award didn't. Why is disputed.",
+        hi: 'इस लकीर में फ़िरोज़पुर और ज़ीरा तहसीलें पाकिस्तान में थीं; फ़ैसले में नहीं। क्यों, इस पर बहस है।',
       },
       sources: [{ id: 'mansergh-xii', loc: 'No. 377 and note; No. 395' }, { id: 'chester-2002' }],
     },
@@ -278,8 +278,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'cad-14aug1947' }] },
     why: {
       text: {
-        en: "Carried to him after midnight; he replied, 'I am proud of the honour.'",
-        hi: "आधी रात के बाद यह संदेश उन तक पहुँचा; जवाब था: 'मुझे इस सम्मान पर गर्व है।'",
+        en: "Carried to him after midnight; he replied, 'I am proud of the honour…'",
+        hi: "आधी रात के बाद यह संदेश उन तक पहुँचा; जवाब था: 'मुझे इस सम्मान पर गर्व है…'",
       },
       sources: [{ id: 'cad-14aug1947' }, { id: 'campbell-johnson-1951', loc: 'entry for 14–15 August 1947' }],
     },
@@ -875,8 +875,8 @@ export const messages: Message[] = [
     from: CA_OFFICE,
     to: { en: 'Cipher Office file', hi: 'साइफ़र दफ़्तर की फ़ाइल' },
     text: {
-      en: 'For the file: on Monday 22 July the Assembly adopted the tricolour, with a navy-blue Wheel.',
-      hi: 'फ़ाइल के लिए: सोमवार 22 जुलाई को सभा ने तिरंगा अपनाया, बीच में गहरे नीले रंग का चक्र।',
+      en: "For the file: on Monday 22 July the Assembly adopted the flag, '…deep Saffron (Kesari), white and dark green in equal proportion…'",
+      hi: "फ़ाइल के लिए: सोमवार 22 जुलाई को सभा ने झंडा अपनाया, '…गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर…'",
     },
     checks: { en: ['Monday 22 July'], hi: ['सोमवार 22 जुलाई'] },
     tells: [
@@ -1014,8 +1014,8 @@ export const messages: Message[] = [
       {
         kind: 'anachronism',
         explain: {
-          en: "Viceroy's House, not Rashtrapati Bhavan: India had no President before the republic.",
-          hi: 'वायसराय हाउस, राष्ट्रपति भवन नहीं: गणतंत्र से पहले राष्ट्रपति था ही नहीं।',
+          en: "Viceroy's House, Government House from 15 August; Rashtrapati Bhavan came with the republic.",
+          hi: 'वायसराय हाउस, 15 अगस्त से गवर्नमेंट हाउस; राष्ट्रपति भवन नाम गणतंत्र के साथ आया।',
         },
         sources: [{ id: 'campbell-johnson-1951', loc: 'datelines, 12 and 16 August 1947' }],
       },
@@ -1105,8 +1105,8 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'The Act fixed 15 August, not astrologers; a 1975 book popularised that story.',
-          hi: '15 अगस्त क़ानून ने तय किया, ज्योतिषियों ने नहीं; यह कहानी 1975 की एक किताब से मशहूर हुई।',
+          en: "No record backs it: power passed at midnight because the Act's day began then.",
+          hi: 'किसी रिकॉर्ड में ऐसा नहीं: सत्ता आधी रात को इसलिए बदली कि क़ानून का तय दिन तभी शुरू हुआ।',
         },
         sources: [
           { id: 'campbell-johnson-1951', loc: 'entry for 7 August 1947' },
@@ -1124,8 +1124,8 @@ export const messages: Message[] = [
     from: { en: 'Correspondent, Madras', hi: 'संवाददाता, मद्रास' },
     to: CIPHER,
     text: {
-      en: "Pandit Nehru will make his 'tryst with destiny' speech from the Red Fort on the morning of 15 August.",
-      hi: "पंडित नेहरू 15 अगस्त की सुबह लाल क़िले से अपना 'ट्रिस्ट विद डेस्टिनी' वाला भाषण देंगे।",
+      en: "Pandit Nehru will speak from the Red Fort on the morning of 15 August: '…a tryst with destiny…'",
+      hi: "पंडित नेहरू 15 अगस्त की सुबह लाल क़िले से बोलेंगे: '…ट्रिस्ट विद डेस्टिनी…'",
     },
     checks: { en: ['from the Red Fort on the morning of 15 August'], hi: ['लाल क़िले से'] },
     tells: [
@@ -1167,8 +1167,8 @@ export const messages: Message[] = [
     from: { en: 'Correspondent, Calcutta', hi: 'संवाददाता, कलकत्ता' },
     to: CIPHER,
     text: {
-      en: 'MOST IMMEDIATE. Award settled: Murshidabad and the whole of Nadia go to East Bengal, and Khulna stays with West Bengal.',
-      hi: 'MOST IMMEDIATE. फ़ैसला तय: मुर्शिदाबाद और पूरा नदिया पूर्वी बंगाल को, और खुलना पश्चिमी बंगाल के साथ रहेगा।',
+      en: "MOST IMMEDIATE. Award leaked: '…Murshidabad and the whole of Nadia go to East Bengal, and Khulna stays with West Bengal…'",
+      hi: "MOST IMMEDIATE. फ़ैसला लीक: '…मुर्शिदाबाद और पूरा नदिया पूर्वी बंगाल को, और खुलना पश्चिमी बंगाल के साथ…'",
     },
     checks: { en: ['Murshidabad and the whole of Nadia go to East Bengal'], hi: ['मुर्शिदाबाद और पूरा नदिया'] },
     tells: [
