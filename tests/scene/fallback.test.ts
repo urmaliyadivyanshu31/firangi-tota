@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mountFallback } from '../../src/scene/fallback'
 import { ERA_PALETTES } from '../../src/scene/palette'
 import type { EraId } from '../../src/content/types'
+import type { SheetSpec } from '../../src/scene/types'
+import { fake2d as fakeCanvas } from './fake-canvas'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -62,5 +64,54 @@ describe('mountFallback', () => {
   it('has a palette for every era', () => {
     const eras: EraId[] = ['delhi-1857', 'lahore-1929', 'bombay-1942', 'delhi-1947']
     for (const id of eras) expect(ERA_PALETTES[id], id).toBeDefined()
+  })
+})
+
+describe('mountFallback: the message on paper', () => {
+  const sheet = (o: Partial<SheetSpec> = {}): SheetSpec => ({
+    era: 'bombay-1942',
+    channel: 'radio',
+    lang: 'en',
+    from: 'Usha Mehta',
+    to: 'All listeners',
+    dateLine: 'Friday, 30 October 1942',
+    body: 'This is the Congress Radio calling on 42.34 metres from somewhere in India.',
+    checks: ['42.34 metres'],
+    pencil: true,
+    ...o,
+  })
+
+  it('draws the same sheet as the 3D stage, and redraws it in place', async () => {
+    const f = fakeCanvas()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+    vi.stubGlobal('requestAnimationFrame', () => 1)
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    const fb = mountFallback(el, 'bombay-1942')
+    await fb.showMessage(sheet())
+    // typed letters are now and then struck twice, so compare with doubled letters collapsed
+    const words = f.texts.map((t) => t.text).join('').replace(/(.)\1+/g, '$1')
+    expect(words).toContain('CONGRESRADIO')
+    expect(words).toContain('calingon42.34metres')
+    const before = f.texts.length
+    fb.redrawMessage(sheet({ lang: 'hi', body: 'यह कांग्रेस रेडियो है, 42.34 मीटर पर।', checks: ['42.34 मीटर'] }))
+    expect(f.texts.slice(before).map((t) => t.text).join('')).toContain('रेडियो')
+    expect(el.querySelectorAll('canvas')).toHaveLength(1)
+    expect(() => fb.flash('right')).not.toThrow()
+    expect(() => fb.flash('wrong')).not.toThrow()
+    await fb.stamp('tota')
+    expect(f.texts.map((t) => t.text).join('')).toContain('TOTA')
+    fb.dispose()
+    expect(el.querySelector('canvas')).toBeNull()
+    vi.unstubAllGlobals()
+  })
+
+  it('copes without a 2D context', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => null) as unknown as HTMLCanvasElement['getContext'])
+    const fb = mountFallback(document.createElement('div'), 'delhi-1947')
+    await expect(fb.showMessage(sheet())).resolves.toBeUndefined()
+    expect(() => fb.redrawMessage(sheet())).not.toThrow()
+    expect(() => fb.flash('wrong')).not.toThrow()
+    fb.dispose()
   })
 })

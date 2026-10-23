@@ -14,6 +14,7 @@ downloads the scripts it shows.
 | Tiro Devanagari Hindi (Tiro Typeworks) | Hindi text on the papers and receipts | `tiro-devanagari-hindi-400-{latin,devanagari}.woff2` | https://fonts.google.com/specimen/Tiro+Devanagari+Hindi | SIL Open Font License 1.1 |
 | Old Standard TT (Alexey Kryukov) | 1857 English paper, receipt quotes | `old-standard-tt-400-latin.woff2` | https://fonts.google.com/specimen/Old+Standard+TT | SIL Open Font License 1.1 |
 | Special Elite (Astigmatic) | Typewriter text: 1929, 1942 and 1947 papers | `special-elite-400-latin.woff2` | https://fonts.google.com/specimen/Special+Elite | Apache License 2.0 |
+| Kalam (Indian Type Foundry), subset | Handwriting on the 3D papers: the pencil notes, the 1929 notes, signatures | `src/scene/fonts/note-hand.woff2` (Latin plus the Devanagari of the fixed pencil notes; licence beside it) | https://fonts.google.com/specimen/Kalam | SIL Open Font License 1.1 |
 
 Licence texts: OFL 1.1 at https://openfontlicense.org, Apache 2.0 at https://www.apache.org/licenses/LICENSE-2.0.
 

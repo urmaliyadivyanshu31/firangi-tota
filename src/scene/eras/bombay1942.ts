@@ -11,7 +11,7 @@ import { ERA_PALETTES, css, mix } from '../palette'
 import { SPOTS, createBatch, createDesk, createRoomShell, createWarmLight, disposeTree, material } from '../props'
 import { TIER_SETTINGS } from '../quality'
 import { clothTexture, glowTexture, makeNoise, toTexture, woodTexture } from '../textures'
-import type { EraDressing, QualityTier } from '../types'
+import type { DressingHooks, EraDressing, QualityTier } from '../types'
 
 type V3 = [number, number, number]
 type Mat = THREE.Material
@@ -1050,8 +1050,21 @@ const bombay1942: EraDressing = {
         scene.remove(root)
         disposeTree(root) // the lamp's lights, the desk and the room shell included
       },
+      hooks: HOOKS,
     }
   },
+}
+
+const HOOKS: DressingHooks = {
+  // stencilled in cream on the teal wall above the clock, between the wiring batten and the curtain
+  title: { pos: [CLOCK.x + 0.02, CLOCK.y + 0.24, BACK + 0.006], w: 0.34, tone: 'cream' },
+  wideFrame: [
+    [CLOCK.x - 0.2, CLOCK.y + 0.4, BACK],
+    [WIN.right - 0.05, CLOCK.y + 0.4, BACK],
+    [CLOCK.x - 0.2, DADO_Y, BACK],
+  ],
+  // the courier's envelope is slid across from the right
+  entry: [0.8, 0, 0.3],
 }
 
 /** Merges plain geometries that share a material (the glow quads). */

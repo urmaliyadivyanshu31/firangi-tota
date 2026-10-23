@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Immersive day</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b0806; overflow: hidden; }
+      #stage { position: fixed; inset: 0; }
+      /* stand-ins for the HUD the app draws, so the shots keep clear of it */
+      .hud { position: fixed; left: 0; right: 0; pointer-events: none; display: none; }
+      body.hudon .hud { display: block; }
+      /* the app's layout: a two-row top bar and the stamps (narrow); a thin top bar, the case
+         file pinned in the left 366 px and the stamps to its right (wide, 900 px and up) */
+      #hud-top { top: 0; height: 90px; background: linear-gradient(rgba(10, 6, 4, 0.82), rgba(10, 6, 4, 0.55)); border-bottom: 1px solid rgba(255, 220, 160, 0.18); }
+      #hud-bottom { bottom: 0; height: 150px; background: linear-gradient(rgba(10, 6, 4, 0.2), rgba(10, 6, 4, 0.85)); border-top: 1px solid rgba(255, 220, 160, 0.12); }
+      #hud-left { display: none; }
+      @media (min-width: 900px) and (orientation: landscape) {
+        #hud-top { height: 96px; }
+        #hud-bottom { height: 128px; left: 366px; }
+        body.hudon #hud-left { display: block; top: 96px; bottom: 18px; left: 18px; right: auto; width: 330px; border-radius: 4px;
+          background: rgba(214, 190, 140, 0.16); border: 1px solid rgba(255, 220, 160, 0.2); }
+      }
+      #bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px;
+        justify-content: center; font: 13px system-ui, sans-serif; z-index: 5; }
+      #bar button { min-height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid #6b4a2a; background: #2a1a10; color: #f3dcb6; }
+      body.shot #bar { display: none; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only: a full day per era (title, arrival, lean-in, stamp, flash) with sample sheets. -->
+    <div id="stage"></div>
+    <div class="hud" id="hud-top"></div>
+    <div class="hud" id="hud-bottom"></div>
+    <div class="hud" id="hud-left"></div>
+    <div id="bar">
+      <button data-act="day">Play day</button>
+      <button data-act="establish">Wide</button>
+      <button data-act="title">Title</button>
+      <button data-act="message">Message</button>
+      <button data-act="asli">ASLI</button>
+      <button data-act="tota">TOTA</button>
+      <button data-act="right">Right</button>
+      <button data-act="wrong">Wrong</button>
+      <button data-act="lang">EN/HI</button>
+      <button data-act="skip">Skip</button>
+    </div>
+    <script type="module" src="./immersive.ts"></script>
+  </body>
+</html>

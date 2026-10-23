@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sheet designs</title>
+    <style>
+      html, body { margin: 0; background: #1b1410; color: #f3dcb6; font: 13px system-ui, sans-serif; }
+      #grid { display: flex; flex-wrap: wrap; gap: 18px; padding: 16px; align-items: flex-start; }
+      figure { margin: 0; }
+      figcaption { padding: 4px 0; opacity: 0.7; }
+      canvas { display: block; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only: every paper design drawn by drawSheet at phone size (359 CSS px wide). -->
+    <div id="grid"></div>
+    <script type="module" src="./sheets.ts"></script>
+  </body>
+</html>
