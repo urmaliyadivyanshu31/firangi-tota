@@ -247,7 +247,7 @@ a { color: inherit; }
 .doc { display: flex; flex-direction: column; width: 100%; max-height: 100%; min-height: 0; animation: doc-in .35s var(--ease-out) both; }
 @keyframes doc-in { from { opacity: .4; transform: translateY(6px) rotate(-.3deg); } to { opacity: 1; transform: none; } }
 .doc__body {
-  position: relative; display: flex; flex-direction: column; gap: 9px; min-height: 0; overflow-y: auto;
+  position: relative; z-index: 1; display: flex; flex-direction: column; gap: 9px; min-height: 0; overflow-y: auto;
   padding: 26px 26px 6px; scrollbar-width: thin; scrollbar-color: rgba(107, 85, 65, .35) transparent;
 }
 .doc .home__title { align-self: center; width: min(300px, 74vw); }
@@ -281,7 +281,7 @@ a { color: inherit; }
 
 .doc__mark { position: absolute; z-index: 1; pointer-events: none; }
 /* the petition's seal sits at its foot, beside the credits line */
-.doc__mark--seal { bottom: 22px; left: 24px; width: 42px; height: 42px; transform: rotate(-10deg); filter: drop-shadow(0 1px 1px rgba(60, 10, 5, .4)); }
+.doc__mark--seal { z-index: 0; bottom: 22px; left: 24px; width: 42px; height: 42px; transform: rotate(-10deg); filter: drop-shadow(0 1px 1px rgba(60, 10, 5, .4)); }
 .doc__mark--seal svg { display: block; width: 100%; height: 100%; }
 .doc__mark--banner {
   top: 18px; left: 18px; right: 18px; padding: 4px 0; text-align: center;
@@ -387,7 +387,7 @@ a { color: inherit; }
 @media (hover: hover) and (pointer: fine) { .mode__key { display: block; } }
 .btn--begin { margin-top: 4px; }
 .doc__credits { text-align: center; padding: 0 0 8px; }
-.doc__creditsbtn { min-height: 44px; padding: 0 8px; font-size: 12.5px; color: var(--ink-soft); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+.doc__creditsbtn { min-height: 48px; padding: 0 8px; font-size: 12.5px; color: var(--ink-soft); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
 
 /* ---------- The day: top bar ---------- */
 
@@ -411,9 +411,9 @@ a { color: inherit; }
 .hud__row--clock { min-height: 30px; gap: 8px; padding: 0 8px 2px; }
 .hud__btn { position: relative; flex-shrink: 0; display: grid; place-items: center; min-width: 48px; min-height: 48px; border-radius: 10px; color: var(--cream); }
 .hud__btn:active { background: rgba(255, 255, 255, .08); }
-.hud__where { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15; padding-left: 4px; }
-.hud__title { font: 400 17px/1.2 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hud__place { font-size: 12.5px; color: var(--cream-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud__where { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; padding-left: 4px; }
+.hud__title { font: 400 17px/1.3 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud__place { font-size: 12.5px; line-height: 1.4; color: var(--cream-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hud__tools { display: flex; align-items: center; }
 .hud__day { display: flex; align-items: center; gap: 5px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--cream-dim); }
 :lang(hi) .hud__day { letter-spacing: 0; font-size: 14px; text-transform: none; }
@@ -576,7 +576,7 @@ a { color: inherit; }
 [data-layout='wide'] .day__controls { left: calc(var(--dossier-w) + 36px); padding-left: 0; padding-right: max(18px, env(safe-area-inset-right)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 .day__skip {
   align-self: flex-end; display: none; align-items: center; gap: 2px;
-  min-height: 44px; padding: 0 10px 0 16px; border-radius: 22px;
+  min-height: 48px; padding: 0 10px 0 16px; border-radius: 24px;
   font-size: 14px; font-weight: var(--semi); color: var(--cream);
   background: rgba(24, 16, 10, .6); border: 1px solid rgba(246, 234, 208, .22);
 }
@@ -625,7 +625,7 @@ a { color: inherit; }
 .listen-group.has-picker .listen { border-radius: 24px 0 0 24px; border-right-width: .75px; padding-right: 12px; }
 .voice-credit { position: absolute; right: 0; bottom: calc(100% + 4px); white-space: nowrap; font-size: 11.5px; color: var(--cream-dim); text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
 .listen__more {
-  display: grid; place-items: center; min-width: 40px; min-height: 48px; padding: 0 8px 0 4px; border-radius: 0 24px 24px 0;
+  display: grid; place-items: center; min-width: 48px; min-height: 48px; padding: 0 8px 0 4px; border-radius: 0 24px 24px 0;
   color: var(--saffron-hi); background: rgba(24, 16, 10, .62); border: 1.5px solid rgba(248, 189, 90, .7); border-left-width: .75px;
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
@@ -727,21 +727,29 @@ a { color: inherit; }
 /* ---------- The day: the verdict on the paper, citations ---------- */
 
 .fold { margin-top: 12px; font-size: 14px; color: var(--ink-soft); text-align: left; }
-.fold__head { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px; cursor: pointer; list-style: none; color: var(--maroon); text-decoration: underline; text-underline-offset: 3px; }
+.fold__head { display: inline-flex; align-items: center; gap: 4px; min-height: 48px; padding: 0 8px; cursor: pointer; list-style: none; color: var(--maroon); text-decoration: underline; text-underline-offset: 3px; }
 .fold__head::-webkit-details-marker { display: none; }
 .fold[open] .fold__head { text-decoration: none; }
 .kind { margin-bottom: 8px; font-style: italic; color: var(--ink-soft); }
 .sources { display: flex; flex-direction: column; gap: 4px; padding-left: 0; }
 .source { font-size: 13.5px; line-height: 1.4; }
-.source a { color: var(--indigo); }
+/* each citation is a whole line to tap, a fingertip tall */
+.source a { display: block; min-height: 48px; padding: 12px 0; color: var(--indigo); }
 
 /* the verdict on the 3D paper's back: here only the buttons below it, a hit area over its source line, and the citations */
 .paper-result { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 .paper-result > * { pointer-events: auto; }
 .source-hit { position: fixed; z-index: 6; border-radius: 4px; background: transparent; }
 .source-hit:hover { background: rgba(232, 150, 46, .12); }
-.source-pop { position: fixed; z-index: 7; left: 50%; bottom: calc(160px + env(safe-area-inset-bottom)); width: min(92vw, 480px); max-height: 46vh; transform: translateX(-50%); }
-.source-pop .pcard__scroll { padding: 26px 28px; font-size: 14px; }
+.pop-scrim { position: fixed; inset: 0; z-index: 7; background: rgba(var(--soot), .55); animation: fade-in .2s ease-out both; }
+@keyframes fade-in { from { opacity: 0; } }
+.source-pop, .receipts-pop {
+  position: fixed; z-index: 8; left: 50%; top: 50%;
+  width: min(calc(100vw - 2 * var(--gutter)), 520px); max-height: min(78vh, 640px);
+  transform: translate(-50%, -50%); animation: pop-in .28s var(--ease-out) both;
+}
+@keyframes pop-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+.source-pop .pcard__scroll { padding: 30px 28px 6px; font-size: 14px; }
 .paper-result__actions {
   position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 10px;
   padding: 22px 44px max(14px, env(safe-area-inset-bottom));
@@ -751,7 +759,6 @@ a { color: inherit; }
 [data-layout='wide'] .paper-result__actions > * { width: min(100%, 520px); }
 /* the receipts open over the scene, never pushing the buttons up over the paper */
 .link--receipts { align-self: center; color: var(--cream); text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
-.receipts-pop { position: fixed; z-index: 8; left: 50%; top: 50%; width: min(92vw, 520px); max-height: 74vh; transform: translate(-50%, -50%); animation: card-in .3s var(--ease-out) both; }
 .receipts-pop .pcard__scroll { padding: 30px 28px 6px; }
 
 /* ---------- Receipts: clippings behind a tap at the chapter's end ---------- */
@@ -836,7 +843,7 @@ a { color: inherit; }
 
 /* ---------- Big screens: the papers grow to fill the frame ---------- */
 
-@media (min-width: 1200px) {
+@media (min-width: 1200px) and (min-height: 860px) {
   .screen--card .stack { max-width: 720px; }
   .screen--main .stack { max-width: 740px; }
   .screen--main { padding-top: max(84px, env(safe-area-inset-top)); }
@@ -872,6 +879,102 @@ a { color: inherit; }
   .doc__body { gap: 7px; padding-top: 20px; }
   .chapter { aspect-ratio: auto; min-height: 76px; }
 }
+
+/* ---------- Small phones: the top bar keeps the chapter's name whole ---------- */
+
+@media (max-width: 400px) {
+  .hud { padding-left: 3px; padding-right: 3px; }
+  .hud__row--where { gap: 4px; }
+  .hud__title { font-size: 15px; }
+  .plaque--horn { width: 50px; }
+  .langswitch { padding: 0 5px; }
+  .langswitch__opt { padding: 0 6px; }
+  .langswitch__bar { margin: 10px 2px; }
+}
+
+/* the chapter tiles: wide enough to lie landscape from 600 px; on short screens the art keeps clear of the year */
+@media (min-width: 600px) {
+  .chapter { aspect-ratio: 5 / 4; }
+  .art--dial { left: 22%; right: 22%; top: 8%; }
+}
+@media (max-height: 760px) {
+  .art--seal svg { width: 20px; height: 20px; top: 6px; right: 5px; }
+  .art__glint { width: 26px; height: 26px; top: 3px; right: 2px; }
+  .art--dial { left: 24%; right: 24%; top: 6%; }
+  .art__press { top: 12%; }
+  .art--strip { top: 9%; }
+}
+
+/* ---------- A phone on its side: the paper gets the full height ---------- */
+
+/* The main page: two columns on the paper, the title and chapters left, the rest right. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .screen--main { padding-top: max(62px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .screen--main .stack { max-width: 900px; }
+  .doc__body {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: auto auto auto 1fr;
+    column-gap: 26px; row-gap: 8px; align-content: start; padding: 18px 26px 4px;
+  }
+  .doc--note .doc__body, .doc--telegram .doc__body { padding-top: 46px; }
+  .doc--radio .doc__body { padding-left: 50px; }
+  .doc .home__title { grid-column: 1; grid-row: 1; width: min(230px, 30vw); }
+  .doc__hook { grid-column: 1; grid-row: 2; font-size: 15px; }
+  .tabs-era { grid-column: 1; grid-row: 3; margin: 2px 0 0; }
+  .doc__credits { grid-column: 1; grid-row: 4; align-self: end; padding: 0; }
+  .doc__era { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; gap: 6px; }
+  .doc__q { margin-top: 0; font-size: 17px; }
+  .chapter { aspect-ratio: auto; min-height: 70px; padding: 6px 7px 7px; }
+  .chapter__year { font-size: 19px; }
+  .mode { min-height: 64px; }
+  .doc__mark--seal { width: 34px; height: 34px; bottom: 16px; left: 18px; }
+}
+
+/* The day: the top bar is one thin row; the case file and ASLI stand left of the paper, the
+   rulebook and TOTA right of it (the keys agree: ← ASLI, → TOTA); the verdict's buttons go right. */
+[data-short] { --side-w: clamp(150px, 21vw, 200px); }
+[data-short] .hud { display: flex; align-items: center; gap: 8px; padding: 2px 6px 4px; top: max(6px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); }
+[data-short] .hud__row { display: contents; }
+[data-short] .hud__where { flex: 0 1 auto; flex-direction: row; align-items: baseline; gap: 8px; max-width: 28%; }
+[data-short] .hud__place { display: none; }
+[data-short] .hud__tools { order: 9; }
+[data-short] .hud__daylabel { display: none; }
+[data-short] .day__controls {
+  top: auto; display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr) var(--side-w);
+  grid-template-areas: '. . lis' 'ltab . rtab' 'asli . tota'; align-items: end; row-gap: 8px; column-gap: 0;
+  padding: 0 max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  background: none;
+}
+[data-short] .day__controls .tabs, [data-short] .day__controls .stamps { display: contents; }
+[data-short] .tab--file { grid-area: ltab; }
+[data-short] .tab--rules { grid-area: rtab; }
+[data-short] .listen-group { grid-area: lis; justify-self: stretch; }
+[data-short] .listen-group .listen { flex: 1; justify-content: center; }
+[data-short] .stamp--asli { grid-area: asli; }
+[data-short] .stamp--tota { grid-area: tota; }
+[data-short] .stamp { min-height: 64px; gap: 6px; padding: 6px 8px 6px 6px; }
+[data-short] .stamp__handle { width: 22px; height: 32px; }
+[data-short] .stamp__names { flex-direction: column; align-items: center; gap: 0; }
+[data-short] .stamp__dev { font-size: 22px; line-height: 1.05; }
+[data-short] .stamp__lat { font-size: 11px; }
+[data-short] .day__skip { position: fixed; z-index: 4; top: calc(max(6px, env(safe-area-inset-top)) + 64px); right: max(10px, env(safe-area-inset-right)); }
+/* the case file and rulebook slide in from the left, over the paper */
+[data-short] .sheet {
+  top: max(8px, env(safe-area-inset-top)); bottom: max(8px, env(safe-area-inset-bottom)); right: auto;
+  width: min(400px, 56vw); max-height: none; padding-bottom: 0; border-radius: 6px;
+  transform: translateX(-108%);
+}
+[data-short] .sheet__head { padding-top: 12px; border-radius: 6px 6px 0 0; }
+[data-short] .sheet__grab { display: none; }
+[data-short] .clip { top: -5px; }
+[data-short] .paper-result__actions {
+  left: auto; right: max(10px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom));
+  width: var(--side-w); padding: 0; gap: 8px; background: none;
+}
+[data-short] .paper-result__actions .row2 { grid-template-columns: 1fr; gap: 8px; }
+[data-short] .paper-result__actions .btn { min-height: 50px; font-size: 17px; }
+[data-short] .paper-result__actions .btn--primary { padding-left: 50px; padding-right: 10px; font-size: 18px; }
+[data-short] .paper-result__actions .btn--primary::before { left: 8px; width: 34px; height: 34px; margin-top: -17px; }
+[data-short] .link--receipts { align-self: stretch; }
 
 /* ---------- Reduced motion: everything holds still, nothing is lost ---------- */
 

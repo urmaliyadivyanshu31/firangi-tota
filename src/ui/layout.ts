@@ -1,34 +1,49 @@
 // Landscape (≥ 900 px wide) pins the case file and rulebook on the left; anything narrower keeps
-// them in sheets behind two tabs. JS owns the switch so screens can move focus and ARIA with it.
+// them in sheets behind two tabs. A short landscape screen (a phone on its side) is never "wide":
+// it has no height for a pinned dossier, so it keeps the tabs and moves them and the stamps to the
+// sides, leaving the paper the full height. JS owns the switch so screens can move focus and ARIA.
 
 export const WIDE_PX = 900
-const QUERY = `(min-width: ${WIDE_PX}px)`
+/** A phone on its side: too short for the top bar, the paper and the stamps stacked. */
+export const SHORT_MAX_H = 500
+const WIDE_QUERY = `(min-width: ${WIDE_PX}px)`
+const SHORT_QUERY = `(orientation: landscape) and (max-height: ${SHORT_MAX_H}px)`
 
-function query(): MediaQueryList | null {
+function query(q: string): MediaQueryList | null {
   try {
-    return typeof matchMedia === 'function' ? matchMedia(QUERY) : null
+    return typeof matchMedia === 'function' ? matchMedia(q) : null
   } catch {
     return null
   }
 }
 
-export function isWide(): boolean {
-  const q = query()
-  return q ? q.matches : (typeof innerWidth === 'number' ? innerWidth : 0) >= WIDE_PX
+export function isShort(): boolean {
+  const q = query(SHORT_QUERY)
+  if (q) return q.matches
+  const w = typeof innerWidth === 'number' ? innerWidth : 0
+  const h = typeof innerHeight === 'number' ? innerHeight : 0
+  return w > h && h > 0 && h <= SHORT_MAX_H
 }
 
-/** Calls `cb` when the layout flips. Returns an unsubscribe. */
+export function isWide(): boolean {
+  const q = query(WIDE_QUERY)
+  const wide = q ? q.matches : (typeof innerWidth === 'number' ? innerWidth : 0) >= WIDE_PX
+  return wide && !isShort()
+}
+
+/** Calls `cb` when the layout flips (wide, or short). Returns an unsubscribe. */
 export function onLayoutChange(cb: (wide: boolean) => void): () => void {
-  const q = query()
-  if (q && typeof q.addEventListener === 'function') {
-    const fn = () => cb(q.matches)
-    q.addEventListener('change', fn)
-    return () => q.removeEventListener('change', fn)
-  }
-  let last = isWide()
+  let last = `${isWide()}|${isShort()}`
   const fn = () => {
-    const now = isWide()
-    if (now !== last) cb((last = now))
+    const now = `${isWide()}|${isShort()}`
+    if (now === last) return
+    last = now
+    cb(isWide())
+  }
+  const qs = [query(WIDE_QUERY), query(SHORT_QUERY)].filter((q): q is MediaQueryList => !!q && typeof q.addEventListener === 'function')
+  if (qs.length === 2) {
+    for (const q of qs) q.addEventListener('change', fn)
+    return () => { for (const q of qs) q.removeEventListener('change', fn) }
   }
   window.addEventListener('resize', fn)
   return () => window.removeEventListener('resize', fn)

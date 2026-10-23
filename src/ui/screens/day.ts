@@ -5,7 +5,7 @@ import type { VoiceState } from '../../audio/voice'
 import type { ScreenRect, SheetSpec } from '../../scene/index'
 import { announce, h, mount, svg } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
-import { isWide, onLayoutChange } from '../layout'
+import { isShort, isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
 import { relatedFacts } from '../pencil'
@@ -289,6 +289,9 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
 
   function applyLayout(): void {
     screen.dataset.layout = wide ? 'wide' : 'narrow'
+    // a phone on its side: the tabs and stamps go to the sides of the paper (styles.css)
+    if (!wide && isShort()) screen.setAttribute('data-short', '')
+    else screen.removeAttribute('data-short')
     for (const k of ['file', 'rules'] as Tab[]) {
       const shown = wide || open === k
       panels[k].classList.toggle('is-open', !wide && open === k)
@@ -391,14 +394,34 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   // ---- the result is on the 3D paper's back: here only the buttons, the source and a mirror
   let nextBtn: HTMLButtonElement | null = null
   let result: HTMLElement | null = null
+  /** Closes the source and receipts cards; true when one was open. */
+  let closePops = (): boolean => false
   if (revealed) {
     const r: PaperReveal = p.onPaper ?? { mirror: '', sourceRect: null, sources: [] }
+    // The citations and the receipts open as cards over the scene, on a shade that closes them when
+    // tapped; each has its own close slip (a phone has no Escape key).
+    const closeSlip = (action: string) =>
+      h('footer', { class: 'pcard__foot' },
+        h('button', { class: 'btn btn--chit', type: 'button', 'data-action': action, onclick: () => closePops() }, t('closePanel', lang)))
     const pop = h('div', { class: 'source-pop pcard', role: 'dialog', 'aria-label': t('source', lang), id: 'ft-source-pop' },
-      h('div', { class: 'pcard__scroll' }, r.kind ? h('p', { class: 'kind' }, r.kind) : null, sourceList(r.sources, era)))
+      h('div', { class: 'pcard__scroll' }, r.kind ? h('p', { class: 'kind' }, r.kind) : null, sourceList(r.sources, era)),
+      closeSlip('close-source'))
     pop.hidden = true
+    const popScrim = h('div', { class: 'pop-scrim', 'aria-hidden': 'true', onclick: () => closePops() })
+    popScrim.hidden = true
+    let opener: HTMLElement | null = null // focus goes back here when the card closes
+    const showPop = (el: HTMLElement, show: boolean, from: HTMLElement) => {
+      closePops()
+      el.hidden = !show
+      popScrim.hidden = !show
+      if (!show) return
+      opener = from
+      el.querySelector<HTMLElement>('.pcard__foot button')?.focus({ preventScroll: true })
+    }
     const toggleSource = () => {
-      pop.hidden = !pop.hidden
-      srcBtn.setAttribute('aria-expanded', String(!pop.hidden))
+      const show = Boolean(pop.hidden)
+      showPop(pop, show, srcBtn)
+      srcBtn.setAttribute('aria-expanded', String(show))
     }
     const label = `${t('source', lang)}: ${r.sources[0] ? formatSource(r.sources[0], era) : ''}`
     const rect = r.sourceRect
@@ -416,12 +439,19 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
             h('p', { class: 'receipt__who' }, rc.who[lang]),
             h('p', { class: 'receipt__joke' }, rc.joke[lang]),
             h('p', { class: 'receipt__source' }, formatSource(rc.source, era)))))),
-      h('footer', { class: 'pcard__foot' },
-        h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'close-receipts', onclick: () => {
-          receiptsPop.hidden = true
-          result?.querySelector('[data-action="receipts"]')?.setAttribute('aria-expanded', 'false')
-        } }, t('closePanel', lang))))
+      closeSlip('close-receipts'))
     receiptsPop.hidden = true
+    closePops = () => {
+      const wasOpen = !pop.hidden || !receiptsPop.hidden
+      const focusInside = pop.contains(document.activeElement) || receiptsPop.contains(document.activeElement)
+      pop.hidden = true
+      receiptsPop.hidden = true
+      popScrim.hidden = true
+      srcBtn.setAttribute('aria-expanded', 'false')
+      result?.querySelector('[data-action="receipts"]')?.setAttribute('aria-expanded', 'false')
+      if (wasOpen && focusInside) opener?.focus({ preventScroll: true })
+      return wasOpen
+    }
     const again = on.again
     const home = on.home
     const share = on.share
@@ -434,8 +464,8 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
           end.receipts.length
             ? h('button', { class: 'link link--receipts', type: 'button', 'data-action': 'receipts', 'aria-controls': 'ft-receipts-pop', 'aria-expanded': 'false',
                 onclick: (e: Event) => {
-                  const show = receiptsPop.hidden
-                  receiptsPop.hidden = !show
+                  const show = Boolean(receiptsPop.hidden)
+                  showPop(receiptsPop, show, e.currentTarget as HTMLElement)
                   ;(e.currentTarget as HTMLElement).setAttribute('aria-expanded', String(show))
                 } }, t('receipts', lang))
             : null,
@@ -445,7 +475,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     const under = r.paperRect && isWide() ? `left:${Math.round(r.paperRect.x)}px;width:${Math.round(r.paperRect.w)}px;right:auto` : ''
     result = h('div', { class: 'paper-result' },
       h('p', { class: 'sr-only paper-result__mirror', 'aria-live': 'polite' }, r.mirror),
-      rect ? srcBtn : null, pop, receiptsPop,
+      rect ? srcBtn : null, popScrim, pop, receiptsPop,
       h('footer', { class: 'paper-result__actions', ...(under ? { style: under } : {}) }, rect ? null : srcBtn, actions))
   }
 
@@ -472,8 +502,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     root, screen, on, props: { ...p },
     close: () => {
       if (picker?.classList.contains('is-open')) return setPicker(false), true
-      const popped = screen.querySelector<HTMLElement>('.receipts-pop:not([hidden]), .source-pop:not([hidden])')
-      if (popped) return (popped.hidden = true), true
+      if (closePops()) return true
       return !wide && open ? (setOpen(null), true) : false
     },
   }
