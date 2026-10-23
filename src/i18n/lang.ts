@@ -3,9 +3,12 @@ import { store } from '../game/storage'
 
 const KEY = 'lang'
 
+/** First visit: Hindi when any of the browser's languages is Hindi, else English. */
 function guess(): Lang {
   try {
-    return typeof navigator !== 'undefined' && /^hi\b/i.test(navigator.language) ? 'hi' : 'en'
+    if (typeof navigator === 'undefined') return 'en'
+    const list = navigator.languages?.length ? navigator.languages : [navigator.language]
+    return list.some((l) => /^hi\b/i.test(l ?? '')) ? 'hi' : 'en'
   } catch {
     return 'en'
   }
@@ -17,7 +20,7 @@ function valid(v: unknown): v is Lang {
 
 let current: Lang | null = null
 
-/** Has the player picked a language before? (False shows the language screen.) */
+/** Has the player picked a language before? */
 export function hasLang(): boolean {
   return valid(store.get<unknown>(KEY, null))
 }
@@ -28,6 +31,11 @@ export function getLang(): Lang {
   const saved = store.get<unknown>(KEY, null)
   current = valid(saved) ? saved : guess()
   return current
+}
+
+/** Forget the remembered pick for this page (a fresh first visit; tests use it). */
+export function forgetLang(): void {
+  current = null
 }
 
 /** Switch language, remember it (if storage works) and update `<html lang>`. */
