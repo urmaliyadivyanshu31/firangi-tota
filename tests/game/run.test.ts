@@ -65,4 +65,71 @@ describe('buildRun', () => {
     const messages = Array.from({ length: 9 }, (_, i) => msg(`m${i}`, 1, i % 2 === 0))
     expect(() => buildRun({ ...era, messages }, 'medium', mulberry32(1))).toThrow(/delhi-1857/)
   })
+
+  describe('same-day event pairs', () => {
+    const twin: Era = {
+      ...era,
+      messages: [
+        ...era.messages.filter((m) => m.onDay === undefined),
+        msg('ev-r', 2, true, { onDay: 5, pair: 'ev' }),
+        msg('ev-f', 2, false, { onDay: 5, pair: 'ev' }),
+      ],
+    }
+    it('picks either twin, never both, exactly one on day 5', () => {
+      const seen = new Set<string>()
+      for (let seed = 1; seed <= 200; seed++) {
+        const run = buildRun(twin, 'medium', mulberry32(seed))
+        const ev = run.filter((m) => m.id.startsWith('ev-'))
+        expect(ev).toHaveLength(1)
+        expect(run[4]!.id).toBe(ev[0]!.id)
+        seen.add(ev[0]!.id)
+      }
+      expect(seen).toEqual(new Set(['ev-r', 'ev-f']))
+    })
+    it('is deterministic for a seed', () => {
+      for (let seed = 1; seed <= 20; seed++) {
+        const a = buildRun(twin, 'hard', mulberry32(seed)).map((m) => m.id)
+        expect(buildRun(twin, 'hard', mulberry32(seed)).map((m) => m.id)).toEqual(a)
+      }
+    })
+  })
+
+  it('never places a rule-gated forgery before its rule arrives', () => {
+    const gated = msg('gated', 1, false, { tells: [{ kind: 'knowledge', explain: { en: 'x', hi: 'x' }, ruleId: 'r5' }] })
+    const g: Era = {
+      ...era,
+      rules: [{ id: 'r5', text: { en: 'x', hi: 'x' }, arrivesOnDay: 5 }],
+      messages: [gated, ...era.messages],
+    }
+    let seen = false
+    for (let seed = 1; seed <= 200; seed++) {
+      const run = buildRun(g, 'hard', mulberry32(seed))
+      const i = run.findIndex((m) => m.id === 'gated')
+      if (i >= 0) {
+        seen = true
+        expect(i + 1).toBeGreaterThanOrEqual(5)
+      }
+    }
+    expect(seen).toBe(true)
+  })
+
+  it('gates both halves of a pair when only the forged half has a rule', () => {
+    const forged = msg('gp-f', 1, false, { pair: 'gp', tells: [{ kind: 'knowledge', explain: { en: 'x', hi: 'x' }, ruleId: 'r5' }] })
+    const real = msg('gp-r', 1, true, { pair: 'gp' })
+    const g: Era = {
+      ...era,
+      rules: [{ id: 'r5', text: { en: 'x', hi: 'x' }, arrivesOnDay: 5 }],
+      messages: [forged, real, ...era.messages],
+    }
+    let seen = false
+    for (let seed = 1; seed <= 200; seed++) {
+      const run = buildRun(g, 'hard', mulberry32(seed))
+      const i = run.findIndex((m) => m.pair === 'gp')
+      if (i >= 0) {
+        seen = true
+        expect(i + 1).toBeGreaterThanOrEqual(5)
+      }
+    }
+    expect(seen).toBe(true)
+  })
 })

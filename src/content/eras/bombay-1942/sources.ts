@@ -1,0 +1,125 @@
+import type { Source } from '../../types'
+
+// Every source the Bombay 1942 content uses. All are cited in docs/research/quit-india-1942.md.
+export const sources: Source[] = [
+  {
+    id: 'usha-mehta-1969',
+    author: 'Usha Mehta, interviewed by Uma Shanker',
+    title: 'Oral history interview no. 107 (recorded 30 Oct 1969), Centre of South Asian Studies, Cambridge',
+    year: '1969',
+    url: 'http://media.s-asian.cam.ac.uk/pdf/107.pdf',
+  },
+  {
+    id: 'abbas-ccas',
+    author: 'K. A. Abbas',
+    title: 'Oral history interview no. 123b, Centre of South Asian Studies, Cambridge',
+    year: 'n.d.',
+    url: 'http://media.s-asian.cam.ac.uk/pdf/123b.pdf',
+  },
+  {
+    id: 'huacuja-2023',
+    author: 'Isabel Huacuja Alonso',
+    title:
+      "Broadcasting the '(anti)colonial sublime': Radio SEAC, Congress Radio, and the Second World War in South Asia, Modern Asian Studies 57(5), pp. 1615–49",
+    year: '2023',
+    url: 'https://doi.org/10.1017/S0026749X2200049X',
+  },
+  {
+    id: 'chatterjee-1989',
+    author: 'Gautam Chatterjee',
+    title:
+      "Quit India Movement and 'illegal' Congress Radio, Mainstream, 12 Aug 1989 (from Sengupta and Chatterjee, Secret Congress Broadcasts and Storming Railway Tracks During Quit India Movement, 1988)",
+    year: '1989',
+    url: 'http://www.ibiblio.org/gautam/GC_ByLines/Quit%20India%20Movement.pdf',
+  },
+  {
+    id: 'thakkar-2021',
+    author: 'Usha Thakkar',
+    title: 'Congress Radio: Usha Mehta and the Underground Radio Station of 1942 (Penguin Viking), excerpt in Scroll',
+    year: '2021',
+    url: 'https://scroll.in/article/1004051/',
+  },
+  {
+    id: 'nehru-centre-2021',
+    author: 'Nehru Centre, Mumbai',
+    title: 'Newsletter, November 2021: "Freedom Movement: Congress Radio" (based on Thakkar)',
+    year: '2021',
+    url: 'https://www.nehrucentremumbai.in/wp-content/uploads/2023/08/November-2021-for-web.pdf',
+  },
+  {
+    id: 'bipan-chandra-1989',
+    author: 'Bipan Chandra, Mridula Mukherjee, Aditya Mukherjee, K. N. Panikkar, Sucheta Mahajan',
+    title: "India's Struggle for Independence (Penguin)",
+    year: '1989',
+    url: 'https://archive.org/details/indias-struggle-for-independence_202106',
+  },
+  {
+    id: 'top-ii-1971',
+    author: 'N. Mansergh (ed.)',
+    title: 'The Transfer of Power 1942–7, vol. II, "Quit India" (HMSO)',
+    year: '1971',
+    url: 'https://archive.org/details/transferofpowervol2',
+  },
+  {
+    id: 'goi-1943',
+    author: 'Government of India',
+    title: 'Congress Responsibility for the Disturbances 1942–43',
+    year: '1943',
+    url: 'https://archive.org/details/in.ernet.dli.2015.35918',
+  },
+  {
+    id: 'iar-1942',
+    author: 'N. N. Mitra (ed.)',
+    title: 'The Indian Annual Register 1942, vol. II (July–December)',
+    year: '1942',
+    url: 'https://archive.org/details/in.ernet.dli.2015.45418',
+  },
+  {
+    id: 'rebel-india-1946',
+    author: 'B. Mitra and P. Chakraborty (eds)',
+    title: 'Rebel India (Calcutta)',
+    year: '1946',
+    url: 'https://archive.org/details/dli.bengal.10689.12706',
+  },
+  {
+    id: 'samanta-1946',
+    author: 'S. C. Samanta et al.',
+    title: "August Revolution and Two Years' National Govt in Midnapore",
+    year: '1946',
+    url: 'https://archive.org/details/in.ernet.dli.2015.505456',
+  },
+  {
+    id: 'gandhi-1942',
+    author: 'M. K. Gandhi',
+    title: 'Speech at the AICC, Bombay, 8 August 1942 (CWMG text)',
+    year: '1942',
+    url: 'https://www.mkgandhi.org/speeches/qui.htm',
+  },
+  {
+    id: 'cpi-open-letter-1942',
+    author: 'Communist Party of India',
+    title: 'An Open Letter to the Working Committee from the Indian Communists (reprinted in P. C. Joshi 1945, App. I)',
+    year: '1942',
+    url: 'https://www.marxists.org/subject/india/cpi/open-letter.pdf',
+  },
+  {
+    id: 'cpi-resolution-1942',
+    author: 'Communist Party of India, Central Committee',
+    title: "Solve India's National Crisis Through National Unity! (resolution, September 1942)",
+    year: '1942',
+    url: 'https://www.marxists.org/subject/india/cpi/solve-national-crisis.pdf',
+  },
+  {
+    id: 'savarkar-1967',
+    author: 'V. D. Savarkar',
+    title: 'Historic Statements (statement of 8 April 1942)',
+    year: '1967',
+    url: 'https://archive.org/details/historic_statements_by_savarkar.v001',
+  },
+  {
+    id: 'calendar-1942',
+    author: 'Computed',
+    title: 'Gregorian calendar for 1942 (weekday of each date)',
+    year: '1942',
+  },
+]

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { fillTemplate } from '../../src/game/dates'
 import { dayDate } from '../../src/game/dates'
+import { pencilOn } from '../../src/game/config'
 import { fixtureEra } from './fixture'
 
 describe('fillTemplate', () => {
@@ -25,5 +26,14 @@ describe('dayDate', () => {
     const era = fixtureEra()
     expect(dayDate(era, 1)).toBe(era.windowStart)
     expect(dayDate(era, 14)).toBe('1857-05-23')
+  })
+})
+
+describe('pencilOn', () => {
+  it('follows the difficulty rule', () => {
+    expect(pencilOn('easy', 1) && pencilOn('easy', 14)).toBe(true)
+    expect([1, 2, 3].every((d) => pencilOn('medium', d))).toBe(true)
+    expect(pencilOn('medium', 4)).toBe(false)
+    expect([1, 7, 14].some((d) => pencilOn('hard', d))).toBe(false)
   })
 })

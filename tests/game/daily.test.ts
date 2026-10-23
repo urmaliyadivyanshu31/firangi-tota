@@ -30,6 +30,23 @@ describe('dailyFrom', () => {
   })
 })
 
+describe('dailyFrom balance and order', () => {
+  it('has at least 2 genuine and 2 forged over 60 consecutive dates', () => {
+    for (let i = 0; i < 60; i++) {
+      const d = dailyFrom(Date.UTC(2026, 9, 24 + i, 6), pool)
+      expect(d.messages.filter((m) => m.real).length).toBeGreaterThanOrEqual(2)
+      expect(d.messages.filter((m) => !m.real).length).toBeGreaterThanOrEqual(2)
+    }
+  })
+  it('does not depend on the order eras are passed in', () => {
+    const reversed = [...pool].reverse()
+    for (let i = 0; i < 8; i++) {
+      const t = Date.UTC(2026, 9, 24 + i, 6)
+      expect(dailyFrom(t, reversed)).toEqual(dailyFrom(t, pool))
+    }
+  })
+})
+
 describe('shareText', () => {
   it('formats the result grid', () => {
     expect(shareText({ daily: 12, eraTitle: 'Dilli 1857', results: [true, true, false, true, true] })).toBe(

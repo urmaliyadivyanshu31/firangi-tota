@@ -10,7 +10,10 @@ export interface Source { id: string; author: string; title: string; year: strin
 export interface SourceRef { id: string; loc?: string }            // loc: page, section or URL anchor
 export interface Fact { id: string; label: L10n; value: L10n; sources: SourceRef[]; hardHidden?: boolean }
 export interface Rule { id: string; text: L10n; arrivesOnDay: number } // 1-based day index
-export interface Tell { kind: TellKind; explain: L10n; factId?: string; sources?: SourceRef[] }
+export interface Tell {
+  kind: TellKind; explain: L10n; factId?: string; sources?: SourceRef[]
+  ruleId?: string                                  // the rulebook rule that lets a player catch this slip
+}
 export interface Message {
   id: string; tier: Tier; real: boolean; pair?: string; onDay?: number;
   from: L10n; to: L10n; text: L10n;               // text may contain {date} {weekday} {date+N} {weekday+N}
