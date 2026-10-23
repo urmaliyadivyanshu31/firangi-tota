@@ -42,6 +42,10 @@ export function appEras(): Era[] {
     windowStart: STARTS[i]!,
     channel: CHANNELS[i]!,
     forger: l('a rival', 'एक दुश्मन'),
+    endings: {
+      caught: { stamp: l('Caught', 'पकड़े गए'), title: l('The forger won', 'जालसाज़ जीता') },
+      survived: { stamp: l('Cleared', 'पास'), title: l('All letters checked', 'सब चिट्ठियाँ परखीं') },
+    },
     sources: [
       { id: 's1', author: 'A. Author', title: 'First Book', year: '1900' },
       { id: 's2', author: 'B. Author', title: 'Second Book', year: '1950', url: 'https://example.org/book' },

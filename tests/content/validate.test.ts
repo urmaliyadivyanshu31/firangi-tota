@@ -187,10 +187,10 @@ describe('validateEra', () => {
   })
 
   describe('endings', () => {
-    it('are optional', () => {
+    it('are required', () => {
       const e = fresh()
-      delete e.endings
-      expect(validateEra(e)).toEqual([])
+      delete (e as Partial<Era>).endings
+      expect(validateEra(e)).toContain('endings: missing')
     })
     it('require both languages', () => {
       const e = fresh()

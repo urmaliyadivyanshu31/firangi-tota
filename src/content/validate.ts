@@ -225,7 +225,8 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
     refs(r.id, 'receipt', [r.source], true)
   }
 
-  if (era.endings) {
+  if (!era.endings) add('endings', 'missing')
+  else {
     for (const k of ['caught', 'survived'] as const) {
       l10n(era.id, `endings.${k}.stamp`, era.endings[k]?.stamp)
       l10n(era.id, `endings.${k}.title`, era.endings[k]?.title)

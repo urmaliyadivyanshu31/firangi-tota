@@ -20,6 +20,7 @@ export function fixtureEra(): Era {
     id: 'delhi-1857', order: 1, title: l('Fixture'), place: l('x'), year: '1857',
     persona: l('x'), intro: [l('x'), l('x')], windowStart: '1857-05-10', channel: 'telegram',
     forger: l('x'), sources: [], facts: [], rules: [], messages, receipts: [],
+    endings: { caught: { stamp: l('Caught'), title: l('Caught') }, survived: { stamp: l('Cleared'), title: l('Cleared') } },
     epilogue: { survived: [], caught: [], sources: [] },
   }
 }
