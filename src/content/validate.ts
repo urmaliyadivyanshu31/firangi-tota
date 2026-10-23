@@ -1,9 +1,7 @@
 import type { Era, L10n, Lang, SourceRef } from './types'
+import { fillTemplate } from '../game/dates'
 
 const LANGS: Lang[] = ['en', 'hi']
-
-// Task 3 replaces this stub with the real fillTemplate.
-const fillTemplateStub = (text: string): string => text.replace(/\{[^}]*\}/g, '')
 
 const isDay = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 14
 
@@ -96,7 +94,7 @@ export function validateEra(era: Era): string[] {
 
     if (m.checks) {
       for (const lang of LANGS) {
-        const filled = fillTemplateStub(m.text[lang] ?? '')
+        const filled = fillTemplate(m.text[lang] ?? '', era.windowStart, lang)
         for (const c of m.checks[lang]) {
           if (c === '' || !filled.includes(c)) add(id, `check not found in ${lang} text: "${c}"`)
         }
