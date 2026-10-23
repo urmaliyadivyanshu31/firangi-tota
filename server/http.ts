@@ -1,16 +1,34 @@
 // Node (req, res) adapter for handleVoice, shared by the Vite dev server and the Vercel function.
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js'
-import { handleVoice, type TtsClient, type VoiceResult } from './voice.js'
+import { elevenLabsSynth, fishSynth, type Synth, type TtsClient } from './providers.js'
+import { handleVoice, type VoiceResult } from './voice.js'
+import { parseProvider, type ProviderId } from './voices.js'
 
-/**
- * The server-side ElevenLabs client, or null when no key is configured.
- * The key comes from the server environment (Vercel env or .env.local via Vite's loadEnv) and
- * goes only into this client. It is never logged and never sent to the browser.
- */
+/** Server-side settings. Keys come from the server environment only and go only into the client. */
+export interface VoiceEnv {
+  VOICE_PROVIDER?: string
+  FISH_API_KEY?: string
+  ELEVENLABS_API_KEY?: string
+}
+
+const clean = (k: string | undefined) => (k && k.trim() ? k.trim() : null)
+
+/** The ElevenLabs client, or null when no key is configured. */
 export function createTtsClient(apiKey: string | undefined): TtsClient | null {
-  if (!apiKey || !apiKey.trim()) return null
-  return new ElevenLabsClient({ apiKey: apiKey.trim() })
+  const key = clean(apiKey)
+  return key ? new ElevenLabsClient({ apiKey: key }) : null
+}
+
+/** The active provider and its synthesizer (null when that provider's key is missing). */
+export function voiceBackend(env: VoiceEnv): { provider: ProviderId; synth: Synth | null } {
+  const provider = parseProvider(env.VOICE_PROVIDER)
+  if (provider === 'fish') {
+    const key = clean(env.FISH_API_KEY)
+    return { provider, synth: key ? fishSynth(key) : null }
+  }
+  const client = createTtsClient(env.ELEVENLABS_API_KEY)
+  return { provider, synth: client ? elevenLabsSynth(client) : null }
 }
 
 /** Parse a request URL into a query object; repeated keys become arrays (and are refused). */
@@ -30,7 +48,7 @@ function send(res: ServerResponse, result: VoiceResult): void {
   res.end(result.body)
 }
 
-export function createVoiceMiddleware(getClient: () => TtsClient | null) {
+export function createVoiceMiddleware(getBackend: () => { provider: ProviderId; synth: Synth | null }) {
   return async function voiceMiddleware(req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (req.method !== 'GET') {
       send(res, {
@@ -42,7 +60,7 @@ export function createVoiceMiddleware(getClient: () => TtsClient | null) {
     }
     let result: VoiceResult
     try {
-      result = await handleVoice(queryFromUrl(req.url), { client: getClient() })
+      result = await handleVoice(queryFromUrl(req.url), getBackend())
     } catch {
       result = {
         status: 503,

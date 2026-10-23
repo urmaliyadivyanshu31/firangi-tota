@@ -1,36 +1,29 @@
 // GET /api/voice: one game message, read aloud in its era's voice.
 //
-// Server only. The browser never sees the ElevenLabs key, and this endpoint never accepts free
+// Server only. The browser never sees a provider key, and this endpoint never accepts free
 // text: it takes an era, a message id, a language, a day and an optional voice (the chapter's
 // own voice by default, or an alternate such as Dastango), and reads our own message. Every
 // valid URL maps to one fixed clip, so the set of clips is finite and each is generated once,
 // then cached by the CDN and the browser.
 //
-// Cache busting: the audio URL carries `v`, a short hash of the exact text and voice settings.
-// A request without the right `v` (or with a day the text does not depend on) gets a cheap
-// redirect to the canonical URL. So a fact-check fix or a voice swap changes the URL instead of
-// leaving a year-long cached clip that reads the old words.
-import type { ElevenLabs } from '@elevenlabs/elevenlabs-js'
+// Cache busting: the audio URL carries `v`, a short hash of the provider, model, voice and exact
+// text. A request without the right `v` (or with a day the text does not depend on) gets a cheap
+// redirect to the canonical URL. So a fact-check fix, a voice swap or a provider switch changes
+// the URL instead of leaving a year-long cached clip that reads the old words.
 import type { Era, Lang, Message } from '../src/content/types.js'
+import { isVoiceChoice, type ElevenVoice, type FishVoice, type VoiceChoice } from '../src/content/voices.js'
 import { dayDate, fillTemplate } from '../src/game/dates.js'
 import { isEraId, SERVER_ERAS } from './eras.js'
-import { isVoiceChoice, type VoiceChoice, type VoiceSpec } from '../src/content/voices.js'
-import { MODEL_ID, OUTPUT_FORMAT, voiceFor } from './voices.js'
+import type { Synth } from './providers.js'
+import { FISH_MODEL, FISH_MP3_BITRATE, MODEL_ID, OUTPUT_FORMAT, voiceFor, type ProviderId } from './voices.js'
 
-/** The slice of ElevenLabsClient this handler uses, so tests can pass a mock. */
-export interface TtsClient {
-  textToSpeech: {
-    convert(
-      voiceId: string,
-      request: ElevenLabs.BodyTextToSpeechFull,
-      requestOptions?: { timeoutInSeconds?: number; maxRetries?: number },
-    ): PromiseLike<ReadableStream<Uint8Array>>
-  }
-}
+export type { Synth, TtsClient } from './providers.js'
 
 export interface VoiceDeps {
-  /** null when ELEVENLABS_API_KEY is not set: the endpoint answers 503. */
-  client: TtsClient | null
+  /** The active provider. It is part of every cache key, even when no key is configured. */
+  provider: ProviderId
+  /** null when the provider's key is not set: audio requests answer 503. */
+  synth: Synth | null
   now?: () => number
 }
 
@@ -44,10 +37,8 @@ export interface VoiceResult {
 }
 
 export const MAX_DAY = 14
-/** Longer texts are refused before they reach ElevenLabs (our messages are far shorter). */
+/** Longer texts are refused before they reach a provider (our messages are far shorter). */
 export const MAX_TEXT_CHARS = 3000
-const MAX_AUDIO_BYTES = 5 * 1024 * 1024
-const UPSTREAM_TIMEOUT_S = 25
 
 export const AUDIO_CACHE = 'public, max-age=31536000, s-maxage=31536000, immutable'
 /** Redirects are cheap and must follow content fixes quickly, so the CDN keeps them 5 minutes. */
@@ -97,8 +88,13 @@ function fnv1a(s: string): string {
   return (h >>> 0).toString(16).padStart(8, '0')
 }
 
-export function revision(choice: VoiceChoice, voice: VoiceSpec, lang: Lang, text: string): string {
-  return fnv1a(JSON.stringify([MODEL_ID, OUTPUT_FORMAT, choice, voice.voiceId, voice.settings, voice.effects ?? null, lang, text]))
+const MODEL_OF: Record<ProviderId, string> = {
+  fish: `${FISH_MODEL}/mp3-${FISH_MP3_BITRATE}`,
+  elevenlabs: `${MODEL_ID}/${OUTPUT_FORMAT}`,
+}
+
+export function revision(provider: ProviderId, choice: VoiceChoice, voice: FishVoice | ElevenVoice, lang: Lang, text: string): string {
+  return fnv1a(JSON.stringify([provider, MODEL_OF[provider], choice, voice, lang, text]))
 }
 
 export interface ResolvedClip {
@@ -110,12 +106,13 @@ export interface ResolvedClip {
   text: string
   /** 'era' (the chapter's own voice) or an alternate voice id. */
   choice: VoiceChoice
-  voice: VoiceSpec
+  provider: ProviderId
+  voice: FishVoice | ElevenVoice
   rev: string
 }
 
-/** The exact clip a valid request asks for, or the error to answer with. */
-export function resolveClip(query: VoiceQuery): ResolvedClip | VoiceResult {
+/** The exact clip a valid request asks for under `provider`, or the error to answer with. */
+export function resolveClip(query: VoiceQuery, provider: ProviderId): ResolvedClip | VoiceResult {
   for (const key of Object.keys(query)) if (!ALLOWED.has(key)) return bad()
   const eraId = single(query, 'era')
   const id = single(query, 'id')
@@ -127,21 +124,22 @@ export function resolveClip(query: VoiceQuery): ResolvedClip | VoiceResult {
   if (lang !== 'hi' && lang !== 'en') return bad()
   if (!dayRaw || !DAY_RE.test(dayRaw)) return bad()
   if (query.v !== undefined && (!v || !REV_RE.test(v))) return bad()
-  const choiceRaw = query.voice === undefined ? 'era' : single(query, 'voice')
-  if (!choiceRaw || !VOICE_RE.test(choiceRaw) || !isVoiceChoice(choiceRaw)) return bad()
+  const choice = query.voice === undefined ? 'era' : single(query, 'voice')
+  if (!choice || !VOICE_RE.test(choice) || !isVoiceChoice(choice)) return bad()
 
   if (!isEraId(eraId)) return notFound()
   const era = SERVER_ERAS[eraId]
   const message = era.messages.find((m) => m.id === id)
   if (!message) return notFound()
+  const voice = voiceFor(eraId, choice, provider)
+  if (!voice) return notFound() // this voice has no model on the active provider
 
   const template = message.text[lang]
   const day = dependsOnDay(era, template, lang) ? Number(dayRaw) : 1
   const text = fillTemplate(template, dayDate(era, day), lang).trim()
   // Our own content is always within the limit (a test checks every message); refuse, never truncate.
   if (!text || text.length > MAX_TEXT_CHARS) return unavailable()
-  const voice = voiceFor(eraId, choiceRaw)
-  return { era, message, lang, day, text, choice: choiceRaw, voice, rev: revision(choiceRaw, voice, lang, text) }
+  return { era, message, lang, day, text, choice, provider, voice, rev: revision(provider, choice, voice, lang, text) }
 }
 
 /** The canonical query for a clip. `voice` appears only for an alternate voice. */
@@ -167,46 +165,14 @@ function isCanonical(query: VoiceQuery, clip: ResolvedClip): boolean {
   return keys.length === Object.keys(want).length && keys.every((k) => single(query, k) === want[k])
 }
 
-async function readAll(stream: ReadableStream<Uint8Array>): Promise<Uint8Array> {
-  const reader = stream.getReader()
-  const chunks: Uint8Array[] = []
-  let total = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    total += value.byteLength
-    if (total > MAX_AUDIO_BYTES) {
-      void reader.cancel()
-      throw new Error('audio too large')
-    }
-    chunks.push(value)
-  }
-  const out = new Uint8Array(total)
-  let at = 0
-  for (const c of chunks) {
-    out.set(c, at)
-    at += c.byteLength
-  }
-  return out
+function synthesize(synth: Synth, clip: ResolvedClip): Promise<Uint8Array> {
+  // resolveClip picked `voice` for clip.provider, and handleVoice checked synth.provider matches.
+  return synth.provider === 'fish'
+    ? synth.synthesize(clip.voice as FishVoice, clip.text, clip.lang)
+    : synth.synthesize(clip.voice as ElevenVoice, clip.text, clip.lang)
 }
 
-function synthesize(client: TtsClient, clip: ResolvedClip): Promise<Uint8Array> {
-  const { voice } = clip
-  const request: ElevenLabs.BodyTextToSpeechFull = {
-    text: clip.text,
-    modelId: MODEL_ID,
-    languageCode: clip.lang,
-    applyTextNormalization: 'on',
-    outputFormat: OUTPUT_FORMAT,
-    voiceSettings: { stability: voice.settings.stability, similarityBoost: voice.settings.similarityBoost },
-    ...(voice.effects ? { audioEffects: { ...voice.effects } } : {}),
-  }
-  return Promise.resolve(
-    client.textToSpeech.convert(voice.voiceId, request, { timeoutInSeconds: UPSTREAM_TIMEOUT_S, maxRetries: 1 }),
-  ).then(readAll)
-}
-
-// Concurrent requests for the same clip on one server instance share one ElevenLabs call
+// Concurrent requests for the same clip on one server instance share one provider call
 // (for example everyone opening the daily puzzle at once before the CDN has the clip).
 const inflight = new Map<string, Promise<Uint8Array>>()
 
@@ -216,7 +182,7 @@ function upstreamStatus(err: unknown): number | undefined {
 }
 
 export async function handleVoice(query: VoiceQuery, deps: VoiceDeps): Promise<VoiceResult> {
-  const clip = resolveClip(query)
+  const clip = resolveClip(query, deps.provider)
   if ('status' in clip) return clip
 
   if (!isCanonical(query, clip)) {
@@ -227,15 +193,15 @@ export async function handleVoice(query: VoiceQuery, deps: VoiceDeps): Promise<V
     }
   }
 
-  const { client } = deps
-  if (!client) return unavailable()
+  const { synth } = deps
+  if (!synth || synth.provider !== deps.provider) return unavailable()
 
   const now = deps.now ?? Date.now
   const started = now()
-  const key = `${clip.era.id}|${clip.message.id}|${clip.lang}|${clip.day}|${clip.choice}|${clip.rev}`
+  const key = `${clip.provider}|${clip.era.id}|${clip.message.id}|${clip.lang}|${clip.day}|${clip.choice}|${clip.rev}`
   let job = inflight.get(key)
   if (!job) {
-    job = synthesize(client, clip)
+    job = synthesize(synth, clip)
     inflight.set(key, job)
     const clear = () => { inflight.delete(key) }
     job.then(clear, clear)
@@ -246,7 +212,7 @@ export async function handleVoice(query: VoiceQuery, deps: VoiceDeps): Promise<V
     audio = await job
   } catch (err) {
     // Log only what helps and leaks nothing: never the error object, its body or any header.
-    console.warn(`[voice] ElevenLabs failed era=${clip.era.id} id=${clip.message.id} lang=${clip.lang} voice=${clip.choice} status=${upstreamStatus(err) ?? 'none'}`)
+    console.warn(`[voice] ${clip.provider} failed era=${clip.era.id} id=${clip.message.id} lang=${clip.lang} voice=${clip.choice} status=${upstreamStatus(err) ?? 'none'}`)
     return unavailable()
   }
   if (audio.byteLength === 0) return unavailable()

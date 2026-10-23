@@ -25,6 +25,13 @@ describe('check-secrets', () => {
     expect(scanText('README.md', `Add \`${envName}=\` to .env.local\n`)).toEqual([])
   })
 
+  it('allows reading the variable in code, and flags a Fish key with a value', () => {
+    const fishName = ['FISH', 'API', 'KEY'].join('_')
+    expect(scanText('vite.config.ts', `  ${envName}: env.${envName},\n  ${fishName}: process.env.${fishName}\n`)).toEqual([])
+    const findings = scanText('.envrc', `${fishName}=${randomBytes(16).toString('hex')}\n`)
+    expect(findings.map((f) => f.rule)).toContain(`${fishName} with a value`)
+  })
+
   it('flags other common key shapes', () => {
     const gh = ['ghp', randomBytes(20).toString('hex')].join('_')
     const pem = ['-----BEGIN', 'PRIVATE', 'KEY-----'].join(' ')
