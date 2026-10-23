@@ -1092,7 +1092,7 @@ export const messages: Message[] = [
           hi: 'प्रेसिडेंट विट्ठलभाई पटेल थे, वल्लभभाई नहीं।',
         },
         factId: 'assembly',
-        sources: [CHAMAN, { id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
+        sources: [CHAMAN, { id: 'cwmg-40', loc: 'Chronology, pp. 443–444 (19 February; 30 March 1929)' }],
       },
     ],
   },
@@ -1255,8 +1255,8 @@ export const messages: Message[] = [
     from: SWAMI,
     to: POST_BOX,
     text: {
-      en: 'Gandhi is far from Delhi, touring Andhra; today he speaks at a public meeting in Bezwada. Watch what he says about Monday.',
-      hi: 'गांधी दिल्ली से बहुत दूर, आंध्र के दौरे पर हैं; आज वे बेज़वाड़ा में एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
+      en: 'Gandhi is far from Delhi, touring Andhra; today he speaks at a public meeting in Bezwada (Vijayawada). Watch what he says about Monday.',
+      hi: 'गांधी दिल्ली से बहुत दूर, आंध्र के दौरे पर हैं; आज वे बेज़वाड़ा (विजयवाड़ा) में एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
     },
     checks: { en: ['touring Andhra', 'Bezwada'], hi: ['आंध्र के दौरे', 'बेज़वाड़ा'] },
     why: {
@@ -1284,8 +1284,8 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'Gandhi was touring Andhra; on 10 April he spoke at Bezwada.',
-          hi: 'गांधी आंध्र के दौरे पर थे; 10 अप्रैल को वे बेज़वाड़ा में बोले।',
+          en: 'Gandhi was touring Andhra; on 10 April he spoke at Bezwada (Vijayawada).',
+          hi: 'गांधी आंध्र के दौरे पर थे; 10 अप्रैल को वे बेज़वाड़ा (विजयवाड़ा) में बोले।',
         },
         sources: [{ id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
       },
@@ -1398,7 +1398,8 @@ export const messages: Message[] = [
   },
 
   // Day 11, Friday 12 April: Young India of Thursday 11 April printed Sarojini Naidu's letter
-  // from her American lecture tour ("a wandering singer with a spirit in my feet").
+  // from her American lecture tour ("a wandering singer with a spirit in my feet"). Her Berlin
+  // letter of 18 June: "the Wandering Singer returns home on 22nd July".
   {
     id: 'lh-sarojini-g',
     tier: 3,
@@ -1408,16 +1409,16 @@ export const messages: Message[] = [
     from: PANDITJI,
     to: POST_BOX,
     text: {
-      en: "Sarojini Naidu is lecturing across America. This week's Young India prints her letter; she calls herself 'a wandering singer'.",
-      hi: "सरोजिनी नायडू अमेरिका में घूम-घूमकर भाषण दे रही हैं। इस हफ़्ते के यंग इंडिया में उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
+      en: "Sarojini Naidu is abroad on a lecture tour. This week's Young India prints her letter from America; she calls herself 'a wandering singer'.",
+      hi: "सरोजिनी नायडू विदेश में भाषण-यात्रा पर हैं। इस हफ़्ते के यंग इंडिया में अमेरिका से आई उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
     },
-    checks: { en: ['lecturing across America', 'a wandering singer'], hi: ['अमेरिका में', 'घुमक्कड़ गायिका'] },
+    checks: { en: ['abroad on a lecture tour', 'a wandering singer'], hi: ['विदेश में', 'घुमक्कड़ गायिका'] },
     why: {
       text: {
         en: 'Young India printed her letter from the USA on 11 April 1929.',
         hi: 'यंग इंडिया ने 11 अप्रैल 1929 को अमेरिका से आई उनकी चिट्ठी छापी।',
       },
-      sources: [{ id: 'naidu-1929' }],
+      sources: [{ id: 'naidu-1929' }, { id: 'naidu-1929b' }],
     },
   },
   {
@@ -1437,10 +1438,10 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'She was lecturing in America; Young India printed her letter from there.',
-          hi: 'वे अमेरिका में भाषण दे रही थीं; यंग इंडिया ने वहीं से आई चिट्ठी छापी।',
+          en: 'She was abroad on her lecture tour; she came home only on 22 July.',
+          hi: 'वे विदेश में भाषण-यात्रा पर थीं; 22 जुलाई को ही घर लौटीं।',
         },
-        sources: [{ id: 'naidu-1929' }],
+        sources: [{ id: 'naidu-1929' }, { id: 'naidu-1929b' }],
       },
     ],
   },

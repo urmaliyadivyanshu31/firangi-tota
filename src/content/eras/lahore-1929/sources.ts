@@ -169,7 +169,7 @@ export const sources: Source[] = [
     id: 'cwmg-40',
     author: 'M.K. Gandhi',
     title: 'Collected Works of Mahatma Gandhi, Vol. XL (15 February – 31 May 1929), chronology and introduction',
-    year: '1929',
+    year: '1970',
     url: 'https://archive.org/details/HindSwaraj-CWMG-040',
   },
   {
@@ -180,6 +180,13 @@ export const sources: Source[] = [
     url: 'https://www.mkgandhi.org/Selected%20Letters/Sarojini/letter46.htm',
   },
   {
+    id: 'naidu-1929b',
+    author: 'Sarojini Naidu',
+    title: 'Letter to Gandhiji, Berlin, 18 June 1929 (mkgandhi.org)',
+    year: '1929',
+    url: 'https://www.mkgandhi.org/Selected%20Letters/Sarojini/letter48.htm',
+  },
+  {
     id: 'nehru-1936',
     author: 'Jawaharlal Nehru',
     title: 'An Autobiography (John Lane, London)',
@@ -188,7 +195,7 @@ export const sources: Source[] = [
   },
   {
     id: 'tribune-2010',
-    author: 'Tribune News Service',
+    author: 'Aruti Nayar (Tribune News Service)',
     title: "Keeping martyr's memory alive (Sardar Ajit Singh at Dalhousie; The Tribune, 12 July 2010)",
     year: '2010',
     url: 'https://www.tribuneindia.com/2010/20100712/main6.htm',
