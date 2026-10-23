@@ -9,8 +9,8 @@ export const TIMER_S: Record<Difficulty, number> = { easy: 90, medium: 60, hard:
 /** Puzzle #1 of the daily Aaj ka Taar (IST date). */
 export const DAILY_EPOCH = '2026-10-24'
 
-/** Pencil marks (the "check" highlights): Easy always, Medium for the first 5 days, Hard never. */
-export const PENCIL_MEDIUM_DAYS = 5
+/** Pencil marks (the "check" highlights): Easy always, Medium days 1-3, Hard never. */
+export const PENCIL_MEDIUM_DAYS = 3
 export function pencilOn(d: Difficulty, day: number): boolean {
   if (d === 'easy') return true
   if (d === 'medium') return day <= PENCIL_MEDIUM_DAYS
