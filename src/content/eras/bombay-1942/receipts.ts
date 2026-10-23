@@ -59,8 +59,8 @@ export const receipts: Receipt[] = [
       hi: 'भारत छोड़ो? पहले ड्यूटी तो पूरी कर लें',
     },
     theirSide: {
-      en: 'His side: Savarkar called his line “responsive co-operation”, which “implies all and any means from unconditional co-operation to an armed resistance”, and argued that Hindus trained in the forces would serve Hindu interests (statement of 8 April 1942, printed in his Historic Statements, 1967).',
-      hi: 'उनकी बात: सावरकर ने अपनी नीति को “जवाबी सहयोग” कहा, जिसमें “बिना शर्त सहयोग से लेकर हथियारबंद विरोध तक हर रास्ता” शामिल है, और कहा कि फ़ौज में सीखे हिंदू हिंदुओं के हित में काम आएँगे (8 अप्रैल 1942 का बयान, उनकी किताब ‘हिस्टॉरिक स्टेटमेंट्स’, 1967 में छपा)।',
+      en: 'His side: Savarkar called his line “responsive co-operation”, which “implies all and any means from unconditional co-operation to an armed resistance”, and argued that Hindus trained in the forces would serve Hindu interests (statement of 8 April 1942, printed in Historic Statements, a collection of his statements published after his death, 1967).',
+      hi: 'उनकी बात: सावरकर ने अपनी नीति को “जवाबी सहयोग” कहा, जिसमें “बिना शर्त सहयोग से लेकर हथियारबंद विरोध तक हर रास्ता” शामिल है, और कहा कि फ़ौज में सीखे हिंदू हिंदुओं के हित में काम आएँगे (8 अप्रैल 1942 का बयान, जो उनके बयानों के संग्रह ‘हिस्टॉरिक स्टेटमेंट्स’ में उनकी मौत के बाद 1967 में छपा)।',
     },
     source: { id: 'iar-1942', loc: 'September 1942 chronicle (Savarkar statement from Bombay); theirSide: Historic Statements (1967), statement of 8 Apr 1942' },
   },

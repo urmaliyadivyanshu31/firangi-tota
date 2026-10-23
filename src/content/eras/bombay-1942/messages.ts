@@ -961,8 +961,8 @@ export const messages: Message[] = [
     from: SLIP,
     to: ANN,
     text: {
-      en: 'Tell the country how they did it. The special train left Bombay at 7:15 that Sunday morning. Gandhiji’s party was taken off the train at Chinchwad, a small station short of Poona; the Working Committee went on to Ahmednagar Fort.',
-      hi: 'देश को बताइए कि उन्होंने यह कैसे किया। उस रविवार सुबह 7:15 पर ख़ास ट्रेन बंबई से चली। गांधीजी और उनके साथियों को पूना से थोड़ा पहले चिंचवड़ के छोटे स्टेशन पर ट्रेन से उतारा गया; वर्किंग कमेटी आगे अहमदनगर क़िले गई।',
+      en: 'Tell the country how they did it. The special train left Bombay at 7:15 on the morning of Sunday 9 August. Gandhiji’s party was taken off the train at Chinchwad, a small station short of Poona; the Working Committee went on to Ahmednagar Fort.',
+      hi: 'देश को बताइए कि उन्होंने यह कैसे किया। रविवार 9 अगस्त की सुबह 7:15 पर ख़ास ट्रेन बंबई से चली। गांधीजी और उनके साथियों को पूना से थोड़ा पहले चिंचवड़ के छोटे स्टेशन पर ट्रेन से उतारा गया; वर्किंग कमेटी आगे अहमदनगर क़िले गई।',
     },
     checks: { en: ['taken off the train at Chinchwad'], hi: ['चिंचवड़ के छोटे स्टेशन पर ट्रेन से उतारा गया'] },
     why: {
@@ -981,8 +981,8 @@ export const messages: Message[] = [
     from: SLIP,
     to: ANN,
     text: {
-      en: 'Tell the country how they did it. The special train left Bombay at 7:15 that Sunday morning. Gandhiji’s party was taken off the train at Kalyan; the Working Committee went on to Ahmednagar Fort.',
-      hi: 'देश को बताइए कि उन्होंने यह कैसे किया। उस रविवार सुबह 7:15 पर ख़ास ट्रेन बंबई से चली। गांधीजी और उनके साथियों को कल्याण में ट्रेन से उतारा गया; वर्किंग कमेटी आगे अहमदनगर क़िले गई।',
+      en: 'Tell the country how they did it. The special train left Bombay at 7:15 on the morning of Sunday 9 August. Gandhiji’s party was taken off the train at Kalyan; the Working Committee went on to Ahmednagar Fort.',
+      hi: 'देश को बताइए कि उन्होंने यह कैसे किया। रविवार 9 अगस्त की सुबह 7:15 पर ख़ास ट्रेन बंबई से चली। गांधीजी और उनके साथियों को कल्याण में ट्रेन से उतारा गया; वर्किंग कमेटी आगे अहमदनगर क़िले गई।',
     },
     checks: { en: ['taken off the train at Kalyan'], hi: ['कल्याण में ट्रेन से उतारा गया'] },
     tells: [
@@ -1199,7 +1199,7 @@ export const messages: Message[] = [
         kind: 'anachronism',
         explain: {
           en: 'Radio men in 1942 said megacycles, “Mc”, as the police did when they logged a broadcast on “6.55 MC”. “MHz” is a later word (the hertz became the standard unit only in 1960), and we were a shortwave station, not FM.',
-          hi: '1942 में रेडियो वाले मेगासाइकिल, “Mc”, कहते थे, जैसे पुलिस ने एक प्रसारण “6.55 MC” पर दर्ज किया। “मेगाहर्ट्ज़” बाद का शब्द है (हर्ट्ज़ नाम 1960 में जाकर चलन में आया), और हम शॉर्टवेव स्टेशन थे, FM नहीं।',
+          hi: '1942 में रेडियो वाले मेगासाइकिल, “Mc”, कहते थे, जैसे पुलिस ने एक प्रसारण “6.55 MC” पर दर्ज किया। “मेगाहर्ट्ज़” बाद का शब्द है (हर्ट्ज़ 1960 में जाकर मानी हुई इकाई बना), और हम शॉर्टवेव स्टेशन थे, FM नहीं।',
         },
         sources: [{ id: 'huacuja-2023', loc: 'n. 85 (police report, “6.55 MC”)' }, { id: 'chatterjee-1989' }],
       },
