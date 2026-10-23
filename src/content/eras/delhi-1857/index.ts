@@ -32,6 +32,18 @@ const era: Era = {
     en: "an agent for the Firangi, forging papers in the names of the King's men",
     hi: 'फ़िरंगी का एजेंट, जो बादशाह के लोगों के नाम से जाली काग़ज़ बनाता है',
   },
+  // Ending stamps and headings. caught.title: Delhi fell in September and the King, after his
+  // surrender on 21 September, was carried back as a prisoner (Sen pp.110-12; Majumdar pp.74-75).
+  endings: {
+    caught: {
+      stamp: { en: 'Kala Pani', hi: 'काला पानी' },
+      title: { en: 'Delhi fell; the King became a prisoner.', hi: 'दिल्ली गिरी; बादशाह क़ैदी बन गए।' },
+    },
+    survived: {
+      stamp: { en: 'Court stands', hi: 'दरबार सलामत' },
+      title: { en: "Your seal kept the Firangi's paper out.", hi: 'आपकी मुहर ने फ़िरंगी का काग़ज़ बाहर रखा।' },
+    },
+  },
   sources,
   facts,
   rules,
