@@ -6,7 +6,8 @@ import { hodson, hunter, jl, low, majumdar, mh, sen, trial } from './sources'
 // letter gives the 20th; princes shot the next day, Macdowell gives the 21st); Majumdar pp.74-75 and
 // Sen p.113 (trial, exile, death 7 Nov 1862); Trial c. pp.91-98, JL pp.93-94, MH pp.72-73 and
 // Sen p.89 (atrocities on both sides); Sen p.411 and Majumdar p.237 (the debate over the name).
-// caught: MH pp.72-73 (reprisals, false witnesses); Low II p.489 (first 250 convicts sailed from
+// caught: MH pp.72-73 (reprisals, false witnesses); Low II p.489 (the first batch, "two hundred and
+// fifty mutineers", sailed from
 // Calcutta on 4 March 1858; over 2,000 by the end of 1858); Hunter I pp.283-84 (the settlement was
 // set up in 1858 because of the life prisoners left by the Mutiny).
 export const epilogue: Epilogue = {
@@ -42,8 +43,8 @@ export const epilogue: Epilogue = {
       hi: "आपकी मुहर से फ़िरंगी का एक काग़ज़ आगे निकल गया। सितंबर में दिल्ली गिरी तो अंग्रेज़ों ने शहर से बदला लिया। मैनुद्दीन ने लिखा, 'जो तलवार से बच गए, उन्हें फाँसी ने मार डाला।' जब अदालतें फिर खुलीं, तो 'जिसका भी कोई दुश्मन था, उसने उसके ख़िलाफ़ गवाही दी। हर तरफ़ झूठे गवाह भरे पड़े थे।'",
     },
     {
-      en: 'Men convicted for the rising were shipped across the sea to a new penal settlement at Port Blair in the Andaman Islands: the Kala Pani. The first 250, all mutineers, sailed from Calcutta on 4 March 1858. By the end of that year there were more than 2,000 convicts there.',
-      hi: 'बग़ावत के लिए सज़ा पाए लोगों को समंदर पार अंडमान द्वीपों में पोर्ट ब्लेयर की नई जेल-बस्ती भेजा गया: काला पानी। पहले 250 क़ैदी, सब बाग़ी सिपाही, 4 मार्च 1858 को कलकत्ता से रवाना हुए। उसी साल के आख़िर तक वहाँ 2,000 से ज़्यादा क़ैदी थे।',
+      en: 'Men convicted for the rising were shipped across the sea to a new penal settlement at Port Blair in the Andaman Islands: the Kala Pani. The first batch of convicts, all prisoners of the rising, sailed from Calcutta on 4 March 1858. By the end of that year there were more than 2,000 convicts there.',
+      hi: 'बग़ावत के लिए सज़ा पाए लोगों को समंदर पार अंडमान द्वीपों में पोर्ट ब्लेयर की नई जेल-बस्ती भेजा गया: काला पानी। क़ैदियों का पहला जत्था, सब 1857 के बाग़ी, 4 मार्च 1858 को कलकत्ता से रवाना हुआ। उसी साल के आख़िर तक वहाँ 2,000 से ज़्यादा क़ैदी थे।',
     },
   ],
   sources: [

@@ -93,3 +93,4 @@ export const CHUNI_17 = "Chuni Lal's news diary, 17 May 1857, c. pp.112-13"
 export const CHUNI_18 = "Chuni Lal's news diary, 18 May 1857, c. p.113"
 export const CHUNI_19_20 = "Chuni Lal's news diary, 19-20 May 1857, c. pp.113-15"
 export const KING_ORDER = 'undated order of the King to Mirza Mughal, c. pp.131-35'
+export const CHATTA = 'Petition No. 52, shopkeepers of the Chatta, undated, c. p.25'

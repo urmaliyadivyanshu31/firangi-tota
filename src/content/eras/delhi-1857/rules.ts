@@ -33,8 +33,8 @@ export const rules: Rule[] = [
     id: 'persian-bait',
     arrivesOnDay: 3,
     text: {
-      en: "Persian-army news is the Firangi's favourite bait. In March a forged 'proclamation of the King of Persia' was stuck on the Jama Masjid, saying he would soon conquer Hindustan and that 500 men in Delhi were already his. A paper that reports a Persian army as certain fact is planted.",
-      hi: "ईरानी फ़ौज की ख़बर फ़िरंगी का पसंदीदा चारा है। मार्च में जामा मस्जिद पर 'ईरान के बादशाह का ऐलान' नाम का एक जाली इश्तिहार चिपका था, कि वह जल्द हिंदुस्तान जीत लेगा और दिल्ली में 500 आदमी पहले से उसके साथ हैं। जो काग़ज़ ईरानी फ़ौज को पक्की ख़बर बताए, वह किसी ने रखवाया है।",
+      en: "Persian-army news is the Firangi's favourite bait. In March someone stuck a forged 'proclamation of the King of Persia' on the Jama Masjid, saying he would soon conquer Hindustan and that 500 men in Delhi were already his. Delhi's own paper called the man who put it up a forger. The Firangi's agent plays on the same hope: a paper that reports a Persian army as certain fact is planted.",
+      hi: "ईरानी फ़ौज की ख़बर फ़िरंगी का पसंदीदा चारा है। मार्च में किसी ने जामा मस्जिद पर 'ईरान के बादशाह का ऐलान' नाम का एक जाली इश्तिहार चिपका दिया, कि वह जल्द हिंदुस्तान जीत लेगा और दिल्ली में 500 आदमी पहले से उसके साथ हैं। दिल्ली के अपने अख़बार ने उसे लगाने वाले को जालसाज़ कहा। फ़िरंगी का एजेंट इसी उम्मीद से खेलता है: जो काग़ज़ ईरानी फ़ौज को पक्की ख़बर बताए, वह किसी ने रखवाया है।",
     },
   },
   {

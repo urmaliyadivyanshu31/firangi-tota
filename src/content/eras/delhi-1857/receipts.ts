@@ -6,7 +6,8 @@ import { mh, sen } from './sources'
 export const receipts: Receipt[] = [
   {
     // Quote: MH pp.73-74. Joke: no reply from Patiala (Majumdar p.126); camped near Ambala within
-    // eighteen hours of the English request (Cave-Browne I p.190). theirSide: Sen pp.291-93.
+    // eighteen hours of the English request (Cave-Browne I p.190). theirSide: Sen pp.291-93
+    // (Scindia) and Sen p.104 (more than half the fighting men on the Ridge were Indians).
     id: 'patiala-jind-nabha',
     who: { en: 'Patiala, Jind and Nabha', hi: 'पटियाला, जींद और नाभा' },
     quote: {
@@ -18,8 +19,8 @@ export const receipts: Receipt[] = [
       hi: 'बादशाह की चिट्ठियों का पटियाला से कोई जवाब नहीं आया। कंपनी की एक चिट्ठी पर महाराजा अठारह घंटे में अंबाला के पास डेरा डाले बैठे थे। सोचिए, किस चिट्ठी में ज़्यादा कमाई थी।',
     },
     theirSide: {
-      en: "Princely India was not one side. Scindia of Gwalior kept the rebel Gwalior Contingent idle for the English 'by various devices', yet in June 1858 his own army went over to the rebels and he fled towards Agra (Sen).",
-      hi: "रियासतें सब एक तरफ़ नहीं थीं। ग्वालियर के सिंधिया ने 'तरह-तरह की तरकीबों से' ग्वालियर की बाग़ी फ़ौज (ग्वालियर कंटिंजेंट) को अंग्रेज़ों के लिए बिठाए रखा, फिर भी जून 1858 में उनकी अपनी फ़ौज बाग़ियों से जा मिली और वे आगरा की ओर भागे (सेन)।",
+      en: "These were rulers' choices, not a people's. Scindia of Gwalior kept the rebel Gwalior Contingent idle for the English 'by various devices', yet in June 1858 his own army went over to the rebels and he fled towards Agra. And more than half the fighting men on the English side of the Ridge in September were Indians (Sen).",
+      hi: "ये राजाओं के फ़ैसले थे, किसी क़ौम के नहीं। ग्वालियर के सिंधिया ने 'तरह-तरह की तरकीबों से' ग्वालियर की बाग़ी फ़ौज (ग्वालियर कंटिंजेंट) को अंग्रेज़ों के लिए बिठाए रखा, फिर भी जून 1858 में उनकी अपनी फ़ौज बाग़ियों से जा मिली और वे आगरा की ओर भागे। और सितंबर में रिज पर अंग्रेज़ों की तरफ़ से लड़ने वालों में आधे से ज़्यादा हिंदुस्तानी थे (सेन)।",
     },
     source: mh('pp.73-74'),
   },
@@ -40,7 +41,7 @@ export const receipts: Receipt[] = [
       en: "The record is not all one colour: inside the rebel city he twice saved Jiwan Lal from extortion (Jiwan Lal's diary).",
       hi: 'रिकॉर्ड एक ही रंग का नहीं है: बाग़ी शहर के अंदर उसने दो बार जीवन लाल को ज़बरदस्ती की वसूली से बचाया (जीवन लाल की डायरी)।',
     },
-    source: sen('Foreword by A. K. Azad, pp. xi-xii; pp.95, 109'),
+    source: sen('Foreword by A. K. Azad, p. xx; pp.95, 109'),
   },
   {
     // Quote: JL p.77. Joke: four paid watchers (JL pp.77-78); honorary magistracy (MH Intro p.3).

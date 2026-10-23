@@ -8,7 +8,7 @@ export const facts: Fact[] = [
     id: 'court',
     label: { en: 'The court', hi: 'दरबार' },
     value: {
-      en: "King Bahadur Shah, pen-name Zafar. His 1857 coins call him 'Suraj-u-din, the brave'. His chief men are Hakim Ahsanullah Khan, his physician, and Nawab Mahbub Ali Khan. His chosen heir is Mirza Jawan Bakht.",
+      en: "King Bahadur Shah, pen-name Zafar. His 1857 coins call him 'Siraj-ud-din, the brave' (Metcalfe spells it Suraj-u-din). His chief men are Hakim Ahsanullah Khan, his physician, and Nawab Mahbub Ali Khan. His chosen heir is Mirza Jawan Bakht.",
       hi: "बादशाह बहादुर शाह, जो 'ज़फ़र' नाम से शायरी करते हैं। 1857 के सिक्कों पर उनका शाही नाम 'सिराजुद्दीन, बहादुर' है। उनके ख़ास आदमी हैं उनके हकीम, हकीम अहसनुल्लाह ख़ान, और नवाब महबूब अली ख़ान। उनके चुने हुए वारिस मिर्ज़ा जवाँ बख़्त हैं।",
     },
     sources: [jl('pp.96-97'), mh('p.59'), sen('p.95')],
@@ -27,7 +27,7 @@ export const facts: Fact[] = [
     label: { en: 'Regiments in the city', hi: 'शहर की पलटनें' },
     value: {
       en: 'From Meerut: the 3rd Light Cavalry and the 11th and 20th Native Infantry. From Delhi: the 38th, 54th and 74th Native Infantry.',
-      hi: 'मेरठ से: तीसरी घुड़सवार पलटन (3rd लाइट कैवेलरी), और 11वीं व 20वीं पैदल पलटन। दिल्ली की: 38वीं, 54वीं और 74वीं पैदल पलटन।',
+      hi: 'मेरठ से: तीसरी घुड़सवार पलटन, और 11वीं व 20वीं पैदल पलटन। दिल्ली की: 38वीं, 54वीं और 74वीं पैदल पलटन।',
     },
     sources: [sen('pp.59-62'), mh('p.53')],
   },
@@ -35,10 +35,10 @@ export const facts: Fact[] = [
     id: 'gates',
     label: { en: 'Gates', hi: 'दरवाज़े' },
     value: {
-      en: "North wall: Kashmiri and Mori Gates. West wall: Kabul, Lahore and Ajmeri Gates. South wall: Turkman and Delhi Gates. The Chandni Chowk runs from the city's Lahore Gate to the Fort's own Lahore Gate: two different gates. The road from Ballabhgarh comes in at the Delhi Gate.",
-      hi: 'उत्तर की दीवार: कश्मीरी और मोरी दरवाज़े। पश्चिम की दीवार: काबुली, लाहौरी और अजमेरी दरवाज़े। दक्षिण की दीवार: तुर्कमान और दिल्ली दरवाज़े। चाँदनी चौक शहर के लाहौरी दरवाज़े से क़िले के अपने लाहौरी दरवाज़े तक जाता है: ये दो अलग दरवाज़े हैं। बल्लभगढ़ से आने वाली सड़क दिल्ली दरवाज़े पर पहुँचती है।',
+      en: "North wall: Kashmiri and Mori Gates. West wall: Kabul, Lahore, Farash Khana and Ajmeri Gates. South wall: Turkman and Delhi Gates. The Chandni Chowk, with the Lahore Bazar beyond the Fatehpuri Masjid, runs from the city's Lahore Gate to the Fort's own Lahore Gate: two different gates. The road from Ballabhgarh comes in at the Delhi Gate.",
+      hi: 'उत्तर की दीवार: कश्मीरी और मोरी दरवाज़े। पश्चिम की दीवार: काबुली, लाहौरी, फ़राशख़ाना और अजमेरी दरवाज़े। दक्षिण की दीवार: तुर्कमान और दिल्ली दरवाज़े। चाँदनी चौक, फ़तेहपुरी मस्जिद के आगे लाहौरी बाज़ार के साथ, शहर के लाहौरी दरवाज़े से क़िले के अपने लाहौरी दरवाज़े तक जाता है: ये दो अलग दरवाज़े हैं। बल्लभगढ़ से आने वाली सड़क दिल्ली दरवाज़े पर पहुँचती है।',
     },
-    sources: [fanshawe('pp.5-6'), mh('p.61'), trial('Petition No. 63, 22 May 1857, p.33')],
+    sources: [fanshawe('pp.5-6'), fanshawe('p.53'), mh('p.61'), trial('Petition No. 63, 22 May 1857, p.33')],
   },
   {
     id: 'money',
@@ -53,10 +53,10 @@ export const facts: Fact[] = [
     id: 'officials',
     label: { en: 'The English side', hi: 'अंग्रेज़ों की तरफ़' },
     value: {
-      en: 'Lord Canning is Governor-General. Sir John Lawrence is Chief Commissioner of the Punjab, at Lahore. Mr. Colvin is Lieutenant-Governor of the North-Western Provinces, at Agra.',
-      hi: 'लॉर्ड कैनिंग गवर्नर-जनरल हैं। सर जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर हैं, लाहौर में। मिस्टर कॉल्विन उत्तर-पश्चिमी सूबों के लेफ़्टिनेंट-गवर्नर हैं, आगरा में।',
+      en: 'Lord Canning is Governor-General. Sir John Lawrence is Chief Commissioner of the Punjab, which is ruled from Lahore; this May he is at Rawalpindi. Mr. Colvin is Lieutenant-Governor of the North-Western Provinces, at Agra.',
+      hi: 'लॉर्ड कैनिंग गवर्नर-जनरल हैं। सर जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर हैं, जिसकी हुकूमत लाहौर से चलती है; इस मई वे रावलपिंडी में हैं। मिस्टर कॉल्विन उत्तर-पश्चिमी सूबों के लेफ़्टिनेंट-गवर्नर हैं, आगरा में।',
     },
-    sources: [majumdar('p.71'), sen('pp.321-22'), mh('p.59')],
+    sources: [majumdar('p.71'), sen('p.77'), sen('p.327'), sen('pp.321-22'), mh('p.59')],
   },
   {
     id: 'calendar',
@@ -92,9 +92,9 @@ export const facts: Fact[] = [
     hardHidden: true,
     label: { en: 'The English force', hi: 'अंग्रेज़ी फ़ौज' },
     value: {
-      en: 'In May it is still gathering at Ambala, Karnal and Meerut. It takes the Ridge outside Delhi only on 8 June, after the battle of Badli-ki-Serai.',
-      hi: 'मई में वह अभी अंबाला, करनाल और मेरठ में जमा हो रही है। दिल्ली के बाहर की रिज (पहाड़ी) पर वह 8 जून को ही क़ब्ज़ा करती है, बादली की सराय की लड़ाई के बाद।',
+      en: 'In May it gathers at Ambala, Karnal and Meerut, and only at the very end of the month fights its way towards Delhi. It takes the Ridge outside the city only on 8 June, after the battle of Badli-ki-Serai.',
+      hi: 'मई में वह अंबाला, करनाल और मेरठ में जमा होती है, और महीने के बिल्कुल आख़िर में ही दिल्ली की ओर लड़ते हुए बढ़ती है। शहर के बाहर की रिज (पहाड़ी) पर वह 8 जून को ही क़ब्ज़ा करती है, बादली की सराय की लड़ाई के बाद।',
     },
-    sources: [sen('p.79'), trial(CHUNI_17), jl('p.107')],
+    sources: [sen('p.79'), trial(CHUNI_17), jl('pp.107-08')],
   },
 ]

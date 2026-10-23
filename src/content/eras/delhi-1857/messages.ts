@@ -3,6 +3,7 @@ import {
   caveBrowne,
   CHUNI_17,
   CHUNI_18,
+  CHATTA,
   CHUNI_19_20,
   fanshawe,
   jl,
@@ -34,7 +35,7 @@ const eventMessages: Message[] = [
     real: true,
     pair: 'ev-commanders',
     onDay: 2,
-    from: { en: 'Chuni Lal, news-writer', hi: 'चुन्नी लाल, अख़बार-नवीस' },
+    from: { en: 'Chuni Lal, news-writer', hi: 'चुन्नी लाल, ख़बरनवीस' },
     to: OFFICE,
     text: {
       en: 'Monday, 18th May 1857. The King came from his private apartments into the Hall of Special Audience, and took his seat on the throne, in state. The bands of the five regiments attended and continued playing English music. The King bestowed arms and dresses of honour… on Mirza Mughal as Commander-in-Chief of the whole of the Forces, on… others of his sons as Colonels of infantry, and on his grandson Abu Bakr as Colonel of the regiment of Cavalry.',
@@ -59,7 +60,7 @@ const eventMessages: Message[] = [
     real: false,
     pair: 'ev-commanders',
     onDay: 2,
-    from: { en: 'Chuni Lal, news-writer', hi: 'चुन्नी लाल, अख़बार-नवीस' },
+    from: { en: 'Chuni Lal, news-writer', hi: 'चुन्नी लाल, ख़बरनवीस' },
     to: OFFICE,
     text: {
       en: 'Monday, 18th May 1857. The King came into the Hall of Special Audience and took his seat on the throne, in state. The bands of the five regiments played English music. The King bestowed arms and dresses of honour on Mirza Jawan Bakht as Commander-in-Chief of the whole of the Forces, and on his grandson Abu Bakr as Colonel of the regiment of Cavalry.',
@@ -129,8 +130,8 @@ const eventMessages: Message[] = [
         kind: 'name',
         factId: 'court',
         explain: {
-          en: "On 17 May some soldiers did talk of making Abu Bakr king, but the coins presented on 19 May carry the old King's title, Suraj-u-din. The forger minted barrack gossip.",
-          hi: '17 मई को कुछ सिपाहियों ने अबू बक्र को बादशाह बनाने की बात ज़रूर की थी, पर 19 मई को पेश हुए सिक्कों पर बूढ़े बादशाह का शाही नाम सिराजुद्दीन है। जालसाज़ ने छावनी की गप को सिक्के में ढाल दिया।',
+          en: "On 17 May, Jiwan Lal says, the mutineers 'elected' Abu Bakr king in place of the old King, but the coins presented on 19 May carry the old King's title, Suraj-u-din. The forger minted barrack gossip.",
+          hi: "जीवन लाल के मुताबिक़ 17 मई को बाग़ियों ने बूढ़े बादशाह की जगह अबू बक्र को बादशाह 'चुन' लिया था, पर 19 मई को पेश हुए सिक्कों पर बूढ़े बादशाह का शाही नाम सिराजुद्दीन है। जालसाज़ ने छावनी की गप को सिक्के में ढाल दिया।",
         },
         sources: [jl('pp.95-97')],
       },
@@ -143,7 +144,7 @@ const eventMessages: Message[] = [
     tier: 2,
     real: true,
     onDay: 4,
-    from: { en: 'Darbar record', hi: 'दरबार का रोज़नामचा' },
+    from: { en: 'Darbar record', hi: 'दरबार की डायरी' },
     to: OFFICE,
     text: {
       en: "Wednesday, 20th May. A deputation of Hindu officers arrived to complain of the war against Hindus being preached. The King replied: 'The Holy War is against the English; I have forbidden it against the Hindus.'",
@@ -168,7 +169,6 @@ const eventMessages: Message[] = [
     id: 'ev-drum',
     tier: 1,
     real: true,
-    pair: 'drum',
     onDay: 5,
     from: { en: 'Drum proclamation', hi: 'ढिंढोरा' },
     to: PEOPLE,
@@ -190,13 +190,12 @@ const eventMessages: Message[] = [
     },
   },
 
-  // ── Day 6, Fri 22 May: the King's order to Mirza Mughal ───────────────────────────
+  // ── Undated (c. 21-22 May): the King's order to Mirza Mughal, gated by court-manners ──
   {
     id: 'ev-order-real',
     tier: 2,
     real: true,
     pair: 'ev-order',
-    onDay: 6,
     from: { en: 'The King, under his seal', hi: 'बादशाह, अपनी मुहर से' },
     to: MIRZA,
     text: {
@@ -221,7 +220,6 @@ const eventMessages: Message[] = [
     tier: 2,
     real: false,
     pair: 'ev-order',
-    onDay: 6,
     from: { en: 'The King, under his seal', hi: 'बादशाह, अपनी मुहर से' },
     to: MIRZA,
     text: {
@@ -235,6 +233,7 @@ const eventMessages: Message[] = [
     tells: [
       {
         kind: 'habit',
+        ruleId: 'court-manners',
         sources: [trial(KING_ORDER)],
         explain: {
           en: 'The opening is perfect; the opinion is upside down. In his real order the King complains that soldiers ride up to the Hall of Special Audience and come to court in caps instead of turbans. He never praised it. See the rulebook on court manners.',
@@ -290,6 +289,7 @@ const eventMessages: Message[] = [
       {
         kind: 'weekday',
         factId: 'calendar',
+        ruleId: 'weekdays',
         explain: {
           en: "Count from Sunday 17 May: 24 May is a Sunday too. The real petition says 'This is Sunday', and Jiwan Lal saw the same new moon that evening. A Monday moon would put Eid a day late.",
           hi: "रविवार 17 मई से गिनिए: 24 मई भी रविवार है। असली अर्ज़ी में लिखा है 'आज रविवार है', और जीवन लाल ने भी उसी शाम नया चाँद देखा। सोमवार को चाँद दिखता तो ईद एक दिन देर से पड़ती।",
@@ -398,11 +398,21 @@ const eventMessages: Message[] = [
       {
         kind: 'place',
         factId: 'officials',
+        ruleId: 'english-titles',
         explain: {
-          en: "The Lieutenant-Governor sits at Agra. Lahore has a Chief Commissioner, Sir John Lawrence. A real traitor would know where to send his letter. And a letter that conveniently falls into the gate guards' hands is the oldest trick in the rulebook.",
-          hi: 'लेफ़्टिनेंट-गवर्नर आगरा में बैठते हैं। लाहौर में चीफ़ कमिश्नर हैं, सर जॉन लॉरेंस। असली ग़द्दार को पता होता कि चिट्ठी कहाँ भेजनी है। और जो चिट्ठी आराम से पहरेदारों के हाथ लग जाए, वह नियमों की किताब की सबसे पुरानी चाल है।',
+          en: 'The Lieutenant-Governor sits at Agra. The Punjab, ruled from Lahore, has a Chief Commissioner, Sir John Lawrence. A real traitor would know where to send his letter.',
+          hi: 'लेफ़्टिनेंट-गवर्नर आगरा में बैठते हैं। पंजाब में, जिसकी हुकूमत लाहौर से चलती है, चीफ़ कमिश्नर हैं, सर जॉन लॉरेंस। असली ग़द्दार को पता होता कि चिट्ठी कहाँ भेजनी है।',
         },
-        sources: [majumdar('p.71'), sen('pp.321-22'), mh('p.59')],
+        sources: [majumdar('p.71'), sen('pp.321-22')],
+      },
+      {
+        kind: 'habit',
+        ruleId: 'found-letters',
+        explain: {
+          en: "And a letter that conveniently falls into the gate guards' hands, accusing the King's own physician, is the oldest trick in the rulebook. In May the King saw through one just like it.",
+          hi: 'और जो चिट्ठी आराम से पहरेदारों के हाथ लग जाए और बादशाह के अपने हकीम पर इल्ज़ाम लगाए, वह नियमों की किताब की सबसे पुरानी चाल है। मई में बादशाह ऐसी ही एक चाल पकड़ चुके थे।',
+        },
+        sources: [mh('p.59')],
       },
     ],
   },
@@ -418,7 +428,7 @@ const eventMessages: Message[] = [
     to: OFFICE,
     text: {
       en: 'A European found in the Qudsia Bagh has been brought in. His captors declared him to be John Lawrence, known, they said, by an old wound in his back. When he was stripped, no wound was found. He was dressed as a fortune-teller and carried an almanac in his hand. He is suspected to be a spy.',
-      hi: 'क़ुदसिया बाग़ में मिले एक यूरोपियन को पकड़कर लाया गया है। पकड़ने वालों ने कहा कि यह जॉन लॉरेंस है, जिसे पीठ के एक पुराने घाव से पहचाना गया। कपड़े उतरवाने पर कोई घाव नहीं मिला। वह भविष्य बताने वाले के भेस में था और हाथ में पंचांग लिए था। उस पर जासूस होने का शक है।',
+      hi: 'क़ुदसिया बाग़ में मिले एक यूरोपियन को पकड़कर लाया गया है। पकड़ने वालों ने कहा कि यह जॉन लॉरेंस है, जिसे पीठ के एक पुराने घाव से पहचाना गया। कपड़े उतरवाने पर कोई घाव नहीं मिला। वह ज्योतिषी के भेस में था और हाथ में पंचांग लिए था। उस पर जासूस होने का शक है।',
     },
     checks: {
       en: ['declared him to be John Lawrence', 'no wound was found'],
@@ -426,10 +436,10 @@ const eventMessages: Message[] = [
     },
     why: {
       text: {
-        en: "Jiwan Lal's diary for 29 May tells it just like this. The real John Lawrence was Chief Commissioner of the Punjab, far away at Lahore; the man in the garden was only suspected of spying.",
-        hi: '29 मई की जीवन लाल की डायरी में ठीक यही लिखा है। असली जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर थे, दूर लाहौर में; बाग़ वाले आदमी पर सिर्फ़ जासूसी का शक था।',
+        en: "Jiwan Lal's diary for 29 May tells it just like this. The real John Lawrence was Chief Commissioner of the Punjab, far away at Rawalpindi that May; the man in the garden was only suspected of spying.",
+        hi: '29 मई की जीवन लाल की डायरी में ठीक यही लिखा है। असली जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर थे, उस मई दूर रावलपिंडी में; बाग़ वाले आदमी पर सिर्फ़ जासूसी का शक था।',
       },
-      sources: [jl('p.107'), majumdar('p.71')],
+      sources: [jl('p.107'), majumdar('p.71'), sen('p.77')],
     },
   },
   {
@@ -442,7 +452,7 @@ const eventMessages: Message[] = [
     to: OFFICE,
     text: {
       en: 'Great news: John Lawrence, Lieutenant-Governor of the Punjab, has been caught in the Qudsia Bagh dressed as a fortune-teller. He knows he is beaten and has confessed everything. The Punjab is ours for the taking.',
-      hi: 'बड़ी ख़बर: पंजाब के लेफ़्टिनेंट-गवर्नर जॉन लॉरेंस क़ुदसिया बाग़ में भविष्य बताने वाले के भेस में पकड़े गए हैं। उन्होंने हार मान ली है और सब कुछ क़बूल कर लिया है। पंजाब अब हमारा है।',
+      hi: 'बड़ी ख़बर: पंजाब के लेफ़्टिनेंट-गवर्नर जॉन लॉरेंस क़ुदसिया बाग़ में ज्योतिषी के भेस में पकड़े गए हैं। उन्होंने हार मान ली है और सब कुछ क़बूल कर लिया है। पंजाब अब हमारा है।',
     },
     checks: {
       en: ['Lieutenant-Governor of the Punjab', 'has confessed everything'],
@@ -453,10 +463,10 @@ const eventMessages: Message[] = [
         kind: 'name',
         factId: 'officials',
         explain: {
-          en: 'John Lawrence was Chief Commissioner of the Punjab, not Lieutenant-Governor, and he was at Lahore, not in a Delhi garden. The man brought in on 29 May had no wound, confessed nothing and was only suspected of spying.',
-          hi: 'जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर थे, लेफ़्टिनेंट-गवर्नर नहीं, और वे लाहौर में थे, दिल्ली के किसी बाग़ में नहीं। 29 मई को पकड़े गए आदमी के कोई घाव नहीं था, उसने कुछ क़बूल नहीं किया, और उस पर बस जासूसी का शक था।',
+          en: 'John Lawrence was Chief Commissioner of the Punjab, not Lieutenant-Governor, and that May he was far away at Rawalpindi, not in a Delhi garden. The man brought in on 29 May had no wound and was only suspected of spying.',
+          hi: 'जॉन लॉरेंस पंजाब के चीफ़ कमिश्नर थे, लेफ़्टिनेंट-गवर्नर नहीं, और उस मई वे दूर रावलपिंडी में थे, दिल्ली के किसी बाग़ में नहीं। 29 मई को पकड़े गए आदमी के शरीर पर कोई घाव नहीं था, और उस पर बस जासूसी का शक था।',
         },
-        sources: [majumdar('p.71'), jl('p.107')],
+        sources: [majumdar('p.71'), sen('p.77'), sen('p.327'), jl('p.107')],
       },
     ],
   },
@@ -479,10 +489,10 @@ const eventMessages: Message[] = [
     },
     why: {
       text: {
-        en: "It sounds like enemy mockery, but it is Jiwan Lal's own entry for 30 May: the bystanders 'understood that he gave himself unfounded praise'. The English won both fights on the Hindun before they marched on Delhi.",
-        hi: "यह दुश्मन का मज़ाक़ लगता है, पर यह 30 मई की जीवन लाल की अपनी डायरी है: पास खड़े लोग 'समझ गए कि वे अपनी झूठी तारीफ़ कर रहे हैं'। दिल्ली की ओर बढ़ने से पहले अंग्रेज़ों ने हिंडन की दोनों लड़ाइयाँ जीतीं।",
+        en: "It sounds like enemy mockery, and the jibe is Jiwan Lal's, who kept his diary for the English: on 30 May he wrote that the bystanders 'understood that he gave himself unfounded praise'. The facts check out: Abu Bakr had commanded, and the English won both fights on the Hindun before they marched on Delhi.",
+        hi: "यह दुश्मन का मज़ाक़ लगता है, और ताना सच में जीवन लाल का है, जो अपनी डायरी अंग्रेज़ों के लिए लिखते थे: 30 मई को उन्होंने लिखा कि पास खड़े लोग 'समझ गए कि वे अपनी झूठी तारीफ़ कर रहे हैं'। बाक़ी बातें सही हैं: कमान अबू बक्र के हाथ में थी, और दिल्ली की ओर बढ़ने से पहले अंग्रेज़ों ने हिंडन की दोनों लड़ाइयाँ जीतीं।",
       },
-      sources: [jl('p.108'), sen('p.79')],
+      sources: [jl('pp.78, 108'), sen('p.79')],
     },
   },
 ]
@@ -544,7 +554,7 @@ const datelessMessages: Message[] = [
     tier: 1,
     real: true,
     pair: 'guard',
-    from: { en: 'A palace officer', hi: 'महल का एक अफ़सर' },
+    from: { en: 'An officer of the King', hi: 'बादशाह का एक अफ़सर' },
     to: KING,
     text: {
       en: "The King! Shelter of the World! Respectfully Sheweth,— That the guard posted at your slave's house has been withdrawn, and ill-conducted men of the city come in mobs to plunder it. My wife and children live there. I pray that a guard be posted. (Prayers for the King's prosperity.) Petition of the home-born slave. [The King's note, in pencil:] Mirza Mughal will station a guard from the 20th Regiment Native Infantry at the petitioner's house.",
@@ -559,7 +569,7 @@ const datelessMessages: Message[] = [
         en: "Written for the game, after a real petition of 23 May in the trial papers, on which the King wrote in pencil: 'Mirza Moghal will station a Guard, from the 20th Regiment Native Infantry, at the petitioner's house.' The 20th came from Meerut.",
         hi: "यह खेल के लिए लिखा गया है, मुक़दमे के काग़ज़ों में 23 मई की एक असली अर्ज़ी के आधार पर, जिस पर बादशाह ने पेंसिल से लिखा: 'मिर्ज़ा मुग़ल 20वीं पैदल पलटन से अर्ज़ी देने वाले के घर पर पहरा लगाएँ।' 20वीं पलटन मेरठ से आई थी।",
       },
-      sources: [trial('Petition No. 3, dated 23 May 1857'), sen('p.61')],
+      sources: [trial('Petition No. 3 (Capt. Dildar Ali Khan), dated 23 May 1857, before p.10'), sen('p.61')],
     },
   },
   {
@@ -567,7 +577,7 @@ const datelessMessages: Message[] = [
     tier: 1,
     real: false,
     pair: 'guard',
-    from: { en: 'A palace officer', hi: 'महल का एक अफ़सर' },
+    from: { en: 'An officer of the King', hi: 'बादशाह का एक अफ़सर' },
     to: KING,
     text: {
       en: "The King! Shelter of the World! Respectfully Sheweth,— That the guard posted at your slave's house has been withdrawn, and ill-conducted men of the city come in mobs to plunder it. My wife and children live there. I pray that a guard be posted. (Prayers for the King's prosperity.) Petition of the home-born slave. [The King's note, in pencil:] Mirza Mughal will station a guard from the 37th Regiment Native Infantry at the petitioner's house.",
@@ -658,8 +668,8 @@ const datelessMessages: Message[] = [
     },
     why: {
       text: {
-        en: 'Written for the game from Mainodin\'s account: day by day perwanahs went out from the King to regiments, promising 30 rupees a month to infantry and 50 to cavalry who joined, and the soldiers made their way to Delhi.',
-        hi: 'यह मैनुद्दीन के बयान से खेल के लिए लिखा गया है: रोज़ बादशाह की तरफ़ से पलटनों को परवाने जाते थे, जिनमें आ मिलने वाले पैदल सिपाही को 30 रुपये और सवार को 50 रुपये महीने का वादा होता था, और सिपाही दिल्ली चल पड़ते थे।',
+        en: 'Written for the game from Mainodin\'s account: day by day perwanahs were extorted from the King, addressed to particular regiments, promising 30 rupees a month to infantry and 50 to cavalry who joined, and the soldiers made their way to Delhi.',
+        hi: 'यह मैनुद्दीन के बयान से खेल के लिए लिखा गया है: रोज़ बादशाह से ज़बरदस्ती परवाने लिखवाए जाते थे, ख़ास पलटनों के नाम, जिनमें आ मिलने वाले पैदल सिपाही को 30 रुपये और सवार को 50 रुपये महीने का वादा होता था, और सिपाही दिल्ली चल पड़ते थे।',
       },
       sources: [mh('p.60')],
     },
@@ -701,7 +711,7 @@ const datelessMessages: Message[] = [
     from: { en: 'Agent of the Raja of Ballabhgarh', hi: 'बल्लभगढ़ के राजा का मुख़्तार' },
     to: KING,
     text: {
-      en: 'The King! Shelter of the World! Respectfully Sheweth,— That on his departure from this, some time ago, agreeably to your Majesty\'s orders, the Rajah left certain necessary articles here, such as clothes, etc., which he has now sent for. I pray, therefore, that a passport may be granted, to the effect that the carts coming from Ballabhgarh are not to be molested by any one, and that when the things are being sent, the Soldiers at the Delhi Gate are not to oppose any hindrance. (Prayers for the prosperity of the reign.) Petition of the menial slave, Ahmad Ali, confidential Agent of the Rajah of Ballabhgarh. Seal of Ahmad Ali. [The King\'s order:] Mirza Mughal will have the pass made out and given.',
+      en: 'The King! Shelter of the World! Respectfully Sheweth,— That on his departure from this, some time ago, agreeably to your Majesty\'s orders, … the Rajah left certain necessary articles here, such as clothes, etc., which he has now sent for. I pray, therefore, that a passport may be granted, to the effect that the carts coming from Ballabhgarh are not to be molested by any one, and that when the things are being sent, the Soldiers at the Delhi Gate are not to oppose any hindrance. (Prayers for the prosperity of the reign.) Petition of the menial slave, Ahmad Ali, confidential Agent of the Rajah of Ballabhgarh. Seal of Ahmad Ali. [The King\'s order:] Mirza Mughal will have the pass made out and given.',
       hi: 'बादशाह सलामत! जहाँपनाह! अर्ज़ है कि— कुछ समय पहले हुज़ूर के हुक्म से जाते वक़्त राजा साहब कुछ ज़रूरी सामान, जैसे कपड़े वग़ैरह, यहाँ छोड़ गए थे, जो अब उन्होंने मँगवाया है। इसलिए गुज़ारिश है कि एक पास दिया जाए कि बल्लभगढ़ से आने वाली गाड़ियों को कोई न छेड़े, और सामान भेजते समय दिल्ली दरवाज़े के सिपाही कोई रुकावट न डालें। (बादशाहत सदा बनी रहे।) अर्ज़ी: अदना ग़ुलाम अहमद अली, बल्लभगढ़ के राजा के भरोसेमंद मुख़्तार की। अहमद अली की मुहर। [बादशाह का हुक्म:] मिर्ज़ा मुग़ल पास बनवाकर दे दें।',
     },
     checks: {
@@ -725,7 +735,7 @@ const datelessMessages: Message[] = [
     from: { en: 'Agent of the Raja of Ballabhgarh', hi: 'बल्लभगढ़ के राजा का मुख़्तार' },
     to: KING,
     text: {
-      en: 'The King! Shelter of the World! Respectfully Sheweth,— That on his departure from this, some time ago, agreeably to your Majesty\'s orders, the Rajah left certain necessary articles here, such as clothes, etc., which he has now sent for. I pray, therefore, that a passport may be granted, to the effect that the carts coming from Ballabhgarh are not to be molested by any one, and that when the things are being sent, the Soldiers at the Kashmiri Gate are not to oppose any hindrance. (Prayers for the prosperity of the reign.) Petition of the menial slave, Ahmad Ali, confidential Agent of the Rajah of Ballabhgarh. Seal of Ahmad Ali.',
+      en: 'The King! Shelter of the World! Respectfully Sheweth,— That on his departure from this, some time ago, agreeably to your Majesty\'s orders, … the Rajah left certain necessary articles here, such as clothes, etc., which he has now sent for. I pray, therefore, that a passport may be granted, to the effect that the carts coming from Ballabhgarh are not to be molested by any one, and that when the things are being sent, the Soldiers at the Kashmiri Gate are not to oppose any hindrance. (Prayers for the prosperity of the reign.) Petition of the menial slave, Ahmad Ali, confidential Agent of the Rajah of Ballabhgarh. Seal of Ahmad Ali.',
       hi: 'बादशाह सलामत! जहाँपनाह! अर्ज़ है कि— कुछ समय पहले हुज़ूर के हुक्म से जाते वक़्त राजा साहब कुछ ज़रूरी सामान, जैसे कपड़े वग़ैरह, यहाँ छोड़ गए थे, जो अब उन्होंने मँगवाया है। इसलिए गुज़ारिश है कि एक पास दिया जाए कि बल्लभगढ़ से आने वाली गाड़ियों को कोई न छेड़े, और सामान भेजते समय कश्मीरी दरवाज़े के सिपाही कोई रुकावट न डालें। (बादशाहत सदा बनी रहे।) अर्ज़ी: अदना ग़ुलाम अहमद अली, बल्लभगढ़ के राजा के भरोसेमंद मुख़्तार की। अहमद अली की मुहर।',
     },
     checks: {
@@ -752,19 +762,19 @@ const datelessMessages: Message[] = [
     from: { en: 'The King, in pencil', hi: 'बादशाह, पेंसिल से' },
     to: MIRZA,
     text: {
-      en: 'Mirza Mughal will post a guard at the Lahore Gate of the city, at the western end of the Chandni Chowk, so that the shops there are not plundered.',
-      hi: 'मिर्ज़ा मुग़ल शहर के लाहौरी दरवाज़े पर, चाँदनी चौक के पश्चिमी सिरे पर, पहरा लगाएँ, ताकि वहाँ की दुकानें न लूटी जाएँ।',
+      en: 'Mirza Mughal will post a guard at the Lahore Gate of the city, at the western end of the road through the Chandni Chowk, so that the shops there are not plundered.',
+      hi: 'मिर्ज़ा मुग़ल शहर के लाहौरी दरवाज़े पर, चाँदनी चौक वाली सड़क के पश्चिमी सिरे पर, पहरा लगाएँ, ताकि वहाँ की दुकानें न लूटी जाएँ।',
     },
     checks: {
-      en: ['Lahore Gate of the city', 'western end of the Chandni Chowk'],
-      hi: ['शहर के लाहौरी दरवाज़े पर', 'चाँदनी चौक के पश्चिमी सिरे पर'],
+      en: ['Lahore Gate of the city', 'western end of the road'],
+      hi: ['शहर के लाहौरी दरवाज़े पर', 'सड़क के पश्चिमी सिरे पर'],
     },
     why: {
       text: {
-        en: "Written for the game in the style of the King's pencil notes; every detail checks out. The Chandni Chowk runs from the city's Lahore Gate in the west wall to the Fort's own Lahore Gate, and in May a regiment was posted at each.",
-        hi: 'यह बादशाह की पेंसिल वाली टिप्पणियों के ढंग में खेल के लिए लिखा गया है; हर बात सही है। चाँदनी चौक पश्चिमी दीवार के शहर वाले लाहौरी दरवाज़े से क़िले के अपने लाहौरी दरवाज़े तक जाता है, और मई में दोनों पर एक-एक पलटन तैनात थी।',
+        en: "Written for the game in the style of the King's pencil notes; every detail checks out. The road through the Chandni Chowk, carrying on past the Fatehpuri Masjid as the Lahore Bazar, runs from the city's Lahore Gate in the west wall to the Fort's own Lahore Gate, and in May a regiment was posted at each.",
+        hi: 'यह बादशाह की पेंसिल वाली टिप्पणियों के ढंग में खेल के लिए लिखा गया है; हर बात सही है। चाँदनी चौक वाली सड़क, फ़तेहपुरी मस्जिद के आगे लाहौरी बाज़ार बनकर, पश्चिमी दीवार के शहर वाले लाहौरी दरवाज़े से क़िले के अपने लाहौरी दरवाज़े तक जाती है, और मई में दोनों पर एक-एक पलटन तैनात थी।',
       },
-      sources: [fanshawe('pp.5-6'), mh('p.61')],
+      sources: [fanshawe('pp.5-6'), fanshawe('p.53'), mh('p.61')],
     },
   },
   {
@@ -775,22 +785,22 @@ const datelessMessages: Message[] = [
     from: { en: 'The King, in pencil', hi: 'बादशाह, पेंसिल से' },
     to: MIRZA,
     text: {
-      en: 'Mirza Mughal will post a guard at the Lahore Gate of the Fort, at the western end of the Chandni Chowk where it meets the city wall, so that the shops there are not plundered.',
-      hi: 'मिर्ज़ा मुग़ल क़िले के लाहौरी दरवाज़े पर, चाँदनी चौक के पश्चिमी सिरे पर जहाँ वह शहर की दीवार से मिलता है, पहरा लगाएँ, ताकि वहाँ की दुकानें न लूटी जाएँ।',
+      en: 'Mirza Mughal will post a guard at the Lahore Gate of the Fort, at the western end of the road through the Chandni Chowk, where it meets the city wall, so that the shops there are not plundered.',
+      hi: 'मिर्ज़ा मुग़ल क़िले के लाहौरी दरवाज़े पर, चाँदनी चौक वाली सड़क के पश्चिमी सिरे पर जहाँ वह शहर की दीवार से मिलती है, पहरा लगाएँ, ताकि वहाँ की दुकानें न लूटी जाएँ।',
     },
     checks: {
       en: ['Lahore Gate of the Fort', 'where it meets the city wall'],
-      hi: ['क़िले के लाहौरी दरवाज़े पर', 'शहर की दीवार से मिलता है'],
+      hi: ['क़िले के लाहौरी दरवाज़े पर', 'शहर की दीवार से मिलती है'],
     },
     tells: [
       {
         kind: 'place',
         factId: 'gates',
         explain: {
-          en: "Delhi has two Lahore Gates. The one in the city wall, at the western end of the Chandni Chowk, is the city's. The Fort's Lahore Gate stands at the other end of the street. The forger fell into the oldest trap in Delhi.",
-          hi: 'दिल्ली में दो लाहौरी दरवाज़े हैं। शहर की दीवार वाला, चाँदनी चौक के पश्चिमी सिरे पर, शहर का है। क़िले का लाहौरी दरवाज़ा उसी सड़क के दूसरे सिरे पर है। जालसाज़ दिल्ली के सबसे पुराने जाल में फँस गया।',
+          en: "Delhi has two Lahore Gates. The one in the city wall, where the road through the Chandni Chowk ends in the west, is the city's. The Fort's Lahore Gate stands at the other, eastern end. The forger fell into the oldest trap in Delhi.",
+          hi: 'दिल्ली में दो लाहौरी दरवाज़े हैं। शहर की दीवार वाला, जहाँ चाँदनी चौक वाली सड़क पश्चिम में ख़त्म होती है, शहर का है। क़िले का लाहौरी दरवाज़ा दूसरे, पूर्वी सिरे पर है। जालसाज़ दिल्ली के सबसे पुराने जाल में फँस गया।',
         },
-        sources: [fanshawe('pp.5-6')],
+        sources: [fanshawe('pp.5-6'), fanshawe('p.53')],
       },
     ],
   },
@@ -804,19 +814,20 @@ const datelessMessages: Message[] = [
     from: { en: 'Shopkeepers of the Chatta', hi: 'छत्ता बाज़ार के दुकानदार' },
     to: KING,
     text: {
-      en: 'The King! Shelter of the World! Respectfully Sheweth,— That a body of soldiers have taken up their quarters right in front of our shops, and we slaves cannot open them. We pray that the soldiers be moved. (Prayers for the prosperity of the reign.) Petition of the slaves, the shopkeepers of the Chatta. [The King\'s order, in pencil:] Mirza Mughal will have their shops given to these shopkeepers.',
-      hi: 'बादशाह सलामत! जहाँपनाह! अर्ज़ है कि— सिपाहियों की एक टोली ने ठीक हमारी दुकानों के सामने डेरा डाल लिया है, और हम ग़ुलाम दुकानें नहीं खोल पाते। गुज़ारिश है कि सिपाहियों को हटाया जाए। (बादशाहत सदा बनी रहे।) अर्ज़ी: ग़ुलाम, छत्ता बाज़ार के दुकानदारों की। [बादशाह का हुक्म, पेंसिल से:] मिर्ज़ा मुग़ल इन दुकानदारों को उनकी दुकानें दिलवा दें।',
+      en: "The King! Shelter of the World! Respectfully Sheweth,— That a body of Soldiery have established their residence immediately in the front of our shops, and we slaves are unable to open them, in consequence. We pray, therefore, that… orders may be issued to the Officers of the State, for the removal of these Soldiers from their present locality… (Prayers for the prosperity of the reign.) Petition of the slaves, the Shop-keepers of the Chatta. [The King's order, in pencil:] Mirza Mughal will have their shops given to these shop-keepers.",
+      hi: 'बादशाह सलामत! जहाँपनाह! अर्ज़ है कि— सिपाहियों की एक टोली ने ठीक हमारी दुकानों के सामने डेरा डाल लिया है, और इस वजह से हम ग़ुलाम दुकानें नहीं खोल पाते। इसलिए गुज़ारिश है कि… सरकारी अफ़सरों को हुक्म दिया जाए कि इन सिपाहियों को यहाँ से हटाएँ… (बादशाहत सदा बनी रहे।) अर्ज़ी: ग़ुलाम, छत्ता बाज़ार के दुकानदारों की। [बादशाह का हुक्म, पेंसिल से:] मिर्ज़ा मुग़ल इन दुकानदारों को उनकी दुकानें दिलवा दें।',
     },
     checks: {
-      en: ['right in front of our shops', 'Mirza Mughal will have their shops given'],
+      en: ['immediately in the front of our shops', 'Mirza Mughal will have their shops given'],
       hi: ['ठीक हमारी दुकानों के सामने डेरा डाल लिया', 'मिर्ज़ा मुग़ल इन दुकानदारों को उनकी दुकानें दिलवा दें'],
     },
+    document: { sources: [trial(CHATTA)] },
     why: {
       text: {
-        en: "Written for the game on the model of a real petition from the Chatta shopkeepers in the trial papers, where the King's pencil note reads just like this. The King's own order of May complains that soldiers had quartered themselves in the palace and the bazaars.",
-        hi: 'यह मुक़दमे के काग़ज़ों में छत्ता बाज़ार के दुकानदारों की एक असली अर्ज़ी के नमूने पर खेल के लिए लिखा गया है, जिस पर बादशाह की पेंसिल वाली टिप्पणी ठीक ऐसी ही है। मई के बादशाह के अपने हुक्म में शिकायत है कि सिपाहियों ने महल और बाज़ारों में डेरे डाल लिए थे।',
+        en: "The Chatta shopkeepers' petition in the trial papers, undated, with the King's pencil order on it. The King's own order complains that soldiers had quartered themselves in the palace and at the city gates, and had desolated the bazaars.",
+        hi: 'यह मुक़दमे के काग़ज़ों में छत्ता बाज़ार के दुकानदारों की बिना तारीख़ की अर्ज़ी है, जिस पर बादशाह का पेंसिल से लिखा हुक्म है। बादशाह के अपने हुक्म में शिकायत है कि सिपाहियों ने महल और शहर के दरवाज़ों पर डेरे डाल लिए थे और बाज़ार उजाड़ दिए थे।',
       },
-      sources: [trial("petition of the shopkeepers of the Chatta, with the King's pencil order"), trial(KING_ORDER)],
+      sources: [trial(CHATTA), trial(KING_ORDER)],
     },
   },
   {
@@ -827,8 +838,8 @@ const datelessMessages: Message[] = [
     from: { en: 'Shopkeepers of the Chatta', hi: 'छत्ता बाज़ार के दुकानदार' },
     to: KING,
     text: {
-      en: 'The King! Shelter of the World! Respectfully Sheweth,— That a body of soldiers have taken up their quarters right in front of our shops, and we slaves cannot open them. We pray that the soldiers be moved. (Prayers for the prosperity of the reign.) Petition of the slaves, the shopkeepers of the Chatta. [The King\'s reply:] My dear Mirza, kindly see that these good shopkeepers get their shops back. Yours affectionately, Bahadur Shah.',
-      hi: 'बादशाह सलामत! जहाँपनाह! अर्ज़ है कि— सिपाहियों की एक टोली ने ठीक हमारी दुकानों के सामने डेरा डाल लिया है, और हम ग़ुलाम दुकानें नहीं खोल पाते। गुज़ारिश है कि सिपाहियों को हटाया जाए। (बादशाहत सदा बनी रहे।) अर्ज़ी: ग़ुलाम, छत्ता बाज़ार के दुकानदारों की। [बादशाह का जवाब:] माई डियर मिर्ज़ा, मेहरबानी करके देख लेना कि इन भले दुकानदारों को दुकानें वापस मिल जाएँ। योर्स अफ़ेक्शनेटली, बहादुर शाह।',
+      en: "The King! Shelter of the World! Respectfully Sheweth,— That a body of Soldiery have established their residence immediately in the front of our shops, and we slaves are unable to open them, in consequence. We pray, therefore, that… orders may be issued to the Officers of the State, for the removal of these Soldiers from their present locality… (Prayers for the prosperity of the reign.) Petition of the slaves, the Shop-keepers of the Chatta. [The King's reply:] My dear Mirza, kindly see that these good shopkeepers get their shops back. Yours affectionately, Bahadur Shah.",
+      hi: 'बादशाह सलामत! जहाँपनाह! अर्ज़ है कि— सिपाहियों की एक टोली ने ठीक हमारी दुकानों के सामने डेरा डाल लिया है, और इस वजह से हम ग़ुलाम दुकानें नहीं खोल पाते। इसलिए गुज़ारिश है कि… सरकारी अफ़सरों को हुक्म दिया जाए कि इन सिपाहियों को यहाँ से हटाएँ… (बादशाहत सदा बनी रहे।) अर्ज़ी: ग़ुलाम, छत्ता बाज़ार के दुकानदारों की। [बादशाह का जवाब:] माई डियर मिर्ज़ा, मेहरबानी करके देख लेना कि इन भले दुकानदारों को दुकानें वापस मिल जाएँ। योर्स अफ़ेक्शनेटली, बहादुर शाह।',
     },
     checks: {
       en: ['My dear Mirza', 'Yours affectionately'],
@@ -837,9 +848,10 @@ const datelessMessages: Message[] = [
     tells: [
       {
         kind: 'habit',
-        sources: [trial("petition of the shopkeepers of the Chatta, with the King's pencil order")],
+        ruleId: 'petition-form',
+        sources: [trial(CHATTA)],
         explain: {
-          en: "The King's notes on petitions are short orders: 'Mirza Mughal will have their shops given to these shopkeepers.' No 'My dear', no 'Yours affectionately'. That is an English letter wearing a Mughal turban.",
+          en: "The King's notes on petitions are short orders: 'Mirza Mughal will have their shops given to these shop-keepers.' No 'My dear', no 'Yours affectionately'. That is an English letter wearing a Mughal turban.",
           hi: "अर्ज़ियों पर बादशाह की टिप्पणियाँ छोटे हुक्म होती हैं: 'मिर्ज़ा मुग़ल इन दुकानदारों को उनकी दुकानें दिलवा दें।' न 'माई डियर', न 'योर्स अफ़ेक्शनेटली'। यह मुग़ली पगड़ी पहने एक अंग्रेज़ी चिट्ठी है।",
         },
       },
@@ -865,7 +877,7 @@ const datelessMessages: Message[] = [
         en: "Written for the game; every detail checks out. Kazi Faiz Ulla was the city's chief police officer in May. The King's own order complains that soldiers plundered houses 'on the false plea that they have concealed Europeans', and Mainodin says the sepoys recognised no authority that was not military.",
         hi: "यह खेल के लिए लिखा गया है; हर बात सही है। मई में क़ाज़ी फ़ैज़ुल्ला शहर के सबसे बड़े पुलिस अफ़सर थे। बादशाह का अपना हुक्म शिकायत करता है कि सिपाही 'यूरोपियन छिपाने के झूठे बहाने' से घर लूटते थे, और मैनुद्दीन लिखते हैं कि सिपाही फ़ौजी के सिवा किसी का हुक्म नहीं मानते थे।",
       },
-      sources: [trial(CHUNI_19_20), trial(KING_ORDER), mh('p.58')],
+      sources: [trial(CHUNI_19_20), trial(KING_ORDER), mh('p.58'), jl('p.92')],
     },
   },
   {
@@ -886,6 +898,7 @@ const datelessMessages: Message[] = [
     tells: [
       {
         kind: 'habit',
+        ruleId: 'petition-form',
         sources: [trial('petitions, e.g. Nos. 60-68, pp.32-35')],
         explain: {
           en: "That is how an English clerk ends a letter to his Collector, not how a Kotwal ends a petition to the King. Real petitions close 'Petition of the slave…', usually with the petitioner's seal.",
@@ -901,11 +914,11 @@ const datelessMessages: Message[] = [
     tier: 2,
     real: true,
     pair: 'daily-report',
-    from: { en: 'Palace news-writer', hi: 'महल का अख़बार-नवीस' },
+    from: { en: 'Palace news-writer', hi: 'महल का ख़बरनवीस' },
     to: OFFICE,
     text: {
       en: 'Report for {weekday}, {date}. The King came from his private apartments into the Hall of Special Audience and held his court. Nobles and officers presented nazars of gold mohurs and rupees. The soldiers again asked for their pay.',
-      hi: '{weekday}, {date} की रिपोर्ट। बादशाह अपने ख़ास महल से दीवान-ए-ख़ास में आए और दरबार लगाया। अमीरों और अफ़सरों ने सोने की मोहरों और रुपयों की नज़रें पेश कीं। सिपाहियों ने फिर अपनी तनख़्वाह माँगी।',
+      hi: '{weekday}, {date} की रिपोर्ट। बादशाह अपने ख़ास महल से दीवान-ए-ख़ास में आए और दरबार लगाया। अमीरों और अफ़सरों ने सोने की मोहरों और रुपयों के नज़राने पेश किए। सिपाहियों ने फिर अपनी तनख़्वाह माँगी।',
     },
     checks: {
       en: ['Report for', 'held his court'],
@@ -914,7 +927,7 @@ const datelessMessages: Message[] = [
     why: {
       text: {
         en: 'Written for the game; every detail checks out. The date and weekday agree, the soldiers made the King hold a darbar every day, nazars of gold mohurs and rupees were presented at it, and the troops kept demanding pay.',
-        hi: 'यह खेल के लिए लिखा गया है; हर बात सही है। तारीख़ और दिन मेल खाते हैं, सिपाहियों ने बादशाह से रोज़ दरबार लगवाया, उसमें सोने की मोहरों और रुपयों की नज़रें पेश होती थीं, और फ़ौज बार-बार तनख़्वाह माँगती थी।',
+        hi: 'यह खेल के लिए लिखा गया है; हर बात सही है। तारीख़ और दिन मेल खाते हैं, सिपाहियों ने बादशाह से रोज़ दरबार लगवाया, उसमें सोने की मोहरों और रुपयों के नज़राने पेश होते थे, और फ़ौज बार-बार तनख़्वाह माँगती थी।',
       },
       sources: [mh('p.60'), trial(CHUNI_18), jl('pp.100, 105')],
     },
@@ -924,11 +937,11 @@ const datelessMessages: Message[] = [
     tier: 2,
     real: false,
     pair: 'daily-report',
-    from: { en: 'Palace news-writer', hi: 'महल का अख़बार-नवीस' },
+    from: { en: 'Palace news-writer', hi: 'महल का ख़बरनवीस' },
     to: OFFICE,
     text: {
       en: 'Report for {weekday+1}, {date}. The King came from his private apartments into the Hall of Special Audience and held his court. Nobles and officers presented nazars of gold mohurs and rupees. The soldiers again asked for their pay.',
-      hi: '{weekday+1}, {date} की रिपोर्ट। बादशाह अपने ख़ास महल से दीवान-ए-ख़ास में आए और दरबार लगाया। अमीरों और अफ़सरों ने सोने की मोहरों और रुपयों की नज़रें पेश कीं। सिपाहियों ने फिर अपनी तनख़्वाह माँगी।',
+      hi: '{weekday+1}, {date} की रिपोर्ट। बादशाह अपने ख़ास महल से दीवान-ए-ख़ास में आए और दरबार लगाया। अमीरों और अफ़सरों ने सोने की मोहरों और रुपयों के नज़राने पेश किए। सिपाहियों ने फिर अपनी तनख़्वाह माँगी।',
     },
     checks: {
       en: ['Report for', 'held his court'],
@@ -938,9 +951,10 @@ const datelessMessages: Message[] = [
       {
         kind: 'weekday',
         factId: 'calendar',
+        ruleId: 'weekdays',
         explain: {
           en: 'The weekday is one day off. Count from Sunday 17 May. A palace news-writer who lost track of the days would not keep his post for a week.',
-          hi: 'दिन एक आगे खिसका हुआ है। रविवार 17 मई से गिनिए। जो अख़बार-नवीस दिन ही भूल जाए, वह हफ़्ता भर भी नौकरी पर नहीं टिकता।',
+          hi: 'दिन एक आगे खिसका हुआ है। रविवार 17 मई से गिनिए। जो ख़बरनवीस दिन ही भूल जाए, वह हफ़्ता भर भी नौकरी पर नहीं टिकता।',
         },
       },
     ],
@@ -952,7 +966,7 @@ const datelessMessages: Message[] = [
     tier: 2,
     real: true,
     pair: 'rumour',
-    from: { en: 'News-writer', hi: 'अख़बार-नवीस' },
+    from: { en: 'News-writer', hi: 'ख़बरनवीस' },
     to: OFFICE,
     text: {
       en: 'It is reported that English troops are coming from Ambala. Nothing more is known for certain; otherwise everything is quiet.',
@@ -975,7 +989,7 @@ const datelessMessages: Message[] = [
     tier: 2,
     real: false,
     pair: 'rumour',
-    from: { en: 'News-writer', hi: 'अख़बार-नवीस' },
+    from: { en: 'News-writer', hi: 'ख़बरनवीस' },
     to: OFFICE,
     text: {
       en: 'It is certain: a Persian army of 50,000 men has crossed the Attock and will be at Delhi within the month. The English are finished.',
@@ -988,10 +1002,11 @@ const datelessMessages: Message[] = [
     tells: [
       {
         kind: 'knowledge',
+        ruleId: 'persian-bait',
         sources: [trial("'Authentic News', 23 March 1857, and Delhi newspapers of August-September 1857, c. pp.128-31")],
         explain: {
-          en: "No Persian army was coming. In March a forged 'proclamation of the King of Persia' on the Jama Masjid had promised one, and later that summer the Delhi papers printed the Persians at Kandahar, then 50,000 strong, then at Attock, while saying they did not believe it themselves. 'It is certain' is the giveaway; see the rulebook.",
-          hi: "कोई ईरानी फ़ौज नहीं आ रही थी। मार्च में जामा मस्जिद पर 'ईरान के बादशाह का' एक जाली ऐलान ऐसा ही वादा कर चुका था, और उसी गर्मी में बाद में दिल्ली के अख़बारों ने ईरानियों को पहले कंधार, फिर 50,000 की तादाद में, फिर अटक पर छापा, पर साथ में लिखा कि वे ख़ुद इस पर यक़ीन नहीं करते। 'पक्की ख़बर' ही पोल खोलती है; नियमों की किताब देखिए।",
+          en: "No Persian army was coming. In March a forged 'proclamation of the King of Persia' on the Jama Masjid had promised one, and later that summer the Delhi papers printed the Persians at Kandahar, then 50,000 strong, then at Attock, though the editors who printed Attock said they did not believe it. 'It is certain' is the giveaway; see the rulebook.",
+          hi: "कोई ईरानी फ़ौज नहीं आ रही थी। मार्च में जामा मस्जिद पर 'ईरान के बादशाह का' एक जाली ऐलान ऐसा ही वादा कर चुका था, और उसी गर्मी में बाद में दिल्ली के अख़बारों ने ईरानियों को पहले कंधार, फिर 50,000 की तादाद में, फिर अटक पर छापा, हालाँकि अटक की ख़बर छापने वाले संपादकों ने लिखा कि उन्हें इस पर यक़ीन नहीं। 'पक्की ख़बर' ही पोल खोलती है; नियमों की किताब देखिए।",
         },
       },
     ],
@@ -1039,10 +1054,10 @@ const datelessMessages: Message[] = [
         kind: 'knowledge',
         factId: 'english-force',
         explain: {
-          en: 'In May the English force was still gathering at Ambala, Karnal and Meerut. It took the Ridge only on 8 June, after beating the rebels at Badli-ki-Serai, and did not storm Delhi until 14 September. The forger is reading next month\'s news.',
-          hi: 'मई में अंग्रेज़ी फ़ौज अभी अंबाला, करनाल और मेरठ में जमा हो रही थी। रिज पर उसने 8 जून को ही क़ब्ज़ा किया, बादली की सराय में बाग़ियों को हराने के बाद, और दिल्ली पर धावा 14 सितंबर को बोला। जालसाज़ अगले महीने का अख़बार पढ़ रहा है।',
+          en: 'In May the English force was still gathering at Ambala, Karnal and Meerut, and met the rebels on the Hindun only at the very end of the month. It took the Ridge only on 8 June, after beating the rebels at Badli-ki-Serai, and did not storm Delhi until 14 September. The forger is reading next month\'s news.',
+          hi: 'मई में अंग्रेज़ी फ़ौज अभी अंबाला, करनाल और मेरठ में जमा हो रही थी, और महीने के बिल्कुल आख़िर में ही हिंडन पर बाग़ियों से भिड़ी। रिज पर उसने 8 जून को ही क़ब्ज़ा किया, बादली की सराय में बाग़ियों को हराने के बाद, और दिल्ली पर धावा 14 सितंबर को बोला। जालसाज़ अगले महीने का अख़बार पढ़ रहा है।',
         },
-        sources: [sen('p.79'), sen('pp.105-07')],
+        sources: [sen('p.79'), sen('pp.105-07'), jl('p.108')],
       },
     ],
   },
@@ -1063,10 +1078,10 @@ const datelessMessages: Message[] = [
     },
     why: {
       text: {
-        en: 'Written for the game. It reads like a trap, but every detail is right: the regiments, Sunday 10 May, and the Commander-in-Chief (General Anson). On 17 May a man really was seized at the bridge carrying a letter from a European at Meerut.',
-        hi: 'यह खेल के लिए लिखा गया है। पढ़ने में जाल लगता है, पर हर बात सही है: पलटनें, रविवार 10 मई, और कमांडर-इन-चीफ़ (जनरल एंसन)। 17 मई को सच में पुल पर एक आदमी पकड़ा गया था, जिसके पास मेरठ के किसी यूरोपियन की चिट्ठी थी।',
+        en: 'Written for the game. It reads like a trap, but every detail is right: the regiments, Sunday 10 May, and the Commander-in-Chief (General Anson, until he died of cholera on 27 May). On 17 May a man really was seized at the bridge carrying a letter from a European at Meerut.',
+        hi: 'यह खेल के लिए लिखा गया है। पढ़ने में जाल लगता है, पर हर बात सही है: पलटनें, रविवार 10 मई, और कमांडर-इन-चीफ़ (जनरल एंसन, 27 मई को हैज़े से मौत तक)। 17 मई को सच में पुल पर एक आदमी पकड़ा गया था, जिसके पास मेरठ के किसी यूरोपियन की चिट्ठी थी।',
       },
-      sources: [trial(CHUNI_17), sen('pp.59-62'), mh('p.53'), majumdar('p.71')],
+      sources: [trial(CHUNI_17), sen('pp.59-62'), mh('p.53'), majumdar('p.71'), sen('p.78')],
     },
   },
   {
@@ -1088,21 +1103,45 @@ const datelessMessages: Message[] = [
       {
         kind: 'anachronism',
         factId: 'officials',
+        ruleId: 'english-titles',
         explain: {
           en: "In 1857 Lord Canning is Governor-General. 'Viceroy' came only after the Crown took India over from the Company, proclaimed on 1 November 1858. No English officer in May 1857 would promote his chief eighteen months early.",
           hi: "1857 में लॉर्ड कैनिंग गवर्नर-जनरल हैं। 'वायसराय' का ओहदा तब आया जब ताज ने कंपनी से हिंदुस्तान ले लिया, जिसका ऐलान 1 नवंबर 1858 को हुआ। मई 1857 का कोई अंग्रेज़ अफ़सर अपने बड़े साहब को अठारह महीने पहले तरक़्क़ी नहीं देगा।",
         },
-        sources: [majumdar('p.71'), sen('p.356')],
+        sources: [majumdar('p.71'), fanshawe('p.214'), sen('p.356')],
       },
     ],
   },
 
   // ── Knowledge tells and genuine papers that look suspicious ───────────────────────
   {
+    id: 'courts-real',
+    tier: 2,
+    real: true,
+    pair: 'proclamation',
+    from: { en: 'Proclamation', hi: 'ऐलान' },
+    to: PEOPLE,
+    text: {
+      en: "Proclamation under the King's special seal: courts of justice have been established in the city, and the soldiery are forbidden to commit acts of violence.",
+      hi: 'बादशाह की ख़ास मुहर से ऐलान: शहर में इंसाफ़ के लिए अदालतें बना दी गई हैं, और सिपाहियों को ज़ोर-ज़बरदस्ती करने से मना किया जाता है।',
+    },
+    checks: {
+      en: ['courts of justice have been established', "under the King's special seal"],
+      hi: ['इंसाफ़ के लिए अदालतें बना दी गई हैं', 'बादशाह की ख़ास मुहर से'],
+    },
+    why: {
+      text: {
+        en: "Written for the game from the King's own order to Mirza Mughal: a notification under the special seal was 'issued publicly, proclaiming that courts of justice had been established in the city, and prohibiting acts of violence on the part of the soldiery'. The King adds that even this had no effect. Jiwan Lal records a Naib Kazi appointed for the administration of justice on 15 May.",
+        hi: "यह मिर्ज़ा मुग़ल के नाम बादशाह के अपने हुक्म से खेल के लिए लिखा गया है: ख़ास मुहर वाला एक ऐलान 'सबके सामने जारी हुआ, कि शहर में इंसाफ़ की अदालतें बन गई हैं और सिपाहियों की ज़ोर-ज़बरदस्ती मना है'। बादशाह आगे लिखते हैं कि इसका भी कोई असर नहीं हुआ। जीवन लाल लिखते हैं कि 15 मई को इंसाफ़ के काम के लिए एक नायब क़ाज़ी रखा गया।",
+      },
+      sources: [trial(KING_ORDER), jl('p.92')],
+    },
+  },
+  {
     id: 'bakht-khan-forged',
     tier: 3,
     real: false,
-    pair: 'drum',
+    pair: 'proclamation',
     from: { en: 'Drum proclamation', hi: 'ढिंढोरा' },
     to: PEOPLE,
     text: {
@@ -1118,8 +1157,8 @@ const datelessMessages: Message[] = [
         kind: 'anachronism',
         factId: 'bakht-khan',
         explain: {
-          en: 'A real order, about six weeks early. Bakht Khan had it drummed through the city on 2 July, the day he took command after arriving with the Bareilly brigade. In May he was still at Bareilly, and the Commander-in-Chief was Mirza Mughal.',
-          hi: 'हुक्म असली है, बस लगभग छह हफ़्ते पहले आ गया। बख़्त ख़ान ने यह ऐलान 2 जुलाई को करवाया, जिस दिन बरेली ब्रिगेड के साथ पहुँचकर उन्होंने कमान सँभाली। मई में वे अभी बरेली में थे, और कमांडर-इन-चीफ़ मिर्ज़ा मुग़ल थे।',
+          en: 'A real order, five to seven weeks early. Bakht Khan had it drummed through the city on 2 July, the day he took command after arriving with the Bareilly brigade. In May he was still at Bareilly, and the Commander-in-Chief was Mirza Mughal.',
+          hi: 'हुक्म असली है, बस पाँच से सात हफ़्ते पहले आ गया। बख़्त ख़ान ने यह ऐलान 2 जुलाई को करवाया, जिस दिन बरेली ब्रिगेड के साथ पहुँचकर उन्होंने कमान सँभाली। मई में वे अभी बरेली में थे, और कमांडर-इन-चीफ़ मिर्ज़ा मुग़ल थे।',
         },
         sources: [jl('pp.133-35'), sen('p.83')],
       },
@@ -1167,6 +1206,7 @@ const datelessMessages: Message[] = [
       {
         kind: 'weekday',
         factId: 'calendar',
+        ruleId: 'weekdays',
         explain: {
           en: "17 May 1857 was a Sunday, your first day at this desk. Everything else here is true, which is just how the Firangi likes it: one wrong day in a page of facts.",
           hi: '17 मई 1857 रविवार था, इस मेज़ पर आपका पहला दिन। बाक़ी सब सच है, और फ़िरंगी को यही पसंद है: सच्ची बातों के पन्ने में एक ग़लत दिन।',
@@ -1257,7 +1297,7 @@ const datelessMessages: Message[] = [
     to: OFFICE,
     text: {
       en: 'Good news for the darbar: Maharaja Narendra Singh of Patiala has come to Delhi in person with his army and presented a nazar of gold mohurs. He will fight for the King.',
-      hi: 'दरबार के लिए ख़ुशख़बरी: पटियाला के महाराजा नरेंद्र सिंह ख़ुद अपनी फ़ौज लेकर दिल्ली आ गए हैं और सोने की मोहरों की नज़र पेश की है। वे बादशाह के लिए लड़ेंगे।',
+      hi: 'दरबार के लिए ख़ुशख़बरी: पटियाला के महाराजा नरेंद्र सिंह ख़ुद अपनी फ़ौज लेकर दिल्ली आ गए हैं और सोने की मोहरों का नज़राना पेश किया है। वे बादशाह के लिए लड़ेंगे।',
     },
     checks: {
       en: ['has come to Delhi in person with his army', 'He will fight for the King'],
@@ -1267,10 +1307,10 @@ const datelessMessages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: "Patiala went the other way. Within eighteen hours of the English call the Maharaja was camped near Ambala, and on 19 May the court heard he had joined the English. He never even answered the King's letters. The only Patiala prince in Delhi was his brother, Kunwar Ajit Singh, who was on bad terms with him.",
-          hi: 'पटियाला उलटी तरफ़ गया। अंग्रेज़ों के बुलाने के अठारह घंटे के अंदर महाराजा अंबाला के पास डेरा डाले बैठे थे, और 19 मई को दरबार को ख़बर मिली कि वे अंग्रेज़ों से जा मिले हैं। उन्होंने बादशाह की चिट्ठियों का जवाब तक नहीं दिया। दिल्ली में पटियाला का अकेला राजकुमार उनका भाई कुँवर अजीत सिंह था, जिसकी उनसे बनती नहीं थी।',
+          en: "Patiala went the other way. Within eighteen hours of the English call the Maharaja was camped near Ambala, and on 19 May the court heard he had joined the English. He never even answered the King's letters. His brother, Kunwar Ajit Singh, did live in Delhi, but the King himself said the Kunwar was on bad terms with the Maharaja.",
+          hi: 'पटियाला उलटी तरफ़ गया। अंग्रेज़ों के बुलाने के अठारह घंटे के अंदर महाराजा अंबाला के पास डेरा डाले बैठे थे, और 19 मई को दरबार को ख़बर मिली कि वे अंग्रेज़ों से जा मिले हैं। उन्होंने बादशाह की चिट्ठियों का जवाब तक नहीं दिया। उनके भाई कुँवर अजीत सिंह दिल्ली में ज़रूर रहते थे, पर ख़ुद बादशाह ने कहा कि कुँवर की महाराजा से बनती नहीं थी।',
         },
-        sources: [caveBrowne('p.190'), jl('p.97'), majumdar('p.126')],
+        sources: [caveBrowne('p.190'), jl('p.97'), trial(CHUNI_19_20), majumdar('p.126')],
       },
     ],
   },
