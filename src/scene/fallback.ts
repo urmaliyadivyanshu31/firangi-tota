@@ -1,12 +1,36 @@
 // The 2D fallback: a still drawing of the era's desk for devices without WebGL2 or after the
-// context is lost. No three.js here, so the app can show it without loading the 3D chunk.
+// context is lost, with the message drawn big on its paper by the same drawer as the 3D sheet.
+// No three.js here, so the app can show it without loading the 3D chunk.
 import type { EraId } from '../content/types'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
+import { TITLE_TONE, drawDayTitle, drawSheet, loadSheetFonts, measureSheet } from './sheet'
+import type { DayTitle, FlashKind, SheetSpec, SheetStamp, StampKind } from './types'
 
 export interface Fallback {
   setEra(id: EraId): void
+  /** Draws the message on the paper, big enough to read; resolves once fonts are in. */
+  showMessage(s: SheetSpec): Promise<void>
+  /** Language or pencil change: the same sheet, redrawn. */
+  redrawMessage(s: SheetSpec): void
+  /** A short saffron glow (right) or red ink from the edges (wrong). */
+  flash(kind: FlashKind): void
+  /** The day's title over the wall, about 1.6 s. */
+  dayTitle(t: DayTitle): Promise<void>
+  /** The stamp's imprint on the paper. */
+  stamp(kind: StampKind): Promise<void>
   dispose(): void
 }
+
+const insetPx = (el: Element, name: string, fallback: number): number => {
+  try {
+    const n = parseFloat(getComputedStyle(el).getPropertyValue(name))
+    return Number.isFinite(n) ? n : fallback
+  } catch {
+    return fallback
+  }
+}
+
+const DEVANAGARI = /[ऀ-ॿ]/
 
 export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   const canvas = document.createElement('canvas')
@@ -20,40 +44,192 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     g = null
   }
   let current = era
+  let sheet: SheetSpec | null = null
+  let stamp: SheetStamp | null = null
+  let title: DayTitle | null = null
+  let flashK: { kind: FlashKind; t0: number } | null = null
+  let raf = 0
+  let disposed = false
+  // the composed still (desk, title, paper), kept so a flash only repaints an overlay on top
+  let base: HTMLCanvasElement | null = null
+  let W = 390
+  let H = 844
+  let dpr = 1
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  const draw = () => {
+  const compose = () => {
     if (!g) return
-    const W = Math.max(1, el.clientWidth || window.innerWidth || 390)
-    const H = Math.max(1, el.clientHeight || window.innerHeight || 844)
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    canvas.width = Math.round(W * dpr)
-    canvas.height = Math.round(H * dpr)
+    W = Math.max(1, el.clientWidth || window.innerWidth || 390)
+    H = Math.max(1, el.clientHeight || window.innerHeight || 844)
+    dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const pw = Math.round(W * dpr)
+    const ph = Math.round(H * dpr)
+    if (canvas.width !== pw || canvas.height !== ph) {
+      canvas.width = pw
+      canvas.height = ph
+    }
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
     drawDesk(g, W, H, ERA_PALETTES[current])
+    if (title) drawTitleOver(g, W, H, title, current)
+    if (sheet) drawPaper(g, W, H, sheet, stamp, el)
+    if (flashK) {
+      // keep the still for the flash frames (one canvas, resized only with the screen)
+      base ??= document.createElement('canvas')
+      if (base.width !== pw || base.height !== ph) {
+        base.width = pw
+        base.height = ph
+      }
+      base.getContext('2d')?.drawImage(canvas, 0, 0)
+    }
+  }
+
+  const frame = (now: number) => {
+    raf = 0
+    if (!g || disposed || !flashK) return
+    const t = (now - flashK.t0) / (flashK.kind === 'right' ? 1000 : 1300)
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    if (base) g.drawImage(base, 0, 0)
+    g.setTransform(dpr, 0, 0, dpr, 0, 0)
+    if (t >= 1) {
+      flashK = null
+      return
+    }
+    drawFlash(g, W, H, flashK.kind, t)
+    raf = requestAnimationFrame(frame)
   }
 
   let timer = 0
   const onResize = () => {
     window.clearTimeout(timer)
-    timer = window.setTimeout(draw, 100)
+    timer = window.setTimeout(compose, 100)
   }
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null
   ro?.observe(el)
   window.addEventListener('resize', onResize)
-  draw()
+  compose()
+
+  const fonts = (lang: SheetSpec['lang']) =>
+    loadSheetFonts(lang, 2000).then((ok) => {
+      // a slow network: draw now, and again when the faces arrive
+      if (!ok) void loadSheetFonts(lang, 0).then(() => !disposed && compose())
+    })
 
   return {
     setEra(id) {
       current = id
-      draw()
+      sheet = null
+      stamp = null
+      title = null
+      compose()
+    },
+    async showMessage(s) {
+      await fonts(s.lang)
+      if (disposed) return
+      title = null
+      sheet = s
+      stamp = null
+      compose()
+    },
+    redrawMessage(s) {
+      sheet = s
+      if (stamp && g) stamp = { ...stamp, at: measureSheet(g, s).stampAt }
+      compose()
+    },
+    flash(kind) {
+      if (!g || disposed || reduced || typeof requestAnimationFrame !== 'function') return
+      flashK = { kind, t0: typeof performance !== 'undefined' ? performance.now() : Date.now() }
+      compose()
+      if (!raf) raf = requestAnimationFrame(frame)
+    },
+    async dayTitle(t) {
+      await loadSheetFonts(DEVANAGARI.test(t.big + t.small) ? 'hi' : 'en', 1500)
+      if (disposed) return
+      sheet = null
+      stamp = null
+      title = t
+      compose()
+      await new Promise<void>((r) => setTimeout(r, reduced ? 900 : 1600))
+    },
+    async stamp(kind) {
+      if (!sheet || !g) return
+      stamp = { kind, at: measureSheet(g, sheet).stampAt, rot: kind === 'asli' ? -0.18 : 0.14 }
+      compose()
     },
     dispose() {
+      disposed = true
       window.clearTimeout(timer)
+      if (raf) cancelAnimationFrame(raf)
       ro?.disconnect()
       window.removeEventListener('resize', onResize)
       canvas.remove()
+      base = null
     },
   }
+}
+
+/** The message's paper, as big as the screen allows between the HUD bars, turned a hair. */
+function drawPaper(g: CanvasRenderingContext2D, W: number, H: number, s: SheetSpec, stamp: SheetStamp | null, el: Element): void {
+  const portrait = W / H < 0.8
+  const top = insetPx(el, '--ft-hud-top', portrait ? 70 : 62)
+  const bottom = insetPx(el, '--ft-hud-bottom', portrait ? 140 : 120)
+  const left = insetPx(el, '--ft-hud-left', 0)
+  const right = insetPx(el, '--ft-hud-right', 0)
+  const aspect = measureSheet(g, s).aspect
+  const freeW = W - left - right
+  const freeH = H - top - bottom
+  let pw = freeW * 0.92
+  let ph = pw * aspect
+  if (ph > freeH * 0.94) {
+    ph = freeH * 0.94
+    pw = ph / aspect
+  }
+  g.save()
+  g.translate(left + freeW / 2, top + freeH / 2)
+  g.rotate(-0.012)
+  g.translate(-pw / 2, -ph / 2)
+  g.shadowColor = 'rgba(0,0,0,0.5)'
+  g.shadowBlur = 18
+  g.shadowOffsetY = 6
+  g.fillStyle = '#e8dcc0'
+  g.fillRect(0, 0, pw, ph)
+  g.shadowColor = 'rgba(0,0,0,0)'
+  g.shadowBlur = 0
+  g.shadowOffsetY = 0
+  drawSheet(g, pw, ph, s, stamp ?? undefined)
+  g.restore()
+}
+
+function drawTitleOver(g: CanvasRenderingContext2D, W: number, H: number, t: DayTitle, era: EraId): void {
+  const portrait = H > W
+  const w = Math.min(W * (portrait ? 0.86 : 0.5), 640)
+  g.save()
+  g.translate((W - w) / 2, H * (portrait ? 0.14 : 0.1))
+  drawDayTitle(g, w, w / 2, t, TITLE_TONE[era])
+  g.restore()
+}
+
+function drawFlash(g: CanvasRenderingContext2D, W: number, H: number, kind: FlashKind, t: number): void {
+  const R = Math.hypot(W, H) / 2
+  g.save()
+  if (kind === 'right') {
+    const a = t < 0.12 ? t / 0.12 : 1 - (t - 0.12) / 0.88
+    g.globalCompositeOperation = 'lighter'
+    const grd = g.createRadialGradient(W / 2, H / 2, R * 0.1, W / 2, H / 2, R)
+    grd.addColorStop(0, `rgba(242,162,58,${(0.18 * a).toFixed(3)})`)
+    grd.addColorStop(1, `rgba(242,162,58,${(0.42 * a).toFixed(3)})`)
+    g.fillStyle = grd
+  } else {
+    const spread = Math.min(1, t / 0.45)
+    const a = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4
+    const inner = R * (1 - 0.62 * (1 - Math.pow(1 - spread, 3)))
+    const grd = g.createRadialGradient(W / 2, H / 2, Math.max(0, inner - R * 0.08), W / 2, H / 2, inner + R * 0.02)
+    grd.addColorStop(0, 'rgba(163,23,14,0)')
+    grd.addColorStop(0.7, `rgba(140,18,10,${(0.62 * a).toFixed(3)})`)
+    grd.addColorStop(1, `rgba(163,23,14,${(0.5 * a).toFixed(3)})`)
+    g.fillStyle = grd
+  }
+  g.fillRect(0, 0, W, H)
+  g.restore()
 }
 
 /** Desk, lamp glow and a sheet of paper, framed like the 3D desk shot. */

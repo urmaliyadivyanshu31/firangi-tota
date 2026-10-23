@@ -1,9 +1,88 @@
 // Shared scene types. Type-only imports of three keep this module out of the three.js chunk.
 import type * as THREE from 'three'
-import type { EraId } from '../content/types'
+import type { Channel, EraId, Lang } from '../content/types'
 
 export type QualityTier = 'low' | 'mid' | 'high'
 export type StampKind = 'asli' | 'tota'
+export type V3 = [number, number, number]
+
+/** One message as it is printed on the paper. `drawSheet` in sheet.ts draws it. */
+export interface SheetSpec {
+  era: EraId
+  channel: Channel
+  lang: Lang
+  /** Replaces the channel's printed heading (Darbar-e-Mualla, TELEGRAM, CONGRESS RADIO …). */
+  heading?: string
+  from: string
+  to: string
+  dateLine: string
+  /** Replaces the channel's reference number (No. 3408-S …). */
+  serial?: string
+  /** Already placeholder-filled. A trailing " — Name" is set as a signature line. */
+  body: string
+  /** Substrings of body, from or to to underline in pencil when `pencil` is true. */
+  checks: string[]
+  pencil: boolean
+  /**
+   * A small "real document" tag in the corner, drawn as a paper label (no emoji glyph). It would
+   * give the answer away, so it is drawn only when `revealed` is also true (ruling R30b): after
+   * the stamp, never while the player decides.
+   */
+  documentMark?: boolean
+  /** The verdict is in: the real-document tag may show. */
+  revealed?: boolean
+}
+
+/** The ink imprint drawn onto a sheet: `at` is (u, v) across and down the sheet, 0..1. */
+export interface SheetStamp {
+  kind: StampKind
+  at: [number, number]
+  rot: number
+}
+
+export interface DayTitle {
+  big: string
+  small: string
+}
+
+export type FlashKind = 'right' | 'wrong'
+
+/**
+ * Optional places in an era's room that the stage uses for its choreography. Everything is in
+ * world metres (desk top y = 0, +z toward the player). A dressing without hooks gets defaults:
+ * the day title on the back wall above the desk, arrivals onto the desk.
+ */
+export interface DressingHooks {
+  /** Where the in-world day title appears: its centre, width, and the way the surface faces. */
+  title?: { pos: V3; w: number; yaw?: number; tone?: 'gilt' | 'chalk' | 'cream' | 'glass' }
+  /** Extra points the title shot keeps in frame (the 1947 calendar beside the window). */
+  titleFrame?: V3[]
+  /** What the wide establishing shot must show above the desk (a window, a jharokha). */
+  wideFrame?: V3[]
+  /** Where an arriving paper starts, off frame (a slid note, a tossed petition, an envelope). */
+  entry?: V3
+  /** 1947: the tear-off countdown calendar. The stage lays its own pages over the pad face. */
+  calendar?: {
+    pos: V3
+    w: number
+    h: number
+    draw(g: CanvasRenderingContext2D, w: number, h: number, daysLeft: number): void
+    /** The days left on the first day of the window (the pad as built shows this). */
+    firstDay: number
+  }
+  /** 1947: the typewriter. `platen` is the typing line in the machine's frame (origin, yaw). */
+  typewriter?: {
+    origin: V3
+    yaw: number
+    platen: V3
+    /** Lean of the paper back from vertical, radians. */
+    lean: number
+    /** The sheet the machine shows at rest; hidden while a telegram is typed. */
+    idleSheet?: THREE.Object3D
+    /** The carriage (platen, knobs, rail). It slides along the machine's x while typing. */
+    carriage?: THREE.Object3D
+  }
+}
 
 /**
  * One era's desk. `build` adds the room, desk, lamp and props to `scene` and returns per-frame
@@ -17,6 +96,8 @@ export interface EraDressing {
   build(ctx: { scene: THREE.Scene; tier: QualityTier; rng: () => number }): {
     update(tMs: number): void
     dispose(): void
+    /** Places the stage's choreography uses (title wall, calendar, typewriter). */
+    hooks?: DressingHooks
   }
   /** The desk shot, authored for a portrait phone (about 390×844). The stage refits it per aspect. */
   camera: { pos: [number, number, number]; look: [number, number, number] }
@@ -24,9 +105,14 @@ export interface EraDressing {
   lightColor: number
 }
 
+/** Moments the stage marks, for sound: a title lands, a seal cracks, a typewriter dings … */
+export type StageCueName = 'title' | 'flip' | 'arrive' | 'seal' | 'unfold' | 'flap' | 'type' | 'ding' | 'stamp' | 'right' | 'wrong'
+
 export interface StageOptions {
   reducedMotion: boolean
   forceTier?: QualityTier
+  /** Called at each choreography moment (optional; for the audio layer). */
+  onCue?: (name: StageCueName) => void
 }
 
 export interface Stage {
@@ -43,6 +129,27 @@ export interface Stage {
   caught(): Promise<void>
   setPaused(p: boolean): void
   dispose(): void
+
+  /** The wide room shot for home, title and setup. Resolves when the camera arrives. */
+  establish(): Promise<void>
+  /** The day's title appears in the room (wall, window or calendar), about 1.6 s. */
+  dayTitle(t: DayTitle): Promise<void>
+  /**
+   * The era's arrival (arzi, note, envelope or typewriter), then the lean-in over the paper.
+   * Resolves when the message is readable. Fonts are loaded first.
+   *
+   * The lean-in keeps the paper inside the screen minus the HUD. The stage reads the HUD's size
+   * from the CSS custom properties `--ft-hud-top`, `--ft-hud-bottom`, `--ft-hud-left` and
+   * `--ft-hud-right` (px) on its mount element; without them it assumes a top bar and a row of
+   * stamp buttons.
+   */
+  showMessage(s: SheetSpec): Promise<void>
+  /** Language or pencil change: redraws the same sheet, no animation. */
+  redrawMessage(s: SheetSpec): void
+  /** A room flash after the stamp: green-gold for right, vermilion for wrong. */
+  flash(kind: FlashKind): void
+  /** Finishes the current animation (title, arrival, camera move, stamp) at once. */
+  skip(): void
 }
 
 /**

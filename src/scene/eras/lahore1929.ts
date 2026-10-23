@@ -21,7 +21,7 @@ import {
   toTexture,
   woodTexture,
 } from '../textures'
-import type { EraDressing, QualityTier } from '../types'
+import type { DressingHooks, EraDressing, QualityTier } from '../types'
 
 type V3 = [number, number, number]
 type Batch = ReturnType<typeof createBatch>
@@ -1216,8 +1216,22 @@ export const lahore1929: EraDressing = {
         scene.remove(root)
         disposeTree(root)
       },
+      hooks: HOOKS,
     }
   },
+}
+
+const HOOKS: DressingHooks = {
+  // pale against the night in the barred window (the coat and hat hang on the wall beside it)
+  title: { pos: [(CLEAR.x0 + CLEAR.x1) / 2 - 0.02, 0.6, BZ + 0.2], w: 0.36, tone: 'chalk' },
+  wideFrame: [
+    [NICHE.x0 - 0.04, 0.78, BZ],
+    [WIN.x1 + 0.02, 0.78, BZ],
+    [NICHE.x0, NICHE.y0, BZ],
+    [WIN.x1, WIN.y0 + 0.1, BZ],
+  ],
+  // pushed in under the door, from the left
+  entry: [-0.86, 0.002, 0.3],
 }
 
 export default lahore1929

@@ -16,6 +16,7 @@ import { ERA_PALETTES, mix } from '../palette'
 import { DESK, SPOTS, createBatch, createDesk, createWarmLight, disposeTree, markShadowsDirty, material, type WarmLight } from '../props'
 import { TIER_SETTINGS } from '../quality'
 import { blobTexture, clothTexture, glowTexture, paperTexture, plasterTexture, stoneTexture, toTexture, woodTexture } from '../textures'
+import { mulberry32 } from '../../game/rng'
 import type { EraDressing, QualityTier } from '../types'
 
 type V3 = [number, number, number]
@@ -41,6 +42,12 @@ const GLASS_Z = FRAME_Z - 0.004
 const VIEW_Z = BACK_Z - 0.2
 /** The calendar on the back wall, above the typewriter. */
 const CAL = { x: 0.12, y: 0.255, w: 0.19, h: 0.27 }
+/** The tear-off pad inside the calendar's board: its width, height and centre height. */
+const PAD = (() => {
+  const w = CAL.w - 0.026
+  const h = w * 1.21
+  return { w, h, y: CAL.y - CAL.h / 2 + 0.014 + h / 2 }
+})()
 /** The typewriter in the back right corner, turned a little toward the chair. */
 const TYPEWRITER = { x: 0.29, z: -0.16, yaw: -0.24 }
 /** The bulb hangs just below the rim of the shade. */
@@ -85,35 +92,38 @@ function fitText(g: Ctx2D, text: string, x: number, y: number, px: number, maxW:
 function calendarTexture(w: number, rng: () => number, anisotropy: number): THREE.CanvasTexture {
   const h = Math.round(w * 1.21)
   const [c, g] = canvas2d(w, h)
-  if (g) {
-    g.fillStyle = '#efe8d5'
-    g.fillRect(0, 0, w, h)
-    for (let i = 0; i < 260; i++) {
-      g.fillStyle = `rgba(120,100,70,${(0.03 + rng() * 0.05).toFixed(3)})`
-      g.fillRect(rng() * w, rng() * h, 1 + rng() * 2, 1 + rng() * 2)
-    }
-    // stubs of the torn sheets, then the binding strip over them
-    g.fillStyle = '#d8ceb4'
-    g.beginPath()
-    g.moveTo(0, h * 0.05)
-    for (let x = 0; x <= w; x += w / 36) g.lineTo(x, h * (0.062 + rng() * 0.022))
-    g.lineTo(w, h * 0.05)
-    g.closePath()
-    g.fill()
-    g.fillStyle = '#2b1e17'
-    g.fillRect(0, 0, w, h * 0.052)
-    g.textAlign = 'center'
-    g.textBaseline = 'alphabetic'
-    g.fillStyle = '#16120f'
-    fitText(g, String(CALENDAR_DAYS), w / 2, h * 0.565, h * 0.44, w * 0.82)
-    g.fillStyle = '#9e2219'
-    g.fillRect(w * 0.12, h * 0.615, w * 0.76, Math.max(1, h * 0.008))
-    fitText(g, 'DAYS LEFT', w / 2, h * 0.71, h * 0.082, w * 0.8)
-    g.fillStyle = '#1d1915'
-    fitText(g, 'TO PREPARE FOR THE', w / 2, h * 0.8, h * 0.06, w * 0.86, 'normal')
-    fitText(g, 'TRANSFER OF POWER', w / 2, h * 0.89, h * 0.068, w * 0.86)
-  }
+  if (g) drawCalendarPage(g, w, h, CALENDAR_DAYS, rng)
   return toTexture(c, { anisotropy })
+}
+
+/** One page of the countdown pad: the big number of days left, under the binding strip. */
+export function drawCalendarPage(g: Ctx2D, w: number, h: number, days: number, rng: () => number): void {
+  g.fillStyle = '#efe8d5'
+  g.fillRect(0, 0, w, h)
+  for (let i = 0; i < 260; i++) {
+    g.fillStyle = `rgba(120,100,70,${(0.03 + rng() * 0.05).toFixed(3)})`
+    g.fillRect(rng() * w, rng() * h, 1 + rng() * 2, 1 + rng() * 2)
+  }
+  // stubs of the torn sheets, then the binding strip over them
+  g.fillStyle = '#d8ceb4'
+  g.beginPath()
+  g.moveTo(0, h * 0.05)
+  for (let x = 0; x <= w; x += w / 36) g.lineTo(x, h * (0.062 + rng() * 0.022))
+  g.lineTo(w, h * 0.05)
+  g.closePath()
+  g.fill()
+  g.fillStyle = '#2b1e17'
+  g.fillRect(0, 0, w, h * 0.052)
+  g.textAlign = 'center'
+  g.textBaseline = 'alphabetic'
+  g.fillStyle = '#16120f'
+  fitText(g, String(days), w / 2, h * 0.565, h * 0.44, w * 0.82)
+  g.fillStyle = '#9e2219'
+  g.fillRect(w * 0.12, h * 0.615, w * 0.76, Math.max(1, h * 0.008))
+  fitText(g, days === 1 ? 'DAY LEFT' : 'DAYS LEFT', w / 2, h * 0.71, h * 0.082, w * 0.8)
+  g.fillStyle = '#1d1915'
+  fitText(g, 'TO PREPARE FOR THE', w / 2, h * 0.8, h * 0.06, w * 0.86, 'normal')
+  fitText(g, 'TRANSFER OF POWER', w / 2, h * 0.89, h * 0.068, w * 0.86)
 }
 
 /** A telegram form: a printed header and boxes, a few typed lines and a red MOST IMMEDIATE. */
@@ -804,6 +814,8 @@ const delhi1947: EraDressing = {
 
     // -------------------------------------------------------- typewriter: black enamel, round keys, a sheet in
     const keysMat = material(tier, { map: keysTexture(low ? 128 : 256, aniso), shininess: 40, specular: 0x2a2a2a })
+    const cb = createBatch()
+    let idleSheet: THREE.Mesh | null = null
     const sheetMat = material(tier, {
       map: paperTexture({ width: low ? 128 : 256, rng, tint: pal.paper, ink: pal.ink, style: 'typed', anisotropy: aniso }),
       shininess: 4,
@@ -820,14 +832,17 @@ const delhi1947: EraDressing = {
       b.add(local(new THREE.CylinderGeometry(0.048, 0.048, 0.25, 16, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), o, yaw, [0, 0.094, -0.052]), blackMat)
       for (const x of [-0.118, 0.118]) b.add(local(box(0.014, 0.085, 0.17), o, yaw, [x, 0.05, -0.02]), blackMat)
       for (const x of [-0.075, 0.075]) b.add(local(new THREE.CylinderGeometry(0.026, 0.026, 0.006, 16), o, yaw, [x, 0.145, -0.052]), nickelMat)
-      // the carriage: rail, platen, knobs, paper table, return lever
-      b.add(local(box(0.31, 0.014, 0.04), o, yaw, [0, 0.142, -0.09]), nickelMat)
-      b.add(local(new THREE.CylinderGeometry(0.019, 0.019, 0.28, 16).rotateZ(Math.PI / 2), o, yaw, [0, 0.165, -0.09]), blackMat)
-      for (const x of [-0.152, 0.152]) b.add(local(new THREE.CylinderGeometry(0.021, 0.021, 0.016, 14).rotateZ(Math.PI / 2), o, yaw, [x, 0.165, -0.09]), blackMat)
-      b.add(local(box(0.24, 0.004, 0.08), o, yaw, [0, 0.19, -0.13], [0.75, 0, 0]), blackMat)
-      b.add(local(box(0.006, 0.006, 0.06), o, yaw, [-0.17, 0.182, -0.065], [0.35, 0.3, 0]), nickelMat)
-      // the sheet, rising out of the platen and leaning back
-      b.add(local(new THREE.PlaneGeometry(0.19, 0.13), o, yaw, [0, 0.236, -0.115], [-0.42, 0, 0]), sheetMat, [0, 0, 0], [0, 0, 0], true, true)
+      // the carriage: rail, platen, knobs, paper table, return lever. It is its own group, so the
+      // stage can slide it along the machine while a telegram is typed (and ding it home).
+      cb.add(local(box(0.31, 0.014, 0.04), o, yaw, [0, 0.142, -0.09]), nickelMat)
+      cb.add(local(new THREE.CylinderGeometry(0.019, 0.019, 0.28, 16).rotateZ(Math.PI / 2), o, yaw, [0, 0.165, -0.09]), blackMat)
+      for (const x of [-0.152, 0.152]) cb.add(local(new THREE.CylinderGeometry(0.021, 0.021, 0.016, 14).rotateZ(Math.PI / 2), o, yaw, [x, 0.165, -0.09]), blackMat)
+      cb.add(local(box(0.24, 0.004, 0.08), o, yaw, [0, 0.19, -0.13], [0.75, 0, 0]), blackMat)
+      cb.add(local(box(0.006, 0.006, 0.06), o, yaw, [-0.17, 0.182, -0.065], [0.35, 0.3, 0]), nickelMat)
+      // the sheet, rising out of the platen and leaning back (hidden while a telegram is typed)
+      idleSheet = new THREE.Mesh(local(new THREE.PlaneGeometry(0.19, 0.13), o, yaw, [0, 0.236, -0.115], [-0.42, 0, 0]), sheetMat)
+      idleSheet.castShadow = true
+      idleSheet.receiveShadow = true
       for (const [x, z] of [[-0.11, -0.09], [0.11, -0.09], [-0.11, 0.09], [0.11, 0.09]] as const) {
         b.add(local(new THREE.CylinderGeometry(0.01, 0.011, 0.006, 8), o, yaw, [x, -0.002, z]), blackMat)
       }
@@ -839,9 +854,9 @@ const delhi1947: EraDressing = {
     {
       const z = BACK_Z
       b.add(box(CAL.w, CAL.h, 0.008), trimMat, [CAL.x, CAL.y, z + 0.004], [0, 0, 0], true, true)
-      const padW = CAL.w - 0.026
-      const padH = padW * 1.21
-      const padY = CAL.y - CAL.h / 2 + 0.014 + padH / 2
+      const padW = PAD.w
+      const padH = PAD.h
+      const padY = PAD.y
       b.add(box(padW, padH, 0.012), paperEdgeMat, [CAL.x, padY, z + 0.014], [0, 0, 0], true, true)
       b.add(new THREE.PlaneGeometry(padW, padH), calMat, [CAL.x, padY, z + 0.0202], [0, 0, 0], false, true)
       // the nail it hangs from
@@ -957,6 +972,10 @@ const delhi1947: EraDressing = {
 
     const statics = b.build()
     root.add(statics)
+    const carriage = cb.build()
+    carriage.name = 'typewriter-carriage'
+    if (idleSheet) carriage.add(idleSheet)
+    root.add(carriage)
     // the ceiling light goes in after the lamp, so the stage's dust follows the lamp (the first warm light)
     root.add(ceilingGroup)
     scene.add(root)
@@ -987,6 +1006,33 @@ const delhi1947: EraDressing = {
       dispose() {
         scene.remove(root)
         disposeTree(root)
+      },
+      hooks: {
+        // the day title glows on the rain-streaked window; the countdown calendar flips beside it
+        title: { pos: [(WIN.x0 + WIN.x1) / 2, 0.6, FRAME_Z + 0.03], w: 0.5, tone: 'glass' },
+        titleFrame: [
+          [CAL.x - CAL.w / 2, CAL.y - CAL.h / 2, BACK_Z],
+          [CAL.x + CAL.w / 2, CAL.y + CAL.h / 2, BACK_Z],
+        ],
+        wideFrame: [
+          [WIN.x0 + 0.05, 0.78, BACK_Z],
+          [CAL.x + CAL.w / 2 + 0.04, 0.78, BACK_Z],
+        ],
+        calendar: {
+          pos: [CAL.x, PAD.y, BACK_Z + 0.0202],
+          w: PAD.w,
+          h: PAD.h,
+          firstDay: CALENDAR_DAYS,
+          draw: (g, w, h, days) => drawCalendarPage(g, w, h, days, mulberry32(days + 7)),
+        },
+        typewriter: {
+          origin: [TYPEWRITER.x, 0.004, TYPEWRITER.z],
+          yaw: TYPEWRITER.yaw,
+          platen: [0, 0.178, -0.088],
+          lean: 0.42,
+          idleSheet: idleSheet ?? undefined,
+          carriage,
+        },
       },
     }
   },

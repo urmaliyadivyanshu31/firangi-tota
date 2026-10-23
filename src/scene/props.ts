@@ -856,7 +856,10 @@ export function readShot(paper: THREE.Vector3, aspect: number): Pose {
   return { pos: look.clone().addScaledVector(dir, dist), look, fov }
 }
 
-export type ShotName = 'intro' | 'desk' | 'read' | 'caught'
+export type ShotName = 'intro' | 'desk' | 'read' | 'caught' | 'custom'
+
+/** A shot computed for the current aspect, so it re-fits when the screen turns or resizes. */
+export type PoseFn = (aspect: number) => Pose
 
 export interface CameraRig {
   setBase(base: EraDressing['camera']): void
@@ -865,9 +868,19 @@ export interface CameraRig {
   /** Eases from wherever the camera is now to `shot`. */
   go(shot: ShotName, ms: number, e?: Ease): Promise<void>
   jump(shot: ShotName): void
+  /** Eases to a shot made by `fn` (the 'custom' shot). */
+  goTo(fn: PoseFn, ms: number, e?: Ease): Promise<void>
+  jumpTo(fn: PoseFn): void
+  /** Replaces a named shot's framing (null restores the built-in one). */
+  override(shot: Exclude<ShotName, 'custom'>, fn: PoseFn | null): void
+  /** Forces cached shots to be recomputed (the things they frame moved). */
+  refresh(): void
+  /** How far the camera sways (1 = the normal slow breath). */
+  setSway(k: number): void
   shot(): ShotName
-  shake(amount: number): void
+  shake(amount: number, downward?: number): void
   update(dtMs: number, tMs: number): void
+  aspect(): number
 }
 
 export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: { reducedMotion: boolean }): CameraRig {
@@ -878,6 +891,11 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
   let blend = 1
   let token = 0
   let shakeAmp = 0
+  let thump = 0
+  let sway = 1
+  let swayNow = 1
+  let customFn: PoseFn | null = null
+  const overrides = new Map<ShotName, PoseFn>()
   const from: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 }
   const cur: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 }
   const tmpLook = new THREE.Vector3()
@@ -893,8 +911,11 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
   }
 
   const computePose = (name: ShotName): Pose => {
+    if (name === 'custom' && customFn) return customFn(aspect)
+    const o = overrides.get(name)
+    if (o) return o(aspect)
     const desk = frameShot(base, aspect)
-    if (name === 'desk') return desk
+    if (name === 'desk' || name === 'custom') return desk
     if (name === 'read') return readShot(paper, aspect)
     const off = desk.pos.clone().sub(desk.look)
     if (name === 'caught') {
@@ -918,7 +939,7 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
   }
   copy(cur, poseFor('desk'))
 
-  return {
+  const rig: CameraRig = {
     setBase(b) {
       base = b
       version++
@@ -948,9 +969,35 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
       token++
       copy(cur, poseFor(shot))
     },
+    goTo(fn, ms, e = ease.inOut) {
+      customFn = fn
+      cache.delete('custom')
+      version++
+      return rig.go('custom', ms, e)
+    },
+    jumpTo(fn) {
+      customFn = fn
+      cache.delete('custom')
+      version++
+      rig.jump('custom')
+    },
+    override(shot, fn) {
+      if (fn) overrides.set(shot, fn)
+      else overrides.delete(shot)
+      version++
+    },
+    refresh() {
+      version++
+    },
+    setSway(k) {
+      sway = k
+    },
+    aspect: () => aspect,
     shot: () => current,
-    shake(amount) {
-      if (!o.reducedMotion) shakeAmp = Math.max(shakeAmp, amount)
+    shake(amount, downward = 0) {
+      if (o.reducedMotion) return
+      shakeAmp = Math.max(shakeAmp, amount)
+      thump = Math.max(thump, downward)
     },
     update(dt, t) {
       const target = poseFor(current)
@@ -962,9 +1009,17 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
       camera.position.copy(cur.pos)
       tmpLook.copy(cur.look)
       if (!o.reducedMotion) {
-        // a slow breath, so the room never looks frozen
-        camera.position.x += Math.sin(t * 0.00042) * 0.004
-        camera.position.y += Math.sin(t * 0.00061 + 1) * 0.003
+        // a slow breath, so the room never looks frozen; wider shots sway a little more
+        swayNow += (sway - swayNow) * (1 - Math.exp(-dt / 600))
+        camera.position.x += Math.sin(t * 0.00042) * 0.004 * swayNow
+        camera.position.y += Math.sin(t * 0.00061 + 1) * 0.003 * swayNow
+        tmpLook.x += Math.sin(t * 0.00023 + 2) * 0.006 * (swayNow - 1)
+        if (thump > 0.0002) {
+          // a dull downward knock that settles back
+          camera.position.y -= thump
+          tmpLook.y -= thump * 0.6
+          thump *= Math.pow(0.0015, dt / 1000)
+        }
         if (shakeAmp > 0.0002) {
           camera.position.x += (Math.random() - 0.5) * shakeAmp
           camera.position.y += (Math.random() - 0.5) * shakeAmp
@@ -979,4 +1034,5 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
       }
     },
   }
+  return rig
 }

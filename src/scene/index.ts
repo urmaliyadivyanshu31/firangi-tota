@@ -1,6 +1,8 @@
 // What the app imports before the first paint. Nothing here imports three.js statically (ruling
 // R10): the 3D stage and three.js arrive in their own chunk through loadStage().
-export type { EraDressing, QualityTier, Stage, StageOptions, StampKind } from './types'
+export type { DayTitle, EraDressing, FlashKind, QualityTier, SheetSpec, SheetStamp, Stage, StageCueName, StageOptions, StampKind } from './types'
+// the paper drawer has no three.js in it: the app may use it for share cards and preloading fonts
+export { drawSheet, loadSheetFonts, measureSheet } from './sheet'
 export { STAGE_LOST_EVENT } from './types'
 export { mountFallback, type Fallback } from './fallback'
 

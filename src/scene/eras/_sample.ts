@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { ERA_PALETTES, mix } from '../palette'
 import { SPOTS, createDesk, createRoomShell, createWarmLight, disposeTree, material } from '../props'
 import { makeNoise, toTexture } from '../textures'
-import type { EraDressing } from '../types'
+import type { DressingHooks, EraDressing } from '../types'
 
 const pal = ERA_PALETTES['delhi-1857']
 const FLAME: [number, number, number] = [SPOTS.lamp.x, 0.252, SPOTS.lamp.z]
@@ -44,6 +44,14 @@ function lampBody(rng: () => number, size: number): THREE.Mesh {
   return mesh
 }
 
+const SAMPLE_HOOKS: DressingHooks = {
+  title: { pos: [0, 0.5, -0.545], w: 0.46 },
+  wideFrame: [
+    [-0.42, 0.62, -0.55],
+    [0.42, 0.62, -0.55],
+  ],
+}
+
 export const sampleDressing: EraDressing = {
   id: 'delhi-1857',
   camera: { pos: [0, 0.98, 0.92], look: [0, -0.12, 0.06] },
@@ -69,6 +77,7 @@ export const sampleDressing: EraDressing = {
         disposeTree(oil)
         light.dispose()
       },
+      hooks: SAMPLE_HOOKS,
     }
   },
 }

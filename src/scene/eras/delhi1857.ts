@@ -9,7 +9,7 @@ import { ERA_PALETTES, mix } from '../palette'
 import { SPOTS, createBatch, createDesk, createWarmLight, disposeTree, frameShot, material, scaleUv } from '../props'
 import { TIER_SETTINGS } from '../quality'
 import { blobTexture, clothTexture, glowTexture, makeNoise, metalTexture, plasterTexture, toTexture } from '../textures'
-import type { EraDressing, QualityTier } from '../types'
+import type { DressingHooks, EraDressing, QualityTier } from '../types'
 
 type V3 = [number, number, number]
 type P2 = [number, number]
@@ -1070,8 +1070,29 @@ const delhi1857: EraDressing = {
         scene.remove(root)
         disposeTree(root)
       },
+      hooks: HOOKS,
     }
   },
+}
+
+/** The jharokha's outer frame (with its moulding and chhajja), for the shots. */
+const JH = (() => {
+  const apex = WIN.spring + Math.sqrt((WIN.hw + WIN.e) ** 2 - WIN.e ** 2)
+  return { x0: WIN.x - WIN.hw - WIN.border, x1: WIN.x + WIN.hw + WIN.border, top: apex + WIN.border + 0.08 }
+})()
+
+const HOOKS: DressingHooks = {
+  // the day's title is set in gilt on the plaster above the jharokha, like an inscription panel
+  title: { pos: [WIN.x, JH.top + 0.15, BACK_Z + 0.004], w: 0.5, tone: 'gilt' },
+  // the wide shot keeps the whole cusped arch and the skyline in it
+  wideFrame: [
+    [JH.x0 - 0.02, JH.top + 0.02, BACK_Z],
+    [JH.x1 + 0.02, JH.top + 0.02, BACK_Z],
+    [JH.x0, WIN.sill, BACK_Z],
+    [JH.x1, WIN.sill, BACK_Z],
+  ],
+  // the arzi comes across the durrie from the door side and up onto the low desk
+  entry: [0.62, FLOOR_Y + 0.02, 0.62],
 }
 
 export default delhi1857
