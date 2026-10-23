@@ -1,5 +1,5 @@
-import type { Fact } from '../../types'
-import { fanshawe, jl, majumdar, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources'
+import type { Fact } from '../../types.js'
+import { fanshawe, jl, majumdar, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources.js'
 
 // The case file: one short line each. Two lines are hardHidden (blank in Hard mode).
 // The calendar now lives in the weekdays rule, and the titles in the english-titles rule.

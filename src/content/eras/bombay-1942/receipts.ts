@@ -1,4 +1,4 @@
-import type { Receipt } from '../../types'
+import type { Receipt } from '../../types.js'
 
 // Three receipt cards from dossier §12: left, League and right, each an organisation's public line
 // in 1942, in its own words, with its own defence. Allah Bux is the counterpoint on the League card.

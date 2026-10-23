@@ -1,4 +1,4 @@
-import type { Message } from '../../types'
+import type { Message } from '../../types.js'
 import {
   caveBrowne,
   CHATTA,
@@ -13,7 +13,7 @@ import {
   sen,
   trial,
   yule,
-} from './sources'
+} from './sources.js'
 
 // Days: 1 = Sun 17 May 1857 … 14 = Sat 30 May 1857. Events on days 1-3 are tier 1.
 // Real documents quote public-domain translations, trimmed to the telling line ("…" marks cuts);

@@ -1,4 +1,4 @@
-import type { Receipt } from '../../types'
+import type { Receipt } from '../../types.js'
 
 // Receipt cards: documented words, a short joke at the expense of people and their acts,
 // and their own explanation where the record has one.

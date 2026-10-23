@@ -1,4 +1,4 @@
-import type { Epilogue } from '../../types'
+import type { Epilogue } from '../../types.js'
 
 // Dossier sections 2c, 4, 8 and 12. No gore; the hanging is "evening", as the dossier
 // advises, because the hour is disputed. Gandhi's part: one dated act, and the debate.

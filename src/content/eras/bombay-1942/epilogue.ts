@@ -1,4 +1,4 @@
-import type { Epilogue } from '../../types'
+import type { Epilogue } from '../../types.js'
 
 export const epilogue: Epilogue = {
   survived: [

@@ -1,4 +1,4 @@
-import type { Rule } from '../../types'
+import type { Rule } from '../../types.js'
 
 // The rulebook, one line each. Sources: trial petitions (form); Chuni Lal's diary, JL p.102 and
 // Petition No. 64 (weekdays, Eid); the Trial's Persian-rumour papers; the King's own order (manners);

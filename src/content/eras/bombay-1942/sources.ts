@@ -1,4 +1,4 @@
-import type { Source } from '../../types'
+import type { Source } from '../../types.js'
 
 // Every source the Bombay 1942 content uses. All are cited in docs/research/quit-india-1942.md.
 export const sources: Source[] = [

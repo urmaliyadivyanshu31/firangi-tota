@@ -1,4 +1,4 @@
-import type { Epilogue } from '../../types'
+import type { Epilogue } from '../../types.js'
 
 // Survived: what happened next. Caught: not jail in a free India; a rumour ran ahead of the
 // truth. Violence only as ranges, never scenes, never a perpetrator community.

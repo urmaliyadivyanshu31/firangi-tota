@@ -1,4 +1,4 @@
-import type { Source, SourceRef } from '../../types'
+import type { Source, SourceRef } from '../../types.js'
 
 // Every source this era cites. Page references (loc) were checked against the archive.org
 // full texts linked here. Metcalfe 1898 holds two narratives: MH = Mainodin, JL = Jiwan Lal.
