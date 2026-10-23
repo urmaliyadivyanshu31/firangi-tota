@@ -43,6 +43,8 @@ whistle, a tram gong, an air-raid siren test, the sea, rain gusts, thunder, tele
 ## Images
 
 The parrot mark, the seal and the icons are drawn for this project (MIT, like the code).
+The app icons in `public/icons/` (192, 512, maskable and apple-touch) are rendered from that parrot
+mark by `scripts/icons.mjs` (MIT, like the code).
 
 ## Game text
 
