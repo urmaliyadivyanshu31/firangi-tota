@@ -66,7 +66,8 @@ export const messages: Message[] = [
           hi: 'हम रात 8:45 बजे बोलते हैं, 9:45 पर नहीं। जालसाज़ ने हमारी पंक्ति तो नक़ल कर ली, पर हमारा समय ग़लत लिख दिया।',
         },
         factId: 'f-signature',
-        sources: [{ id: 'nehru-centre-2021' }, { id: 'thakkar-2021', loc: 'Scroll excerpt' }],
+        ruleId: 'r-onair',
+        sources: [{ id: 'nehru-centre-2021' }, { id: 'huacuja-2023', loc: 'n. 120 (transcript of 18 Oct 1942)' }],
       },
     ],
   },
@@ -81,16 +82,16 @@ export const messages: Message[] = [
     from: REC,
     to: ANN,
     text: {
-      en: 'Tonight’s discs: Sardar Patel’s speech after the resolution, and Maulana Azad in his own voice. Play them after the news.',
-      hi: 'आज रात के रिकॉर्ड: प्रस्ताव के बाद का सरदार पटेल का भाषण, और मौलाना आज़ाद की अपनी आवाज़। इन्हें ख़बरों के बाद बजाइए।',
+      en: 'This week’s discs: Sardar Patel’s speech after the resolution, and Maulana Azad in his own voice. Play them after the news.',
+      hi: 'इस हफ़्ते के रिकॉर्ड: प्रस्ताव के बाद का सरदार पटेल का भाषण, और मौलाना आज़ाद की अपनी आवाज़। इन्हें ख़बरों के बाद बजाइए।',
     },
     checks: { en: ['Sardar Patel’s speech', 'Maulana Azad'], hi: ['सरदार पटेल का भाषण', 'मौलाना आज़ाद'] },
     why: {
       text: {
-        en: 'Police transcripts of late October 1942, including the one for 31 October, record Congress Radio airing Patel’s speech after the resolution and a recording of Azad in his own voice.',
-        hi: 'अक्टूबर 1942 के आख़िर के पुलिस रिकॉर्ड, 31 अक्टूबर वाला भी, बताते हैं कि कांग्रेस रेडियो ने प्रस्ताव के बाद का पटेल का भाषण और आज़ाद की अपनी आवाज़ की रिकॉर्डिंग चलाई।',
+        en: 'Police transcripts of late October 1942 (the published police reports, pp. 115 and 129) record Congress Radio airing Patel’s speech after the resolution and a recording of Azad in his own voice.',
+        hi: 'अक्टूबर 1942 के आख़िर के छपे पुलिस रिकॉर्ड (पेज 115 और 129) बताते हैं कि कांग्रेस रेडियो ने प्रस्ताव के बाद का पटेल का भाषण और आज़ाद की अपनी आवाज़ की रिकॉर्डिंग चलाई।',
       },
-      sources: [{ id: 'huacuja-2023', loc: 'police transcript of 31 Oct 1942' }],
+      sources: [{ id: 'huacuja-2023', loc: 'n. 99 (published police reports, pp. 115 and 129)' }],
     },
   },
   {
@@ -102,8 +103,8 @@ export const messages: Message[] = [
     from: REC,
     to: ANN,
     text: {
-      en: 'Tonight’s discs: Sardar Patel’s speech after the resolution was passed at Azad Maidan, and Maulana Azad in his own voice.',
-      hi: 'आज रात के रिकॉर्ड: आज़ाद मैदान में प्रस्ताव पास होने के बाद सरदार पटेल का भाषण, और मौलाना आज़ाद की अपनी आवाज़।',
+      en: 'This week’s discs: Sardar Patel’s speech after the resolution was passed at Azad Maidan, and Maulana Azad in his own voice.',
+      hi: 'इस हफ़्ते के रिकॉर्ड: आज़ाद मैदान में प्रस्ताव पास होने के बाद सरदार पटेल का भाषण, और मौलाना आज़ाद की अपनी आवाज़।',
     },
     checks: { en: ['passed at Azad Maidan'], hi: ['आज़ाद मैदान में प्रस्ताव'] },
     tells: [
@@ -134,7 +135,7 @@ export const messages: Message[] = [
     why: {
       text: {
         en: 'These are the station’s real opening words, as Usha Mehta remembered them: “This is the Congress Radio calling on 42.34 metres from somewhere in India.” Its news went out mainly in Hindustani.',
-        hi: 'यह स्टेशन के असली शुरुआती शब्द हैं, जैसे उषा मेहता को याद थे: “यह कांग्रेस रेडियो है, 42.34 मीटर पर, हिंदुस्तान में कहीं से।” ख़बरें ज़्यादातर हिंदुस्तानी में जाती थीं।',
+        hi: 'यह स्टेशन के असली शुरुआती शब्द हैं, जैसे उषा मेहता को याद थे: “यह कांग्रेस रेडियो है, 42.34 मीटर पर, हिंदुस्तान में कहीं से बोल रहा है।” ख़बरें ज़्यादातर हिंदुस्तानी में जाती थीं।',
       },
       sources: [{ id: 'usha-mehta-1969' }, { id: 'huacuja-2023', loc: 'languages' }],
     },
@@ -159,6 +160,7 @@ export const messages: Message[] = [
           hi: 'हम 42.34 मीटर पर बोलते हैं। 43.24 में अंक आपस में बदल गए हैं, और इस मेज़ पर कोई अपनी ही सुई ग़लत नहीं पढ़ता।',
         },
         factId: 'f-signature',
+        ruleId: 'r-onair',
         sources: [{ id: 'usha-mehta-1969' }],
       },
     ],
@@ -181,7 +183,7 @@ export const messages: Message[] = [
         en: 'On 9 August 1942, after the dawn arrests, Aruna Asaf Ali raised the flag at Gowalia Maidan. The police used tear gas, then lathis.',
         hi: '9 अगस्त 1942 को, तड़के की गिरफ़्तारियों के बाद, अरुणा आसफ़ अली ने गोवालिया मैदान में झंडा फहराया। पुलिस ने आँसू गैस छोड़ी, फिर लाठियाँ चलाईं।',
       },
-      sources: [{ id: 'rebel-india-1946', loc: 'Bombay section' }, { id: 'top-ii-1971', loc: 'No. 624' }],
+      sources: [{ id: 'rebel-india-1946', loc: 'Bombay section' }, { id: 'top-ii-1971', loc: 'No. 624 (dawn arrests only)' }],
     },
   },
   {
@@ -316,7 +318,7 @@ export const messages: Message[] = [
         en: 'After the arrests Gandhi was taken to the Aga Khan Palace, Poona, and the Working Committee to Ahmednagar Fort.',
         hi: 'गिरफ़्तारी के बाद गांधी को पूना के आग़ा ख़ान महल ले जाया गया, और वर्किंग कमेटी को अहमदनगर क़िले।',
       },
-      sources: [{ id: 'top-ii-1971', loc: 'Nos. 624, 625' }],
+      sources: [{ id: 'top-ii-1971', loc: 'Introduction p. xii; No. 553 (letter from Aga Khan’s Palace, 14 Aug 1942)' }],
     },
   },
   {
@@ -339,7 +341,7 @@ export const messages: Message[] = [
           hi: '1942 में गांधीजी आग़ा ख़ान महल में बंद थे, यरवदा जेल में नहीं। शहर वही, इमारत ग़लत।',
         },
         factId: 'f-detention',
-        sources: [{ id: 'top-ii-1971', loc: 'Nos. 624, 625' }],
+        sources: [{ id: 'top-ii-1971', loc: 'Introduction p. xii; No. 553 (letter from Aga Khan’s Palace, 14 Aug 1942)' }],
       },
     ],
   },
@@ -428,8 +430,8 @@ export const messages: Message[] = [
       {
         kind: 'name',
         explain: {
-          en: 'Our recording is run by Vithalbhai Jhaveri. Vithalbhai Patel died in 1933. The forger reached for the most famous Vithalbhai he knew.',
-          hi: 'हमारी रिकॉर्डिंग विट्ठलभाई झवेरी सँभालते हैं। विट्ठलभाई पटेल की मौत 1933 में हो चुकी थी। जालसाज़ को जो सबसे मशहूर विट्ठलभाई याद आए, उसने वही लिख दिया।',
+          en: 'Our recording is run by Vithalbhai Jhaveri. Vithalbhai Patel, Sardar Patel’s elder brother, had died in 1933. The forger reached for the most famous Vithalbhai he knew.',
+          hi: 'हमारी रिकॉर्डिंग विट्ठलभाई झवेरी सँभालते हैं। सरदार पटेल के बड़े भाई विट्ठलभाई पटेल की मौत 1933 में हो चुकी थी। जालसाज़ को जो सबसे मशहूर विट्ठलभाई याद आए, उसने वही लिख दिया।',
         },
         factId: 'f-team',
       },
@@ -452,8 +454,8 @@ export const messages: Message[] = [
     checks: { en: ['English talk in Lohia’s voice'], hi: ['लोहिया की आवाज़ में अंग्रेज़ी भाषण'] },
     why: {
       text: {
-        en: 'Ram Manohar Lohia spoke on the station in English. The Hindustani voices were Usha Mehta, Moinuddin Harris and Achyut Patwardhan.',
-        hi: 'राम मनोहर लोहिया स्टेशन पर अंग्रेज़ी में बोलते थे। हिंदुस्तानी में उषा मेहता, मोइनुद्दीन हैरिस और अच्युत पटवर्धन बोलते थे।',
+        en: 'Usha Mehta said most of the station’s English speeches were relayed by Ram Manohar Lohia and Coomi Dastur. Its Hindustani voices included her own, Moinuddin Harris and Achyut Patwardhan.',
+        hi: 'उषा मेहता के मुताबिक़ स्टेशन के ज़्यादातर अंग्रेज़ी भाषण राम मनोहर लोहिया और कूमी दस्तूर पढ़ते थे। हिंदुस्तानी में वे ख़ुद, मोइनुद्दीन हैरिस और अच्युत पटवर्धन बोलते थे।',
       },
       sources: [{ id: 'usha-mehta-1969' }],
     },
@@ -466,18 +468,19 @@ export const messages: Message[] = [
     from: REC,
     to: ANN,
     text: {
-      en: 'Two discs tonight. First, the Hindustani news, read by Lohia himself. Second, the English talk.',
-      hi: 'आज रात दो रिकॉर्ड हैं। पहला, हिंदुस्तानी में ख़बरें, जिन्हें लोहिया ख़ुद पढ़ेंगे। दूसरा, अंग्रेज़ी भाषण।',
+      en: 'Two discs tonight. First, the Hindustani news. Second, an English talk Pandit Nehru recorded for us this week.',
+      hi: 'आज रात दो रिकॉर्ड हैं। पहला, हिंदुस्तानी में ख़बरें। दूसरा, अंग्रेज़ी भाषण, जो पंडित नेहरू ने इसी हफ़्ते हमारे लिए रिकॉर्ड किया।',
     },
-    checks: { en: ['read by Lohia himself'], hi: ['जिन्हें लोहिया ख़ुद पढ़ेंगे'] },
+    checks: { en: ['recorded for us this week'], hi: ['इसी हफ़्ते हमारे लिए रिकॉर्ड किया'] },
     tells: [
       {
         kind: 'name',
         explain: {
-          en: 'Lohia’s voice went out in English. The Hindustani news was read by Usha Mehta, Moinuddin Harris or Achyut Patwardhan.',
-          hi: 'लोहिया की आवाज़ अंग्रेज़ी में जाती थी। हिंदुस्तानी ख़बरें उषा मेहता, मोइनुद्दीन हैरिस या अच्युत पटवर्धन पढ़ते थे।',
+          en: 'Pandit Nehru has been locked in Ahmednagar Fort with the Working Committee since 9 August. He recorded nothing for us this week.',
+          hi: 'पंडित नेहरू 9 अगस्त से वर्किंग कमेटी के साथ अहमदनगर क़िले में बंद हैं। उन्होंने इस हफ़्ते हमारे लिए कुछ रिकॉर्ड नहीं किया।',
         },
-        factId: 'f-voices',
+        factId: 'f-detention',
+        sources: [{ id: 'top-ii-1971', loc: 'Introduction p. xii; No. 624' }],
       },
     ],
   },
@@ -521,8 +524,8 @@ export const messages: Message[] = [
       {
         kind: 'name',
         explain: {
-          en: 'Our parts came from Chicago Radio, Nanak Motwane’s firm, and that is the shop the police raided. The forger moved it to the wrong city.',
-          hi: 'हमारे पुर्ज़े शिकागो रेडियो से आते थे, जो नानक मोटवाने की कंपनी है, और पुलिस ने उसी दुकान पर छापा मारा। जालसाज़ ने उसे ग़लत शहर का बना दिया।',
+          en: 'Our parts came from Chicago Radio, Nanak Motwane’s firm, and that is the shop the police raided. The forger swapped one city’s name for another.',
+          hi: 'हमारे पुर्ज़े शिकागो रेडियो से आते थे, जो नानक मोटवाने की कंपनी है, और पुलिस ने उसी दुकान पर छापा मारा। जालसाज़ ने एक शहर का नाम दूसरे से बदल दिया।',
         },
         factId: 'f-team',
         sources: [{ id: 'usha-mehta-1969' }],
@@ -573,7 +576,8 @@ export const messages: Message[] = [
           en: 'We never say where we are. The station called from “somewhere in India”, and a script that names the city does the Special Branch’s work for it.',
           hi: 'हम कभी नहीं बताते कि हम कहाँ हैं। स्टेशन “हिंदुस्तान में कहीं से” बोलता था। जो स्क्रिप्ट शहर का नाम ले, वह स्पेशल ब्रांच का काम आसान करती है।',
         },
-        sources: [{ id: 'usha-mehta-1969' }, { id: 'thakkar-2021', loc: 'p. 137 (transcript of 12 Nov morning)' }],
+        ruleId: 'r-nonames',
+        sources: [{ id: 'usha-mehta-1969' }, { id: 'huacuja-2023', loc: 'n. 90 (transcript of 12 Nov 1942 morning)' }],
       },
     ],
   },
@@ -662,6 +666,7 @@ export const messages: Message[] = [
           en: '“Mr. Gandhi” and “the disturbances” are government words; our scripts say Gandhiji. And his real last message ended “Karenge Ya Marenge”, not “wait at home”.',
           hi: '“मिस्टर गांधी” और “गड़बड़ियाँ” सरकारी शब्द हैं; हमारी स्क्रिप्ट में गांधीजी लिखा जाता है। और उनका असली आख़िरी संदेश “करेंगे या मरेंगे” पर ख़त्म होता था, “घर बैठो” पर नहीं।',
         },
+        ruleId: 'r-words',
         sources: [{ id: 'goi-1943', loc: 'App. X' }],
       },
     ],
@@ -682,8 +687,8 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'usha-mehta-1969' }] },
     why: {
       text: {
-        en: 'Real broadcast words: Ram Manohar Lohia on Congress Radio, as Usha Mehta recalled them in 1969.',
-        hi: 'यह असली प्रसारण के शब्द हैं: कांग्रेस रेडियो पर राम मनोहर लोहिया, जैसे उषा मेहता ने 1969 में याद किया।',
+        en: 'Words Usha Mehta recalled from the broadcast, in her 1969 interview: Ram Manohar Lohia speaking on Congress Radio.',
+        hi: 'ये शब्द उषा मेहता ने 1969 के अपने इंटरव्यू में प्रसारण से याद करके बताए: कांग्रेस रेडियो पर राम मनोहर लोहिया।',
       },
       sources: [{ id: 'usha-mehta-1969' }],
     },
@@ -707,7 +712,8 @@ export const messages: Message[] = [
           en: 'Never talk of the persons behind the stations. This line names our speaker on air and tells the police where he is. And our talks were cut at a separate recording station, never at the transmitter.',
           hi: 'स्टेशन के पीछे के लोगों की बात कभी नहीं होती। यह पंक्ति रेडियो पर हमारे वक्ता का नाम लेती है और पुलिस को बताती है कि वे कहाँ हैं। और हमारे भाषण एक अलग रिकॉर्डिंग स्टेशन पर रिकॉर्ड होते थे, मशीन वाली जगह पर कभी नहीं।',
         },
-        sources: [{ id: 'thakkar-2021', loc: 'p. 137 (transcript of 12 Nov morning)' }, { id: 'usha-mehta-1969' }],
+        ruleId: 'r-nonames',
+        sources: [{ id: 'huacuja-2023', loc: 'n. 90 (transcript of 12 Nov 1942 morning)' }, { id: 'usha-mehta-1969' }],
       },
     ],
   },
@@ -726,13 +732,10 @@ export const messages: Message[] = [
     checks: { en: ['Hold it until it is confirmed'], hi: ['इसे रोक कर रखिए'] },
     why: {
       text: {
-        en: 'This is how the station worked. On 26 October 1942 it told listeners it had sat on a story of soldiers shot at Meerut for a month “as it was not confirmed”.',
-        hi: 'स्टेशन ऐसे ही काम करता था। 26 अक्टूबर 1942 को उसने सुनने वालों को बताया कि मेरठ में सिपाहियों को गोली मारने की एक ख़बर उसने महीने भर रोके रखी, “क्योंकि वह पक्की नहीं थी”।',
+        en: 'The station really did hold news back. On 26 October 1942 it told listeners it had sat on a story of soldiers shot at Meerut for a month “as it was not confirmed”.',
+        hi: 'स्टेशन सच में ख़बरें रोकता था। 26 अक्टूबर 1942 को उसने सुनने वालों को बताया कि मेरठ में सिपाहियों को गोली मारने की एक ख़बर उसने महीने भर रोके रखी, “क्योंकि वह पक्की नहीं थी”।',
       },
-      sources: [
-        { id: 'huacuja-2023', loc: 'police transcript of 26 Oct 1942' },
-        { id: 'chatterjee-1989', loc: 'police transcripts' },
-      ],
+      sources: [{ id: 'chatterjee-1989', loc: 'police transcript of 26 Oct 1942' }],
     },
   },
   {
@@ -754,7 +757,8 @@ export const messages: Message[] = [
           en: 'We hold back what we cannot confirm. A slip that begs us to skip the check is how a plant gets false news on air, and false news is what the government needs to discredit us.',
           hi: 'जो ख़बर पक्की न हो, हम उसे रोकते हैं। जो पर्ची जाँच छोड़ने को कहे, उसी से झूठी ख़बर रेडियो पर पहुँचती है, और सरकार को हमें बदनाम करने के लिए यही चाहिए।',
         },
-        sources: [{ id: 'huacuja-2023', loc: 'police transcript of 26 Oct 1942' }],
+        ruleId: 'r-confirm',
+        sources: [{ id: 'chatterjee-1989', loc: 'police transcript of 26 Oct 1942' }],
       },
     ],
   },
@@ -798,6 +802,7 @@ export const messages: Message[] = [
           en: 'Since 1 September 1942 Indian Standard Time has run one hour ahead: six and a half hours ahead of Greenwich, not five and a half. The forger’s watch is still on peacetime.',
           hi: '1 सितंबर 1942 से इंडियन स्टैंडर्ड टाइम एक घंटा आगे है: ग्रीनविच से साढ़े छह घंटे आगे, साढ़े पाँच नहीं। जालसाज़ की घड़ी अब भी पुराने वक़्त पर है।',
         },
+        ruleId: 'r-wartime',
         sources: [{ id: 'iar-1942', loc: 'August chronicle' }],
       },
     ],
@@ -842,6 +847,7 @@ export const messages: Message[] = [
           en: 'We had no tape. Our talks came on home-cut gramophone discs from the recording station, as K. A. Abbas said plainly.',
           hi: 'हमारे पास टेप नहीं था। हमारे भाषण रिकॉर्डिंग स्टेशन से घर पर काटे गए ग्रामोफ़ोन रिकॉर्ड पर आते थे, जैसा के. ए. अब्बास ने साफ़ कहा।',
         },
+        ruleId: 'r-discs',
         sources: [{ id: 'abbas-ccas' }],
       },
     ],
@@ -886,12 +892,13 @@ export const messages: Message[] = [
           en: 'We never spoke for Japan or Germany. A pro-Japanese line is exactly what the government wanted, to paint the station as a fifth column. The judge later found Congress Radio never voiced support for the Axis.',
           hi: 'हम कभी जापान या जर्मनी की तरफ़ से नहीं बोले। सरकार यही चाहती थी कि स्टेशन दुश्मन का साथी दिखे। बाद में जज ने भी माना कि कांग्रेस रेडियो ने कभी जर्मनी-जापान का साथ नहीं दिया।',
         },
+        ruleId: 'r-axis',
         sources: [{ id: 'huacuja-2023', loc: 'judgment; Iyengar testimony' }],
       },
     ],
   },
 
-  // Day 14, Thu 12 Nov: the morning broadcast, the station's last day.
+  // Day 14, Thu 12 Nov: the morning broadcast, on the day of the raid.
   {
     id: 'b42-d14-voices-g',
     tier: 2,
@@ -908,13 +915,13 @@ export const messages: Message[] = [
       en: ['Never talk of the persons behind the stations'],
       hi: ['पीछे के लोगों की बात कभी मत कीजिए'],
     },
-    document: { sources: [{ id: 'thakkar-2021', loc: 'p. 137 (transcript of 12 Nov 1942, morning)' }] },
+    document: { sources: [{ id: 'huacuja-2023', loc: 'nn. 90, 129 (transcript of 12 Nov 1942 morning, from Thakkar p. 137)' }] },
     why: {
       text: {
-        en: 'Real broadcast words from the morning of 12 November 1942, the station’s last day on air, from the police transcript cited by Usha Thakkar.',
-        hi: 'यह 12 नवंबर 1942 की सुबह के असली प्रसारण के शब्द हैं, स्टेशन का आख़िरी दिन। उषा ठक्कर ने अपनी किताब में पुलिस रिकॉर्ड से ये शब्द दिए हैं।',
+        en: 'Real broadcast words from the morning of 12 November 1942, the day of the raid, from the police transcript.',
+        hi: 'यह 12 नवंबर 1942 की सुबह के, जिस दिन छापा पड़ा, असली प्रसारण के शब्द हैं, पुलिस रिकॉर्ड से।',
       },
-      sources: [{ id: 'thakkar-2021', loc: 'p. 137' }],
+      sources: [{ id: 'huacuja-2023', loc: 'nn. 90, 129 (transcript of 12 Nov 1942 morning, from Thakkar p. 137)' }],
     },
   },
   {
@@ -940,7 +947,53 @@ export const messages: Message[] = [
           en: 'Never talk of the persons behind the stations: the real script that morning said exactly that. Naming the organisers on air is a gift to the Special Branch.',
           hi: 'स्टेशन के पीछे के लोगों की बात कभी नहीं होती: उस सुबह की असली स्क्रिप्ट में ठीक यही लिखा था। रेडियो पर संगठन वालों के नाम लेना स्पेशल ब्रांच को तोहफ़ा देना है।',
         },
-        sources: [{ id: 'thakkar-2021', loc: 'p. 137' }],
+        ruleId: 'r-nonames',
+        sources: [{ id: 'huacuja-2023', loc: 'n. 90 (transcript of 12 Nov 1942 morning)' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-train-g',
+    tier: 2,
+    real: true,
+    pair: 'train',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Tell the country how they did it. The special train left Bombay at 7:15 that Sunday morning. Gandhiji’s party was taken off the train at Chinchwad, a small station short of Poona; the Working Committee went on to Ahmednagar Fort.',
+      hi: 'देश को बताइए कि उन्होंने यह कैसे किया। उस रविवार सुबह 7:15 पर ख़ास ट्रेन बंबई से चली। गांधीजी और उनके साथियों को पूना से थोड़ा पहले चिंचवड़ के छोटे स्टेशन पर ट्रेन से उतारा गया; वर्किंग कमेटी आगे अहमदनगर क़िले गई।',
+    },
+    checks: { en: ['taken off the train at Chinchwad'], hi: ['चिंचवड़ के छोटे स्टेशन पर ट्रेन से उतारा गया'] },
+    why: {
+      text: {
+        en: 'The Governor of Bombay reported that the special train left at 7:15 a.m. on 9 August, that Gandhi’s party got off at “Chinchwad, a small station short of Poona”, and that the Working Committee went on to Ahmednagar.',
+        hi: 'बंबई के गवर्नर ने लिखा कि ख़ास ट्रेन 9 अगस्त सुबह 7:15 पर चली, गांधी और उनके साथी “पूना से थोड़ा पहले चिंचवड़ नाम के छोटे स्टेशन” पर उतरे, और वर्किंग कमेटी आगे अहमदनगर पहुँची।',
+      },
+      sources: [{ id: 'top-ii-1971', loc: 'No. 624, p. 807; Introduction p. xii' }],
+    },
+  },
+  {
+    id: 'b42-train-f',
+    tier: 2,
+    real: false,
+    pair: 'train',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Tell the country how they did it. The special train left Bombay at 7:15 that Sunday morning. Gandhiji’s party was taken off the train at Kalyan; the Working Committee went on to Ahmednagar Fort.',
+      hi: 'देश को बताइए कि उन्होंने यह कैसे किया। उस रविवार सुबह 7:15 पर ख़ास ट्रेन बंबई से चली। गांधीजी और उनके साथियों को कल्याण में ट्रेन से उतारा गया; वर्किंग कमेटी आगे अहमदनगर क़िले गई।',
+    },
+    checks: { en: ['taken off the train at Kalyan'], hi: ['कल्याण में ट्रेन से उतारा गया'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: {
+          en: 'Gandhiji’s party got off at Chinchwad, “a small station short of Poona”, as the Governor of Bombay reported. Kalyan is barely out of Bombay.',
+          hi: 'बंबई के गवर्नर की रिपोर्ट के मुताबिक़ गांधीजी के साथी पूना से थोड़ा पहले चिंचवड़ नाम के छोटे स्टेशन पर उतरे थे। कल्याण तो बंबई से निकलते ही आ जाता है।',
+        },
+        factId: 'f-zero-hour',
+        sources: [{ id: 'top-ii-1971', loc: 'No. 624, p. 807' }],
       },
     ],
   },
@@ -953,19 +1006,19 @@ export const messages: Message[] = [
     from: SCRIPT,
     to: ANN,
     text: {
-      en: 'When we began, our first broadcasts went out on 41.87 metres. Now listen for us on 42.34.',
-      hi: 'जब हमने शुरुआत की, हमारे पहले प्रसारण 41.87 मीटर पर गए थे। अब हमें 42.34 पर सुनिए।',
+      en: 'In late August our broadcasts went out on 41.87 metres. Now listen for us on 42.34.',
+      hi: 'अगस्त के आख़िर में हमारे प्रसारण 41.87 मीटर पर जाते थे। अब हमें 42.34 पर सुनिए।',
     },
     checks: { en: ['41.87 metres'], hi: ['41.87 मीटर'] },
     tells: [
       {
         kind: 'number',
         explain: {
-          en: 'The first broadcasts were on 41.78 metres, not 41.87. Close, but a radio operator reads their own dial right.',
-          hi: 'पहले प्रसारण 41.78 मीटर पर थे, 41.87 पर नहीं। क़रीब है, पर रेडियो चलाने वाला अपनी सुई ठीक पढ़ता है।',
+          en: 'In late August the station was on 41.78 metres, not 41.87. Close, but a radio operator reads their own dial right.',
+          hi: 'अगस्त के आख़िर में स्टेशन 41.78 मीटर पर था, 41.87 पर नहीं। क़रीब है, पर रेडियो चलाने वाला अपनी सुई ठीक पढ़ता है।',
         },
         factId: 'f-signature',
-        sources: [{ id: 'thakkar-2021', loc: 'Scroll excerpt (court record)' }],
+        sources: [{ id: 'chatterjee-1989', loc: 'Home Dept record (on air 27 Aug 1942 on 41.78 m)' }],
       },
     ],
   },
@@ -1055,7 +1108,7 @@ export const messages: Message[] = [
       {
         kind: 'anachronism',
         explain: {
-          en: 'In 1942 money was rupees, annas and pies, written Rs 599-8-0: 599 rupees and 8 annas. Decimal rupees came only in 1957. The sum is right; the century is wrong.',
+          en: 'In 1942 money was rupees, annas and pies, written Rs 599-8-0: 599 rupees and 8 annas. Decimal rupees came only in 1957. The sum is right; the format is fifteen years early.',
           hi: '1942 में पैसा रुपये, आने और पाई में चलता था, लिखा जाता था रु. 599-8-0: 599 रुपये और 8 आने। दशमलव वाला रुपया 1957 में आया। रक़म सही है, ज़माना ग़लत।',
         },
         factId: 'f-money',
@@ -1145,8 +1198,8 @@ export const messages: Message[] = [
       {
         kind: 'anachronism',
         explain: {
-          en: 'Radio men in 1942 said megacycles, “Mc”, as the police did when they logged a broadcast on “6.55 MC”. “MHz” is a later word, and we were a shortwave station, not FM.',
-          hi: '1942 में रेडियो वाले मेगासाइकिल, “Mc”, कहते थे, जैसे पुलिस ने एक प्रसारण “6.55 MC” पर दर्ज किया। “मेगाहर्ट्ज़” बाद का शब्द है, और हम शॉर्टवेव स्टेशन थे, FM नहीं।',
+          en: 'Radio men in 1942 said megacycles, “Mc”, as the police did when they logged a broadcast on “6.55 MC”. “MHz” is a later word (the hertz became the standard unit only in 1960), and we were a shortwave station, not FM.',
+          hi: '1942 में रेडियो वाले मेगासाइकिल, “Mc”, कहते थे, जैसे पुलिस ने एक प्रसारण “6.55 MC” पर दर्ज किया। “मेगाहर्ट्ज़” बाद का शब्द है (हर्ट्ज़ नाम 1960 में जाकर चलन में आया), और हम शॉर्टवेव स्टेशन थे, FM नहीं।',
         },
         sources: [{ id: 'huacuja-2023', loc: 'n. 85 (police report, “6.55 MC”)' }, { id: 'chatterjee-1989' }],
       },
@@ -1167,8 +1220,8 @@ export const messages: Message[] = [
     checks: { en: ['Home Member', '340', '318'], hi: ['होम मेंबर', '340', '318'] },
     why: {
       text: {
-        en: 'A Congress script quoting a government minister looks odd, but it checks out. On 16 September 1942 the Home Member, Sir Reginald Maxwell, told the Assembly that police firing had killed 340 and the military 318, and that the figures were incomplete.',
-        hi: 'कांग्रेस की स्क्रिप्ट में सरकारी मंत्री की बात अजीब लगती है, पर यह सही है। 16 सितंबर 1942 को होम मेंबर सर रेजिनाल्ड मैक्सवेल ने असेंबली में बताया कि पुलिस की गोलियों से 340 और फ़ौज के हाथों 318 लोग मारे गए, और आँकड़े अधूरे हैं।',
+        en: 'A Congress script quoting the government’s own Home Member looks odd, but it checks out. On 16 September 1942 the Home Member, Sir Reginald Maxwell, told the Assembly that police firing had killed 340 and the military 318, and that the figures were incomplete.',
+        hi: 'कांग्रेस की स्क्रिप्ट में सरकार के अपने होम मेंबर की बात अजीब लगती है, पर यह सही है। 16 सितंबर 1942 को होम मेंबर सर रेजिनाल्ड मैक्सवेल ने असेंबली में बताया कि पुलिस की गोलियों से 340 और फ़ौज के हाथों 318 लोग मारे गए, और आँकड़े अधूरे हैं।',
       },
       sources: [{ id: 'iar-1942', loc: 'September chronicle, 16 Sep' }],
     },
@@ -1189,10 +1242,10 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: 'In 1942 the Viceroy was Lord Linlithgow, and these figures came from the Home Member, Maxwell. The forger put the wrong man in the chair.',
-          hi: '1942 में वायसराय लॉर्ड लिनलिथगो थे, और ये आँकड़े होम मेंबर मैक्सवेल ने दिए थे। जालसाज़ ने कुर्सी पर ग़लत आदमी बिठा दिया।',
+          en: 'In 1942 the Viceroy was Lord Linlithgow, and these figures came from the Home Member, Maxwell. Wavell was then General Sir Archibald Wavell, the Commander-in-Chief, and not yet a lord. The forger put the wrong man in the chair.',
+          hi: '1942 में वायसराय लॉर्ड लिनलिथगो थे, और ये आँकड़े होम मेंबर मैक्सवेल ने दिए थे। तब वेवल जनरल सर आर्चिबाल्ड वेवल थे, कमांडर-इन-चीफ़, लॉर्ड नहीं। जालसाज़ ने कुर्सी पर ग़लत आदमी बिठा दिया।',
         },
-        sources: [{ id: 'iar-1942', loc: 'September chronicle, 16 Sep' }, { id: 'top-ii-1971', loc: 'No. 662' }],
+        sources: [{ id: 'iar-1942', loc: 'September chronicle, 16 Sep' }, { id: 'top-ii-1971', loc: 'No. 662; front matter (Executive Council: General Sir Archibald Wavell, C-in-C)' }],
       },
     ],
   },
@@ -1205,39 +1258,19 @@ export const messages: Message[] = [
     from: SCRIPT,
     to: ANN,
     text: {
-      en: 'When we began, our first broadcasts went out on 41.78 metres. Now listen for us on 42.34.',
-      hi: 'जब हमने शुरुआत की, हमारे पहले प्रसारण 41.78 मीटर पर गए थे। अब हमें 42.34 पर सुनिए।',
+      en: 'In late August our broadcasts went out on 41.78 metres. Now listen for us on 42.34.',
+      hi: 'अगस्त के आख़िर में हमारे प्रसारण 41.78 मीटर पर जाते थे। अब हमें 42.34 पर सुनिए।',
     },
     checks: { en: ['41.78 metres'], hi: ['41.78 मीटर'] },
     why: {
       text: {
-        en: 'It looks wrong, but it checks out. The court record gives 41.78 metres for the first test and broadcasts, and the opening announcement later gave 42.34. Why the number changed is not known.',
-        hi: 'यह ग़लत लगता है, पर सही है। अदालत के रिकॉर्ड में पहले टेस्ट और प्रसारणों के लिए 41.78 मीटर लिखा है, और बाद में शुरुआती घोषणा में 42.34। नंबर क्यों बदला, यह पता नहीं।',
-      },
-      sources: [{ id: 'thakkar-2021', loc: 'Scroll excerpt (court record)' }, { id: 'chatterjee-1989' }],
-    },
-  },
-
-  {
-    id: 'b42-meerut-g',
-    tier: 3,
-    real: true,
-    from: FILE,
-    to: ANN,
-    text: {
-      en: 'A month ago we received news that about 306 soldiers were shot in Meerut by usurper government but we did not give publicity to this news as it was not co[nfirmed]…',
-      hi: 'एक महीना पहले हमें ख़बर मिली थी कि ज़बरदस्ती बैठी सरकार ने मेरठ में लगभग 306 सिपाहियों को गोली मार दी, पर हमने यह ख़बर नहीं सुनाई, क्योंकि यह पक्की नहीं थी…',
-    },
-    checks: { en: ['did not give publicity'], hi: ['यह ख़बर नहीं सुनाई'] },
-    document: { sources: [{ id: 'huacuja-2023', loc: 'police transcript of 26 Oct 1942' }] },
-    why: {
-      text: {
-        en: 'Real broadcast words, from the police transcript of 26 October 1942. No record confirms the Meerut story itself. What is real is the station’s care: it would not air news it could not check.',
-        hi: 'यह असली प्रसारण के शब्द हैं, 26 अक्टूबर 1942 के पुलिस रिकॉर्ड से। मेरठ वाली ख़बर किसी रिकॉर्ड से पक्की नहीं होती। असली बात स्टेशन की सावधानी है: जो ख़बर जाँची न जा सके, वह उसे नहीं सुनाता था।',
+        en: 'It looks wrong, but it checks out. The police and court record put the broadcast of 27 August 1942 on 41.78 metres, and by October the station was calling on 42.34. Usha Mehta remembered 42.34 from the very first announcement. Both numbers are real, and why they differ is not known.',
+        hi: 'यह ग़लत लगता है, पर सही है। पुलिस और अदालत के रिकॉर्ड में 27 अगस्त 1942 का प्रसारण 41.78 मीटर पर दर्ज है, और अक्टूबर तक स्टेशन 42.34 पर बोल रहा था। उषा मेहता को याद था कि पहली घोषणा से ही 42.34 था। दोनों नंबर असली हैं; फ़र्क़ क्यों है, यह पता नहीं।',
       },
       sources: [
-        { id: 'huacuja-2023', loc: 'police transcript of 26 Oct 1942' },
-        { id: 'chatterjee-1989', loc: 'police transcripts' },
+        { id: 'chatterjee-1989', loc: 'Home Dept record (on air 27 Aug 1942 on 41.78 m); transcript of 20 Oct 1942' },
+        { id: 'nehru-centre-2021' },
+        { id: 'usha-mehta-1969' },
       ],
     },
   },
@@ -1250,38 +1283,15 @@ export const messages: Message[] = [
     to: ANN,
     text: {
       en: 'From Sind: Premier Allah Bux gave back his British titles, Khan Bahadur and O.B.E., in protest. “Mr. Churchill’s speech shattered all hopes,” he said. On 10 October the Governor removed him from office.',
-      hi: 'सिंध से: प्रीमियर अल्लाह बख़्श ने विरोध में अपने अंग्रेज़ी ख़िताब, ख़ान बहादुर और O.B.E., लौटा दिए। उन्होंने कहा, “मिस्टर चर्चिल के भाषण ने सारी उम्मीदें तोड़ दीं।” 10 अक्टूबर को गवर्नर ने उन्हें पद से हटा दिया।',
+      hi: 'सिंध से ख़बर: प्रीमियर (सूबे की सरकार के मुखिया) अल्लाह बख़्श ने विरोध में अपने अंग्रेज़ी ख़िताब, ख़ान बहादुर और O.B.E., लौटा दिए। उन्होंने कहा, “मिस्टर चर्चिल के भाषण ने सारी उम्मीदें तोड़ दीं।” 10 अक्टूबर को गवर्नर ने उन्हें पद से हटा दिया।',
     },
     checks: { en: ['Allah Bux', '10 October'], hi: ['अल्लाह बख़्श', '10 अक्टूबर'] },
     why: {
       text: {
         en: 'A premier handing back British titles sounds too good to be true, but it checks out. Allah Bux, Premier of Sind, renounced “Khan Bahadur” and “O.B.E.” in protest in September 1942, and the Governor removed him on 10 October.',
-        hi: 'किसी प्रीमियर का अंग्रेज़ी ख़िताब लौटाना सच से ज़्यादा अच्छा लगता है, पर यह सही है। सिंध के प्रीमियर अल्लाह बख़्श ने सितंबर 1942 में विरोध में “ख़ान बहादुर” और “O.B.E.” लौटाए, और 10 अक्टूबर को गवर्नर ने उन्हें हटा दिया।',
+        hi: 'यक़ीन नहीं होता कि किसी प्रीमियर ने अंग्रेज़ों के ख़िताब लौटा दिए, पर यह सच है। सिंध के प्रीमियर अल्लाह बख़्श ने सितंबर 1942 में विरोध में “ख़ान बहादुर” और “O.B.E.” लौटाए, और 10 अक्टूबर को गवर्नर ने उन्हें हटा दिया।',
       },
       sources: [{ id: 'iar-1942', loc: 'September chronicle; October chronicle, 10 Oct' }],
     },
-  },
-
-  {
-    id: 'b42-operation-f',
-    tier: 3,
-    real: false,
-    from: SLIP,
-    to: ANN,
-    text: {
-      en: 'Tell the country what the British called it: “Operation Zero Hour”, the plan that took our leaders at 5 a.m. on 9 August.',
-      hi: 'देश को बताइए कि अंग्रेज़ों ने इसे क्या नाम दिया था: “ऑपरेशन ज़ीरो आवर”, वह योजना जिससे 9 अगस्त की सुबह 5 बजे हमारे नेता पकड़े गए।',
-    },
-    checks: { en: ['Operation Zero Hour'], hi: ['ऑपरेशन ज़ीरो आवर'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'No document shows a plan called “Operation Zero Hour”. British officials used “zero hour” only for the moment of the strike: “Zero hour was fixed at 5-00 a.m.” The time is right; the code name is invented.',
-          hi: 'किसी दस्तावेज़ में “ऑपरेशन ज़ीरो आवर” नाम की कोई योजना नहीं मिलती। अंग्रेज़ अफ़सर “ज़ीरो आवर” सिर्फ़ हमले के वक़्त के लिए कहते थे: “ज़ीरो आवर सुबह 5 बजे तय था।” समय सही है, नाम गढ़ा हुआ।',
-        },
-        sources: [{ id: 'top-ii-1971', loc: 'No. 624' }],
-      },
-    ],
   },
 ]

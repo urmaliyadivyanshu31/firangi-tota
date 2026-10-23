@@ -7,13 +7,14 @@ export const facts: Fact[] = [
     id: 'f-signature',
     label: { en: 'The station on air', hi: 'स्टेशन की पहचान' },
     value: {
-      en: 'Opens with: “This is the Congress Radio calling on 42.34 metres from somewhere in India.” The first broadcasts were on 41.78 metres. Evening programme from 8:45 pm. Opening tune Hindustan Hamara (Iqbal’s Sare Jahan Se Achcha); closing tune Vande Mataram.',
-      hi: 'शुरुआत: “यह कांग्रेस रेडियो है, 42.34 मीटर पर, हिंदुस्तान में कहीं से बोल रहा है।” पहले प्रसारण 41.78 मीटर पर थे। शाम का प्रोग्राम रात 8:45 से। शुरू में ‘हिंदुस्तान हमारा’ (इक़बाल का ‘सारे जहाँ से अच्छा’), आख़िर में ‘वंदे मातरम्’।',
+      en: 'Opens with: “This is the Congress Radio calling on 42.34 metres from somewhere in India.” The police record puts the first broadcasts on 41.78 metres. Evening programme from 8:45 pm. Opening tune Hindustan Hamara (Iqbal’s Sare Jahan Se Achcha); closing tune Vande Mataram.',
+      hi: 'शुरुआत: “यह कांग्रेस रेडियो है, 42.34 मीटर पर, हिंदुस्तान में कहीं से बोल रहा है।” पुलिस के रिकॉर्ड में पहले प्रसारण 41.78 मीटर पर दर्ज हैं। शाम का प्रोग्राम रात 8:45 से। शुरू में ‘हिंदुस्तान हमारा’ (इक़बाल का ‘सारे जहाँ से अच्छा’), आख़िर में ‘वंदे मातरम्’।',
     },
     sources: [
       { id: 'usha-mehta-1969', loc: 'opening words; tunes' },
-      { id: 'chatterjee-1989', loc: 'police transcripts, e.g. 20 Oct 1942' },
-      { id: 'thakkar-2021', loc: 'Scroll excerpt (court record: 41.78 m, 8:45 pm)' },
+      { id: 'chatterjee-1989', loc: 'Home Dept record (on air 27 Aug 1942 on 41.78 m); transcript of 20 Oct 1942' },
+      { id: 'thakkar-2021', loc: 'Scroll excerpt (trial on 41.78 m)' },
+      { id: 'huacuja-2023', loc: 'n. 120 (transcript of 18 Oct 1942: 8:45 pm)' },
       { id: 'nehru-centre-2021', loc: 'Congress Radio article' },
     ],
   },
@@ -21,8 +22,8 @@ export const facts: Fact[] = [
     id: 'f-voices',
     label: { en: 'Voices on air', hi: 'रेडियो पर आवाज़ें' },
     value: {
-      en: 'Hindustani: Usha Mehta, Moinuddin Harris, Achyut Patwardhan. English: Ram Manohar Lohia, Coomi Dastur. Lohia also writes talks for the station.',
-      hi: 'हिंदुस्तानी में: उषा मेहता, मोइनुद्दीन हैरिस, अच्युत पटवर्धन। अंग्रेज़ी में: राम मनोहर लोहिया, कूमी दस्तूर। लोहिया स्टेशन के लिए भाषण भी लिखते हैं।',
+      en: 'Hindustani: Usha Mehta, Moinuddin Harris, Achyut Patwardhan. English speeches: mostly Ram Manohar Lohia and Coomi Dastur. Lohia also writes talks for the station.',
+      hi: 'हिंदुस्तानी में: उषा मेहता, मोइनुद्दीन हैरिस, अच्युत पटवर्धन। अंग्रेज़ी भाषण: ज़्यादातर राम मनोहर लोहिया और कूमी दस्तूर। लोहिया स्टेशन के लिए भाषण भी लिखते हैं।',
     },
     sources: [{ id: 'usha-mehta-1969' }],
   },
@@ -30,8 +31,8 @@ export const facts: Fact[] = [
     id: 'f-team',
     label: { en: 'Our people', hi: 'हमारे लोग' },
     value: {
-      en: 'Babubhai Khakhar is the chief organiser. Vithalbhai Jhaveri runs the recording. Nariman Printer, a technician, built the set. Parts come from Chicago Radio, the firm of Nanak Motwane.',
-      hi: 'बाबूभाई खाखर सारा इंतज़ाम देखते हैं। विट्ठलभाई झवेरी रिकॉर्डिंग सँभालते हैं। मशीन मिस्त्री नरीमन प्रिंटर ने बनाई। पुर्ज़े शिकागो रेडियो से आते हैं, जो नानक मोटवाने की कंपनी है।',
+      en: 'Babubhai Khakhar is the chief organiser. Vithalbhai Jhaveri runs the recording. Nariman Printer, a technician, built the set. Most parts come from Chicago Radio, the firm of Nanak Motwane.',
+      hi: 'बाबूभाई खाखर सारा इंतज़ाम देखते हैं। विट्ठलभाई झवेरी रिकॉर्डिंग सँभालते हैं। मशीन रेडियो इंजीनियर नरीमन प्रिंटर ने बनाई। ज़्यादातर पुर्ज़े शिकागो रेडियो से आते हैं, जो नानक मोटवाने की कंपनी है।',
     },
     sources: [
       { id: 'chatterjee-1989', loc: 'Home Dept records: the accused' },
@@ -44,7 +45,7 @@ export const facts: Fact[] = [
     label: { en: 'Where we have been', hi: 'हम कहाँ-कहाँ रहे' },
     value: {
       en: 'Sea View, Chowpatty; Ratan Mahal, Walkeshwar Road; Ajit Villa, Laburnum Road; Laxmi Bhuvan, Sandhurst Road; since 15 Oct, Parekh Wadi, Girgaum Back Road. None of this is ever said on air.',
-      hi: 'सी व्यू, चौपाटी; रतन महल, वालकेश्वर रोड; अजीत विला, लैबर्नम रोड; लक्ष्मी भुवन, सैंडहर्स्ट रोड; 15 अक्टूबर से पारेख वाड़ी, गिरगाँव बैक रोड। इनमें से कुछ भी रेडियो पर कभी नहीं बोला जाता।',
+      hi: 'सी व्यू, चौपाटी; रतन महल, वालकेश्वर रोड; अजित विला, लैबर्नम रोड; लक्ष्मी भुवन, सैंडहर्स्ट रोड; 15 अक्टूबर से पारेख वाड़ी, गिरगाँव बैक रोड। इनमें से कुछ भी रेडियो पर कभी नहीं बोला जाता।',
     },
     sources: [
       { id: 'huacuja-2023', loc: 'police list of sites (from Sengupta and Chatterjee 1988)' },
@@ -69,11 +70,11 @@ export const facts: Fact[] = [
     id: 'f-zero-hour',
     label: { en: 'The arrests', hi: 'गिरफ़्तारियाँ' },
     value: {
-      en: 'From 5:00 am on Sunday 9 Aug, about 60 police parties arrested the leaders in Bombay at once; a special train left at 7:15 am. That morning Aruna Asaf Ali raised the Congress flag at Gowalia Tank Maidan.',
-      hi: 'रविवार 9 अगस्त सुबह 5 बजे से लगभग 60 पुलिस टोलियों ने बंबई में सारे नेता एक साथ पकड़े; सुबह 7:15 पर एक ख़ास ट्रेन चली। उसी सुबह अरुणा आसफ़ अली ने गोवालिया टैंक मैदान में कांग्रेस का झंडा फहराया।',
+      en: 'From 5:00 am on Sunday 9 Aug, about 60 police parties arrested the leaders in Bombay at once; a special train left at 7:15 am, and Gandhiji’s party got off at Chinchwad, a small station short of Poona. That morning Aruna Asaf Ali raised the Congress flag at Gowalia Tank Maidan.',
+      hi: 'रविवार 9 अगस्त सुबह 5 बजे से लगभग 60 पुलिस टोलियों ने बंबई में सारे नेता एक साथ पकड़े; सुबह 7:15 पर एक ख़ास ट्रेन चली, और गांधीजी और उनके साथी पूना से थोड़ा पहले चिंचवड़ स्टेशन पर उतारे गए। उसी सुबह अरुणा आसफ़ अली ने गोवालिया टैंक मैदान में कांग्रेस का झंडा फहराया।',
     },
     sources: [
-      { id: 'top-ii-1971', loc: 'No. 624, pp. 806–7' },
+      { id: 'top-ii-1971', loc: 'No. 624, pp. 806–7 (Chinchwad p. 807)' },
       { id: 'rebel-india-1946', loc: 'Bombay section' },
     ],
   },
@@ -81,10 +82,10 @@ export const facts: Fact[] = [
     id: 'f-detention',
     label: { en: 'Where the leaders are held', hi: 'नेता कहाँ बंद हैं' },
     value: {
-      en: 'Gandhiji: the Aga Khan Palace, Poona. The Working Committee: Ahmednagar Fort.',
-      hi: 'गांधीजी: आग़ा ख़ान महल, पूना। वर्किंग कमेटी: अहमदनगर क़िला।',
+      en: 'Gandhiji: the Aga Khan Palace, Poona. The Working Committee, Nehru among them: Ahmednagar Fort.',
+      hi: 'गांधीजी: आग़ा ख़ान महल, पूना। वर्किंग कमेटी, नेहरू समेत: अहमदनगर क़िला।',
     },
-    sources: [{ id: 'top-ii-1971', loc: 'Nos. 624, 625' }],
+    sources: [{ id: 'top-ii-1971', loc: 'Introduction p. xii; No. 553 (letter from Aga Khan’s Palace, 14 Aug 1942)' }],
     hardHidden: true,
   },
   {
