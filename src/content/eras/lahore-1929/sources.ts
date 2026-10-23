@@ -164,6 +164,42 @@ export const sources: Source[] = [
     year: 'n.d.',
     url: 'https://www.constitutionofindia.net/historical-constitution/declaration-of-purna-swaraj-indian-national-congress-1930/',
   },
+  // Added for famous people and moments (docs/research/people-and-moments.md, 2026-10-24).
+  {
+    id: 'cwmg-40',
+    author: 'M.K. Gandhi',
+    title: 'Collected Works of Mahatma Gandhi, Vol. XL (15 February – 31 May 1929), chronology and introduction',
+    year: '1970',
+    url: 'https://archive.org/details/HindSwaraj-CWMG-040',
+  },
+  {
+    id: 'naidu-1929',
+    author: 'Sarojini Naidu',
+    title: 'Letter to Gandhiji from her American tour, [before 11 April] 1929 (Young India, 11 April 1929; mkgandhi.org)',
+    year: '1929',
+    url: 'https://www.mkgandhi.org/Selected%20Letters/Sarojini/letter46.htm',
+  },
+  {
+    id: 'naidu-1929b',
+    author: 'Sarojini Naidu',
+    title: 'Letter to Gandhiji, Berlin, 18 June 1929 (mkgandhi.org)',
+    year: '1929',
+    url: 'https://www.mkgandhi.org/Selected%20Letters/Sarojini/letter48.htm',
+  },
+  {
+    id: 'nehru-1936',
+    author: 'Jawaharlal Nehru',
+    title: 'An Autobiography (John Lane, London)',
+    year: '1936',
+    url: 'https://archive.org/details/in.ernet.dli.2015.98834',
+  },
+  {
+    id: 'tribune-2010',
+    author: 'Aruti Nayar (Tribune News Service)',
+    title: "Keeping martyr's memory alive (Sardar Ajit Singh at Dalhousie; The Tribune, 12 July 2010)",
+    year: '2010',
+    url: 'https://www.tribuneindia.com/2010/20100712/main6.htm',
+  },
   {
     id: 'pti-2018',
     author: 'Press Trust of India',
