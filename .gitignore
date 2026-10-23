@@ -12,3 +12,7 @@ docs/screens/
 .env
 .env.*
 !.env.example
+
+# local AI-agent skills (dev tooling, not part of the game)
+.agents/
+skills-lock.json
