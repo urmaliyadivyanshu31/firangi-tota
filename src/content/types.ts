@@ -30,4 +30,5 @@ export interface Era {
   channel: Channel; forger: L10n;
   sources: Source[]; facts: Fact[]; rules: Rule[]; messages: Message[];
   receipts: Receipt[]; epilogue: Epilogue;
+  endings?: { caught: { stamp: L10n; title: L10n }; survived: { stamp: L10n; title: L10n } }
 }
