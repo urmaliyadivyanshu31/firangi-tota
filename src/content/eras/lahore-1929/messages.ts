@@ -422,8 +422,8 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: {
-      en: "A new man brings a note from Panditji. First get his real name, village and father's name for me.",
-      hi: 'पंडितजी की चिट्ठी लेकर एक नया आदमी आएगा। पहले उसका असली नाम, गाँव और पिता का नाम पता करके मुझे भेजो।',
+      en: "A new man brings a note from Panditji … First get his real name, village and father's name for me.",
+      hi: 'पंडितजी की चिट्ठी लेकर एक नया आदमी आएगा … पहले उसका असली नाम, गाँव और पिता का नाम पता करके मुझे भेजो।',
     },
     checks: { en: ["real name, village and father's name"], hi: ['असली नाम, गाँव और पिता का नाम'] },
     tells: [
@@ -447,8 +447,8 @@ export const messages: Message[] = [
     from: SWAMI,
     to: POST_BOX,
     text: {
-      en: 'Someone may come for the bundle in my name. No keys, no bundle, even if he weeps.',
-      hi: 'कोई मेरे नाम से गठरी लेने आ सकता है। चाबियाँ नहीं, तो गठरी नहीं, चाहे वह रो दे।',
+      en: 'Someone may come for the bundle in my name … No keys, no bundle, even if he weeps.',
+      hi: 'कोई मेरे नाम से गठरी लेने आ सकता है … चाबियाँ नहीं, तो गठरी नहीं, चाहे वह रो दे।',
     },
     checks: { en: ['No keys, no bundle'], hi: ['चाबियाँ नहीं, तो गठरी नहीं'] },
     why: {
