@@ -12,7 +12,7 @@ export const receipts: Receipt[] = [
       hi: "'जयगोपाल ने उसे पहचाना … जयगोपाल फूट-फूटकर रोया और आरोपी से लिपट गया।' (शिव वर्मा की पहचान परेड, 7 जून 1929)",
     },
     joke: { en: 'Point him out, then weep on his shoulder.', hi: 'पहले उँगली उठाओ, फिर गले लगकर रो लो।' },
-    source: { id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', pp. 108, 117" },
+    source: { id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', p. 117" },
   },
   {
     id: 'rc-vohra',

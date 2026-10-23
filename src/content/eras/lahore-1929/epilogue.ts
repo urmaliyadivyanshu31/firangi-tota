@@ -1,7 +1,7 @@
 import type { Epilogue } from '../../types.js'
 
 // Dossier sections 2c, 4, 8 and 12. No gore; the hanging is "evening", as the dossier
-// advises, because the hour is disputed. Gandhi's part: one dated act, and the debate.
+// advises, because the hour is disputed. Gandhi's part: his repeated appeals, and the debate.
 export const epilogue: Epilogue = {
   survived: [
     {
@@ -13,8 +13,8 @@ export const epilogue: Epilogue = {
       hi: 'अक्टूबर 1930 में एक ट्रिब्यूनल ने भगत सिंह, सुखदेव और राजगुरु को फाँसी की सज़ा दी। 27 फ़रवरी 1931 को इलाहाबाद में पुलिस से घिरकर आज़ाद की मौत हुई।',
     },
     {
-      en: 'They were hanged on the evening of 23 March 1931, a day before the announced date. Gandhi appealed that morning; historians still argue whether he did enough.',
-      hi: 'तीनों को 23 मार्च 1931 की शाम फाँसी दी गई, घोषित तारीख़ से एक दिन पहले। गांधी ने उसी सुबह अपील की थी; इतिहासकार आज भी बहस करते हैं कि क्या उन्होंने काफ़ी किया।',
+      en: 'They were hanged on the evening of 23 March 1931, a day before the announced date. Gandhi appealed repeatedly, last that morning; historians argue whether he did enough.',
+      hi: 'तीनों को 23 मार्च 1931 की शाम फाँसी दी गई, घोषित तारीख़ से एक दिन पहले। गांधी ने कई बार अपील की, आख़िरी बार उसी सुबह; इतिहासकार आज भी बहस करते हैं कि क्या उन्होंने काफ़ी किया।',
     },
   ],
   caught: [
