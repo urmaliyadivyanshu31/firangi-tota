@@ -27,8 +27,11 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 **Truth**
 - Every fact needs a source, read from books and papers rather than taken from summaries. The game
   shows the source after each stamp.
-- Fiction is allowed only where it is clearly game fiction (the player's character, the forged
-  messages), and is never presented as a historical claim.
+- Fiction is allowed only where it is clearly game fiction, and is never presented as a historical
+  claim. The player's character, the forged messages and the wording of most genuine messages are
+  written for the game. Every fact inside a genuine message is true and sourced.
+- Where a real letter, telegram, leaflet or broadcast exists, the game uses it and marks it
+  **📜 Real document** with its source. After each stamp the game says which kind of message it was.
 
 **Tone and humour**
 - Serious, with light wit. The game stands with India and with the people who fought for freedom.
@@ -60,3 +63,12 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 
 **Where it lives**
 - A public GitHub repo, hosted on Vercel, at firangitota.com.
+
+## 2026-10-23: After the research
+
+- The research for all four eras is in `docs/research/` and comes from primary sources and
+  scholarship, not summaries.
+- The four chapters, their windows and the player's role in each are set out in the MVP design
+  (`docs/superpowers/specs/2026-10-23-firangi-tota-mvp-design.md`).
+- Launch as fast as possible, quality first. The owner reads the Hindi and every receipt card
+  before the game goes public.

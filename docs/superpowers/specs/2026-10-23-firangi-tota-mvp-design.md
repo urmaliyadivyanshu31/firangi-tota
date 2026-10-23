@@ -1,6 +1,6 @@
 # Firangi Tota: MVP design
 
-Date: 2026-10-23 · Status: DRAFT (era sections wait for the research)
+Date: 2026-10-23 · Status: READY FOR OWNER APPROVAL
 
 ## What it is
 
@@ -261,6 +261,41 @@ At least 30 messages per era (about half genuine, half forged) across tiers 1–
 14-day run and the daily puzzle rarely repeat. Each era also gets 8–10 case-file lines, 5–7 rules,
 the epilogue and 2–3 receipts. Everything is written in English and simple Hindi; the Hindi must be
 easy for a village kid, everyday Hindustani in Devanagari, not Sanskritised.
+
+## Answers from the builder check
+
+**Owner decisions:**
+- **Genuine messages:** most are written for the game in the style of the time, and every name,
+  place, number and date in them is true and sourced. Where a real letter, telegram, leaflet or
+  broadcast exists, it is used and marked **📜 Real document** with its source. After each stamp the
+  game says which kind it was: "📜 Real document · source" or "Written for the game · every detail
+  checks out: A (source), B (source)". Forgeries are written for the game, and their tells are
+  explained.
+- **Launch:** as fast as possible, quality first. A preview link goes to the owner as soon as chapter
+  1 is playable. The owner reads the Hindi and the receipt cards before anything goes public.
+
+**My calls (the owner can override):**
+- **Who writes:** I write the content with a team of agents, era by era, from the dossiers. A
+  separate checker agent verifies every message, fact and receipt against the dossier and its
+  sources before it is merged.
+- **Volume:** at least 40 messages per era (at least 20 genuine/forged pairs). Messages are not
+  tied to dates, except a few "event" messages keyed to one date in the window and shown only on that
+  day. The daily puzzle draws from the same pools with a date seed. Individual messages may repeat
+  after a few weeks, and the pools grow after launch, including through community PRs.
+- **Windows:** final as written:
+  - Delhi starts 17 May, so the killings of 16 May are never staged.
+  - Lahore and 1947 start a day or two earlier than the dossiers suggested, so Hard has 14 days.
+  - Days with no recorded event use messages that aren't tied to a date.
+- **Device floor:**
+  - Android 8+ with Chrome or WebView and 2 GB of RAM.
+  - iOS 15+ Safari.
+  - Current desktop browsers.
+  - KaiOS / JioPhone is out of scope: no WebGL, a D-pad and a tiny screen.
+  - The 2D fallback is the same game with the same UI over a still, drawn desk, not a separate game.
+  - The build targets ES2019.
+- **Quotes and licensing:** long quotations only from public-domain texts (Metcalfe 1898, Kaye,
+  Hodson, court records, Bhagat Singh's writings). Modern works only as short quotes with citations.
+  The game text's CC BY 4.0 licence excludes quoted third-party material, as noted in `CREDITS.md`.
 
 ## Left to the builder
 
