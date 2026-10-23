@@ -48,7 +48,7 @@ let keysBound = false
 function onKey(e: KeyboardEvent): void {
   const a = active
   if (!a || !a.screen.isConnected || e.altKey || e.ctrlKey || e.metaKey) return
-  const target = e.target as HTMLElement | null
+  const target = e.target instanceof Element ? e.target : null
   if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return
   const i = a.eras.findIndex((x) => x.id === a.p.selected)
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {

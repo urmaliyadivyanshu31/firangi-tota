@@ -3,7 +3,7 @@
 // the agarbatti. The room is always on screen: the stage establishes it behind the cards, titles
 // each day, brings the message in on its paper, stamps it and flashes. Nothing here imports
 // three.js: the stage and the era desks arrive by dynamic import after the first paint (R10).
-import { audio } from './audio/engine'
+import { audio, cueForStage } from './audio/engine'
 import { ERAS, eraById } from './content/registry'
 import type { Era, EraId, Message } from './content/types'
 import { DAYS, TIMER_S, pencilOn, type Difficulty } from './game/config'
@@ -41,7 +41,8 @@ export interface AppEnv {
 }
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
-const LOW_TIME = 0.3 // under this share of the agarbatti, it ticks every second
+const LOW_TIME = 0.3 // under this share of the agarbatti, a clock ticks every second
+const TENSION_S = 5 // in the last seconds the tick rises toward the end
 const MAX_FRAME_MS = 1000 // one long frame (a stall, a resume) never burns more than this
 const ANIM_GUARD_MS = 3500 // a stage animation that never settles must not stall the game
 const STAGE_WAIT_MS = 6000 // a day waits this long for the 3D stage before using the 2D desk
@@ -262,11 +263,14 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     }
   }
 
-  /** The stage's beats, as sound. Right and wrong are cued by the game itself, on every desk. */
+  /**
+   * The stage's beats, as sound, in sync: the typewriter keys, the seal, the arrival, right and wrong
+   * inside flash(). The stamp's thunk depends on which stamp, so it is played here on the impact beat.
+   */
   function onCue(name: StageCueName): void {
-    if (name === 'arrive') audio.cue('arrive')
-    else if (name === 'flip' || name === 'unfold' || name === 'flap' || name === 'seal') audio.cue('page')
-    else if (name === 'stamp') thunk()
+    if (name === 'stamp') return thunk()
+    const c = cueForStage(name)
+    if (c) audio.cue(c)
   }
 
   function thunk(): void {
@@ -389,12 +393,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     timeLeft = Math.max(0, timeLeft - dt / 1000)
     const frac = timeLeft / timeTotal
     setTimer(ui, frac, timeLeft)
-    if (frac < LOW_TIME && timeLeft > 0) {
-      const whole = Math.ceil(timeLeft)
-      if (whole < lastWhole) {
-        lastWhole = whole
-        audio.cue('tick')
-      }
+    const whole = Math.ceil(timeLeft)
+    if (whole < lastWhole && timeLeft > 0) {
+      lastWhole = whole
+      audio.cue('incense')
+      if (timeLeft <= TENSION_S) audio.cue('tensionTick', { level: 1 - timeLeft / TENSION_S })
+      else if (frac < LOW_TIME) audio.cue('clockTick')
     }
     if (timeLeft <= 0) {
       timerArmed = false
@@ -433,9 +437,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         const btn = controls.querySelector<HTMLButtonElement>('[data-action="sound"]')
         const on = toggleSound()
         if (btn) setSoundToggle(btn, on, getLang())
+        audio.cue('toggleClick')
       },
       lang: (l: Lang) => {
         setLang(l)
+        audio.cue('plaqueFlick')
         redraw()
       },
     }))
@@ -466,11 +472,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         setDeskEra(id)
         establish()
         audio.ambience(id)
-        audio.cue('page')
+        audio.cue('cardTurn')
         redraw()
       },
       difficulty: (d) => {
         if (d === difficulty) return
+        audio.cue('toggleClick')
         difficulty = d
         store.set('difficulty', d)
         redraw()
@@ -555,7 +562,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const lang = getLang()
     await guard(desk ? desk.dayTitle(dayTitleFor(p.state.day, isoDateFor(p), lang)) : Promise.resolve())
     if (stale()) return
-    if (!desk?.cues) audio.cue('arrive') // the stage cues it when the paper actually arrives
+    if (!desk?.cues) audio.cue('arrive') // the 3D stage cues it when the paper actually moves
     syncHudInsets()
     const d = desk
     await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve())
@@ -591,12 +598,16 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       stamp: (v) => void onStamp(v),
       listen: toggleVoice,
       voiceStyle: chooseVoice,
-      tab: () => audio.cue('page'),
+      tab: () => audio.cue('fileOpen'),
       next: onNext,
       skip: () => desk?.skip(),
-      sound: () => setSound(ui, toggleSound(), getLang()),
+      sound: () => {
+        setSound(ui, toggleSound(), getLang())
+        audio.cue('toggleClick')
+      },
       lang: () => {
         setLang(getLang() === 'en' ? 'hi' : 'en')
+        audio.cue('plaqueFlick')
         stopVoice()
         drawDay()
         if (readable || revealed) desk?.redrawMessage(sheetFor(p))
@@ -622,17 +633,18 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     }
     // The stamps stop taking taps while the desk plays the stamp, or the caught beat when the
     // agarbatti burnt out. A tap on the room finishes the animation.
+    if (v !== 'timeout') audio.cue('stampPress')
     setStamping(ui, v)
     if (v !== 'timeout') {
       await stampDesk(v)
       if (token !== gen) return
     }
-    // the room flashes and the camera eases back to the desk for the card (caught() overrides it)
+    // the room flashes and the camera eases back to the desk for the card (caught() overrides it);
+    // the stage sounds right or wrong inside flash(), the flat desk needs the game to
     const flash: FlashKind = correct ? 'right' : 'wrong'
     desk?.flash(flash)
-    if (correct) audio.cue('correct')
-    else {
-      audio.cue('caught')
+    if (!desk?.cues) audio.cue(correct ? 'correct' : 'caught')
+    if (!correct) {
       await guard(desk ? desk.caught() : Promise.resolve())
       if (token !== gen) return
     }
@@ -678,6 +690,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function showEnd(props: EndProps, line: string, again: () => void): void {
     leave()
     syncPause()
+    audio.cue('endTelegram') // the telegram comes off the teleprinter before its stamp lands
     show('end', () => renderEnd(ui, props, { again, home: showMain, share: () => void share(line) }))
   }
 

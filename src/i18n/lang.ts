@@ -33,6 +33,11 @@ export function getLang(): Lang {
   return current
 }
 
+/** Forget the remembered pick for this page (a fresh first visit; tests use it). */
+export function forgetLang(): void {
+  current = null
+}
+
 /** Switch language, remember it (if storage works) and update `<html lang>`. */
 export function setLang(l: Lang): void {
   current = l

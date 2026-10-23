@@ -22,52 +22,63 @@ function withReceipts(e: Era): Receipt[] {
 
 beforeEach(() => setLang('en'))
 
-describe('renderEnd', () => {
-  it("shows every receipt's quote and source", () => {
+describe('renderEnd: the telegram', () => {
+  it('says plainly what happened: a forgery stamped ASLI', () => {
     const e = era()
-    const receipts = withReceipts(e)
     const root = mount()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts, epilogue: e.epilogue }, handlers())
-    const text = root.textContent!
-    expect(text).toContain('I read every seal twice.')
-    expect(text).toContain('A. Author, First Book (1900), p. 20')
-    expect(text).toContain('I kept my title.')
-    expect(text).toContain('B. Author, Second Book (1950), p. 7')
-    expect(text).toContain('He said he served the city.')
-    expect(root.querySelectorAll('.receipt')).toHaveLength(2)
+    // day 2 is the forged m2, stamped asli
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 2, lastCorrect: false, lastVerdict: 'asli' }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
+    expect(root.querySelector('.wire__verdict')!.textContent).toBe(strings.en.verdictPassed)
+    expect(root.querySelector('.wire__tell')!.textContent).toBe('The court sat in Delhi, not Lahore.')
+    expect([...root.querySelectorAll('.wire__after')].map((p) => p.textContent)).toEqual(['The forgery was found.'])
   })
 
-  it('keeps the card short: at most three lines of what happened next and two clippings', () => {
+  it('says plainly what happened: a genuine message stamped TOTA, and a timeout', () => {
+    const e = era()
+    const root = mount()
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 1, lastCorrect: false, lastVerdict: 'tota' }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
+    expect(root.querySelector('.wire__verdict')!.textContent).toBe(strings.en.verdictRejected)
+    expect(root.querySelector('.wire__tell')!.textContent).toBe('The gate rota is recorded.')
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 1, lastCorrect: false, lastVerdict: 'timeout' }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
+    expect(root.querySelector('.wire__verdict')!.textContent).toBe(strings.en.tooSlow)
+  })
+
+  it('stamps it with the era’s own ending, styled for the era', () => {
+    const e = era()
+    const root = mount()
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 2, lastCorrect: false, lastVerdict: 'asli' }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
+    const stamp = root.querySelector<HTMLElement>('.end-stamp')!
+    expect(stamp.textContent).toBe('Caught')
+    expect(stamp.classList.contains('end-stamp--petition')).toBe(true)
+    expect(root.querySelector('.wire__heading')!.textContent).toBe('The forger got through')
+    setLang('hi')
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue }, handlers())
+    expect(root.querySelector('.end-stamp')!.textContent).toBe('पास')
+    expect(root.querySelector('.end-stamp')!.classList.contains('end-stamp--survived')).toBe(true)
+    expect(root.querySelector('.wire__verdict')).toBeNull()
+  })
+
+  it('falls back to a plain stamp when the era has no endings', () => {
+    const e = era()
+    Reflect.deleteProperty(e, 'endings')
+    const root = mount()
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 2, lastCorrect: false, lastVerdict: 'asli' }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
+    expect(root.querySelector('.end-stamp--plain')!.textContent).toBe(strings.en.caughtStamp)
+    expect(root.querySelector('.wire__heading')!.textContent).toBe(strings.en.caughtTitle)
+  })
+
+  it('keeps sources and at most two receipts behind small taps', () => {
     const e = era()
     withReceipts(e)
     e.receipts.push({ ...e.receipts[0]!, id: 'rc3', quote: { en: 'A third quote.', hi: 'तीसरी बात।' } })
-    e.epilogue.survived = [1, 2, 3, 4].map((n) => ({ en: `Line ${n}.`, hi: `पंक्ति ${n}।` }))
     const root = mount()
     renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue }, handlers())
-    expect(root.querySelectorAll('.end__epilogue > p')).toHaveLength(3)
-    expect(root.textContent).not.toContain('Line 4.')
+    const folds = [...root.querySelectorAll<HTMLDetailsElement>('details.fold')]
+    expect(folds.map((f) => f.querySelector('summary')!.textContent)).toEqual([strings.en.source, strings.en.receipts])
+    expect(folds.every((f) => !f.open)).toBe(true)
     expect(root.querySelectorAll('.receipt')).toHaveLength(2)
-    expect(root.textContent).not.toContain('A third quote.')
-    expect(root.querySelector('.last')).toBeNull() // the last message was already shown on its result card
-  })
-
-  it('shows the epilogue for the outcome with its sources', () => {
-    const e = era()
-    const root = mount()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 2, lastCorrect: false }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
-    expect(root.textContent).toContain('The forgery was found.')
-    expect(root.textContent).not.toContain('The city endured.')
     expect(root.textContent).toContain('A. Author, First Book (1900), p. 30')
-    expect(root.textContent).toContain(strings.en.caughtTitle)
-  })
-
-  it('speaks the current language', () => {
-    setLang('hi')
-    const e = era()
-    const root = mount()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue }, handlers())
-    expect(root.textContent).toContain('मैंने हर मुहर दो बार देखी।')
-    expect(root.textContent).toContain(strings.hi.survivedTitle)
+    expect(root.textContent).not.toContain('A third quote.')
   })
 
   it('wires again, home and share', () => {

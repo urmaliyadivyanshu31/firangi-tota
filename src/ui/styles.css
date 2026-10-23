@@ -280,7 +280,8 @@ a { color: inherit; }
 .doc--telegram .doc__body { padding-top: 42px; }
 
 .doc__mark { position: absolute; z-index: 1; pointer-events: none; }
-.doc__mark--seal { top: 22px; left: 22px; width: 44px; height: 44px; transform: rotate(-10deg); filter: drop-shadow(0 1px 1px rgba(60, 10, 5, .4)); }
+/* the petition's seal sits at its foot, beside the credits line */
+.doc__mark--seal { bottom: 22px; left: 24px; width: 42px; height: 42px; transform: rotate(-10deg); filter: drop-shadow(0 1px 1px rgba(60, 10, 5, .4)); }
 .doc__mark--seal svg { display: block; width: 100%; height: 100%; }
 .doc__mark--banner {
   top: 18px; left: 18px; right: 18px; padding: 4px 0; text-align: center;
@@ -378,7 +379,7 @@ a { color: inherit; }
 .mode:active { transform: translateY(1px); }
 /* the chosen shift is inked round with a stamp ring */
 .mode.is-on { box-shadow: inset 0 0 0 2px var(--maroon), inset 0 1px 4px rgba(60, 30, 10, .25); }
-.mode.is-on::after { content: ''; position: absolute; inset: 4px; border-radius: 50% / 46%; border: 1.5px solid rgba(125, 31, 44, .55); transform: rotate(-4deg); -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask); pointer-events: none; animation: ink-thump .35s var(--ease-spring) both; }
+.mode.is-on::after { content: ''; position: absolute; inset: -6px -5px; border-radius: 50% / 46%; border: 1.5px solid rgba(125, 31, 44, .6); transform: rotate(-3deg); -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask); pointer-events: none; animation: ink-thump .35s var(--ease-spring) both; }
 .mode__days { font: 700 25px/1.05 var(--display-en); }
 .mode__name { font-size: 13px; font-weight: 700; }
 .mode__secs { font-size: 11px; color: var(--ink-soft); }
@@ -646,7 +647,7 @@ a { color: inherit; }
 [data-layout='wide'] .stamps { padding: 0; gap: 20px; }
 .stamp {
   --ink-c: var(--indigo); --wood: #6e4a26;
-  position: relative; flex: 1; display: flex; align-items: center; gap: 8px;
+  position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px;
   min-height: 70px; padding: 7px 12px 7px 8px; border-radius: 11px;
   color: var(--ink-c);
   background:
@@ -666,6 +667,14 @@ a { color: inherit; }
   box-shadow: inset 0 0 0 2px var(--ink-c), inset 0 0 0 4px rgba(251, 246, 232, .9), inset 0 0 0 5px var(--ink-c);
 }
 .stamp__names { display: flex; align-items: baseline; gap: 7px; -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask); }
+/* on a phone the two names stack, so each stamp keeps its room */
+@media (max-width: 599px) {
+  .stamp { gap: 6px; padding: 6px 8px 6px 6px; }
+  .stamp__handle { width: 22px; height: 32px; }
+  .stamp__names { flex-direction: column; align-items: center; gap: 0; }
+  .stamp__dev { font-size: 23px; line-height: 1.05; }
+  .stamp__lat { font-size: 11px; }
+}
 .stamp__dev { font: 400 24px/1.12 var(--display-hi); }
 .stamp__lat { font: 700 12.5px/1 var(--display-en); letter-spacing: .16em; }
 .stamp__foot { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 1.2; color: var(--ink); opacity: .8; }
@@ -782,7 +791,7 @@ a { color: inherit; }
 .wire__no { justify-self: end; font: 13px/1.2 var(--type); color: #1a1b20; }
 .wire__date { grid-row: 2; justify-self: end; font: 12.5px/1.2 var(--type); color: #1a1b20; }
 .wire__date:lang(hi) { font-family: var(--display-hi); }
-.wire__heading { font: 400 21px/1.35 inherit; font-family: inherit; text-transform: uppercase; letter-spacing: .02em; padding-right: 30%; }
+.wire__heading { font-family: inherit; font-size: 21px; font-weight: 400; line-height: 1.35; text-transform: uppercase; letter-spacing: .02em; padding-right: 22%; }
 .wire__heading:lang(hi) { text-transform: none; font-size: 22px; }
 .wire__verdict { margin-top: 12px; font: 700 18px/1.35 var(--ui); color: #8a1c12; }
 .wire--survived .wire__verdict { color: #2a3a8c; }

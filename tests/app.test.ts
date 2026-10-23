@@ -7,7 +7,7 @@ import { dailyFrom } from '../src/game/daily'
 import { mulberry32 } from '../src/game/rng'
 import { chapterShareText, shareText } from '../src/game/share'
 import { createChapter } from '../src/game/state'
-import { setLang } from '../src/i18n/lang'
+import { forgetLang, setLang } from '../src/i18n/lang'
 import { strings } from '../src/i18n/strings'
 import type { Voice, VoiceState } from '../src/audio/voice'
 import { VOICES } from '../src/content/voices'
@@ -61,7 +61,7 @@ vi.mock('../src/content/registry', async () => {
 })
 vi.mock('../src/scene/index', () => ({ STAGE_LOST_EVENT: 'ft:stage-lost', loadStage: m.loadStage, mountFallback: m.mountFallback }))
 vi.mock('../src/scene/eras/index', () => ({ dressingFor: (id: string) => ({ id, fake: true }), ALL_DRESSINGS: [] }))
-vi.mock('../src/audio/engine', () => ({ audio: m.audio }))
+vi.mock('../src/audio/engine', async () => ({ audio: m.audio, cueForStage: (await import('../src/audio/stage-cues')).cueForStage }))
 
 // ---------------------------------------------------------------- harness
 
@@ -125,14 +125,16 @@ function queueFor(id: EraId, d: Difficulty, seed: number): Message[] {
   return createChapter(eraById(id), d, mulberry32(seed)).queue
 }
 
-/** Home → chapter card → difficulty → both intro pages → day 1. */
+/** The main page: choose the chapter, choose the days, Begin → day 1. */
 async function toDay1(ui: HTMLElement, id: EraId = 'delhi-1857', d: Difficulty = 'easy'): Promise<void> {
   click(ui, `[data-era="${id}"]`)
   click(ui, `[data-mode="${d}"]`)
-  click(ui, '[data-action="next"]')
-  click(ui, '[data-action="next"]')
+  click(ui, '[data-action="begin"]')
   await flush()
 }
+
+/** The sound and language plaques live outside the screen, top right. */
+const dock = (sel: string) => document.querySelector<HTMLElement>(`.controls-dock ${sel}`)
 
 function setHidden(hidden: boolean): void {
   Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
@@ -173,28 +175,44 @@ afterEach(() => {
 // ---------------------------------------------------------------- tests
 
 describe('first visit and language', () => {
-  it('shows the language screen; choosing हिंदी persists lang and shows home in Hindi', () => {
-    const { ui } = boot()
-    expect($(ui, '.screen--lang')).not.toBeNull()
-    click(ui, '[data-lang="hi"]')
-    expect(localStorage.getItem('ft:lang')).toBe('"hi"')
-    expect($(ui, '.screen--home')).not.toBeNull()
-    expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.hi.appName)
-    expect(document.documentElement.lang).toBe('hi')
+  const setLanguages = (list: string[]) => Object.defineProperty(navigator, 'languages', { configurable: true, get: () => list })
+
+  it('lands straight on the main page, in Hindi when the browser has a Hindi language', () => {
+    setLanguages(['en-GB', 'hi-IN'])
+    forgetLang()
+    try {
+      const { ui } = boot()
+      expect($(ui, '.screen--main')).not.toBeNull()
+      expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.hi.appName)
+      expect(document.documentElement.lang).toBe('hi')
+    } finally {
+      delete (navigator as unknown as Record<string, unknown>).languages
+    }
   })
 
-  it('goes straight home once a language is saved, and ?lang= overrides it', () => {
-    setLang('hi') // a language picked on an earlier visit
-    let { ui } = boot()
-    expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.hi.appName)
-    ;({ ui } = boot('?lang=en'))
-    expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.en.appName)
+  it('lands in English otherwise, keeps a saved choice, and ?lang= overrides it', () => {
+    setLanguages(['en-US', 'fr'])
+    forgetLang()
+    try {
+      let { ui } = boot()
+      expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.en.appName)
+      setLang('hi')
+      ;({ ui } = boot())
+      expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.hi.appName)
+      ;({ ui } = boot('?lang=en'))
+      expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.en.appName)
+    } finally {
+      delete (navigator as unknown as Record<string, unknown>).languages
+    }
   })
 
-  it('switches language from home at any time', () => {
+  it('switches language from the plaque at any time, both names always shown', () => {
     const { ui } = boot('?lang=en')
-    click(ui, '[data-action="lang"]')
+    expect([...document.querySelectorAll('.controls-dock .langswitch__opt')].map((o) => o.textContent)).toEqual(['हिंदी', 'English'])
+    dock('[data-lang="hi"]')!.click()
     expect($(ui, '.home__title .sr-only')!.textContent).toBe(strings.hi.appName)
+    expect(localStorage.getItem('ft:lang')).toBe('"hi"')
+    expect(dock('[data-lang="hi"]')!.getAttribute('aria-pressed')).toBe('true')
   })
 })
 
@@ -228,7 +246,8 @@ describe('a chapter', () => {
     expect(m.stage.setPaused).toHaveBeenLastCalledWith(false)
     expect(m.audio.ambience).toHaveBeenCalledWith('delhi-1857')
     expect(m.audio.cue).toHaveBeenCalledWith(msg.real ? 'stampAsli' : 'stampTota')
-    expect(m.audio.cue).toHaveBeenCalledWith('correct')
+    expect(m.audio.cue).toHaveBeenCalledWith('stampPress')
+    expect(m.audio.cue).not.toHaveBeenCalledWith('correct') // the stage sounds it inside flash()
 
     click(ui, '[data-action="next"]')
     await flush()
@@ -250,16 +269,19 @@ describe('a chapter', () => {
     expect($(ui, '.reveal--wrong')!.textContent).toContain(strings.en.wrong)
     expect(m.stage.flash).toHaveBeenCalledWith('wrong')
     expect(m.stage.caught).toHaveBeenCalledTimes(1)
-    expect(m.audio.cue).toHaveBeenCalledWith('caught')
 
     click(ui, '[data-action="next"]')
     await flush()
-    expect($(ui, '.screen--end')).not.toBeNull()
-    expect(text(ui)).toContain(strings.en.caughtTitle)
+    expect($(ui, '.screen--end .wire')).not.toBeNull()
+    expect($(ui, '.end-stamp')!.textContent).toBe('Caught') // the era's own ending stamp
+    expect($(ui, '.wire__heading')!.textContent).toBe('The forger won')
+    expect($(ui, '.wire__verdict')!.textContent).toBe(msg.real ? strings.en.verdictRejected : strings.en.verdictPassed)
     expect(text(ui)).toContain('You were sent to Kala Pani.')
-    expect(ui.querySelectorAll('.receipt')).toHaveLength(2)
+    expect(ui.querySelectorAll('.receipt')).toHaveLength(2) // behind the Receipts tap
+    expect($(ui, '.fold--receipts')).not.toBeNull()
     expect(text(ui)).toContain('I kept my title.')
     expect(text(ui)).toContain('A. Author, First Book (1900), p. 20')
+    expect(m.audio.cue).toHaveBeenCalledWith('endTelegram')
   })
 
   it('the agarbatti burning out is a timeout: "Too slow", caught, with ticks in the last 30%', async () => {
@@ -267,20 +289,26 @@ describe('a chapter', () => {
     await toDay1(ui)
     seconds(60)
     expect($(ui, '.reveal')).toBeNull()
-    expect(m.audio.cue).not.toHaveBeenCalledWith('tick')
+    expect(m.audio.cue).not.toHaveBeenCalledWith('clockTick')
     expect($(ui, '.agarbatti')!.style.getPropertyValue('--burn')).toBe(String(31 / 90)) // the first frame only starts the clock
     seconds(35)
     await flush()
     expect($(ui, '.reveal--wrong')!.querySelector('.reveal__word')!.textContent).toBe(strings.en.tooSlow)
-    const ticks = m.audio.cue.mock.calls.filter(([c]) => c === 'tick').length
-    expect(ticks).toBeGreaterThanOrEqual(25)
-    expect(ticks).toBeLessThanOrEqual(27)
+    // a clock under 30% (26 s down to 6 s), then a rising tension tick in the last 5 s
+    const count = (c: string) => m.audio.cue.mock.calls.filter(([x]) => x === c).length
+    expect(count('clockTick')).toBeGreaterThanOrEqual(19)
+    expect(count('clockTick')).toBeLessThanOrEqual(22)
+    expect(count('tensionTick')).toBe(5)
+    const levels = m.audio.cue.mock.calls.filter(([x]) => x === 'tensionTick').map((c) => (c as unknown as [string, { level: number }])[1].level)
+    expect(levels[0]).toBeCloseTo(0, 5)
+    expect(levels[levels.length - 1]).toBeCloseTo(0.8, 5)
+    expect(count('incense')).toBeGreaterThanOrEqual(85)
     expect(m.stage.stamp).not.toHaveBeenCalled() // nobody stamped
     expect(m.stage.flash).toHaveBeenCalledWith('wrong')
     expect(m.stage.caught).toHaveBeenCalledTimes(1)
     click(ui, '[data-action="next"]')
     await flush()
-    expect(text(ui)).toContain(strings.en.caughtTitle)
+    expect($(ui, '.wire__verdict')!.textContent).toBe(strings.en.tooSlow)
   })
 
   it('pauses the agarbatti while the tab is hidden and while the reveal shows', async () => {
@@ -313,7 +341,7 @@ describe('a chapter', () => {
       click(ui, '[data-action="next"]')
       await flush()
     }
-    expect(text(ui)).toContain(strings.en.survivedTitle)
+    expect($(ui, '.end-stamp')!.textContent).toBe('Cleared') // the era's own ending stamp
     expect(m.audio.cue).toHaveBeenCalledWith('survived')
     expect(localStorage.getItem('ft:best:delhi-1857:easy')).toBe('7')
     click(ui, '[data-action="share"]')
@@ -323,7 +351,6 @@ describe('a chapter', () => {
 
     click(ui, '[data-action="home"]')
     expect($(ui, '[data-era="delhi-1857"]')!.textContent).toContain('Survived Easy')
-    expect(m.audio.ambience).toHaveBeenLastCalledWith(null)
   })
 
   it('Play again restarts the same chapter and difficulty at day 1', async () => {
@@ -342,9 +369,9 @@ describe('a chapter', () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     click(ui, '[data-action="quit"]')
-    expect($(ui, '.screen--home')).not.toBeNull()
+    expect($(ui, '.screen--main')).not.toBeNull()
     seconds(120)
-    expect($(ui, '.screen--home')).not.toBeNull()
+    expect($(ui, '.screen--main')).not.toBeNull()
     expect(m.stage.stamp).not.toHaveBeenCalled()
   })
 })
@@ -353,8 +380,7 @@ describe('the daily puzzle', () => {
   it('plays 5 messages without pencil marks and with every rule, then shows a share grid that matches shareText', async () => {
     const share = vi.fn(() => Promise.resolve())
     nav.share = share
-    const { ui } = boot('?lang=en')
-    click(ui, '[data-action="daily"]')
+    const { ui } = boot('?lang=en&daily')
     await flush()
     const d = dailyFrom(NOW, ERAS)
     const era = eraById(d.era)
@@ -391,8 +417,7 @@ describe('the daily puzzle', () => {
   })
 
   it('replaying the same IST date shows the stored result, not a new run', async () => {
-    let { ui } = boot('?lang=en')
-    click(ui, '[data-action="daily"]')
+    let { ui } = boot('?lang=en&daily')
     await flush()
     for (let i = 0; i < 5; i++) {
       click(ui, '[data-stamp="tota"]')
@@ -402,73 +427,84 @@ describe('the daily puzzle', () => {
     }
     const first = $(ui, '.share-grid')!.dataset.results
 
-    ;({ ui } = boot('?lang=en', NOW + 3 * 3600_000)) // later the same IST day
-    expect($(ui, '[data-action="daily"]')!.textContent).toContain(strings.en.dailyDone)
-    click(ui, '[data-action="daily"]')
+    ;({ ui } = boot('?lang=en&daily', NOW + 3 * 3600_000)) // later the same IST day
     await flush()
     expect($(ui, '[data-stamp]')).toBeNull()
     expect($(ui, '.share-grid')!.dataset.results).toBe(first)
 
-    ;({ ui } = boot('?lang=en', NOW + 24 * 3600_000)) // the next day is a new puzzle
-    expect($(ui, '[data-action="daily"]')!.textContent).not.toContain(strings.en.dailyDone)
+    ;({ ui } = boot('?lang=en&daily', NOW + 24 * 3600_000)) // the next day is a new puzzle
+    await flush()
+    expect($(ui, '[data-stamp]')).not.toBeNull()
   })
 
   it('stores each answer at once, so leaving mid-puzzle resumes instead of restarting', async () => {
-    let { ui } = boot('?lang=en')
-    click(ui, '[data-action="daily"]')
+    let { ui } = boot('?lang=en&daily')
     await flush()
     click(ui, '[data-stamp="asli"]')
     await flush()
     click(ui, '[data-action="next"]')
     await flush()
     click(ui, '[data-action="quit"]')
-    ;({ ui } = boot('?lang=en'))
-    click(ui, '[data-action="daily"]')
+    ;({ ui } = boot('?lang=en&daily'))
     await flush()
     expect(text(ui)).toContain('Day 2 of 5')
   })
 })
 
-describe('home', () => {
-  it('Continue points to the first era, in order, without a survived run', () => {
+describe('the main page', () => {
+  it('opens on the first chapter not yet survived, and Begin starts day 1 with the chosen days', async () => {
     localStorage.setItem('ft:best:delhi-1857:easy', '7') // survived
     localStorage.setItem('ft:best:lahore-1929:hard', '9') // not survived: 9 of 14
-    let { ui } = boot('?lang=en')
-    expect($(ui, '[data-action="continue"]')!.textContent).toContain('Place 1929 1929')
-    click(ui, '[data-action="continue"]')
-    expect($(ui, '.screen--setup')!.textContent).toContain('Title 1929')
+    const { ui } = boot('?lang=en&seed=3')
+    expect($(ui, '[role="tab"][aria-selected="true"]')!.dataset.era).toBe('lahore-1929')
+    expect($(ui, 'article.doc')!.classList.contains('doc--note')).toBe(true)
+    click(ui, '[data-mode="medium"]')
+    expect(localStorage.getItem('ft:difficulty')).toBe('"medium"')
+    click(ui, '[data-action="begin"]')
+    await flush()
+    expect(text(ui)).toContain('Day 1 of 10')
+    expect(m.stage.setEra).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'lahore-1929' }))
+  })
 
-    for (const id of ['lahore-1929', 'bombay-1942', 'delhi-1947']) localStorage.setItem(`ft:best:${id}:medium`, '10')
-    ;({ ui } = boot('?lang=en'))
-    click(ui, '[data-action="continue"]')
-    expect($(ui, '.screen--setup')!.textContent).toContain('Title 1857') // all done: back to the first
+  it('switching chapter swaps the paper and the room behind it', async () => {
+    const { ui } = boot('?lang=en')
+    frame()
+    await flush()
+    m.stage.establish.mockClear()
+    click(ui, '[data-era="bombay-1942"]')
+    await flush()
+    expect($(ui, 'article.doc')!.classList.contains('doc--radio')).toBe(true)
+    expect(m.stage.setEra).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'bombay-1942' }))
+    expect(m.stage.establish).toHaveBeenCalled()
+    expect(m.audio.ambience).toHaveBeenLastCalledWith('bombay-1942')
+    expect(m.audio.cue).toHaveBeenCalledWith('cardTurn')
   })
 
   it('remembers mute across visits; sound is on by default', () => {
-    let { ui } = boot('?lang=en')
+    boot('?lang=en')
     expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
-    click(ui, '[data-action="sound"]')
+    dock('[data-action="sound"]')!.click()
     expect(localStorage.getItem('ft:muted')).toBe('true')
     expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
-    ;({ ui } = boot('?lang=en'))
+    boot('?lang=en')
     expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
-    expect($(ui, '[data-action="sound"]')!.getAttribute('aria-pressed')).toBe('false')
+    expect(dock('[data-action="sound"]')!.getAttribute('aria-pressed')).toBe('false')
   })
 
-  it('unlocks audio on the first tap anywhere, and plays no ambience at home', () => {
+  it('unlocks audio on the first tap anywhere', () => {
     boot('?lang=en')
     expect(m.audio.unlock).not.toHaveBeenCalled()
-    expect(m.audio.ambience).toHaveBeenLastCalledWith(null)
     document.body.dispatchEvent(new Event('pointerup', { bubbles: true }))
     expect(m.audio.unlock).toHaveBeenCalled()
   })
 
-  it('opens the credits from home and comes back', () => {
+  it('opens the credits from the line at the bottom and comes back, with the plaques still there', () => {
     const { ui } = boot('?lang=en')
     click(ui, '[data-action="credits"]')
     expect(text(ui)).toContain('Inspired by Politburo or Parrot by atomiquest')
+    expect(dock('[data-action="sound"]')).not.toBeNull()
     click(ui, '[data-action="back"]')
-    expect($(ui, '.screen--home')).not.toBeNull()
+    expect($(ui, '.screen--main')).not.toBeNull()
   })
 })
 
@@ -513,15 +549,15 @@ describe('sharing without navigator.share', () => {
 })
 
 describe('the 3D stage (Ruling R10)', () => {
-  it('paints home without three.js, then loads the stage after the first paint when idle', async () => {
+  it('paints the main page without three.js, then loads the stage after the first paint when idle', async () => {
     const { ui, stage } = boot('?lang=en&tier=low')
-    expect($(ui, '.screen--home')).not.toBeNull()
+    expect($(ui, '.screen--main')).not.toBeNull()
     expect(m.loadStage).not.toHaveBeenCalled()
     frame()
     await flush()
     expect(m.loadStage).toHaveBeenCalledTimes(1)
     expect(m.createStage).toHaveBeenCalledWith(stage, expect.objectContaining({ forceTier: 'low', reducedMotion: false }))
-    expect(m.stage.setEra).toHaveBeenCalledTimes(1) // home shows a desk too
+    expect(m.stage.setEra).toHaveBeenCalledTimes(1) // the main page shows the chapter's room
   })
 
   it('loads the stage at once on the first chapter tap', async () => {
@@ -584,8 +620,7 @@ describe('the 3D stage (Ruling R10)', () => {
       const { ui } = boot('?lang=en&seed=3')
       click(ui, '[data-era="delhi-1857"]')
       click(ui, '[data-mode="easy"]')
-      click(ui, '[data-action="next"]')
-      click(ui, '[data-action="next"]')
+      click(ui, '[data-action="begin"]')
       await vi.advanceTimersByTimeAsync(10)
       const verdict = right(queueFor('delhi-1857', 'easy', 3)[0]!)
       click(ui, `[data-stamp="${verdict}"]`)
@@ -604,14 +639,11 @@ describe('the 3D stage (Ruling R10)', () => {
 })
 
 describe('the immersive day', () => {
-  it('establishes the wide room behind home, setup and intro', async () => {
-    const { ui } = boot('?lang=en')
+  it('establishes the wide room behind the main page', async () => {
+    boot('?lang=en')
     frame()
     await flush()
-    expect(m.stage.establish).toHaveBeenCalledTimes(1) // home, once the stage arrives
-    click(ui, '[data-era="delhi-1857"]')
-    click(ui, '[data-mode="easy"]')
-    expect(m.stage.establish).toHaveBeenCalledTimes(3) // setup, intro
+    expect(m.stage.establish).toHaveBeenCalledTimes(1) // once the stage arrives
   })
 
   it('titles the day in the room, then brings the message in; the stamps and the agarbatti wait for it', async () => {
@@ -668,7 +700,7 @@ describe('the immersive day', () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     seconds(20)
-    click(ui, '.hud [data-action="lang"]')
+    click(ui, '.hud [data-lang="hi"]')
     expect(m.stage.redrawMessage).toHaveBeenCalledTimes(1)
     const sheet = m.stage.redrawMessage.mock.calls[0]![0]
     expect(sheet.lang).toBe('hi')
@@ -684,6 +716,7 @@ describe('the immersive day', () => {
     await toDay1(ui)
     click(ui, '.hud [data-action="sound"]')
     expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
+    expect(m.audio.cue).toHaveBeenCalledWith('toggleClick')
     expect($(ui, '.hud [data-action="sound"]')!.getAttribute('aria-pressed')).toBe('false')
     expect($(ui, '.screen--day')).not.toBeNull()
   })
@@ -834,6 +867,7 @@ describe('the 2D desk mirrors the stage', () => {
     expect(f.stamp).toHaveBeenCalledWith(wrong(msg))
     expect(f.flash).toHaveBeenCalledWith('wrong')
     expect(m.audio.cue).toHaveBeenCalledWith(wrong(msg) === 'asli' ? 'stampAsli' : 'stampTota')
+    expect(m.audio.cue).toHaveBeenCalledWith('caught') // the flat desk has no flash sound of its own
     expect($(ui, '.reveal--wrong')).not.toBeNull()
   })
 })
@@ -846,8 +880,10 @@ describe('the stage, wired', () => {
     expect(m.audio.cue).not.toHaveBeenCalledWith('arrive') // the stage times it
     onCue('arrive')
     onCue('unfold')
+    onCue('key')
     expect(m.audio.cue).toHaveBeenCalledWith('arrive')
-    expect(m.audio.cue).toHaveBeenCalledWith('page')
+    expect(m.audio.cue).toHaveBeenCalledWith('paperUnfold')
+    expect(m.audio.cue).toHaveBeenCalledWith('typeKey')
     const stamping = deferred()
     m.stage.stamp.mockImplementation(() => stamping.promise)
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!

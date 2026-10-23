@@ -186,12 +186,14 @@ describe('renderDay: the top bar', () => {
     expect(sound.getAttribute('aria-label')).toBe(strings.en.sound)
     expect(sound.getAttribute('aria-pressed')).toBe('true')
     sound.click()
-    root.querySelector<HTMLButtonElement>('.hud [data-action="lang"]')!.click()
+    const langs = [...root.querySelectorAll<HTMLButtonElement>('.hud .langswitch__opt')]
+    expect(langs.map((b) => [b.textContent, b.getAttribute('aria-pressed')])).toEqual([['हिंदी', 'false'], ['English', 'true']])
+    langs[1]!.click() // already English: nothing
+    langs[0]!.click()
     root.querySelector<HTMLButtonElement>('.hud [data-action="quit"]')!.click()
     expect(on.sound).toHaveBeenCalledTimes(1)
     expect(on.lang).toHaveBeenCalledTimes(1)
     expect(on.quit).toHaveBeenCalledTimes(1)
-    expect(root.querySelector('.hud [data-action="lang"]')!.textContent).toBe(strings.hi.langShort)
   })
 })
 
