@@ -57,12 +57,11 @@ export function kindKey(msg: Message): keyof Strings {
   return msg.real ? 'kindWritten' : 'kindForged'
 }
 
-/** "This message was forged", or "…genuine · Real document" with a scroll for a real one. */
+/** "This message was forged", or "…genuine" over a scroll and "Real document" for a real one. */
 export function truthEl(msg: Message, lang: Lang): HTMLElement {
-  return h('p', { class: `truth truth--${msg.document ? 'document' : msg.real ? 'written' : 'forged'}` },
-    msg.document ? scrollMark() : null,
-    h('span', null, t(msg.real ? 'wasGenuine' : 'wasForged', lang)),
-    msg.document ? h('span', { class: 'truth__kind' }, ` · ${t('kindReal', lang)}`) : null)
+  return h('div', { class: `truth truth--${msg.document ? 'document' : msg.real ? 'written' : 'forged'}` },
+    h('p', null, t(msg.real ? 'wasGenuine' : 'wasForged', lang)),
+    msg.document ? h('p', { class: 'truth__kind' }, scrollMark(), t('kindReal', lang)) : null)
 }
 
 /** The one-line tell (forged) or why (genuine). */
