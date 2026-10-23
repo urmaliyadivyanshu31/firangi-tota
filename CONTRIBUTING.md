@@ -15,6 +15,7 @@ historical claim. Pull requests with unsourced facts will not be merged.
 2. Put the messages, case file and sources for that era inside it, in English and Hindi.
 3. Follow [docs/content-style.md](docs/content-style.md) for wording, names and tone.
 4. Add a test for the new content.
+5. Era folders are found automatically; you never edit `registry.ts`. Folders starting with `_` are fixtures and are skipped.
 
 ## Before you open a pull request
 
