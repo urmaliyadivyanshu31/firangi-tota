@@ -527,15 +527,15 @@ export const messages: Message[] = [
     from: { en: 'Letter copy, from Poona', hi: 'ख़त की नक़ल, पूना से' },
     to: ANN,
     text: {
-      en: 'Gandhiji to the Viceroy, from Detention Camp, 5 November: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.” Peter was Lord Halifax’s son.',
-      hi: 'गांधीजी का वायसराय को ख़त, नज़रबंदी कैंप से, 5 नवंबर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।” पीटर लॉर्ड हैलिफ़ैक्स के बेटे थे।',
+      en: 'Gandhiji to the Viceroy, from Detention Camp, 5 November, on Lord Halifax’s son: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.”',
+      hi: 'गांधीजी का वायसराय को ख़त, नज़रबंदी कैंप से, 5 नवंबर, लॉर्ड हैलिफ़ैक्स के बेटे पर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।”',
     },
     checks: { en: ['from Detention Camp'], hi: ['नज़रबंदी कैंप से'] },
     document: { sources: [{ id: 'cwmg-76', loc: 'No. 442, pp. 416–17' }] },
     why: {
       text: {
-        en: 'Real letter, written at the Aga Khan Palace, which Gandhi headed “Detention Camp”.',
-        hi: 'असली ख़त, आग़ा ख़ान महल से लिखा; गांधीजी ने ऊपर “नज़रबंदी कैंप” लिखा।',
+        en: 'Real letter from the Aga Khan Palace, headed “Detention Camp”; private then, published later.',
+        hi: 'असली ख़त, आग़ा ख़ान महल से, ऊपर “नज़रबंदी कैंप” लिखा; तब निजी था, बाद में छपा।',
       },
       sources: [{ id: 'cwmg-76', loc: 'No. 442, pp. 416–17 (from TOP III, p. 209)' }, { id: 'mkgandhi-agakhan' }],
     },
@@ -549,8 +549,8 @@ export const messages: Message[] = [
     from: { en: 'Letter copy, from Poona', hi: 'ख़त की नक़ल, पूना से' },
     to: ANN,
     text: {
-      en: 'Gandhiji to the Viceroy, from Ahmednagar Fort, 5 November: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.” Peter was Lord Halifax’s son.',
-      hi: 'गांधीजी का वायसराय को ख़त, अहमदनगर क़िले से, 5 नवंबर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।” पीटर लॉर्ड हैलिफ़ैक्स के बेटे थे।',
+      en: 'Gandhiji to the Viceroy, from Ahmednagar Fort, 5 November, on Lord Halifax’s son: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.”',
+      hi: 'गांधीजी का वायसराय को ख़त, अहमदनगर क़िले से, 5 नवंबर, लॉर्ड हैलिफ़ैक्स के बेटे पर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।”',
     },
     checks: { en: ['from Ahmednagar Fort'], hi: ['अहमदनगर क़िले से'] },
     tells: [
@@ -705,8 +705,8 @@ export const messages: Message[] = [
     from: REC,
     to: ANN,
     text: {
-      en: 'Play Lohia’s talk, but never say his name on air. It opens: “So far we were conducting movements but now we are conducting a revolution.”',
-      hi: 'लोहिया का भाषण बजाइए, पर रेडियो पर उनका नाम कभी मत लीजिए। भाषण यूँ शुरू होता है: “अब तक हम आंदोलन चला रहे थे, पर अब हम क्रांति चला रहे हैं।”',
+      en: 'Play Lohia’s talk, but never say his name on air. It says: “So far we were conducting movements but now we are conducting a revolution.”',
+      hi: 'लोहिया का भाषण बजाइए, पर रेडियो पर उनका नाम कभी मत लीजिए। भाषण में आता है: “अब तक हम आंदोलन चला रहे थे, पर अब हम क्रांति चला रहे हैं।”',
     },
     checks: { en: ['never say his name on air'], hi: ['उनका नाम कभी मत लीजिए'] },
     why: {
@@ -1095,8 +1095,8 @@ export const messages: Message[] = [
     from: REC,
     to: ANN,
     text: {
-      en: 'Police raided our organisers’ office today. Lohia’s answer: “The fight for freedom cannot stop. The work must go on.”',
-      hi: 'आज पुलिस ने हमारे संगठन वालों के दफ़्तर पर छापा मारा। लोहिया का जवाब: “आज़ादी की लड़ाई रुक नहीं सकती। काम चलते रहना चाहिए।”',
+      en: 'Police raided our organisers’ office today. Lohia’s answer: “The fight for freedom cannot stop. The work must go on…”',
+      hi: 'आज पुलिस ने हमारे संगठन वालों के दफ़्तर पर छापा मारा। लोहिया का जवाब: “आज़ादी की लड़ाई रुक नहीं सकती। काम चलते रहना चाहिए…”',
     },
     checks: { en: ['The work must go on'], hi: ['काम चलते रहना चाहिए'] },
     why: {
@@ -1146,10 +1146,10 @@ export const messages: Message[] = [
     document: { sources: [{ id: 'gandhi-1942' }] },
     why: {
       text: {
-        en: 'Gandhiji’s own words to the Congress committee at Gowalia Tank, 8 August 1942.',
-        hi: 'गांधीजी के अपने शब्द, 8 अगस्त 1942, गोवालिया टैंक में कांग्रेस कमेटी के सामने।',
+        en: 'Gandhiji’s Hindustani speech, Gowalia Tank, 8 August 1942, in the Collected Works translation.',
+        hi: 'गांधीजी का हिंदुस्तानी भाषण, गोवालिया टैंक, 8 अगस्त 1942; यहाँ कलेक्टेड वर्क्स के अंग्रेज़ी अनुवाद से।',
       },
-      sources: [{ id: 'gandhi-1942' }, { id: 'bipan-chandra-1989' }],
+      sources: [{ id: 'gandhi-1942', loc: 'CWMG 76, No. 426 (translation of the Hindi speech)' }, { id: 'bipan-chandra-1989' }],
     },
   },
   {

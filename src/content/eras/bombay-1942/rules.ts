@@ -7,7 +7,7 @@ export const rules: Rule[] = [
     id: 'r-onair',
     text: {
       en: 'We go on air at 8:45 pm, on 42.34 metres, “from somewhere in India”.',
-      hi: 'हम रात 8:45 बजे, 42.34 मीटर पर, “हिंदुस्तान में कहीं से” बोलते हैं।',
+      hi: 'हम रात 8:45 बजे, रेडियो की सुई पर 42.34 मीटर, “हिंदुस्तान में कहीं से” बोलते हैं।',
     },
     arrivesOnDay: 1,
   },

@@ -23,7 +23,7 @@ const era: Era = {
       hi: 'बंबई, 1942। नेता जेल में, अख़बारों की ज़बान बंद। हर रात 8:45 बजे: “यह कांग्रेस रेडियो है, 42.34 मीटर पर, हिंदुस्तान में कहीं से बोल रहा है।”',
     },
     {
-      en: 'You read the news and run the set. Couriers bring slips and recorded speeches; the CID hides forgeries among them. Stamp each ASLI or TOTA. One fake ends us.',
+      en: 'You read the news and run the radio. Couriers bring slips and recorded speeches; the CID hides forgeries among them. Stamp each ASLI or TOTA. One fake ends us.',
       hi: 'आप ख़बर पढ़ते हैं और रेडियो की मशीन चलाते हैं। हरकारे पर्चियाँ और रिकॉर्ड किए भाषण लाते हैं; सी.आई.डी. इनमें जाली माल मिला देती है। हर एक पर असली या तोता की मुहर लगाइए। एक जाली ख़बर, और सब ख़त्म।',
     },
   ],
@@ -41,7 +41,7 @@ const era: Era = {
   endings: {
     caught: {
       stamp: { en: 'Raided', hi: 'छापा' },
-      title: { en: 'Police at the door; the transmitter goes dark', hi: 'दरवाज़े पर पुलिस, रेडियो ख़ामोश' },
+      title: { en: 'Police at the door; the radio goes dark', hi: 'दरवाज़े पर पुलिस, रेडियो ख़ामोश' },
     },
     survived: {
       stamp: { en: 'Still on air', hi: 'रेडियो चालू' },
