@@ -1,14 +1,17 @@
-// Read-aloud: plays the current message in its era's voice, fetched from /api/voice.
+// Read-aloud: plays the current message in the Dastango voice (or a guest voice), from /api/voice.
 //
 // - One <audio> element, reused. It is created and started inside the player's tap (play() is
 //   called synchronously from the click handler), which is what iOS needs to allow playback.
 // - It ignores the game-sound mute: the player asked for this by tapping.
 // - There is no speechSynthesis fallback. If the clip cannot play, the state becomes 'error'.
 import type { EraId, Lang } from '../content/types'
-import type { VoiceChoice } from '../content/voices'
+import { DEFAULT_VOICE, type VoiceChoice } from '../content/voices'
 
 export type { VoiceChoice } from '../content/voices'
-// Labels and credits for a voice picker: ALT_VOICES in src/content/voices.ts.
+// Labels and credits for a voice picker: VOICES and voiceChoices() in src/content/voices.ts.
+
+/** 'era' is the old name for the default voice (every era now uses Dastango). */
+export type VoiceRequestChoice = VoiceChoice | 'era'
 
 export type VoiceState = 'idle' | 'loading' | 'playing' | 'error'
 
@@ -18,8 +21,8 @@ export interface VoiceRequest {
   lang: Lang
   /** Chapter day whose date fills the message: dayDate(era, day) must be the date on screen. */
   day: number
-  /** 'era' (default) is the chapter's own voice; otherwise an alternate such as 'dastango'. */
-  voice?: VoiceChoice
+  /** 'dastango' (default, every era) or 'guest' once that voice is enabled. 'era' means the default. */
+  voice?: VoiceRequestChoice
 }
 
 export interface Voice {
@@ -38,14 +41,17 @@ export interface VoiceOptions {
 
 export function voiceUrl(req: VoiceRequest, endpoint = '/api/voice'): string {
   const p = new URLSearchParams({ era: req.era, id: req.id, lang: req.lang, day: String(req.day) })
-  const choice = req.voice ?? 'era'
-  if (choice !== 'era') p.set('voice', choice)
+  const choice = choiceOf(req)
+  if (choice !== DEFAULT_VOICE) p.set('voice', choice)
   return `${endpoint}?${p.toString()}`
 }
 
+function choiceOf(req: VoiceRequest): VoiceChoice {
+  return !req.voice || req.voice === 'era' ? DEFAULT_VOICE : req.voice
+}
+
 const same = (a: VoiceRequest | null, b: VoiceRequest) =>
-  !!a && a.era === b.era && a.id === b.id && a.lang === b.lang && a.day === b.day &&
-  (a.voice ?? 'era') === (b.voice ?? 'era')
+  !!a && a.era === b.era && a.id === b.id && a.lang === b.lang && a.day === b.day && choiceOf(a) === choiceOf(b)
 
 export function createVoice(opts: VoiceOptions = {}): Voice {
   const endpoint = opts.endpoint ?? '/api/voice'

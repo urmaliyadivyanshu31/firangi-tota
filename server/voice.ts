@@ -1,8 +1,8 @@
 // GET /api/voice: one game message, read aloud in its era's voice.
 //
 // Server only. The browser never sees a provider key, and this endpoint never accepts free
-// text: it takes an era, a message id, a language, a day and an optional voice (the chapter's
-// own voice by default, or an alternate such as Dastango), and reads our own message. Every
+// text: it takes an era, a message id, a language, a day and an optional voice (the Dastango
+// storyteller by default, or a guest voice once enabled), and reads our own message. Every
 // valid URL maps to one fixed clip, so the set of clips is finite and each is generated once,
 // then cached by the CDN and the browser.
 //
@@ -11,7 +11,7 @@
 // redirect to the canonical URL. So a fact-check fix, a voice swap or a provider switch changes
 // the URL instead of leaving a year-long cached clip that reads the old words.
 import type { Era, Lang, Message } from '../src/content/types.js'
-import { isVoiceChoice, type ElevenVoice, type FishVoice, type VoiceChoice } from '../src/content/voices.js'
+import { DEFAULT_VOICE, isVoiceChoice, type ElevenVoice, type FishVoice, type VoiceChoice } from '../src/content/voices.js'
 import { dayDate, fillTemplate } from '../src/game/dates.js'
 import { isEraId, SERVER_ERAS } from './eras.js'
 import type { Synth } from './providers.js'
@@ -104,7 +104,7 @@ export interface ResolvedClip {
   /** 1 when the text does not depend on the day. */
   day: number
   text: string
-  /** 'era' (the chapter's own voice) or an alternate voice id. */
+  /** 'dastango' (every era's voice) or 'guest'. */
   choice: VoiceChoice
   provider: ProviderId
   voice: FishVoice | ElevenVoice
@@ -124,15 +124,15 @@ export function resolveClip(query: VoiceQuery, provider: ProviderId): ResolvedCl
   if (lang !== 'hi' && lang !== 'en') return bad()
   if (!dayRaw || !DAY_RE.test(dayRaw)) return bad()
   if (query.v !== undefined && (!v || !REV_RE.test(v))) return bad()
-  const choice = query.voice === undefined ? 'era' : single(query, 'voice')
+  const choice = query.voice === undefined ? DEFAULT_VOICE : single(query, 'voice')
   if (!choice || !VOICE_RE.test(choice) || !isVoiceChoice(choice)) return bad()
 
   if (!isEraId(eraId)) return notFound()
   const era = SERVER_ERAS[eraId]
   const message = era.messages.find((m) => m.id === id)
   if (!message) return notFound()
-  const voice = voiceFor(eraId, choice, provider)
-  if (!voice) return notFound() // this voice has no model on the active provider
+  const voice = voiceFor(choice, provider)
+  if (!voice) return notFound() // a disabled voice (the guest slot), or none on this provider
 
   const template = message.text[lang]
   const day = dependsOnDay(era, template, lang) ? Number(dayRaw) : 1
@@ -142,14 +142,14 @@ export function resolveClip(query: VoiceQuery, provider: ProviderId): ResolvedCl
   return { era, message, lang, day, text, choice, provider, voice, rev: revision(provider, choice, voice, lang, text) }
 }
 
-/** The canonical query for a clip. `voice` appears only for an alternate voice. */
+/** The canonical query for a clip. `voice` appears only when it is not the default. */
 export function canonicalParams(c: Pick<ResolvedClip, 'era' | 'message' | 'lang' | 'day' | 'choice' | 'rev'>): Record<string, string> {
   return {
     era: c.era.id,
     id: c.message.id,
     lang: c.lang,
     day: String(c.day),
-    ...(c.choice === 'era' ? {} : { voice: c.choice }),
+    ...(c.choice === DEFAULT_VOICE ? {} : { voice: c.choice }),
     v: c.rev,
   }
 }

@@ -1,9 +1,10 @@
-// Alternate read-aloud voices, usable in every chapter. Shared by the game (labels, credits) and
-// the voice server (provider ids, settings). Voice ids are public provider ids, not secrets.
+// Read-aloud voices. One voice, the Dastango storyteller, reads every era; a guest voice can be
+// added later. Shared by the game (labels, credits) and the voice server (provider ids, settings).
+// Voice ids are public provider ids, not secrets.
 //
-// Adding a voice is config only: fill an entry below. A voice used with someone's permission
-// must carry a `credit` line, which the game shows whenever that voice is selected.
-// Never add a voice that clones or imitates a real person without their written permission.
+// A guest voice of a real person is added only with that person's verifiable permission, and must
+// carry a `credit` line, which the game shows whenever that voice is selected. Never add a voice
+// that clones or imitates anyone without that permission.
 import type { L10n } from './types.js'
 
 /** An ElevenLabs voice (kept for later; the default provider is Fish Audio). */
@@ -34,22 +35,22 @@ export interface ProviderVoices {
   fish?: FishVoice
 }
 
-export interface AltVoice extends ProviderVoices {
+export interface VoiceConfig extends ProviderVoices {
   label: L10n
   /** Required for any voice used with a person's permission; shown in the game. */
   credit?: string
-  /** A slot that is not ready yet. Disabled voices are refused by the server and hidden in the game. */
+  /** False until the voice is ready. A disabled voice is answered 404 and hidden in the game. */
   enabled: boolean
 }
 
 const CONFIG = {
   dastango: {
-    // A dastango tells dastans, long stories, by lamplight: deep, gravelly, theatrical Hindustani.
+    // A dastango tells dastans, long stories, by lamplight: deep, theatrical Hindustani.
     // Chosen from the voice libraries by generic traits only (mature male storyteller).
     label: { en: 'Dastango', hi: 'दास्तानगो' },
     enabled: true,
-    // Interim Fish library voice with a generic title ("elder inspiration"); replace with a
-    // Voice Design model once the Fish account has API credit.
+    // Fish library voice with a generic title ("elder inspiration"), kept by the owner after
+    // listening to the samples. Swap by changing this one id.
     fish: { referenceId: '65d76b8dc9be4ac78bbf77a93f2227b9', title: 'बुजुर्ग प्रेरणा', temperature: 0.8, speed: 0.92 },
     // ElevenLabs alternatives: YkAJCvEzSQvG7K2YK9kx (Bharadwaj - Deep, Expressive), NAuCjDa0V2FYHGI2F2CS (Kabir - Serious, Calm and Raspy).
     elevenlabs: {
@@ -59,25 +60,27 @@ const CONFIG = {
       effects: { environmentId: 'small_room', sendLevel: 0.18 },
     },
   },
-  // Slot for a future voice used with written permission. To turn it on: set `enabled: true`,
-  // the provider id(s) and the credit, e.g. credit: 'Voice: <name> (with permission)'.
+  // Slot for a guest voice, used only after its owner's permission is verified. Until then it
+  // stays disabled with no model id. To turn it on: `enabled: true`, the provider model id(s)
+  // and the credit line, e.g. credit: 'Voice: <name> (with permission)'.
   guest: {
     label: { en: 'Guest voice', hi: 'मेहमान आवाज़' },
     enabled: false,
     credit: '',
   },
-} satisfies Record<string, AltVoice>
+} satisfies Record<string, VoiceConfig>
 
-export type AltVoiceId = keyof typeof CONFIG
-export const ALT_VOICES: Readonly<Record<AltVoiceId, AltVoice>> = CONFIG
-/** 'era' is each chapter's own voice. */
-export type VoiceChoice = 'era' | AltVoiceId
+export type VoiceChoice = keyof typeof CONFIG
+export const VOICES: Readonly<Record<VoiceChoice, VoiceConfig>> = CONFIG
+/** The voice for every era unless the player picks another. */
+export const DEFAULT_VOICE: VoiceChoice = 'dastango'
 
+/** A known voice name (enabled or not). */
 export function isVoiceChoice(v: string): v is VoiceChoice {
-  return v === 'era' || (Object.prototype.hasOwnProperty.call(ALT_VOICES, v) && ALT_VOICES[v as AltVoiceId].enabled)
+  return Object.prototype.hasOwnProperty.call(VOICES, v)
 }
 
-/** The choices a voice picker should offer, in order. */
+/** The voices a picker should offer, in order. */
 export function voiceChoices(): VoiceChoice[] {
-  return ['era', ...(Object.keys(ALT_VOICES) as AltVoiceId[]).filter((id) => ALT_VOICES[id].enabled)]
+  return (Object.keys(VOICES) as VoiceChoice[]).filter((id) => VOICES[id].enabled)
 }
