@@ -1,36 +1,45 @@
 import type { Rule } from '../../types.js'
 
-// The station's rulebook, from the record (spec "Rules from the record", dossier §6–7).
+// The station's rulebook, from the record (spec "Rules from the record", dossier §4, §6–7).
+// r-records explains the radio's "records" on day 1, so no message leans on jargon a newcomer lacks.
 export const rules: Rule[] = [
   {
     id: 'r-onair',
     text: {
-      en: 'On air at 8:45 pm, on 42.34 metres, “from somewhere in India”.',
-      hi: 'रात 8:45 बजे, 42.34 मीटर पर, “हिंदुस्तान में कहीं से”।',
+      en: 'We go on air at 8:45 pm, on 42.34 metres, “from somewhere in India”.',
+      hi: 'हम रात 8:45 बजे, 42.34 मीटर पर, “हिंदुस्तान में कहीं से” बोलते हैं।',
     },
     arrivesOnDay: 1,
   },
   {
     id: 'r-nonames',
     text: {
-      en: 'On air, never talk of the persons behind the stations. Notes may name them.',
-      hi: 'रेडियो पर स्टेशन के पीछे के लोगों की बात कभी नहीं। आपस की पर्चियों में नाम चल सकते हैं।',
+      en: 'On air, never name our people or our places. Private notes may.',
+      hi: 'रेडियो पर अपने लोगों या ठिकानों के नाम कभी नहीं। आपस की पर्चियों में चलेंगे।',
+    },
+    arrivesOnDay: 1,
+  },
+  {
+    id: 'r-records',
+    text: {
+      en: 'Speeches come on gramophone records from our recording room; each lasts 8–10 plays.',
+      hi: 'भाषण हमारे रिकॉर्डिंग वाले कमरे से ग्रामोफ़ोन रिकॉर्ड पर आते हैं; हर रिकॉर्ड 8-10 बार बजता है।',
     },
     arrivesOnDay: 1,
   },
   {
     id: 'r-confirm',
     text: {
-      en: 'Hold back any report we cannot confirm; we held the Meerut story a month.',
-      hi: 'जो ख़बर पक्की न हो, रोक लीजिए; मेरठ की ख़बर हमने महीने भर रोकी।',
+      en: 'News we cannot confirm waits. We once held a story for a month.',
+      hi: 'जो ख़बर पक्की न हो, वह रुकेगी। एक ख़बर हमने महीने भर रोकी थी।',
     },
     arrivesOnDay: 2,
   },
   {
-    id: 'r-wartime',
+    id: 'r-songs',
     text: {
-      en: 'From 1 September, Indian Standard Time is 6½ hours ahead of Greenwich.',
-      hi: '1 सितंबर से इंडियन स्टैंडर्ड टाइम ग्रीनविच से साढ़े छह घंटे आगे है।',
+      en: 'We open with “Sare Jahan Se Achcha” and close with “Vande Mataram”.',
+      hi: 'हम “सारे जहाँ से अच्छा” से शुरू करते हैं और “वंदे मातरम्” पर ख़त्म।',
     },
     arrivesOnDay: 3,
   },
@@ -49,13 +58,5 @@ export const rules: Rule[] = [
       hi: 'हम जर्मनी या जापान की तरफ़ से कभी नहीं बोलते। भारत की किसी से दुश्मनी नहीं।',
     },
     arrivesOnDay: 7,
-  },
-  {
-    id: 'r-discs',
-    text: {
-      en: 'Talks come on home-cut gramophone discs, good for eight or ten plays. No tape.',
-      hi: 'भाषण घर पर काटे ग्रामोफ़ोन रिकॉर्ड पर आते हैं, 8 या 10 बार चलने लायक़। टेप नहीं।',
-    },
-    arrivesOnDay: 9,
   },
 ]

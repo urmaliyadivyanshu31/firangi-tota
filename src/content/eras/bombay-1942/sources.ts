@@ -1,6 +1,7 @@
 import type { Source } from '../../types.js'
 
-// Every source the Bombay 1942 content uses. All are cited in docs/research/quit-india-1942.md.
+// Every source the Bombay 1942 content uses. All are cited in docs/research/quit-india-1942.md,
+// except churchill-1942 and cad-1947, added in the story pass for the famous-moments messages.
 export const sources: Source[] = [
   {
     id: 'usha-mehta-1969',
@@ -115,6 +116,20 @@ export const sources: Source[] = [
     title: 'Historic Statements (statement of 8 April 1942)',
     year: '1967',
     url: 'https://archive.org/details/historic_statements_by_savarkar.v001',
+  },
+  {
+    id: 'churchill-1942',
+    author: 'Winston S. Churchill',
+    title: 'Speech at the Lord Mayor’s Luncheon, Mansion House, London, 10 November 1942 (International Churchill Society text)',
+    year: '1942',
+    url: 'https://winstonchurchill.org/resources/speeches/1941-1945-war-leader/the-bright-gleam-of-victory/',
+  },
+  {
+    id: 'cad-1947',
+    author: 'Constituent Assembly of India',
+    title: 'Debates, vol. IV, 22 July 1947: resolution on the National Flag (Wheel “to represent the Charkha”)',
+    year: '1947',
+    url: 'https://www.constitutionofindia.net/debates/22-jul-1947/',
   },
   {
     id: 'calendar-1942',
