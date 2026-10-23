@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { strings } from '../../src/i18n/strings'
-import { buildReveal, verdictLine } from '../../src/ui/reveal'
+import { buildReveal, shortSource, verdictLine } from '../../src/ui/reveal'
 import { era, msgById } from './helpers'
 
 describe('the reveal on the paper', () => {
@@ -19,7 +19,7 @@ describe('the reveal on the paper', () => {
     const r = buildReveal({ era: e, msg: msgById(e, 'm2'), verdict: 'tota', lang: 'en' })
     expect(r).toMatchObject({ outcome: 'right', real: false, documentMark: false, highlight: ['court sat in Lahore'], note: 'The court sat in Delhi, not Lahore.', lang: 'en' })
     expect(r.back.tell).toBe(r.note)
-    expect(r.back.source).toBe('B. Author, Second Book (1950), ch. 3')
+    expect(r.back.source).toBe('Second Book, 1950, ch. 3') // short on the paper; the popover has the full citation
     expect(r.back.consequence).toBeUndefined()
     expect(r.back.stamp).toEqual({ text: strings.en.right, tone: 'right', style: 'seal' })
   })
@@ -42,6 +42,19 @@ describe('the reveal on the paper', () => {
     expect(r.documentMark).toBe(true) // after the stamp the paper may show it (R30b)
     expect(r.back.stamp).toEqual({ text: 'पास', tone: 'survived', style: 'seal' })
     expect(r.back.consequence).toBe('हर चिट्ठी परखी गई। शहर टिका रहा।')
+  })
+
+  it('shortens a long citation for the paper: the title or the author, the year, the first part of the page', () => {
+    const e = era()
+    e.sources.push(
+      { id: 'trial', author: 'Military Commission, Delhi (court record; repr. Calcutta 1895)', title: 'Proceedings on the Trial of Muhammad Bahadur Shah, titular King of Delhi', year: '1858' },
+      { id: 'tp', author: 'Nicholas Mansergh (ed.)', title: 'The Transfer of Power 1942-7, Vol. XII: 8 July - 15 August 1947', year: '1983' },
+      { id: 'sen', author: 'S. N. Sen', title: 'Eighteen Fifty-Seven', year: '1957' },
+    )
+    expect(shortSource({ id: 'trial', loc: 'Petition No. 63, 22 May 1857, p.33' }, e)).toBe('Military Commission, 1858, Petition No. 63')
+    expect(shortSource({ id: 'tp', loc: 'No. 377' }, e)).toBe('The Transfer of Power 1942-7, 1983, No. 377')
+    expect(shortSource({ id: 'sen', loc: 'pp.59-60' }, e)).toBe('Eighteen Fifty-Seven, 1957, pp.59-60')
+    for (const id of ['trial', 'tp', 'sen']) expect(shortSource({ id, loc: 'p. 1' }, e).length).toBeLessThanOrEqual(60)
   })
 
   it('names a timeout as such', () => {

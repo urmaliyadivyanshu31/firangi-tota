@@ -407,6 +407,21 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       ...(rect ? { style: `left:${Math.round(rect.x)}px;top:${Math.round(rect.y + rect.h / 2 - Math.max(48, rect.h) / 2)}px;width:${Math.max(48, Math.round(rect.w))}px;height:${Math.max(48, Math.round(rect.h))}px` } : {}) },
       rect ? null : t('source', lang))
     const end = r.end
+    // the receipts: newspaper clippings in a popover over the scene, with a close slip
+    const receiptsPop = h('div', { class: 'receipts-pop pcard', role: 'dialog', 'aria-label': t('receipts', lang), id: 'ft-receipts-pop' },
+      h('div', { class: 'pcard__scroll' },
+        h('div', { class: 'receipts' }, (end?.receipts ?? []).slice(0, 2).map((rc, i) =>
+          h('article', { class: 'receipt', 'data-receipt': rc.id, style: `--i:${i}` },
+            h('blockquote', { class: 'receipt__quote' }, h('p', null, rc.quote[lang])),
+            h('p', { class: 'receipt__who' }, rc.who[lang]),
+            h('p', { class: 'receipt__joke' }, rc.joke[lang]),
+            h('p', { class: 'receipt__source' }, formatSource(rc.source, era)))))),
+      h('footer', { class: 'pcard__foot' },
+        h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'close-receipts', onclick: () => {
+          receiptsPop.hidden = true
+          result?.querySelector('[data-action="receipts"]')?.setAttribute('aria-expanded', 'false')
+        } }, t('closePanel', lang))))
+    receiptsPop.hidden = true
     const again = on.again
     const home = on.home
     const share = on.share
@@ -417,13 +432,12 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
             h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'again', onclick: () => again?.() }, t('playAgain', lang)),
             h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'home', onclick: () => home?.() }, t('home', lang))),
           end.receipts.length
-            ? h('details', { class: 'fold fold--receipts paper-receipts' }, h('summary', { class: 'fold__head' }, t('receipts', lang)),
-                h('div', { class: 'receipts' }, end.receipts.slice(0, 2).map((rc, i) =>
-                  h('article', { class: 'receipt', 'data-receipt': rc.id, style: `--i:${i}` },
-                    h('blockquote', { class: 'receipt__quote' }, h('p', null, rc.quote[lang])),
-                    h('p', { class: 'receipt__who' }, rc.who[lang]),
-                    h('p', { class: 'receipt__joke' }, rc.joke[lang]),
-                    h('p', { class: 'receipt__source' }, formatSource(rc.source, era))))))
+            ? h('button', { class: 'link link--receipts', type: 'button', 'data-action': 'receipts', 'aria-controls': 'ft-receipts-pop', 'aria-expanded': 'false',
+                onclick: (e: Event) => {
+                  const show = receiptsPop.hidden
+                  receiptsPop.hidden = !show
+                  ;(e.currentTarget as HTMLElement).setAttribute('aria-expanded', String(show))
+                } }, t('receipts', lang))
             : null,
         ]
       : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
@@ -431,7 +445,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     const under = r.paperRect && isWide() ? `left:${Math.round(r.paperRect.x)}px;width:${Math.round(r.paperRect.w)}px;right:auto` : ''
     result = h('div', { class: 'paper-result' },
       h('p', { class: 'sr-only paper-result__mirror', 'aria-live': 'polite' }, r.mirror),
-      rect ? srcBtn : null, pop,
+      rect ? srcBtn : null, pop, receiptsPop,
       h('footer', { class: 'paper-result__actions', ...(under ? { style: under } : {}) }, rect ? null : srcBtn, actions))
   }
 
@@ -458,6 +472,8 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     root, screen, on, props: { ...p },
     close: () => {
       if (picker?.classList.contains('is-open')) return setPicker(false), true
+      const popped = screen.querySelector<HTMLElement>('.receipts-pop:not([hidden]), .source-pop:not([hidden])')
+      if (popped) return (popped.hidden = true), true
       return !wide && open ? (setOpen(null), true) : false
     },
   }

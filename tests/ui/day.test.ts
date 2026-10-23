@@ -461,10 +461,15 @@ describe('renderDay: the verdict on the paper', () => {
     expect(on.again).toHaveBeenCalledTimes(1)
     expect(on.home).toHaveBeenCalledTimes(1)
     expect(on.share).toHaveBeenCalledTimes(1)
-    const receipts = root.querySelector<HTMLDetailsElement>('.paper-receipts')!
-    expect(receipts.open).toBe(false)
-    expect(receipts.querySelector('summary')!.textContent).toBe(strings.en.receipts)
-    expect(receipts.querySelectorAll('.receipt')).toHaveLength(1)
+    const open = root.querySelector<HTMLButtonElement>('[data-action="receipts"]')!
+    const pop = root.querySelector<HTMLElement>('#ft-receipts-pop')!
+    expect(open.textContent).toBe(strings.en.receipts)
+    expect(pop.hidden).toBe(true)
+    open.click() // a popover over the scene: the buttons stay where they are
+    expect(pop.hidden).toBe(false)
+    expect(pop.querySelectorAll('.receipt')).toHaveLength(1)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(pop.hidden).toBe(true)
     // without a rect from the stage, the source is a small slip among the buttons
     expect(root.querySelector('.paper-result__actions [data-action="source"]')!.textContent).toBe(strings.en.source)
   })
