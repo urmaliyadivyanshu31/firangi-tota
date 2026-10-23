@@ -13,8 +13,8 @@ export const rules: Rule[] = [
   {
     id: 'begins-ends',
     text: {
-      en: "Text passed on in a telegram sits between 'Begins.' and 'Ends.', with no greeting or slogan. A garbled group is marked [group corrupt].",
-      hi: "तार में आगे भेजा गया संदेश 'Begins.' और 'Ends.' के बीच होता है, उसमें कोई सलाम या नारा नहीं होता। जो हिस्सा बिगड़ जाए, उस पर [group corrupt] लिखा जाता है।",
+      en: "Text passed on in a telegram sits between 'Begins.' and 'Ends.', in the original's words. Official telegrams and office notes never sign off with a slogan. A garbled group is marked [group corrupt].",
+      hi: "तार में आगे भेजा गया संदेश 'Begins.' और 'Ends.' के बीच, अपने असली शब्दों में होता है। सरकारी तार और दफ़्तरी नोट किसी नारे से ख़त्म नहीं होते। जो हिस्सा बिगड़ जाए, उस पर [group corrupt] लिखा जाता है।",
     },
     arrivesOnDay: 1,
   },

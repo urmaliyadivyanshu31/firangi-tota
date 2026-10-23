@@ -696,8 +696,8 @@ export const messages: Message[] = [
         kind: 'form',
         ruleId: 'priority',
         explain: {
-          en: "Real priorities read IMMEDIATE or MOST IMMEDIATE, and numbers read like 'No. 3408-S' or 'UNNUMBERED'. 'URGENT!!' and 'Ref: 3408/S/47' are a modern office's habits.",
-          hi: "असली प्राथमिकता IMMEDIATE या MOST IMMEDIATE होती है, और नंबर 'No. 3408-S' या 'UNNUMBERED' जैसा। 'URGENT!!' और 'Ref: 3408/S/47' आज के दफ़्तरों की आदत है।",
+          en: "Real priorities read IMPORTANT, IMMEDIATE or MOST IMMEDIATE, and numbers read like 'No. 3408-S' or 'UNNUMBERED'. 'URGENT!!' and 'Ref: 3408/S/47' are a modern office's habits.",
+          hi: "असली प्राथमिकता IMPORTANT, IMMEDIATE या MOST IMMEDIATE होती है, और नंबर 'No. 3408-S' या 'UNNUMBERED' जैसा। 'URGENT!!' और 'Ref: 3408/S/47' आज के दफ़्तरों की आदत है।",
         },
         sources: [{ id: 'mansergh-xii', loc: 'Nos. 391, 462, 477, 485 (headers)' }],
       },
@@ -741,8 +741,8 @@ export const messages: Message[] = [
         kind: 'habit',
         ruleId: 'begins-ends',
         explain: {
-          en: "'Jai Hind' closed speeches and broadcasts (Nehru ended his broadcast of 3 June with it). Text passed on by cipher telegram carries no slogan.",
-          hi: "'जय हिंद' भाषणों और रेडियो पर बोला जाता था (नेहरू ने 3 जून का अपना रेडियो भाषण इसी से ख़त्म किया)। साइफ़र तार से आगे भेजे गए संदेश में कोई नारा नहीं होता।",
+          en: "The passed-on text is an office note from the Governor's Secretary, Lahore, and official notes never signed off with a slogan. 'Jai Hind' closed speeches and broadcasts (Nehru ended his broadcast of 3 June with it).",
+          hi: "आगे भेजा गया संदेश लाहौर के गवर्नर के सचिव का दफ़्तरी नोट है, और सरकारी नोट किसी नारे से ख़त्म नहीं होते थे। 'जय हिंद' भाषणों और रेडियो पर बोला जाता था (नेहरू ने 3 जून का अपना रेडियो भाषण इसी से ख़त्म किया)।",
         },
         sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 3 June 1947' }],
       },
