@@ -112,4 +112,24 @@ describe('buildRun', () => {
     }
     expect(seen).toBe(true)
   })
+
+  it('gates both halves of a pair when only the forged half has a rule', () => {
+    const forged = msg('gp-f', 1, false, { pair: 'gp', tells: [{ kind: 'knowledge', explain: { en: 'x', hi: 'x' }, ruleId: 'r5' }] })
+    const real = msg('gp-r', 1, true, { pair: 'gp' })
+    const g: Era = {
+      ...era,
+      rules: [{ id: 'r5', text: { en: 'x', hi: 'x' }, arrivesOnDay: 5 }],
+      messages: [forged, real, ...era.messages],
+    }
+    let seen = false
+    for (let seed = 1; seed <= 200; seed++) {
+      const run = buildRun(g, 'hard', mulberry32(seed))
+      const i = run.findIndex((m) => m.pair === 'gp')
+      if (i >= 0) {
+        seen = true
+        expect(i + 1).toBeGreaterThanOrEqual(5)
+      }
+    }
+    expect(seen).toBe(true)
+  })
 })

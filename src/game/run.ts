@@ -1,12 +1,18 @@
 import type { Era, Message, Tier } from '../content/types'
 import { DAYS, type Difficulty } from './config'
 
-/** First day this message may appear: when the last rule needed to catch its tells has arrived. */
+/**
+ * First day this message may appear: when the last rule needed to catch the tells of the message,
+ * or of any message sharing its pair key, has arrived (a pair is gated as a unit, so a
+ * gated forgery never reveals that its genuine twin is the "early" kind).
+ */
 export function earliestDay(era: Era, m: Message): number {
   let day = 1
-  for (const t of m.tells ?? []) {
-    const rule = t.ruleId ? era.rules.find((r) => r.id === t.ruleId) : undefined
-    if (rule) day = Math.max(day, rule.arrivesOnDay)
+  for (const x of era.messages.filter((o) => o === m || (m.pair !== undefined && o.pair === m.pair))) {
+    for (const t of x.tells ?? []) {
+      const rule = t.ruleId ? era.rules.find((r) => r.id === t.ruleId) : undefined
+      if (rule) day = Math.max(day, rule.arrivesOnDay)
+    }
   }
   return day
 }
