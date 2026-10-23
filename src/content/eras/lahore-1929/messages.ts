@@ -37,9 +37,9 @@ const NOTICE_DEC_HI = (sig: string) =>
   `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। सॉन्डर्स मर गया; लाला लाजपत राय का बदला ले लिया गया … एक इंसान की मौत का हमें अफ़सोस है … दस्तख़त: ${sig}, तारीख़ 18 दिसंबर 1928।`
 
 const NOTICE_23_EN = (about: string) =>
-  `The Hindustan Socialist Republican Army. Notice. No more secrets No more Special Guess … About ${about} of 17 December … (Rule 10 B.R.C) … Balraj, Commander-in-chief.`
+  `The Hindustan Socialist Republican Army. Notice. No more secrets No more Special Guess — About ${about} of 17 December … (Rule 10 B.R.C) … Balraj, Commander-in-chief.`
 const NOTICE_23_HI = (about: string) =>
-  `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। अब कोई राज़ नहीं, अब कोई 'स्पेशल गेस' नहीं … 17 दिसंबर की ${about} के बारे में … (रूल 10 बीआरसी) … बलराज, कमांडर-इन-चीफ़।`
+  `हिंदुस्तान सोशलिस्ट रिपब्लिकन आर्मी। नोटिस। अब कोई राज़ नहीं, अब कोई 'स्पेशल गेस' नहीं — 17 दिसंबर की ${about} के बारे में … (रूल 10 बीआरसी) … बलराज, कमांडर-इन-चीफ़।`
 
 const LEAFLET_EN = (heading: string) =>
   `${heading} (NOTICE). It takes a loud voice to make the deaf hear … Long Live the Revolution. Signed, Balraj, Commander-in-Chief.`
@@ -227,8 +227,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: "In December our friend left first class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
-      hi: "दिसंबर में हमारा दोस्त फ़र्स्ट क्लास में गया: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
+      en: "In December our friend left Lahore first class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
+      hi: "दिसंबर में हमारा दोस्त लाहौर से फ़र्स्ट क्लास में निकला: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
     },
     checks: { en: ['first class', 'tiffin'], hi: ['फ़र्स्ट क्लास', 'टिफ़िन'] },
     why: {
@@ -247,8 +247,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: "In December our friend left third class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
-      hi: "दिसंबर में हमारा दोस्त थर्ड क्लास में गया: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
+      en: "In December our friend left Lahore third class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
+      hi: "दिसंबर में हमारा दोस्त लाहौर से थर्ड क्लास में निकला: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
     },
     checks: { en: ['third class'], hi: ['थर्ड क्लास'] },
     tells: [
@@ -756,8 +756,8 @@ export const messages: Message[] = [
       {
         kind: 'knowledge',
         explain: {
-          en: "No record shows he wrote it; in court they sang 'Bharat na reh sakega'.",
-          hi: "कोई रिकॉर्ड नहीं कि यह गीत उन्होंने लिखा; अदालत में उन्होंने 'भारत न रह सकेगा' गाया।",
+          en: "No record from then says he wrote it; they sang 'Bharat na reh sakega'.",
+          hi: "उस दौर के किसी रिकॉर्ड में नहीं कि यह गीत उन्होंने लिखा; अदालत में 'भारत न रह सकेगा' गाया गया।",
         },
         sources: [{ id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', p. 101" }],
       },
@@ -1196,7 +1196,7 @@ export const messages: Message[] = [
         en: 'Police raided No. 69 on 15 April 1929, arresting Sukhdev and two others.',
         hi: 'पुलिस ने 15 अप्रैल 1929 को नंबर 69 पर छापा मारा; सुखदेव और दो और पकड़े गए।',
       },
-      sources: [RAID_CH, { id: 'noorani-1996', loc: "ch. 'Hour of Trial', p. 52 (absconders)" }],
+      sources: [RAID_CH],
     },
   },
   {
