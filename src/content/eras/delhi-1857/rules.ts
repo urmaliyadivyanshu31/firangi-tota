@@ -1,4 +1,4 @@
-import type { Rule } from '../../types'
+import type { Rule } from '../../types.js'
 
 // The rulebook. Each rule comes from the record (see the messages that rely on it):
 // petition form from the trial papers; weekdays from the calendar; the Persian placard from the

@@ -1,4 +1,4 @@
-import type { Receipt } from '../../types'
+import type { Receipt } from '../../types.js'
 
 // Dossier section 12. People and their documented acts only; never a community.
 // Saunders, Chanan Singh and the witnesses the police summoned are never mocked.

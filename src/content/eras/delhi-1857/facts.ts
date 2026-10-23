@@ -1,5 +1,5 @@
-import type { Fact } from '../../types'
-import { fanshawe, jl, majumdar, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources'
+import type { Fact } from '../../types.js'
+import { fanshawe, jl, majumdar, mh, sen, trial, yule, CHUNI_17, CHUNI_18 } from './sources.js'
 
 // The case file. Two lines are hardHidden: Hard mode blanks them, so only a history buff
 // can use them.

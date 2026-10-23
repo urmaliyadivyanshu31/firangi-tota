@@ -1,4 +1,4 @@
-import type { Fact } from '../../types'
+import type { Fact } from '../../types.js'
 
 // The announcer-operator's case file (dossier §4). Three lines are hardHidden: things a history
 // buff knows, left blank in Hard.

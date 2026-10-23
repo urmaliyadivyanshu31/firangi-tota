@@ -16,6 +16,9 @@ historical claim. Pull requests with unsourced facts will not be merged.
 3. Follow [docs/content-style.md](docs/content-style.md) for wording, names and tone.
 4. Add a test for the new content.
 5. Era folders are found automatically; you never edit `registry.ts`. Folders starting with `_` are fixtures and are skipped.
+6. Inside an era folder, end relative imports with `.js` (`import { facts } from './facts.js'`). The
+   read-aloud server runs this content in plain Node, which needs the full file name. Then add the
+   era to `server/eras.ts` and give it a voice in `server/voices.ts`; the typecheck reminds you.
 
 ## Before you open a pull request
 

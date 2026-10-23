@@ -1,10 +1,10 @@
-import type { Era } from '../../types'
-import { epilogue } from './epilogue'
-import { facts } from './facts'
-import { messages } from './messages'
-import { receipts } from './receipts'
-import { rules } from './rules'
-import { sources } from './sources'
+import type { Era } from '../../types.js'
+import { epilogue } from './epilogue.js'
+import { facts } from './facts.js'
+import { messages } from './messages.js'
+import { receipts } from './receipts.js'
+import { rules } from './rules.js'
+import { sources } from './sources.js'
 
 // Chapter 3: the secret Congress Radio, Bombay. Research: docs/research/quit-india-1942.md
 const era: Era = {

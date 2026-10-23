@@ -1,4 +1,4 @@
-import type { Epilogue } from '../../types'
+import type { Epilogue } from '../../types.js'
 
 // Dossier sections 2c, 4, 8 and 12. The hanging is told without gore, the hour is given
 // as disputed, and Gandhi's part is shown through the documents with both readings.

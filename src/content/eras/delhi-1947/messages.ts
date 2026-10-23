@@ -1,4 +1,4 @@
-import type { Message } from '../../types'
+import type { Message } from '../../types.js'
 
 // Window: Tue 5 Aug (day 1) to Mon 18 Aug 1947 (day 14).
 // Event days: 4 = Fri 8 Aug, 8 = Tue 12 Aug, 9 = Wed 13 Aug, 10 = Thu 14 Aug,

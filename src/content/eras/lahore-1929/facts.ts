@@ -1,4 +1,4 @@
-import type { Fact } from '../../types'
+import type { Fact } from '../../types.js'
 
 // The case file: what the post box knows. Dossier section 4, with each line's source.
 export const facts: Fact[] = [

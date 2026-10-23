@@ -1,4 +1,4 @@
-import type { Rule } from '../../types'
+import type { Rule } from '../../types.js'
 
 // The cipher room's rulebook. Formats follow the telegram headers printed in Mansergh, Vol. XII.
 export const rules: Rule[] = [

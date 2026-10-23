@@ -1,4 +1,4 @@
-import type { Fact } from '../../types'
+import type { Fact } from '../../types.js'
 
 // The case file. hardHidden lines are blank in Hard: a history buff knows them.
 export const facts: Fact[] = [

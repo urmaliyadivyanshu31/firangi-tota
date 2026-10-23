@@ -1,4 +1,4 @@
-import type { L10n, Message } from '../../types'
+import type { L10n, Message } from '../../types.js'
 
 // Window: Tuesday 2 April (day 1) to Monday 15 April 1929 (day 14).
 // Day 5 = Sat 6 Apr, day 6 = Sun 7 Apr, day 7 = Mon 8 Apr, day 8 = Tue 9 Apr,

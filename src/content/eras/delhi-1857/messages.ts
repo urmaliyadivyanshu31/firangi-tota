@@ -1,4 +1,4 @@
-import type { Message } from '../../types'
+import type { Message } from '../../types.js'
 import {
   caveBrowne,
   CHUNI_17,
@@ -13,7 +13,7 @@ import {
   sen,
   trial,
   yule,
-} from './sources'
+} from './sources.js'
 
 // Days: 1 = Sun 17 May 1857 … 14 = Sat 30 May 1857.
 // Event messages (onDay) follow Jiwan Lal's diary and the trial papers. Days 1-3 events are tier 1.

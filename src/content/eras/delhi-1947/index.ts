@@ -1,10 +1,10 @@
-import type { Era } from '../../types'
-import { sources } from './sources'
-import { facts } from './facts'
-import { rules } from './rules'
-import { messages } from './messages'
-import { receipts } from './receipts'
-import { epilogue } from './epilogue'
+import type { Era } from '../../types.js'
+import { sources } from './sources.js'
+import { facts } from './facts.js'
+import { rules } from './rules.js'
+import { messages } from './messages.js'
+import { receipts } from './receipts.js'
+import { epilogue } from './epilogue.js'
 
 // Delhi, August 1947. Dossier: docs/research/independence-1947.md
 const era: Era = {
