@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import type { Lang } from '../content/types'
 import { mulberry32, seedFrom } from '../game/rng'
 import { arrive, placeAtRest, type ArrivalCtx, type StageCue } from './arrivals'
+import { bindParallax, createParallaxModel } from './parallax'
 import { mountFallback, type Fallback } from './fallback'
 import {
   SHEET_PX,
@@ -213,6 +214,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   const tweens = createTweens()
   const camera = new THREE.PerspectiveCamera(50, 1, 0.03, 30)
   const rig = createCameraRig(camera, tweens, { reducedMotion: reduced })
+  // the pointer's glance (off under reduced motion; only over empty scene, never over the UI)
+  const parallax = createParallaxModel()
+  const unbindParallax = reduced ? () => undefined : bindParallax(el, parallax)
   // R14: save the tier once it holds for 10 s. A session that stepped down also saves that tier as
   // a ceiling, so the next session never probes above it; an older ceiling is carried forward.
   const tiers = createTierControl({
@@ -601,6 +605,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     tweens.tick(step)
     const pxPerUnit = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))
     w.update(clock, pxPerUnit)
+    const glance = parallax.step(step)
+    rig.setParallax(glance.yaw, glance.pitch)
     rig.update(step, clock)
     if (w.flash.mesh.visible) w.flash.fit(camera)
     const dressDirty = takeShadowsDirty(w.scene)
@@ -895,6 +901,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       w.paper.group.visible = false
     }
     rig.setSway(1)
+    rig.setParallaxScale(1)
     const move = reduced ? (rig.jumpTo(titlePose), Promise.resolve()) : rig.goTo(titlePose, 800, ease.inOut)
     // the 1947 countdown: one leaf comes off the Viceroy's calendar
     const cal = w.calendar
@@ -954,6 +961,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     w.sheet.setOutside(s.to, s.lang, s.channel === 'petition')
     void hideTitle(w)
     rig.setSway(1)
+    rig.setParallaxScale(1)
     rig.refresh()
     const rest = sheetRest(w)
     let leaned = false
@@ -971,6 +979,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       shake: (a, down) => rig.shake(a, down),
       leanIn: (ms) => {
         leaned = true
+        rig.setParallaxScale(0.06)
         void tweens.run(reduced ? 0 : ms, (k) => w.sheet.setGlow(0.15 + 0.85 * k), ease.inOut)
         if (reduced) {
           rig.jumpTo(readPose)
@@ -981,6 +990,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       arrivePose,
       typewriterPose: typewriterPose(w),
       alive: () => gen === worldGen && !lost && !disposed,
+      skipping: () => skipping,
     }
     await arrive(s.channel, ctx)
     if (gen !== worldGen) return
@@ -1057,6 +1067,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       if (disposed || lost || !world) return Promise.resolve()
       liftCaught()
       rig.setSway(2.4)
+      rig.setParallaxScale(1)
       if (reduced) {
         rig.jumpTo(widePose)
         return Promise.resolve()
@@ -1127,15 +1138,18 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
           if (!caughtState) for (const l of world?.warm ?? []) l.setDim(1)
         })
         void tweens
-          .run(reduced ? 800 : 1500, (k) => {
+          .run(reduced ? 800 : 1600, (k) => {
             const spread = reduced ? 1 : 1 - Math.pow(1 - Math.min(1, k / 0.42), 3)
             const amount = k < 0.62 ? 1 : 1 - (k - 0.62) / 0.38
-            fx.set('wrong', amount, spread)
+            // the red wash hits at once and drains over half a second
+            const wash = reduced ? 0.6 : Math.max(0, 1 - k / 0.32)
+            fx.set('wrong', amount, spread, wash)
           }, ease.linear)
           .then(() => fx.set('wrong', 0, 0))
       }
       // the result card sits over the room: ease back to the desk with the stamped paper on it
       w.sheet.setGlow(0.35)
+      rig.setParallaxScale(1)
       void tweens.wait(reduced ? 0 : 280).then(() => {
         if (world === w && !caughtState) return rig.go('desk', reduced ? 0 : 1100, ease.inOut)
       })
@@ -1158,6 +1172,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       tweens.setInstant(true)
       tweens.clear()
       document.removeEventListener('visibilitychange', syncRunning)
+      unbindParallax()
       window.removeEventListener('resize', onResize)
       window.clearTimeout(resizeTimer)
       ro?.disconnect()

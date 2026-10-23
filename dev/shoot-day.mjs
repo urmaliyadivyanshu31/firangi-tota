@@ -49,6 +49,7 @@ for (const era of ERAS) {
         const errors = []
         page.on('pageerror', (e) => errors.push(String(e)))
         page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+        try {
         await page.goto(`${BASE}/dev/immersive.html?auto&hud&era=${era}&lang=${lang}&tier=${tier}${EXTRA}`)
         for (const [beat, delay] of SHOTS) {
           await page.waitForFunction((b) => {
@@ -60,7 +61,11 @@ for (const era of ERAS) {
           if (BEATS.includes(beat)) await page.screenshot({ path: `${OUT}/${tag}-${SHOTS.findIndex((s) => s[0] === beat)}-${beat}.png` })
         }
         await page.waitForFunction(() => window.__beat === 'done', null, { timeout: 40000 })
-        const cues = await page.evaluate(() => window.__cues ?? [])
+        } catch (e) {
+          // one stuck run (a dev-server reload, a slow GPU) must not stop the rest of the matrix
+          errors.push(String(e).split('\n')[0])
+        }
+        const cues = await page.evaluate(() => window.__cues ?? []).catch(() => [])
         const video = page.video()
         await ctx.close()
         if (video) {

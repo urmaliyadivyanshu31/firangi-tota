@@ -28,6 +28,17 @@ Recorded beds are CC0 1.0 (public domain dedication), cut to 27-30 s seamless lo
 | `public/audio/lahore-1929.m4a` | "Steam Train Station Noises" | BobMorris1 | https://freesound.org/people/BobMorris1/sounds/414613/ | CC0 1.0 |
 | `public/audio/bombay-1942.m4a` | "Indoors_Shed_RainOnTinRoof_01" | MrFossy | https://freesound.org/people/MrFossy/sounds/521773/ | CC0 1.0 |
 | `public/audio/delhi-1947.m4a` | "Night time crickets, distant dogs and traffic" | SukritSen | https://freesound.org/people/SukritSen/sounds/482687/ | CC0 1.0 |
+| `public/audio/typewriter.wav` (five key strikes and the space bar) | "Typing on a 1920s Remington" | rpnelson | https://freesound.org/people/rpnelson/sounds/793351/ | CC0 1.0 |
+| `public/audio/typewriter.wav` (margin bell and carriage return) | "Typewriter bell & carriage reset" | knufds | https://freesound.org/people/knufds/sounds/345955/ | CC0 1.0 |
+
+The typewriter sprite is cut from the sounds' Freesound HQ previews (a login is needed for the
+original files; the licence is the same CC0), high-passed, levelled and stored as one 22.05 kHz mono
+16-bit WAV (about 100 KB) so every key starts on its exact sample. Everything else new is
+synthesized in `src/audio/synth.ts`: the seal crack, the paper and envelope sounds, the day-title
+settle (a tabla "dha" in 1857), the bell for a right answer and the siren for a wrong one, the
+interface sounds, the agarbatti and clock ticks, the teleprinter burst of the ending telegram, and
+the occasional sounds of each era's street (naqqara, hooves, crows, tonga and bicycle bells, a train
+whistle, a tram gong, an air-raid siren test, the sea, rain gusts, thunder, telegraph ticks).
 
 ## Images
 
