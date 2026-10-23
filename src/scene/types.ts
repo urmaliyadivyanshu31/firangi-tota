@@ -31,8 +31,12 @@ export interface StageOptions {
 
 export interface Stage {
   setEra(d: EraDressing): void
-  /** A fresh sheet slides onto the desk and the camera leans in to read. */
-  showPaper(): void
+  /**
+   * A fresh sheet slides onto the desk and the camera leans in to read. With `lean: false` the
+   * camera keeps the desk shot: the game does that, because its own readable paper covers the
+   * sheet there, while the lamp, the stamps and the room stay in view around it.
+   */
+  showPaper(o?: { lean?: boolean }): void
   /** Raise, move, press, shake; resolves when the stamp is back at rest. */
   stamp(kind: StampKind): Promise<void>
   /** A short dark beat: the light dims and the camera drops. Holds until the next showPaper or setEra. */

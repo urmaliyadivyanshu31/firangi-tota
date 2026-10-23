@@ -253,6 +253,7 @@ button.card:active { transform: translateY(2px) scale(.99); }
 
 .intro__scroll { display: flex; flex-direction: column; justify-content: center; padding: 8px 0 24px; }
 .intro__paper { padding: 22px 20px 24px; border-radius: 3px; font-family: var(--f-type); font-size: 18px; line-height: 1.6; }
+.intro__paper.mat-radio { padding-left: 42px; } /* clear of the script paper's red margin */
 .intro__paper.mat-petition { font-family: var(--f-1857); font-size: 19px; }
 .intro__paper:lang(hi) { font-family: var(--f-hi); font-size: 19px; line-height: 1.85; }
 .intro__title { font-size: 26px; line-height: 1.2; font-weight: 400; margin-bottom: 4px; }
@@ -270,12 +271,15 @@ button.card:active { transform: translateY(2px) scale(.99); }
 .screen--day { gap: 8px; }
 .day__top { flex: none; display: flex; flex-direction: column; gap: 4px; }
 .day__meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
-.day__when { display: flex; flex-direction: column; min-width: 0; color: var(--lamp); text-shadow: 0 1px 2px rgba(0, 0, 0, .8); line-height: 1.25; }
+.day__when { flex: 1; display: flex; flex-direction: column; min-width: 0; color: var(--lamp); text-shadow: 0 1px 2px rgba(0, 0, 0, .8); line-height: 1.25; }
+.day__quit { flex: none; }
 .day__count { font-weight: 700; font-size: 18px; }
 .day__date { font-size: 15px; color: var(--lamp-dim); }
 .day__desk { flex: 1; min-height: 0; display: flex; }
-.day__paperwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+.day__paperwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; transition: opacity .2s ease-out; }
 .day__paperwrap.has-sheet { justify-content: flex-start; }
+/* While the stamp comes down on the desk, the paper steps aside so the stamp itself is seen. */
+.screen--day.is-stamping .day__paperwrap { opacity: 0; }
 
 /* The agarbatti: a stick that burns from the right end towards its holder. */
 .agarbatti { --burn: 1; position: relative; height: 30px; }
@@ -385,6 +389,7 @@ mark.pencil {
 .sheet--rules { --paper: #f3eedf; --ink: #1f2433; --ink-soft: #5a5f6e; color: var(--ink); background-color: var(--paper); background-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 30px, rgba(196, 60, 60, .45) 30px, rgba(196, 60, 60, .45) 31.5px, rgba(0, 0, 0, 0) 31.5px), var(--grain); }
 .sheet__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 18px; border-bottom: 1px solid rgba(50, 35, 15, .25); }
 .sheet__head h2 { font-size: 20px; font-weight: 700; }
+.sheet--rules .sheet__head { padding-left: 44px; } /* clear of the notebook's red margin */
 .sheet__close { min-height: 48px; padding: 0 12px; font-size: 15px; font-weight: var(--semi); color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; text-align: right; }
 .sheet__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 18px 20px; }
 .facts { display: flex; flex-direction: column; gap: 12px; }
@@ -439,6 +444,10 @@ mark.pencil {
 .stamp__hint { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: var(--semi); color: var(--chit-ink); opacity: .8; line-height: 1.2; }
 .stamp__key { display: none; font: 600 11px/1 var(--ui); padding: 3px 5px; border-radius: 3px; box-shadow: inset 0 0 0 1px currentColor; }
 @media (hover: hover) and (pointer: fine) { .stamp__key { display: inline-block; } }
+/* While the stamp comes down on the desk: the chosen stamp stays pressed, the other fades. */
+.screen--day.is-stamping .stamp { pointer-events: none; }
+.screen--day.is-stamping .stamp:not(.is-chosen) { opacity: .45; }
+.stamp.is-chosen { transform: translateY(4px); box-shadow: 0 1px 0 var(--chit-edge), 0 3px 6px rgba(0, 0, 0, .45); }
 
 /* The reveal, where the stamps were. */
 .day__controls--reveal { max-height: 60%; min-height: 0; }
@@ -490,6 +499,7 @@ mark.pencil {
 @keyframes thunk-end { from { transform: rotate(-3deg) scale(1.4); opacity: 0; } to { transform: rotate(-3deg) scale(1); opacity: 1; } }
 .end__where { margin-top: 14px; color: var(--lamp-dim); font-weight: var(--semi); text-shadow: 0 1px 2px rgba(0, 0, 0, .75); }
 .end__card { padding: 18px 18px 18px; border-radius: 3px; }
+.end__card.mat-radio { padding-left: 42px; } /* clear of the script paper's red margin */
 .end__card h2 { font-size: 20px; line-height: 1.25; font-weight: 700; margin-bottom: 8px; }
 .end__epilogue { font-size: 18px; line-height: 1.6; }
 .end__epilogue h2 { font-family: var(--ui); }
@@ -533,6 +543,32 @@ mark.pencil {
 .credits__list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
 .credits__list li { padding-left: 14px; position: relative; }
 .credits__list li::before { content: ''; position: absolute; left: 0; top: .65em; width: 6px; height: 2px; background: var(--ink-soft); }
+.credits__doc { font-size: 15px; line-height: 1.5; }
+.credits__doc h2 { font-family: var(--ui); font-size: 17px; font-weight: 700; margin: 18px 0 6px; }
+.credits__doc .credits__file { font-family: var(--f-type); font-weight: 400; font-size: 22px; margin: 0 0 4px; }
+.credits__doc p + p { margin-top: 8px; }
+.credits__doc a { overflow-wrap: anywhere; }
+.credits__table { display: flex; flex-direction: column; gap: 12px; margin: 6px 0 10px; }
+.credits__table li { display: flex; flex-direction: column; }
+.credits__cell { color: var(--ink-soft); overflow-wrap: anywhere; }
+
+/* ---------- Toast (share: copied, WhatsApp) ---------- */
+
+.toast {
+  position: fixed; z-index: 10; left: 50%; top: max(14px, env(safe-area-inset-top));
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 14px;
+  width: max-content; max-width: calc(100% - 32px); min-height: 52px; padding: 2px 20px; border-radius: 28px;
+  font-weight: var(--semi); color: var(--chit-ink); background: var(--chit) var(--grain);
+  box-shadow: 0 4px 0 var(--chit-edge), 0 10px 22px rgba(0, 0, 0, .5);
+  transform: translateX(-50%);
+  animation: toast-in .18s ease-out both;
+}
+.toast--link { padding-right: 2px; }
+.toast__link {
+  display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; border-radius: 24px;
+  color: #fff; background: #1d7a45; text-decoration: none;
+}
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 /* ---------- Wider screens ---------- */
 

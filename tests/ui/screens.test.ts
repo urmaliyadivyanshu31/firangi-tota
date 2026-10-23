@@ -134,4 +134,23 @@ describe('renderCredits', () => {
     click(root, '[data-action="back"]')
     expect(back).toHaveBeenCalledTimes(1)
   })
+
+  it('shows the CREDITS.md content: every font and recording with its source link and licence', () => {
+    setLang('hi')
+    const root = mount()
+    renderCredits(root, { back: vi.fn() })
+    const doc = root.querySelector<HTMLElement>('.credits__doc')!
+    expect(doc).not.toBeNull()
+    expect(doc.getAttribute('lang')).toBe('en') // the legal record stays in English
+    expect(doc.textContent).toContain('Mukta')
+    expect(doc.textContent).toContain('SIL Open Font License 1.1')
+    expect(doc.textContent).toContain('Apache License 2.0')
+    expect(doc.textContent).toContain('CC0 1.0')
+    expect(doc.querySelector('a[href="https://fonts.google.com/specimen/Mukta"]')).not.toBeNull()
+    expect(doc.querySelector('a[href="https://freesound.org/people/MrFossy/sounds/521773/"]')).not.toBeNull()
+    for (const a of doc.querySelectorAll('a')) {
+      expect(a.getAttribute('href')).toMatch(/^https:\/\//)
+      expect(a.getAttribute('rel')).toBe('noopener noreferrer')
+    }
+  })
 })

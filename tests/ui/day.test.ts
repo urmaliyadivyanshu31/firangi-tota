@@ -252,3 +252,41 @@ describe('renderDay: the reveal (Ruling R2)', () => {
     expect(document.querySelector('[aria-live="polite"]')!.textContent).toContain(strings.en.right)
   })
 })
+
+describe('renderDay: timeouts, the daily puzzle and leaving', () => {
+  it('says "Too slow" instead of "Wrong" after a timeout (Ruling R12)', () => {
+    const e = era()
+    const root = mount()
+    renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'timeout' }), { revealed: true }), handlers())
+    expect(root.querySelector('.reveal__word')!.textContent).toBe(strings.en.tooSlow)
+    expect(document.querySelector('[aria-live="polite"]')!.textContent).toContain(strings.en.tooSlow)
+    renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'asli' }), { revealed: true }), handlers())
+    expect(root.querySelector('.reveal__word')!.textContent).toBe(strings.en.wrong)
+    renderDay(root, props(e, chapter(e, { phase: 'caught', lastCorrect: false, lastVerdict: 'timeout' }), { revealed: true, lang: 'hi' }), handlers())
+    expect(root.querySelector('.reveal__word')!.textContent).toBe('देर हो गई')
+  })
+
+  it('shows every rule, none tagged new, when allRules is set (the daily puzzle)', () => {
+    const e = era()
+    e.rules.push({ id: 'r9', text: { en: 'Late rule', hi: 'बाद का नियम' }, arrivesOnDay: 9 })
+    const root = mount()
+    renderDay(root, props(e, chapter(e, { day: 2 })), handlers())
+    expect(root.querySelector('[data-rule="r9"]')).toBeNull()
+    renderDay(root, props(e, chapter(e, { day: 2 }), { allRules: true }), handlers())
+    expect(root.querySelector('[data-rule="r9"]')).not.toBeNull()
+    expect(root.querySelector('.tag-new')).toBeNull()
+  })
+
+  it('shows a home button only when the caller lets the player leave', () => {
+    const e = era()
+    const root = mount()
+    renderDay(root, props(e, chapter(e)), handlers())
+    expect(root.querySelector('[data-action="quit"]')).toBeNull()
+    const on = { ...handlers(), quit: vi.fn() }
+    renderDay(root, props(e, chapter(e)), on)
+    const quit = root.querySelector<HTMLButtonElement>('[data-action="quit"]')!
+    expect(quit.getAttribute('aria-label')).toBe(strings.en.home)
+    quit.click()
+    expect(on.quit).toHaveBeenCalledTimes(1)
+  })
+})

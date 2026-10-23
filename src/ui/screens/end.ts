@@ -14,6 +14,8 @@ export interface EndProps {
   epilogue: Epilogue
   /** Share text to preview (the daily grid). The Share button shows either way. */
   share?: string
+  /** Label for the again button; defaults to "Play again" (the daily puzzle offers its full chapter). */
+  againLabel?: string
 }
 
 export interface EndHandlers {
@@ -61,14 +63,15 @@ export function renderEnd(root: HTMLElement, p: EndProps, on: EndHandlers): void
   const actions = h('footer', { class: 'end__actions' },
     h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'share', onclick: () => on.share() }, t('share', lang)),
     h('div', { class: 'end__row' },
-      h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'again', onclick: () => on.again() }, t('playAgain', lang)),
+      h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'again', onclick: () => on.again() }, p.againLabel ?? t('playAgain', lang)),
       h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'home', onclick: () => on.home() }, t('home', lang))))
 
   const credits = h('p', { class: 'end__credits' },
     h('button', { class: 'link', type: 'button', 'data-action': 'credits', onclick: () => on.credits() }, t('credits', lang)))
 
   mount(root, h('div', { class: `screen screen--end era-${era.id}`, lang },
-    h('div', { class: 'scroll end__scroll' }, head, epilogue, lastEl, receipts, share, credits),
+    // The share grid is the daily puzzle's result, so it comes first, under the verdict.
+    h('div', { class: 'scroll end__scroll' }, head, share, epilogue, lastEl, receipts, credits),
     actions))
   announce(title)
 }
