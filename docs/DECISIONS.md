@@ -102,3 +102,5 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   build flag (`VITE_VOICE=on`) until the plan is upgraded.
 - Players can switch read-aloud between the era voice and a "Dastango" storyteller voice. The game
   never imitates a real person's voice without their permission.
+- Voices are generated with Fish Audio's free model for now; ElevenLabs stays as an option. Only
+  original or designed voices are used: no community-uploaded clones of real people.
