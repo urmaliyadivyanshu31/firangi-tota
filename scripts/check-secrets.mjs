@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url'
 
 export const RULES = [
   { name: 'ElevenLabs API key', re: /\bsk_[0-9a-f]{32,}\b/ },
-  { name: 'ELEVENLABS_API_KEY with a value', re: /ELEVENLABS_API_KEY\s*[:=]\s*['"]?[^\s'"#]{8,}/ },
+  { name: 'ELEVENLABS_API_KEY with a value', re: /ELEVENLABS_API_KEY\s*[:=]\s*['"]?[A-Za-z0-9_-]{16,}/ },
+  { name: 'FISH_API_KEY with a value', re: /FISH_API_KEY\s*[:=]\s*['"]?[A-Za-z0-9_-]{16,}/ },
+  { name: 'Fish Audio key', re: /\bsk-fish-[A-Za-z0-9_-]{16,}/ },
   { name: 'secret-looking env assignment', re: /^\s*(?:export\s+)?[A-Z][A-Z0-9_]*(?:API_KEY|SECRET|TOKEN|PASSWORD)\s*=\s*['"]?[A-Za-z0-9_\-/+=.]{16,}/m },
   { name: 'OpenAI-style key', re: /\bsk-(?:proj-|ant-)?[A-Za-z0-9_-]{32,}/ },
   { name: 'GitHub token', re: /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{40,})\b/ },

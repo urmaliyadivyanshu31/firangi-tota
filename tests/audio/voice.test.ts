@@ -41,6 +41,16 @@ afterEach(() => { vi.restoreAllMocks() })
 describe('voice client', () => {
   it('builds the endpoint URL from the request', () => {
     expect(voiceUrl(A)).toBe('/api/voice?era=delhi-1857&id=ev-commanders-real&lang=en&day=2')
+    expect(voiceUrl({ ...A, voice: 'era' })).toBe(voiceUrl(A))
+    expect(voiceUrl({ ...A, voice: 'dastango' })).toBe('/api/voice?era=delhi-1857&id=ev-commanders-real&lang=en&day=2&voice=dastango')
+  })
+
+  it('switching the voice for the playing message replays it, it does not stop', async () => {
+    const { v, el, states } = setup()
+    await v.play(A)
+    await v.play({ ...A, voice: 'dastango' })
+    expect(el().src).toContain('voice=dastango')
+    expect(states).toEqual(['loading', 'playing', 'idle', 'loading', 'playing'])
   })
 
   it('starts playback synchronously inside the tap, then reports loading and playing', async () => {
