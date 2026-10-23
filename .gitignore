@@ -7,3 +7,8 @@ playwright-report/
 .DS_Store
 .claude/
 docs/screens/
+
+# secrets: never commit
+.env
+.env.*
+!.env.example
