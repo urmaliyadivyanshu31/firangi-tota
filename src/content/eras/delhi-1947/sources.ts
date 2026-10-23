@@ -17,6 +17,20 @@ export const sources: Source[] = [
     url: 'https://www.constitutionofindia.net/debates/22-jul-1947/',
   },
   {
+    id: 'cad-29aug1947',
+    author: 'Constituent Assembly of India',
+    title: 'Constituent Assembly Debates, Vol. V, 29 August 1947 (the Drafting Committee appointed)',
+    year: '1947',
+    url: 'https://www.constitutionofindia.net/debates/29-aug-1947/',
+  },
+  {
+    id: 'capd-1947',
+    author: 'Constituent Assembly of Pakistan',
+    title: 'Constituent Assembly of Pakistan Debates, Vol. I, Nos. 1–4 (10–14 August 1947)',
+    year: '1947',
+    url: 'https://archive.org/details/CAPD_I_4',
+  },
+  {
     id: 'mansergh-xii',
     author: 'Nicholas Mansergh (ed.)',
     title: 'The Transfer of Power 1942–7, Vol. XII: 8 July – 15 August 1947 (HMSO)',
