@@ -4,7 +4,7 @@ import { pencilOn } from '../../game/config'
 import { fillTemplate } from '../../game/dates'
 import { t, tf } from '../../i18n/strings'
 import { announce, h, mount } from '../h'
-import { speakerIcon } from '../icons'
+import { backIcon, speakerIcon } from '../icons'
 import { paperEl } from '../paper'
 import { proofEl } from '../reveal'
 import { canSpeak, onVoicesChanged } from '../speak'
@@ -23,6 +23,8 @@ export interface DayProps {
   revealed: boolean
   /** Override pencil marks (the daily puzzle has none). Defaults to `pencilOn(difficulty, day)`. */
   pencil?: boolean
+  /** Show every rule, none tagged new (the daily puzzle plays with the whole rulebook). */
+  allRules?: boolean
 }
 
 export interface DayHandlers {
@@ -30,9 +32,17 @@ export interface DayHandlers {
   speak(): void
   tab(t: Tab): void
   next(): void
+  /** Leave for home. When given, a home button shows in the header. */
+  quit?(): void
 }
 
 const LOW = 0.3
+
+/** Right, Wrong, or Too slow when the agarbatti burnt out (Ruling R12). */
+function verdictKey(s: ChapterState): 'right' | 'wrong' | 'tooSlow' {
+  if (s.lastCorrect === true) return 'right'
+  return s.lastVerdict === 'timeout' ? 'tooSlow' : 'wrong'
+}
 
 // One day screen is live at a time; the keyboard and voice listeners follow the latest render.
 let active: { screen: HTMLElement; on: DayHandlers; revealed: boolean; close: () => boolean } | null = null
@@ -90,9 +100,14 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       })
     : () => {}
 
+  const quit = on.quit
+  const quitBtn = quit
+    ? h('button', { class: 'icon-btn day__quit', type: 'button', 'data-action': 'quit', 'aria-label': t('home', lang), title: t('home', lang), onclick: () => quit() }, backIcon())
+    : null
   const top = h('header', { class: 'day__top' },
     agarbatti(lang, p.timerFrac),
     h('div', { class: 'day__meta' },
+      quitBtn,
       h('div', { class: 'day__when' },
         h('span', { class: 'day__count' }, tf('dayOf', lang, { n: state.day, total: state.days })),
         h('span', { class: 'day__date' }, fillTemplate('{weekday}, {date}', isoDate, lang))),
@@ -104,8 +119,8 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       h('dt', { class: 'fact__label' }, f.label[lang]),
       h('dd', { class: 'fact__value' }, hard && f.hardHidden ? '—' : f.value[lang]))))
 
-  const arrived = era.rules.filter((r) => r.arrivesOnDay <= state.day)
-  const isNew = (day: number) => state.day > 1 && day === state.day
+  const arrived = p.allRules ? era.rules : era.rules.filter((r) => r.arrivesOnDay <= state.day)
+  const isNew = (day: number) => !p.allRules && state.day > 1 && day === state.day
   const anyNew = arrived.some((r) => isNew(r.arrivesOnDay))
   const newTag = () => h('span', { class: 'tag-new' }, t('newTag', lang))
   const rules = h('ol', { class: 'rules' }, arrived.map((r) =>
@@ -170,7 +185,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       h('section', { class: `reveal reveal--${correct ? 'right' : 'wrong'}`, 'aria-labelledby': 'ft-verdict' },
         h('div', { class: 'reveal__body' },
           h('div', { class: 'reveal__verdict' },
-            h('h2', { id: 'ft-verdict', class: 'reveal__word' }, t(correct ? 'right' : 'wrong', lang)),
+            h('h2', { id: 'ft-verdict', class: 'reveal__word' }, t(verdictKey(state), lang)),
             h('p', { class: 'reveal__truth' }, t(msg.real ? 'wasGenuine' : 'wasForged', lang))),
           proofEl(msg, era, lang)),
         h('div', { class: 'reveal__foot' }, nextBtn)))
@@ -192,7 +207,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     announced.set(root, key)
     if (revealed) {
       const stop = lang === 'hi' ? '।' : '.'
-      announce(`${t(state.lastCorrect ? 'right' : 'wrong', lang)}${stop} ${t(msg.real ? 'wasGenuine' : 'wasForged', lang)}${stop}`)
+      announce(`${t(verdictKey(state), lang)}${stop} ${t(msg.real ? 'wasGenuine' : 'wasForged', lang)}${stop}`)
       nextBtn?.focus({ preventScroll: true })
     } else {
       announce(tf('announceDay', lang, { n: state.day, from: fillTemplate(msg.from[lang], isoDate, lang) }))

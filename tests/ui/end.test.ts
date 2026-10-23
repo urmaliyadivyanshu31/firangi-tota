@@ -83,4 +83,19 @@ describe('renderEnd', () => {
     expect(on.share).toHaveBeenCalledTimes(1)
     expect(on.credits).toHaveBeenCalledTimes(1)
   })
+
+  it('puts the share grid (the daily result) first, right under the verdict', () => {
+    const e = era()
+    const root = mount()
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 5, lastCorrect: false }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue, share: 'Firangi Tota · Aaj ka Taar #1\n✅❌' }, handlers())
+    const order = [...root.querySelector('.end__scroll')!.children].map((c) => c.className.split(' ')[0])
+    expect(order.indexOf('share')).toBe(order.indexOf('end__head') + 1)
+  })
+
+  it('relabels the again button when asked (the daily puzzle offers the full chapter)', () => {
+    const e = era()
+    const root = mount()
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue, againLabel: 'Play the full chapter' }, handlers())
+    expect(root.querySelector('[data-action="again"]')!.textContent).toBe('Play the full chapter')
+  })
 })

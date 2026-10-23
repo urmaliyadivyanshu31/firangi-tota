@@ -70,6 +70,7 @@ const en = {
   // Reveal
   right: 'Right',
   wrong: 'Wrong',
+  tooSlow: 'Too slow',
   wasGenuine: 'This message was genuine',
   wasForged: 'This message was forged',
   kindReal: '📜 Real document',
@@ -88,6 +89,10 @@ const en = {
   playAgain: 'Play again',
   home: 'Home',
   share: 'Share',
+  copied: 'Copied',
+  copyFailed: 'Could not copy, the text is on the screen',
+  shareWhatsApp: 'Send on WhatsApp',
+  dailyChapter: 'Play chapter',
 
   // Credits
   creditsInspired: 'Inspired by {title} by atomiquest',
@@ -159,6 +164,7 @@ const hi: Strings = {
 
   right: 'सही',
   wrong: 'ग़लत',
+  tooSlow: 'देर हो गई',
   wasGenuine: 'यह संदेश सच्चा था',
   wasForged: 'यह संदेश जाली था',
   kindReal: '📜 असली दस्तावेज़',
@@ -176,6 +182,10 @@ const hi: Strings = {
   playAgain: 'फिर खेलें',
   home: 'होम',
   share: 'शेयर करें',
+  copied: 'कॉपी हो गया',
+  copyFailed: 'कॉपी नहीं हुआ, टेक्स्ट स्क्रीन पर है',
+  shareWhatsApp: 'WhatsApp पर भेजें',
+  dailyChapter: 'अध्याय खेलें',
 
   creditsInspired: 'atomiquest के {title} से प्रेरित',
   creditsCode: 'कोड: MIT लाइसेंस',
@@ -196,6 +206,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'radioHead', 'telegramHead', 'right', 'wrong', 'wasGenuine', 'wasForged', 'kindReal', 'kindWritten',
   'kindForged', 'sources', 'survivedTitle', 'caughtTitle', 'nextHappened', 'caughtHappened',
   'onRecord', 'theirSide', 'lastMessage', 'playAgain', 'home', 'share', 'creditsInspired', 'creditsCode',
+  'tooSlow', 'copied', 'copyFailed', 'shareWhatsApp', 'dailyChapter',
 ]
 
 export function t(key: keyof Strings, lang: Lang): string {

@@ -558,12 +558,15 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       }
       syncRunning()
     },
-    showPaper() {
+    showPaper(o) {
       if (disposed || lost || !world) return
       liftCaught()
+      const lean = o?.lean !== false
       queue = queue
         .then(() => {
-          void rig.go('read', opts.reducedMotion ? 0 : 1100, ease.inOut)
+          if (lean) void rig.go('read', opts.reducedMotion ? 0 : 1100, ease.inOut)
+          // stay on (or return to) the desk shot; never cut short a move that is already heading there
+          else if (rig.shot() !== 'desk') void rig.go('desk', opts.reducedMotion ? 0 : 700, ease.inOut)
           return slidePaper()
         })
         .catch(() => undefined)

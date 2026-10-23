@@ -41,4 +41,15 @@ describe('chapter state', () => {
     const s = mk()
     expect(nextDay(s)).toBe(s)
   })
+  it('remembers the last verdict, so the reveal can say "Too slow" for a timeout', () => {
+    const s = mk()
+    const right = s.queue[0]!.real ? 'asli' : 'tota'
+    const wrong = right === 'asli' ? 'tota' : 'asli'
+    expect(stamp(s, right).lastVerdict).toBe(right)
+    expect(stamp(s, wrong).lastVerdict).toBe(wrong)
+    expect(stamp(s, 'timeout').lastVerdict).toBe('timeout')
+    const next = nextDay(stamp(s, right))
+    expect(next.lastVerdict).toBeUndefined()
+    expect(next.lastCorrect).toBeUndefined()
+  })
 })
