@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   TIER_SETTINGS,
   createQualityManager,
+  createTierControl,
+  loadSavedCeiling,
   loadSavedTier,
   parseTierParam,
   pickInitialTier,
@@ -152,6 +154,41 @@ describe('createQualityManager', () => {
     expect(apply).not.toHaveBeenCalled()
   })
 
+  it('keeps the 30 fps cap through one missed frame (66.7 ms) in the window', () => {
+    const apply = vi.fn()
+    const m = createQualityManager('high', apply)
+    for (let i = 0; i < 1200; i++) m.sample(i % 120 === 60 ? 66.7 : 33.3)
+    expect(m.tier()).toBe('high')
+    expect(apply).not.toHaveBeenCalled()
+  })
+
+  it('keeps the 30 fps cap through two missed frames in one window', () => {
+    const apply = vi.fn()
+    const m = createQualityManager('high', apply)
+    for (let i = 0; i < 1200; i++) m.sample(i % 120 === 30 || i % 120 === 90 ? 66.7 : 33.3 + Math.sin(i) * 0.8)
+    expect(m.tier()).toBe('high')
+    expect(m.info().capped).toBe(true)
+  })
+
+  it('steps down on a genuinely slow 33–40 ms spread (not a cap)', () => {
+    const apply = vi.fn()
+    const m = createQualityManager('high', apply)
+    for (let i = 0; i < 120; i++) m.sample(33 + (i % 8))
+    expect(m.tier()).toBe('mid')
+    expect(apply).toHaveBeenCalledWith('mid')
+  })
+
+  it('never steps up above a saved ceiling', () => {
+    const below = createQualityManager('low', () => undefined, { ceiling: 'mid' })
+    feed(below, 16.7, 2000)
+    expect(below.tier()).toBe('mid') // up to the ceiling is fine
+    const at = vi.fn()
+    const atCeiling = createQualityManager('mid', at, { ceiling: 'mid' })
+    feed(atCeiling, 16.7, 2000)
+    expect(atCeiling.tier()).toBe('mid')
+    expect(at).not.toHaveBeenCalled()
+  })
+
   it('still steps down when 30 fps frames jitter like a busy GPU', () => {
     const apply = vi.fn()
     const m = createQualityManager('high', apply)
@@ -165,6 +202,63 @@ describe('createQualityManager', () => {
     feed(m, 1000, 300)
     expect(m.tier()).toBe('high')
     expect(apply).not.toHaveBeenCalled()
+  })
+})
+
+describe('createTierControl', () => {
+  const run = (c: { frame(ms: number): void }, ms: number, n: number) => {
+    for (let i = 0; i < n; i++) c.frame(ms)
+  }
+
+  it('does not count old-tier frames while a requested tier waits for a stamp to finish', () => {
+    const c = createTierControl({ start: 'high', adaptive: true })
+    run(c, 16.7, 60) // the 1 s start-up warm-up
+    run(c, 30, 120) // slow: the manager asks for mid
+    expect(c.take(false)).toBeNull() // a stamp is running, so the stage can't rebuild yet
+    run(c, 30, 300) // still rendering at high: these frames must not count toward mid
+    expect(c.take(true)).toBe('mid')
+    c.applied()
+    run(c, 30, 25) // the 750 ms post-apply warm-up
+    run(c, 30, 119) // 119 counted frames at mid: not yet a full window
+    expect(c.take(true)).toBeNull()
+    expect(c.tier()).toBe('mid')
+  })
+
+  it('ignores the slow frames right after setEra rebuilds the world', () => {
+    const hitch = (warm: boolean) => {
+      const c = createTierControl({ start: 'high', adaptive: true })
+      run(c, 16.7, 60) // start-up warm-up
+      run(c, 16.7, 200) // steady
+      if (warm) c.warm(750) // what setEra does
+      run(c, 240, 3) // texture generation and shader compiles
+      run(c, 16.7, 117)
+      return c.take(true)
+    }
+    expect(hitch(false)).toBe('mid') // control: counted, those frames would force a step down
+    expect(hitch(true)).toBeNull()
+  })
+
+  it('reports a settled tier once, after it holds for the settle time, with the step-down flag', () => {
+    const settled: [QualityTier, boolean][] = []
+    const c = createTierControl({ start: 'mid', adaptive: true, settleMs: 10_000, onSettled: (t, d) => settled.push([t, d]) })
+    run(c, 16.7, 60)
+    run(c, 30, 120)
+    expect(c.take(true)).toBe('low')
+    c.applied()
+    run(c, 16.7, 45) // warm-up
+    run(c, 16.7, 590) // 9.85 s
+    expect(settled).toEqual([])
+    run(c, 16.7, 20)
+    expect(settled).toEqual([['low', true]])
+    run(c, 16.7, 2000)
+    expect(settled).toHaveLength(1)
+  })
+
+  it('does nothing when the tier is forced', () => {
+    const c = createTierControl({ start: 'low', adaptive: false })
+    run(c, 100, 2000)
+    expect(c.take(true)).toBeNull()
+    expect(c.tier()).toBe('low')
   })
 })
 
@@ -184,6 +278,19 @@ describe('tier memory and start tier', () => {
     expect(loadSavedTier()).toBeUndefined()
     localStorage.setItem('ft:tier', JSON.stringify({ tier: 'low', at: Date.now() - 40 * 864e5 }))
     expect(loadSavedTier()).toBeUndefined()
+  })
+
+  it('saves a ceiling after a step-down and expires it with the tier', () => {
+    const now = Date.now()
+    saveTier('mid', { tier: 'mid', at: now })
+    expect(loadSavedTier()).toBe('mid')
+    expect(loadSavedCeiling()).toEqual({ tier: 'mid', at: now })
+    saveTier('mid') // a session that never stepped down and had no ceiling
+    expect(loadSavedCeiling()).toBeUndefined()
+    saveTier('low', { tier: 'mid', at: now - 40 * 864e5 }) // carried forward, but too old
+    expect(loadSavedCeiling()).toBeUndefined()
+    localStorage.setItem('ft:tier', JSON.stringify({ tier: 'low', at: now - 40 * 864e5, ceiling: 'low', ceilingAt: now }))
+    expect(loadSavedCeiling()).toBeUndefined() // no tier, no ceiling
   })
 
   it('prefers forced, then saved, then detected', () => {

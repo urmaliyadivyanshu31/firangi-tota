@@ -32,9 +32,14 @@ export const SPOTS = {
   /** ASLI sits left of the paper and TOTA right, matching ArrowLeft/ArrowRight. */
   asli: { x: -0.26, z: 0.12 },
   tota: { x: 0.26, z: 0.12 },
-  /** Where an era's main lamp stands (back left). */
-  lamp: { x: -0.3, z: -0.19 },
+  /**
+   * Where an era's main lamp stands (back left). Its body must fit inside radius `r` and height
+   * `h` (flame included): the desk shot keeps that whole volume in frame (ruling R20).
+   */
+  lamp: { x: -0.27, z: -0.19, r: 0.065, h: 0.3 },
 } as const
+/** Stamp handle height. */
+export const STAMP_H = 0.1
 /** Top of the blotter; the paper rests just above it. */
 export const BLOTTER_TOP = 0.002
 const PAPER_Y = BLOTTER_TOP + 0.0006
@@ -790,10 +795,54 @@ export function frameShot(base: EraDressing['camera'], aspect: number): Pose {
   const look = new THREE.Vector3(...base.look)
   const off = new THREE.Vector3(...base.pos).sub(look)
   const d0 = off.length()
+  const dir = off.normalize()
   const tanH = Math.tan(THREE.MathUtils.degToRad(fov) / 2) * aspect
-  const need = FRAME_W / 2 / tanH
-  const pos = look.clone().addScaledVector(off.normalize(), Math.max(d0, need))
-  return { pos, look, fov }
+  let d = Math.max(d0, FRAME_W / 2 / tanH)
+  // then back off until every prop on the shared spots is inside the frame, with a small margin
+  // for the camera's breathing and shake (R20)
+  const cam = new THREE.PerspectiveCamera(fov, aspect, 0.03, 30)
+  const v = new THREE.Vector3()
+  const inFrame = () => {
+    cam.position.copy(look).addScaledVector(dir, d)
+    cam.lookAt(look)
+    cam.updateMatrixWorld()
+    cam.updateProjectionMatrix()
+    return framePoints().every((p) => {
+      v.copy(p).project(cam)
+      return Math.abs(v.x) <= FRAME_MARGIN && Math.abs(v.y) <= FRAME_MARGIN && v.z < 1
+    })
+  }
+  for (let i = 0; i < 60 && !inFrame(); i++) d *= 1.03
+  return { pos: look.clone().addScaledVector(dir, d), look, fov }
+}
+
+/** Props must project inside ±FRAME_MARGIN in normalised device coordinates. */
+export const FRAME_MARGIN = 0.94
+
+let pointsCache: THREE.Vector3[] | null = null
+/** The outline of every prop on the shared spots: stamps, paper and the lamp volume. */
+export function framePoints(): THREE.Vector3[] {
+  if (pointsCache) return pointsCache
+  const pts: THREE.Vector3[] = []
+  const column = (x: number, z: number, r: number, h: number) => {
+    for (let a = 0; a < 8; a++) {
+      const px = x + Math.cos((a / 8) * Math.PI * 2) * r
+      const pz = z + Math.sin((a / 8) * Math.PI * 2) * r
+      pts.push(new THREE.Vector3(px, 0, pz), new THREE.Vector3(px, h, pz))
+    }
+  }
+  column(SPOTS.asli.x, SPOTS.asli.z, STAMP_R, STAMP_H)
+  column(SPOTS.tota.x, SPOTS.tota.z, STAMP_R, STAMP_H)
+  column(SPOTS.lamp.x, SPOTS.lamp.z, SPOTS.lamp.r, SPOTS.lamp.h)
+  const c = Math.cos(SPOTS.paper.yaw)
+  const sn = Math.sin(SPOTS.paper.yaw)
+  for (const [dx, dz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const) {
+    const x = (dx * PAPER.w) / 2
+    const z = (dz * PAPER.h) / 2
+    pts.push(new THREE.Vector3(SPOTS.paper.x + x * c + z * sn, 0, SPOTS.paper.z - x * sn + z * c))
+  }
+  pointsCache = pts
+  return pts
 }
 
 /** Leaning in over the sheet, which sits in the upper part of a portrait screen. */

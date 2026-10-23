@@ -87,11 +87,20 @@ export function pickInitialTier(sig: DeviceSignals): QualityTier {
   return cap
 }
 
+export interface QualityInfo {
+  avgMs: number
+  capped: boolean
+  steppedDown: boolean
+  steppedUp: boolean
+}
+
 export interface QualityManager {
   sample(frameMs: number): void
   tier(): QualityTier
+  /** Clears the measuring window (call once a requested tier is applied); keeps session history. */
+  reset(): void
   /** For the debug overlay. */
-  info(): { avgMs: number; capped: boolean; steppedDown: boolean; steppedUp: boolean }
+  info(): QualityInfo
 }
 
 export interface QualityOptions {
@@ -101,6 +110,8 @@ export interface QualityOptions {
   upP95Ms: number
   upN: number
   gapMs: number
+  /** Never step up above this tier (a ceiling saved by an earlier session that stepped down). */
+  ceiling?: QualityTier
 }
 
 const DEFAULTS: QualityOptions = { downMs: 22, downN: 120, upMs: 17.5, upP95Ms: 20, upN: 240, gapMs: 3000 }
@@ -109,8 +120,9 @@ const DEFAULTS: QualityOptions = { downMs: 22, downN: 120, upMs: 17.5, upP95Ms: 
  * Ruling R14. Steps down when the last 120 frames average over 22 ms. Steps up when 240
  * consecutive frames average ≤ 17.5 ms with a p95 ≤ 20 ms (a clean 60 Hz vsync stream), at most
  * once per session and never in a session that has already stepped down. Changes are at least
- * 3 s of measured frames apart. A tight cluster around 33 ms is a 30 fps cap (iOS Low Power Mode,
- * battery savers), not GPU load, so it does not step down for that.
+ * 3 s of measured frames apart, and never above `ceiling`. When ≥ 90% of the window sits in
+ * 31–36 ms the device is capped at 30 fps (iOS Low Power Mode, battery savers), not GPU-bound, so
+ * it does not step down for that; a missed frame or two (66 ms) doesn't break the detection.
  */
 export function createQualityManager(
   start: QualityTier,
@@ -125,34 +137,43 @@ export function createQualityManager(
   let current = start
   let steppedDown = false
   let steppedUp = false
+  const maxRank = o.ceiling ? rank(o.ceiling) : TIERS.length - 1
   let sinceChange = o.gapMs // the first change may come as soon as a window fills
   let lastAvg = 0
   let lastCapped = false
 
-  const stats = (n: number) => {
+  const at = (i: number) => ring[(head - i + size) % size] ?? 0
+  const mean = (n: number) => {
     let sum = 0
-    for (let i = 1; i <= n; i++) sum += ring[(head - i + size) % size] ?? 0
-    const mean = sum / n
-    let v = 0
+    for (let i = 1; i <= n; i++) sum += at(i)
+    return sum / n
+  }
+  // A 30 fps cap shows as frames bunched at 33.3 ms. Counting the share inside 31–36 ms is robust
+  // to the odd missed vsync (66.7 ms), which would blow up a standard deviation test.
+  const cappedAt30 = (n: number) => {
+    let within = 0
     for (let i = 1; i <= n; i++) {
-      const d = (ring[(head - i + size) % size] ?? 0) - mean
-      v += d * d
+      const v = at(i)
+      if (v >= 31 && v <= 36) within++
     }
-    return { mean, sd: Math.sqrt(v / n) }
+    return within >= 0.9 * n
   }
 
   // p95 ≤ limit means sorted[floor(0.95·n)] ≤ limit, i.e. at most n − floor(0.95·n) − 1 frames
   // over the limit. Counting avoids sorting 240 samples every frame.
   const p95Within = (n: number, limit: number) => {
     let over = 0
-    for (let i = 1; i <= n; i++) if ((ring[(head - i + size) % size] ?? 0) > limit) over++
+    for (let i = 1; i <= n; i++) if (at(i) > limit) over++
     return over <= n - Math.floor(0.95 * n) - 1
   }
 
-  const change = (t: QualityTier) => {
-    current = t
+  const clear = () => {
     count = 0
     head = 0
+  }
+  const change = (t: QualityTier) => {
+    current = t
+    clear()
     sinceChange = 0
     apply(t)
   }
@@ -166,25 +187,100 @@ export function createQualityManager(
       sinceChange += ms
       const i = rank(current)
       if (count >= o.downN) {
-        const { mean, sd } = stats(o.downN)
-        lastAvg = mean
-        lastCapped = mean >= 30.5 && mean <= 36.5 && sd < 2.5
-        if (mean > o.downMs && !lastCapped && i > 0 && sinceChange >= o.gapMs) {
+        const avg = mean(o.downN)
+        lastAvg = avg
+        lastCapped = cappedAt30(o.downN)
+        if (avg > o.downMs && !lastCapped && i > 0 && sinceChange >= o.gapMs) {
           steppedDown = true
           change(TIERS[i - 1] as QualityTier)
           return
         }
       }
-      const canStepUp = !steppedUp && !steppedDown && i < TIERS.length - 1
+      const canStepUp = !steppedUp && !steppedDown && i < maxRank
       if (canStepUp && count >= o.upN && sinceChange >= o.gapMs) {
-        if (stats(o.upN).mean <= o.upMs && p95Within(o.upN, o.upP95Ms)) {
+        if (mean(o.upN) <= o.upMs && p95Within(o.upN, o.upP95Ms)) {
           steppedUp = true
           change(TIERS[i + 1] as QualityTier)
         }
       }
     },
     tier: () => current,
+    reset: clear,
     info: () => ({ avgMs: lastAvg, capped: lastCapped, steppedDown, steppedUp }),
+  }
+}
+
+export interface TierControl {
+  /** Feed every rendered frame's duration. */
+  frame(dtMs: number): void
+  /** The requested tier when one is due and `canApply` (no animation a rebuild would break). */
+  take(canApply: boolean): QualityTier | null
+  /** Call once a taken tier is applied: fresh window, 750 ms warm-up, settle timer restarts. */
+  applied(): void
+  /** Ignore the next `ms` of frames (world rebuilds, shader compiles, resumes). */
+  warm(ms: number): void
+  /** Queue a change by hand (the ?debug test hook). */
+  request(t: QualityTier): void
+  tier(): QualityTier
+  info(): QualityInfo
+}
+
+/**
+ * Sits between the render loop and the quality manager, so the manager only ever sees frames
+ * rendered at the tier it is judging: nothing while a requested tier waits to be applied, nothing
+ * during warm-ups, nothing over 250 ms. `onSettled` fires once a tier has held for `settleMs`.
+ */
+export function createTierControl(o: {
+  start: QualityTier
+  adaptive: boolean
+  ceiling?: QualityTier
+  settleMs?: number
+  onSettled?: (tier: QualityTier, steppedDown: boolean) => void
+}): TierControl {
+  let pending: QualityTier | null = null
+  let current = o.start
+  const manager = o.adaptive ? createQualityManager(o.start, (t) => (pending = t), { ceiling: o.ceiling }) : null
+  const settleMs = o.settleMs ?? 10_000
+  let warmup = 1000 // first-frame shader compiles and texture uploads
+  let stable = 0
+  let settled = false
+  return {
+    frame(dt) {
+      if (!manager || pending) return // old-tier frames say nothing about the requested tier
+      if (warmup > 0) {
+        warmup -= dt
+        return
+      }
+      if (!(dt > 0) || dt > 250) return
+      manager.sample(dt)
+      if (pending) return
+      stable += dt
+      if (!settled && stable >= settleMs) {
+        settled = true
+        o.onSettled?.(current, manager.info().steppedDown)
+      }
+    },
+    take(canApply) {
+      if (!pending || !canApply) return null
+      const t = pending
+      pending = null
+      current = t
+      return t
+    },
+    applied() {
+      manager?.reset()
+      warmup = Math.max(warmup, 750)
+      stable = 0
+      settled = false
+    },
+    warm(ms) {
+      warmup = Math.max(warmup, ms)
+    },
+    request(t) {
+      pending = t
+    },
+    tier: () => current,
+    info: () => manager?.info() ?? { avgMs: 0, capped: false, steppedDown: false, steppedUp: false },
   }
 }
 
@@ -212,8 +308,23 @@ export function loadSavedTier(now = Date.now()): QualityTier | undefined {
   return tier as QualityTier
 }
 
-export function saveTier(tier: QualityTier, now = Date.now()): void {
-  store.set(TIER_KEY, { tier, at: now })
+/** A ceiling saved by a session that stepped down, if recent. It expires like the tier. */
+export function loadSavedCeiling(now = Date.now()): { tier: QualityTier; at: number } | undefined {
+  if (!loadSavedTier(now)) return undefined
+  const v = store.get<{ ceiling?: unknown; ceilingAt?: unknown } | null>(TIER_KEY, null)
+  const c = v?.ceiling
+  const at = v?.ceilingAt
+  if (typeof c !== 'string' || !(TIERS as readonly string[]).includes(c)) return undefined
+  if (typeof at !== 'number' || now - at > TIER_TTL_MS || at > now + 864e5) return undefined
+  return { tier: c as QualityTier, at }
+}
+
+export function saveTier(
+  tier: QualityTier,
+  ceiling?: { tier: QualityTier; at: number },
+  now = Date.now(),
+): void {
+  store.set(TIER_KEY, ceiling ? { tier, at: now, ceiling: ceiling.tier, ceilingAt: ceiling.at } : { tier, at: now })
 }
 
 export function startTier(o: {

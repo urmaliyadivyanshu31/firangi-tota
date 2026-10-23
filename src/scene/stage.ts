@@ -12,6 +12,7 @@ import {
   createDust,
   createPaper,
   createStamps,
+  disposeTree,
   findWarmLights,
   takeShadowsDirty,
   type Dust,
@@ -22,7 +23,8 @@ import {
 } from './props'
 import {
   TIER_SETTINGS,
-  createQualityManager,
+  createTierControl,
+  loadSavedCeiling,
   loadSavedTier,
   parseTierParam,
   pickInitialTier,
@@ -84,6 +86,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   const forced = opts.forceTier ?? parseTierParam(search)
   const debug = /[?&]debug(?=[=&]|$)/.test(search)
   const saved = forced ? undefined : loadSavedTier()
+  const savedCeiling = forced ? undefined : loadSavedCeiling()
   const known = forced ?? saved
 
   // MSAA is fixed at context creation, so decide it before the renderer exists. When the tier is
@@ -140,8 +143,15 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   const tweens = createTweens()
   const camera = new THREE.PerspectiveCamera(50, 1, 0.03, 30)
   const rig = createCameraRig(camera, tweens, { reducedMotion: opts.reducedMotion })
-  let pendingTier: QualityTier | null = null
-  const manager = forced ? null : createQualityManager(tier, (t) => (pendingTier = t))
+  // R14: save the tier once it holds for 10 s. A session that stepped down also saves that tier as
+  // a ceiling, so the next session never probes above it; an older ceiling is carried forward.
+  const tiers = createTierControl({
+    start: tier,
+    adaptive: !forced,
+    ceiling: savedCeiling?.tier,
+    settleMs: SETTLE_MS,
+    onSettled: (t, steppedDown) => saveTier(t, steppedDown ? { tier: t, at: Date.now() } : savedCeiling),
+  })
 
   let dressing: EraDressing | null = null
   let world: World | null = null
@@ -167,7 +177,13 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const fill = new THREE.DirectionalLight(mix(d.lightColor, 0xffffff, 0.3), 0.32)
     fill.position.set(0.4, 1.4, 2.2)
     scene.add(fill)
-    const dressed = d.build({ scene, tier: t, rng: mulberry32(seedFrom(d.id)) })
+    let dressed: ReturnType<EraDressing['build']>
+    try {
+      dressed = d.build({ scene, tier: t, rng: mulberry32(seedFrom(d.id)) })
+    } catch (err) {
+      disposeTree(scene) // whatever the dressing added before it threw
+      throw err
+    }
     const prng = mulberry32(seedFrom(`${d.id}:props`))
     const paper = createPaper({ palette: pal, tier: t, rng: prng })
     const stamps = createStamps({ palette: pal, tier: t, rng: prng })
@@ -219,14 +235,22 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     for (const l of w.warm) l.setDim(caughtState ? 0.3 : 1, true)
   }
 
-  const setWorld = (d: EraDressing, t: QualityTier) => {
+  /** Returns false when the dressing failed to build; the stage then falls back like a lost context. */
+  const setWorld = (d: EraDressing, t: QualityTier): boolean => {
     const old = world
     world = null
     old?.dispose()
-    world = buildWorld(d, t)
     worldGen++
+    try {
+      world = buildWorld(d, t)
+    } catch (err) {
+      console.error('[stage] era dressing failed to build', err)
+      fail('build-failed')
+      return false
+    }
     restoreState(world)
     shadowDirty = true
+    return true
   }
 
   // ------------------------------------------------------------ renderer and tiers
@@ -271,19 +295,13 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     old.forceContextLoss()
   }
 
-  let warmup = 1000 // skip first-frame shader compiles and uploads
-  let stableMs = 0
-  let savedTier = false
-
   const applyTier = (t: QualityTier) => {
     tier = t
     if (TIER_SETTINGS[t].antialias !== aa) swapRenderer(TIER_SETTINGS[t].antialias)
     configure()
     if (dressing) setWorld(dressing, t)
     resize()
-    warmup = 750
-    stableMs = 0
-    savedTier = false
+    tiers.applied() // fresh window and warm-up: only frames at the new tier count
   }
 
   configure()
@@ -303,11 +321,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     raf = requestAnimationFrame(frame)
     const dt = last ? now - last : 16.7
     last = now
-    if (pendingTier && busy === 0) {
-      const t = pendingTier
-      pendingTier = null
-      applyTier(t)
-    }
+    const next = tiers.take(busy === 0) // a rebuild mid-stamp would break the animation, so wait
+    if (next) applyTier(next)
     const w = world
     if (!w) return
     const step = Math.min(dt, 100)
@@ -329,17 +344,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     stats.tris = info.triangles
     stats.frames++
     stats.acc += dt
-    if (manager) {
-      if (warmup > 0) warmup -= dt
-      else if (dt <= 250) {
-        manager.sample(dt)
-        stableMs += dt
-        if (!savedTier && stableMs >= SETTLE_MS && !pendingTier) {
-          saveTier(tier)
-          savedTier = true
-        }
-      }
-    }
+    tiers.frame(dt)
   }
 
   const syncRunning = () => {
@@ -347,7 +352,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     if (should && !running) {
       running = true
       last = 0
-      warmup = Math.max(warmup, 500) // the first frames after a resume are not representative
+      tiers.warm(500) // the first frames after a resume are not representative
       raf = requestAnimationFrame(frame)
     } else if (!should && running) {
       running = false
@@ -370,12 +375,19 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   // ------------------------------------------------------------ context loss
 
   function onLost() {
+    fail('context-lost')
+  }
+
+  /** The stage goes inert, says so, and the 2D fallback takes its place in the mount. */
+  function fail(reason: 'context-lost' | 'build-failed') {
+    if (lost || disposed) return
     lost = true
     syncRunning()
     tweens.setInstant(true)
     tweens.clear()
-    renderer.domElement.style.visibility = 'hidden'
-    const ev = new CustomEvent(STAGE_LOST_EVENT, { cancelable: true, detail: { era: dressing?.id } })
+    // display:none, not visibility:hidden, so the fallback canvas gets the mount's box
+    renderer.domElement.style.display = 'none'
+    const ev = new CustomEvent(STAGE_LOST_EVENT, { cancelable: true, detail: { era: dressing?.id, reason } })
     const appHandled = !el.dispatchEvent(ev)
     if (!appHandled && !disposed) fallback = mountFallback(el, dressing?.id ?? 'delhi-1857')
   }
@@ -396,7 +408,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     canvas: [renderer.domElement.width, renderer.domElement.height],
     aa,
     gpu: sig.gpu ?? '',
-    capped: manager?.info().capped ?? false,
+    capped: tiers.info().capped,
     frames: renderer.info.render.frame,
     lost,
     running,
@@ -424,15 +436,18 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       }
     }, 500)
     // test hook: queue a tier change as the adapter would
-    const setTier = (t: QualityTier) => (pendingTier = t)
+    const setTier = (t: QualityTier) => tiers.request(t)
     ;(window as unknown as { __ftStage?: unknown }).__ftStage = { info: debugInfo, setTier }
   }
 
   // ------------------------------------------------------------ the Stage API
 
+  let exposureTok = 0 // a newer exposure change cancels an older tween still running
   const setExposure = (to: number, ms: number) => {
     const from = exposure
+    const tok = ++exposureTok
     return tweens.run(ms, (k) => {
+      if (tok !== exposureTok) return
       exposure = lerp(from, to, k)
       renderer.toneMappingExposure = exposure
     }, ease.out)
@@ -526,6 +541,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       paperShown = false
       stamped = null
       caughtState = false
+      exposureTok++
       exposure = EXPOSURE
       if (lost) {
         fallback?.setEra(d.id)
@@ -533,7 +549,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       }
       renderer.toneMappingExposure = exposure
       rig.setBase(d.camera)
-      setWorld(d, tier)
+      if (!setWorld(d, tier)) return
+      tiers.warm(750) // texture generation and shader compiles make the next frames slow
       if (opts.reducedMotion) rig.jump('desk')
       else {
         rig.jump('intro')
