@@ -1,11 +1,12 @@
-// The controller. It joins the pure game logic (src/game), the era content, the DOM screens, the
-// lazily loaded 3D stage and the audio, and owns the one requestAnimationFrame loop that burns the
-// agarbatti. Nothing here imports three.js: the stage and the era desks arrive by dynamic import
-// after the first paint (Ruling R10).
+// The controller. It joins the pure game logic (src/game), the era content, the overlay screens,
+// the lazily loaded 3D stage and the audio, and owns the one requestAnimationFrame loop that burns
+// the agarbatti. The room is always on screen: the stage establishes it behind the cards, titles
+// each day, brings the message in on its paper, stamps it and flashes. Nothing here imports
+// three.js: the stage and the era desks arrive by dynamic import after the first paint (R10).
 import { audio } from './audio/engine'
 import { ERAS, eraById } from './content/registry'
 import type { Era, EraId, Message } from './content/types'
-import { DAYS, TIMER_S, type Difficulty } from './game/config'
+import { DAYS, TIMER_S, pencilOn, type Difficulty } from './game/config'
 import { dailyFrom, type Daily } from './game/daily'
 import { dayDate } from './game/dates'
 import { mulberry32, seedFrom } from './game/rng'
@@ -15,11 +16,13 @@ import { store } from './game/storage'
 import { getLang, hasLang, setLang } from './i18n/lang'
 import { strings, t } from './i18n/strings'
 import { STAGE_LOST_EVENT, loadStage, mountFallback, type EraDressing, type Fallback, type QualityTier, type Stage, type StampKind } from './scene/index'
+import type { DayTitle, FlashKind, ImmersiveFallback, ImmersiveStage, SheetSpec, VoicePlayer, VoiceState } from './ui/contract'
 import { h } from './ui/h'
-import { messageText } from './ui/paper'
-import { speak } from './ui/speak'
+import { buildSheet, dayTitleFor } from './ui/message'
+import { createFx, type Fx } from './ui/overlay'
 import { renderCredits } from './ui/screens/credits'
-import { renderDay, setTimer } from './ui/screens/day'
+import { renderDailyEnd } from './ui/screens/daily'
+import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
 import { renderEnd, type EndProps } from './ui/screens/end'
 import { MODE_KEY, renderHome, suggestedEra, type Best } from './ui/screens/home'
 import { renderIntro } from './ui/screens/intro'
@@ -27,26 +30,48 @@ import { renderLanguage } from './ui/screens/language'
 import { renderSetup } from './ui/screens/setup'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
-export interface AppEnv { now(): number; random(): number; url: URL }
+export interface AppEnv {
+  now(): number
+  random(): number
+  url: URL
+  /** Read-aloud. Defaults to the era voices module when it is in the build. */
+  voice?: VoicePlayer
+}
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
 const LOW_TIME = 0.3 // under this share of the agarbatti, it ticks every second
 const MAX_FRAME_MS = 1000 // one long frame (a stall, a resume) never burns more than this
 const STAMP_IMPACT_MS = 720 // raise 200 + move 360 + hover 70 + press 90 (animateStamp in scene/props.ts)
 const ANIM_GUARD_MS = 3500 // a stage animation that never settles must not stall the game
+const STAGE_WAIT_MS = 6000 // a day waits this long for the 3D stage before using the 2D desk
 const TIERS: QualityTier[] = ['low', 'mid', 'high']
+const IST_OFFSET_MS = 330 * 60_000
+const DAY_MS = 86_400_000
+
+// The era voices land in src/audio/voice.ts. Until that module is in the build this finds nothing
+// and the Listen button stays away; nothing here breaks either way.
+const VOICE_MODULE = import.meta.glob<{ voice: VoicePlayer }>('./audio/voice.ts')
 
 /** What the controller needs from a desk: the 3D stage or the 2D fallback. */
 interface Desk {
   setEra(id: EraId): void
-  showPaper(): void
+  establish(): Promise<void>
+  dayTitle(t: DayTitle): Promise<void>
+  showMessage(s: SheetSpec): Promise<void>
+  redrawMessage(s: SheetSpec): void
   stamp(kind: StampKind): Promise<void>
+  flash(kind: FlashKind): void
   caught(): Promise<void>
+  skip(): void
   setPaused(p: boolean): void
   dispose(): void
-  /** When the stamp hits the paper, for the thunk. */
+  /** When the stamp hits the paper, for the thunk and the flash. */
   impactMs: number
 }
+
+/** The stage as it is today plus whatever of the immersive API it already has. */
+type AnyStage = Stage & Partial<ImmersiveStage>
+type AnyFallback = Fallback & Partial<ImmersiveFallback>
 
 type Play =
   | { kind: 'chapter'; era: Era; difficulty: Difficulty; state: ChapterState }
@@ -69,19 +94,23 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   let screen: Screen = 'lang'
   let play: Play | null = null
+  let readable = false // the paper is in view: stamps work, the agarbatti burns
   let revealed = false
   let busy = false // a stamp is being animated
-  let gen = 0 // bumps on every navigation; async work started before it is dropped
+  let gen = 0 // bumps on every navigation and every new day; async work started before it is dropped
 
   let muted = store.get<unknown>('muted', false) === true
 
   // the desk (3D stage or 2D fallback), and what it should show
+  const fx: Fx = createFx(root.stage, reducedMotion)
   let desk: Desk | null = null
   let deskEra: EraId | null = suggestedEra(ERAS, bests())?.id ?? null
   let deskDirty = false // a paper, a stamp or the caught dimming is on it
-  let deskPaper = false // a day is on screen
-  let holdStage = false // the reveal or the end screen: the desk holds still
   let stageLoad: Promise<void> | null = null
+
+  // read-aloud
+  let voice: VoicePlayer | null = null
+  let voiceState: VoiceState = 'idle'
 
   // the agarbatti
   let timerArmed = false
@@ -114,11 +143,19 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     attach(null)
   })
 
-  if (params.has('debug')) {
+  if (env.voice) bindVoice(env.voice)
+  else {
+    const load = VOICE_MODULE['./audio/voice.ts']
+    if (load) load().then((m) => alive() && bindVoice(m.voice), (err: unknown) => console.warn('[app] read-aloud could not load', err))
+  }
+
+  // ?inspect exposes the game state to test scripts without the stage's ?debug overlay.
+  if (params.has('debug') || params.has('inspect')) {
     ;(window as unknown as { __ft?: unknown }).__ft = {
       get screen() { return screen },
       get play() { return play },
       get revealed() { return revealed },
+      get readable() { return readable },
     }
   }
 
@@ -158,28 +195,56 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     } else {
       desk = fallbackDesk(mountFallback(root.stage, deskEra ?? ERAS[0]?.id ?? 'delhi-1857'))
     }
-    if (deskPaper) desk.showPaper()
+    const p = play
+    if (p && screen === 'day') {
+      // A desk that arrives once the paper was readable (a lost context) shows it at once; during
+      // the arrival, arrive() brings it in on whichever desk is there.
+      if (readable || revealed) {
+        void desk.showMessage(sheetFor(p, getLang()))
+        desk.skip()
+      }
+    } else if (screen === 'home' || screen === 'setup' || screen === 'intro' || screen === 'lang') {
+      void desk.establish()
+    }
     syncPause()
   }
 
-  function stageDesk(s: Stage, dressingFor: (id: EraId) => EraDressing): Desk {
+  function stageDesk(s: AnyStage, dressingFor: (id: EraId) => EraDressing): Desk {
     return {
       setEra: (id) => s.setEra(dressingFor(id)),
-      showPaper: () => s.showPaper({ lean: false }), // our paper covers the desk's sheet; keep the room in view
+      establish: () => (s.establish ? s.establish() : Promise.resolve()),
+      dayTitle: (x) => (s.dayTitle ? s.dayTitle(x) : Promise.resolve()),
+      showMessage: (x) => {
+        if (s.showMessage) return s.showMessage(x)
+        s.showPaper({ lean: true })
+        return Promise.resolve()
+      },
+      redrawMessage: (x) => s.redrawMessage?.(x),
       stamp: (k) => s.stamp(k),
+      flash: (k) => s.flash?.(k),
       caught: () => s.caught(),
+      skip: () => s.skip?.(),
       setPaused: (p) => s.setPaused(p),
       dispose: () => s.dispose(),
       impactMs: reducedMotion ? 0 : STAMP_IMPACT_MS,
     }
   }
 
-  function fallbackDesk(f: Fallback): Desk {
+  /** The flat desk draws the same sheet; the title, the flash and the ink come from the DOM layer. */
+  function fallbackDesk(f: AnyFallback): Desk {
     return {
       setEra: (id) => f.setEra(id),
-      showPaper: () => undefined,
-      stamp: () => Promise.resolve(),
+      establish: () => Promise.resolve(),
+      dayTitle: (x) => fx.title(x),
+      showMessage: (x) => (f.showMessage ? f.showMessage(x) : Promise.resolve()),
+      redrawMessage: (x) => f.redrawMessage?.(x),
+      stamp: (k) => {
+        fx.imprint(k)
+        return Promise.resolve()
+      },
+      flash: (k) => (f.flash ? f.flash(k) : fx.flash(k)),
       caught: () => Promise.resolve(),
+      skip: () => fx.skip(),
       setPaused: () => undefined,
       dispose: () => f.dispose(),
       impactMs: 0,
@@ -194,7 +259,13 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     desk?.setEra(id)
   }
 
-  /** The agarbatti runs only on a day in progress with the tab visible; the desk holds still while hidden or under the reveal and the end. */
+  /** The wide shot of the room, behind the cards. */
+  function establish(): void {
+    fx.clear()
+    if (desk) void desk.establish()
+  }
+
+  /** The agarbatti runs only on a day in progress with the tab visible; the room holds still only while hidden. */
   function syncPause(): void {
     if (!alive()) return
     const hidden = document.hidden === true
@@ -206,7 +277,30 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       cancelAnimationFrame(timerRaf)
       timerRaf = 0
     }
-    desk?.setPaused(hidden || holdStage)
+    desk?.setPaused(hidden)
+  }
+
+  // ------------------------------------------------------------------ read-aloud
+
+  function bindVoice(v: VoicePlayer): void {
+    voice = v
+    v.onState((s) => {
+      voiceState = s
+      if (screen === 'day') setVoiceState(ui, s)
+    })
+    if (screen === 'day' && !revealed) drawDay()
+  }
+
+  function stopVoice(): void {
+    voice?.stop()
+  }
+
+  function toggleVoice(): void {
+    const p = play
+    const msg = p && currentMessage(p)
+    if (!voice || !p || !msg || !readable || revealed) return
+    if (voiceState === 'loading' || voiceState === 'playing') return voice.stop()
+    voice.play({ era: p.era.id, id: msg.id, lang: getLang(), day: p.state.day }).catch(() => undefined)
   }
 
   // ------------------------------------------------------------------ the agarbatti
@@ -231,7 +325,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     timerLast = now
     timeLeft = Math.max(0, timeLeft - dt / 1000)
     const frac = timeLeft / timeTotal
-    setTimer(ui, frac)
+    setTimer(ui, frac, timeLeft)
     if (frac < LOW_TIME && timeLeft > 0) {
       const whole = Math.ceil(timeLeft)
       if (whole < lastWhole) {
@@ -253,16 +347,25 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function leave(): void {
     gen++
     play = null
+    readable = false
     revealed = false
     busy = false
-    deskPaper = false
+    stopVoice()
     disarmTimer()
     clearToast()
+  }
+
+  function toggleSound(): boolean {
+    muted = !muted
+    store.set('muted', muted)
+    audio.setMuted(muted)
+    return !muted
   }
 
   function showLanguage(): void {
     leave()
     screen = 'lang'
+    establish()
     renderLanguage(ui, {
       pick: (l) => {
         setLang(l)
@@ -274,11 +377,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function showHome(): void {
     leave()
     screen = 'home'
-    holdStage = false
     audio.ambience(null)
     setDeskEra(deskEra ?? suggestedEra(ERAS, bests())?.id)
+    establish()
     syncPause()
-    renderHome(ui, { eras: ERAS, best: bests(), dailyDone: dailyDone(), soundOn: !muted }, {
+    renderHome(ui, { eras: ERAS, best: bests(), dailyDone: dailyDone(), soundOn: !muted, ...(today() ? { dailyNumber: today()!.number } : {}) }, {
       chapter: (id) => {
         void ensureStage()
         showSetup(eraById(id))
@@ -298,9 +401,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         showHome()
       },
       sound: () => {
-        muted = !muted
-        store.set('muted', muted)
-        audio.setMuted(muted)
+        toggleSound()
         showHome()
       },
       credits: () => showCredits(showHome),
@@ -316,8 +417,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function showSetup(era: Era): void {
     leave()
     screen = 'setup'
-    holdStage = false
     setDeskEra(era.id)
+    establish()
     audio.ambience(era.id)
     syncPause()
     renderSetup(ui, { era }, { start: (d) => showIntro(era, d), back: showHome })
@@ -325,6 +426,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   function showIntro(era: Era, d: Difficulty): void {
     screen = 'intro'
+    establish()
     audio.cue('page')
     renderIntro(ui, { era }, { next: () => startChapter(era, d) })
   }
@@ -339,7 +441,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       return
     }
     leave()
-    holdStage = false
     setDeskEra(era.id)
     audio.ambience(era.id)
     play = { kind: 'chapter', era, difficulty: d, state }
@@ -358,19 +459,52 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     return dayDate(p.era, DAYS.hard - p.state.days + p.state.day)
   }
 
+  /** What the paper shows today. */
+  function sheetFor(p: Play, lang = getLang()): SheetSpec {
+    const msg = currentMessage(p)
+    if (!msg) throw new Error(`No message for day ${p.state.day}`)
+    const pencil = p.kind === 'daily' ? false : pencilOn(p.state.difficulty, p.state.day)
+    return buildSheet({ era: p.era, msg, isoDate: isoDateFor(p), lang, pencil })
+  }
+
   function beginDay(): void {
     const p = play
     if (!p) return
+    const token = ++gen
+    stopVoice()
+    readable = false
     revealed = false
     busy = false
-    holdStage = false
-    deskPaper = true
     deskDirty = true
-    syncPause()
-    desk?.showPaper()
-    audio.cue('arrive')
+    fx.clear()
+    timerArmed = false
     timeLeft = timeTotal = TIMER_S[p.state.difficulty]
+    syncPause()
+    screen = 'day'
     drawDay()
+    void arrive(p, token)
+  }
+
+  /** The day title, then the message comes in. Only once it can be read do the stamps and the agarbatti start. */
+  async function arrive(p: Play, token: number): Promise<void> {
+    const stale = () => token !== gen || play !== p || !alive()
+    if (!desk) await guard(ensureStage(), STAGE_WAIT_MS)
+    if (stale()) return
+    if (!desk) attach(null)
+    const lang = getLang()
+    await guard(desk ? desk.dayTitle(dayTitleFor(p.state.day, isoDateFor(p), lang)) : Promise.resolve())
+    if (stale()) return
+    audio.cue('arrive')
+    const d = desk
+    await guard(d ? d.showMessage(sheetFor(p, lang)) : Promise.resolve())
+    if (stale()) return
+    if (desk && desk !== d) {
+      // the desk changed under the arrival (a lost context): show the paper on the new one
+      void desk.showMessage(sheetFor(p))
+      desk.skip()
+    } else if (getLang() !== lang) desk?.redrawMessage(sheetFor(p)) // the language changed during the arrival
+    readable = true
+    setReadable(ui)
     armTimer(TIMER_S[p.state.difficulty])
   }
 
@@ -379,32 +513,41 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (!p) return
     screen = 'day'
     const lang = getLang()
-    const isoDate = isoDateFor(p)
     renderDay(ui, {
       era: p.era,
       state: p.state,
-      isoDate,
-      timerFrac: timeLeft / timeTotal,
       lang,
+      sheet: sheetFor(p, lang),
+      timerFrac: timeLeft / timeTotal,
+      secs: timeLeft,
+      readable,
       revealed,
-      ...(p.kind === 'daily' ? { pencil: false, allRules: true } : {}),
+      soundOn: !muted,
+      ...(voice ? { voice: voiceState } : {}),
+      ...(p.kind === 'daily' ? { daily: p.daily.number, allRules: true } : {}),
     }, {
       stamp: (v) => void onStamp(v),
-      speak: () => {
-        const msg = currentMessage(p)
-        if (msg) speak(messageText(msg, isoDate, lang), lang)
-      },
+      listen: toggleVoice,
       tab: () => audio.cue('page'),
       next: onNext,
+      skip: () => desk?.skip(),
+      sound: () => setSound(ui, toggleSound(), getLang()),
+      lang: () => {
+        setLang(getLang() === 'en' ? 'hi' : 'en')
+        stopVoice()
+        drawDay()
+        if (readable || revealed) desk?.redrawMessage(sheetFor(p))
+      },
       quit: showHome,
     })
   }
 
   async function onStamp(v: Verdict): Promise<void> {
     const p = play
-    if (!p || busy || revealed || p.state.phase !== 'reading') return
+    if (!p || busy || revealed || !readable || p.state.phase !== 'reading') return
     busy = true
     const token = gen
+    stopVoice()
     disarmTimer()
     p.state = stamp(p.state, v)
     const correct = p.state.lastCorrect === true
@@ -412,14 +555,14 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       p.results = [...p.results, correct]
       saveDaily(p.daily, p.results)
     }
-    // The paper steps aside and the stamps stop taking taps while the desk plays the stamp (or
-    // the caught beat when the agarbatti burnt out).
-    ui.querySelector('.screen--day')?.classList.add('is-stamping')
+    // The stamps stop taking taps while the desk plays the stamp, or the caught beat when the
+    // agarbatti burnt out. A tap on the room finishes the animation.
+    setStamping(ui, v)
+    const flash: FlashKind = correct ? 'right' : 'wrong'
     if (v !== 'timeout') {
-      ui.querySelector(`[data-stamp="${v}"]`)?.classList.add('is-chosen')
-      await stampDesk(v)
+      await stampDesk(v, flash)
       if (token !== gen) return
-    }
+    } else desk?.flash(flash)
     if (correct) audio.cue('correct')
     else {
       audio.cue('caught')
@@ -428,23 +571,23 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     }
     revealed = true
     busy = false
-    holdStage = true
-    syncPause()
     drawDay()
   }
 
-  async function stampDesk(kind: StampKind): Promise<void> {
+  /** The stamp comes down; the thunk and the room's flash land on impact. */
+  async function stampDesk(kind: StampKind, flash: FlashKind): Promise<void> {
     const d = desk
-    let played = false
-    const thunk = () => {
-      if (played) return
-      played = true
+    let hit = false
+    const impact = () => {
+      if (hit) return
+      hit = true
       audio.cue(kind === 'asli' ? 'stampAsli' : 'stampTota')
+      d?.flash(flash)
     }
-    const timer = setTimeout(thunk, d ? d.impactMs : 0)
+    const timer = setTimeout(impact, d ? d.impactMs : 0)
     await guard(d ? d.stamp(kind) : Promise.resolve())
     clearTimeout(timer)
-    thunk()
+    impact()
   }
 
   function onNext(): void {
@@ -476,18 +619,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function showEnd(props: EndProps, line: string, again: () => void): void {
     leave()
     screen = 'end'
-    holdStage = true
     syncPause()
-    const draw = () => {
-      screen = 'end'
-      renderEnd(ui, props, {
-        again,
-        home: showHome,
-        share: () => void share(line),
-        credits: () => showCredits(draw),
-      })
-    }
-    draw()
+    renderEnd(ui, props, { again, home: showHome, share: () => void share(line) })
   }
 
   // ------------------------------------------------------------------ the daily puzzle
@@ -526,7 +659,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // Answers are saved as they are given, so leaving mid-puzzle resumes rather than restarts.
     const results = rec && rec.era === d.era ? rec.results.slice(0, d.messages.length) : []
     leave()
-    holdStage = false
     setDeskEra(d.era)
     audio.ambience(d.era)
     const state: ChapterState = { era: d.era, difficulty: 'medium', day: results.length + 1, days: d.messages.length, queue: d.messages, phase: 'reading' }
@@ -542,17 +674,19 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   function showDailyResult(d: Daily, results: boolean[]): void {
     const era = eraById(d.era)
-    const allRight = results.every(Boolean)
-    const state: ChapterState = { era: era.id, difficulty: 'medium', day: d.messages.length, days: d.messages.length, queue: d.messages, phase: allRight ? 'survived' : 'caught' }
     const line = shareText({ daily: d.number, eraTitle: era.title[getLang()], results })
-    showEnd(
-      { era, state, outcome: allRight ? 'survived' : 'caught', receipts: era.receipts, epilogue: era.epilogue, share: line, againLabel: t('dailyChapter', getLang()) },
-      line,
-      () => {
+    leave()
+    screen = 'end'
+    syncPause()
+    const now = env.now()
+    renderDailyEnd(ui, { era, number: d.number, results, nextAt: nextDailyAt(now), now: env.now }, {
+      share: () => void share(line),
+      chapter: () => {
         void ensureStage()
         showSetup(era)
       },
-    )
+      home: showHome,
+    })
   }
 
   // ------------------------------------------------------------------ progress
@@ -603,6 +737,11 @@ function parseSeed(raw: string | null): number | null {
   if (raw === null || raw.trim() === '') return null
   const s = raw.trim()
   return /^\d+$/.test(s) ? Number(s) >>> 0 : seedFrom(s)
+}
+
+/** The next Aaj ka Taar opens at midnight IST. */
+export function nextDailyAt(now: number): number {
+  return (Math.floor((now + IST_OFFSET_MS) / DAY_MS) + 1) * DAY_MS - IST_OFFSET_MS
 }
 
 /** Resolves when `p` settles or after `ms`, whichever is first. */

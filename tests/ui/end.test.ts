@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderEnd } from '../../src/ui/screens/end'
+import { countdown, renderDailyEnd } from '../../src/ui/screens/daily'
 import { setLang } from '../../src/i18n/lang'
 import { strings } from '../../src/i18n/strings'
 import type { Era, Receipt } from '../../src/content/types'
 import { chapter, era, mount } from './helpers'
 
-const handlers = () => ({ again: vi.fn(), home: vi.fn(), share: vi.fn(), credits: vi.fn() })
+const handlers = () => ({ again: vi.fn(), home: vi.fn(), share: vi.fn() })
 
 function withReceipts(e: Era): Receipt[] {
   e.receipts.push({
@@ -36,20 +37,18 @@ describe('renderEnd', () => {
     expect(root.querySelectorAll('.receipt')).toHaveLength(2)
   })
 
-  it('shows the result line for the last message: written for the game', () => {
+  it('keeps the card short: at most three lines of what happened next and two clippings', () => {
     const e = era()
+    withReceipts(e)
+    e.receipts.push({ ...e.receipts[0]!, id: 'rc3', quote: { en: 'A third quote.', hi: 'तीसरी बात।' } })
+    e.epilogue.survived = [1, 2, 3, 4].map((n) => ({ en: `Line ${n}.`, hi: `पंक्ति ${n}।` }))
     const root = mount()
-    // day 7 is m1, genuine, no document
     renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue }, handlers())
-    expect(root.querySelector('.last')!.textContent).toContain('Written for the game · every detail checks out')
-  })
-
-  it('shows the result line for the last message: a real document', () => {
-    const e = era()
-    e.messages[0]!.document = { sources: [{ id: 's1', loc: 'p. 3' }] }
-    const root = mount()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 3, lastCorrect: false }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue }, handlers())
-    expect(root.querySelector('.last')!.textContent).toContain('📜 Real document')
+    expect(root.querySelectorAll('.end__epilogue > p')).toHaveLength(3)
+    expect(root.textContent).not.toContain('Line 4.')
+    expect(root.querySelectorAll('.receipt')).toHaveLength(2)
+    expect(root.textContent).not.toContain('A third quote.')
+    expect(root.querySelector('.last')).toBeNull() // the last message was already shown on its result card
   })
 
   it('shows the epilogue for the outcome with its sources', () => {
@@ -71,31 +70,62 @@ describe('renderEnd', () => {
     expect(root.textContent).toContain(strings.hi.survivedTitle)
   })
 
-  it('wires again, home, share and credits, and previews share text', () => {
+  it('wires again, home and share', () => {
     const e = era()
     const root = mount()
     const on = handlers()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue, share: 'Firangi Tota · Aaj ka Taar #1\n✅✅' }, on)
-    expect(root.querySelector('.share__text')!.textContent).toContain('✅✅')
-    for (const a of ['again', 'home', 'share', 'credits']) root.querySelector<HTMLElement>(`[data-action="${a}"]`)!.click()
+    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue }, on)
+    for (const a of ['again', 'home', 'share']) root.querySelector<HTMLElement>(`[data-action="${a}"]`)!.click()
     expect(on.again).toHaveBeenCalledTimes(1)
     expect(on.home).toHaveBeenCalledTimes(1)
     expect(on.share).toHaveBeenCalledTimes(1)
-    expect(on.credits).toHaveBeenCalledTimes(1)
   })
+})
 
-  it('puts the share grid (the daily result) first, right under the verdict', () => {
+describe('renderDailyEnd', () => {
+  const NOW = Date.parse('2026-10-25T06:00:00Z')
+  const dailyOn = () => ({ share: vi.fn(), chapter: vi.fn(), home: vi.fn() })
+
+  it('shows the daily score, the share grid, come back tomorrow and the countdown, not the chapter copy', () => {
     const e = era()
     const root = mount()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'caught', day: 5, lastCorrect: false }), outcome: 'caught', receipts: e.receipts, epilogue: e.epilogue, share: 'Firangi Tota · Aaj ka Taar #1\n✅❌' }, handlers())
-    const order = [...root.querySelector('.end__scroll')!.children].map((c) => c.className.split(' ')[0])
-    expect(order.indexOf('share')).toBe(order.indexOf('end__head') + 1)
+    const on = dailyOn()
+    renderDailyEnd(root, { era: e, number: 2, results: [true, true, false, true, true], nextAt: NOW + (7 * 3600 + 12 * 60 + 33) * 1000, now: () => NOW }, on)
+    expect(root.querySelector('.daily-end__title')!.textContent).toBe('Aaj ka Taar #2 · 4/5')
+    const grid = root.querySelector<HTMLElement>('.share-grid')!
+    expect(grid.dataset.results).toBe('11011')
+    expect(grid.querySelectorAll('svg.tile--right')).toHaveLength(4)
+    expect(grid.querySelectorAll('svg.tile--wrong')).toHaveLength(1)
+    expect(grid.getAttribute('aria-label')).toBe('4 of 5 right')
+    expect(root.textContent).toContain(strings.en.dailyTomorrow)
+    expect(root.querySelector('.daily-end__clock')!.textContent).toBe('07:12:33')
+    expect(root.textContent).not.toContain(strings.en.caughtTitle)
+    expect(root.textContent).not.toContain(strings.en.survivedTitle)
+    for (const a of ['share', 'again', 'home']) root.querySelector<HTMLElement>(`[data-action="${a}"]`)!.click()
+    expect(on.share).toHaveBeenCalledTimes(1)
+    expect(on.chapter).toHaveBeenCalledTimes(1)
+    expect(on.home).toHaveBeenCalledTimes(1)
+    expect(root.querySelector('[data-action="again"]')!.textContent).toBe(strings.en.dailyChapter)
   })
 
-  it('relabels the again button when asked (the daily puzzle offers the full chapter)', () => {
-    const e = era()
-    const root = mount()
-    renderEnd(root, { era: e, state: chapter(e, { phase: 'survived', day: 7 }), outcome: 'survived', receipts: e.receipts, epilogue: e.epilogue, againLabel: 'Play the full chapter' }, handlers())
-    expect(root.querySelector('[data-action="again"]')!.textContent).toBe('Play the full chapter')
+  it('counts down every second', () => {
+    vi.useFakeTimers()
+    try {
+      let now = NOW
+      const root = mount()
+      renderDailyEnd(root, { era: era(), number: 2, results: [true, false, true, true, true], nextAt: NOW + 65_000, now: () => now }, dailyOn())
+      expect(root.querySelector('.daily-end__clock')!.textContent).toBe('00:01:05')
+      now += 2000
+      vi.advanceTimersByTime(2000)
+      expect(root.querySelector('.daily-end__clock')!.textContent).toBe('00:01:03')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('writes the countdown as hh:mm:ss and never goes below zero', () => {
+    expect(countdown(0)).toBe('00:00:00')
+    expect(countdown(-5000)).toBe('00:00:00')
+    expect(countdown((23 * 3600 + 59 * 60 + 59) * 1000 + 999)).toBe('23:59:59')
   })
 })

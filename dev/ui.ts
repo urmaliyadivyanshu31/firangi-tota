@@ -13,6 +13,9 @@ import { renderIntro } from '../src/ui/screens/intro'
 import { renderDay } from '../src/ui/screens/day'
 import { renderEnd } from '../src/ui/screens/end'
 import { renderCredits } from '../src/ui/screens/credits'
+import { renderDailyEnd } from '../src/ui/screens/daily'
+import { buildSheet } from '../src/ui/message'
+import { pencilOn } from '../src/game/config'
 
 const q = new URLSearchParams(location.search)
 const screen = q.get('screen') ?? 'home'
@@ -41,10 +44,13 @@ function chapter(over: Partial<ChapterState> = {}): ChapterState {
 
 const root = document.getElementById('ui')!
 const log = (name: string) => (...a: unknown[]) => console.log(name, ...a)
-const dayOn = { stamp: log('stamp'), speak: log('speak'), tab: log('tab'), next: log('next') }
+const dayOn = { stamp: log('stamp'), listen: log('listen'), tab: log('tab'), next: log('next'), skip: log('skip'), sound: log('sound'), lang: log('lang'), quit: log('quit') }
 
-function day(s: ChapterState, extra: { revealed?: boolean; timerFrac?: number } = {}) {
-  renderDay(root, { era, state: s, isoDate: dayDate(era, s.day), timerFrac: extra.timerFrac ?? 0.72, lang, revealed: extra.revealed ?? false }, dayOn)
+function day(s: ChapterState, extra: { revealed?: boolean; timerFrac?: number; readable?: boolean } = {}) {
+  const msg = s.queue[s.day - 1]!
+  const sheet = buildSheet({ era, msg, isoDate: dayDate(era, s.day), lang, pencil: pencilOn(s.difficulty, s.day) })
+  const frac = extra.timerFrac ?? 0.72
+  renderDay(root, { era, state: s, lang, sheet, timerFrac: frac, secs: frac * 90, readable: extra.readable ?? true, revealed: extra.revealed ?? false, soundOn: true, voice: 'idle' }, dayOn)
 }
 
 const four = (['petition', 'note', 'radio', 'telegram'] as Channel[]).map((ch, i) => {
@@ -106,10 +112,15 @@ switch (screen) {
       outcome: survived ? 'survived' : 'caught',
       receipts: era.receipts,
       epilogue: era.epilogue,
-      share: survived ? 'Firangi Tota · Aaj ka Taar #1 · 1857\n✅✅✅❌✅\nfirangitota.com' : undefined,
-    }, { again: log('again'), home: log('home'), share: log('share'), credits: log('credits') })
+    }, { again: log('again'), home: log('home'), share: log('share') })
     break
   }
+  case 'daily-end':
+    renderDailyEnd(root, { era, number: 3, results: [true, true, false, true, true], nextAt: Date.now() + 7 * 3600_000, now: Date.now }, { share: log('share'), chapter: log('chapter'), home: log('home') })
+    break
+  case 'day-arriving':
+    day(chapter(), { readable: false, timerFrac: 1 })
+    break
   case 'credits':
     renderCredits(root, { back: log('back') })
     break
