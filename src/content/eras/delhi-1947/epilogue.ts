@@ -19,12 +19,12 @@ export const epilogue: Epilogue = {
   ],
   caught: [
     {
-      en: 'You passed a forgery; a rumour left the cipher room with an official stamp. No one arrests you, and no single telegram caused what followed.',
-      hi: 'आपने एक जाली तार पास कर दिया; एक अफ़वाह सरकारी मुहर लेकर साइफ़र कमरे से निकल गई। आपको कोई गिरफ़्तार नहीं करता, और आगे जो हुआ वह किसी एक तार से नहीं हुआ।',
+      en: "Without the true word, 'the wildest rumours' ran ahead, as Auchinleck warned that week.",
+      hi: "सच्ची ख़बर न पहुँची, तो 'सबसे बेतुकी अफ़वाहें' आगे दौड़ीं, जैसा ऑकिनलेक ने उसी हफ़्ते चेताया था।",
     },
     {
-      en: "Auchinleck warned that 'the wildest rumours are current'. In the months after, 12 to 18 million were uprooted; estimates of the dead run from 200,000 to 2 million.",
-      hi: "ऑकिनलेक ने चेताया: 'सबसे बेतुकी अफ़वाहें फैल रही हैं।' अगले महीनों में करीब 1.2 से 1.8 करोड़ लोग उजड़े; मरने वालों के अंदाज़े 2 लाख से 20 लाख तक हैं।",
+      en: 'In the months after, 12 to 18 million were uprooted and estimates of the dead run from 200,000 to 2 million; no single telegram caused that.',
+      hi: 'अगले महीनों में करीब 1.2 से 1.8 करोड़ लोग उजड़े, और मरने वालों के अंदाज़े 2 लाख से 20 लाख तक हैं; यह किसी एक तार से नहीं हुआ।',
     },
   ],
   sources: [
