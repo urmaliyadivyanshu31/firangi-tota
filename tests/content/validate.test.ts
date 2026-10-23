@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fixture from '../../src/content/eras/_fixture'
-import { validateEra } from '../../src/content/validate'
+import { countSentences, validateEra } from '../../src/content/validate'
 import type { Era } from '../../src/content/types'
 
 const fresh = (): Era => structuredClone(fixture)
@@ -112,5 +112,43 @@ describe('validateEra', () => {
     const e = fresh()
     e.windowStart = '1857-13-45'
     has(e, 'windowStart')
+  })
+
+  describe('word limits', () => {
+    const long = (n: number) => Array.from({ length: n }, () => 'word').join(' ')
+    it('flags an over-long English message with the exact problem string', () => {
+      const e = fresh()
+      msg(e, 'm1').text.en = long(31)
+      expect(validateEra(e)).toContain('m1: text too long (31 words, max 30) [en]')
+    })
+    it('lets Hindi use 1.5x, rounded up', () => {
+      const e = fresh()
+      msg(e, 'm1').text.hi = long(45)
+      expect(validateEra(e).some((p) => p.includes('[hi]'))).toBe(false)
+      msg(e, 'm1').text.hi = long(46)
+      expect(validateEra(e)).toContain('m1: text too long (46 words, max 45) [hi]')
+    })
+    it('counts words after filling templates', () => {
+      const e = fresh()
+      msg(e, 'm1').text.en = `${long(28)} {date}`
+      expect(validateEra(e)).toContain('m1: text too long (31 words, max 30) [en]')
+    })
+    it('limits sentences per message but not abbreviations or initials', () => {
+      const e = fresh()
+      msg(e, 'm1').text.en = 'One. Two? Three! Four.'
+      expect(validateEra(e)).toContain('m1: text too many sentences (4, max 3) [en]')
+      msg(e, 'm1').text.en = 'Mr. M.K. Gandhi sent No. 5 to Dr. Rao. Done.'
+      expect(validateEra(e).some((p) => p.includes('sentences'))).toBe(false)
+      expect(countSentences('एक। दो। तीन। चार।')).toBe(4)
+    })
+    it('limits other fields and can be switched off', () => {
+      const e = fresh()
+      e.facts[0]!.value.en = long(7)
+      e.epilogue.caught = [e.epilogue.caught[0]!, e.epilogue.caught[0]!, e.epilogue.caught[0]!]
+      const problems = validateEra(e)
+      expect(problems).toContain('f1: value too long (7 words, max 6) [en]')
+      expect(problems).toContain('epilogue: caught too many paragraphs (3, max 2)')
+      expect(validateEra(e, { wordLimits: false }).some((p) => p.includes('too long'))).toBe(false)
+    })
   })
 })

@@ -4,6 +4,82 @@ import { earliestDay } from '../game/run'
 
 const LANGS: Lang[] = ['en', 'hi']
 
+/** Minimalism limits (see .superpowers/sdd/.../minimal-brief.md). Flip per era in tests as cuts merge. */
+export const ENFORCE_WORD_LIMITS = true
+
+const HI_FACTOR = 1.5
+const ABBREVIATIONS = new Set(['no', 'mr', 'mrs', 'ms', 'dr', 'st', 'sri', 'shri', 'smt', 'vs', 'etc', 'col', 'gen', 'lt', 'capt', 'sir', 'jr', 'sr', 'mt', 'rs', 'e.g', 'i.e', 'viz', 'approx'])
+
+const words = (text: string): string[] => text.split(/\s+/).filter(Boolean)
+
+/** Number of sentences, splitting on . ? ! and । but not after abbreviations (No., Mr.), initials (M.K.) or "..." */
+export function countSentences(text: string): number {
+  const tokens = words(text)
+  let n = 0
+  let open = false
+  for (const tok of tokens) {
+    open = true
+    const m = /^(.*?)([.?!।]+)["'”’)\]]*$/.exec(tok)
+    if (!m) continue
+    const [, stem = '', marks = ''] = m
+    if (marks === '.' || marks.endsWith('.')) {
+      if (/\.{2,}$/.test(marks)) continue
+      if (marks === '.' && (ABBREVIATIONS.has(stem.toLowerCase()) || /^([A-Za-z]\.)*[A-Za-z]$/.test(stem))) continue
+    }
+    n++
+    open = false
+  }
+  return n + (open ? 1 : 0)
+}
+
+export function wordLimits(era: Era): string[] {
+  const out: string[] = []
+  const cap = (id: string, field: string, v: L10n | undefined, max: number) => {
+    for (const lang of LANGS) {
+      const raw = v?.[lang]
+      if (typeof raw !== 'string') continue
+      const limit = lang === 'hi' ? Math.ceil(HI_FACTOR * max) : max
+      const n = words(fillTemplate(raw, era.windowStart, lang)).length
+      if (n > limit) out.push(`${id}: ${field} too long (${n} words, max ${limit}) [${lang}]`)
+    }
+  }
+  cap(era.id, 'persona', era.persona, 12)
+  cap(era.id, 'forger', era.forger, 14)
+  era.intro.forEach((p, i) => cap(era.id, `intro[${i}]`, p, 30))
+  for (const f of era.facts) {
+    cap(f.id, 'label', f.label, 3)
+    cap(f.id, 'value', f.value, 6)
+  }
+  for (const r of era.rules) cap(r.id, 'text', r.text, 14)
+  for (const m of era.messages) {
+    cap(m.id, 'text', m.text, 30)
+    cap(m.id, 'from', m.from, 5)
+    cap(m.id, 'to', m.to, 5)
+    m.tells?.forEach((t, i) => cap(m.id, `tells[${i}].explain`, t.explain, 14))
+    if (m.why) cap(m.id, 'why.text', m.why.text, 14)
+    for (const lang of LANGS) {
+      const raw = m.text?.[lang]
+      if (typeof raw !== 'string') continue
+      const n = countSentences(fillTemplate(raw, era.windowStart, lang))
+      if (n > 3) out.push(`${m.id}: text too many sentences (${n}, max 3) [${lang}]`)
+    }
+  }
+  for (const r of era.receipts) {
+    cap(r.id, 'quote', r.quote, 25)
+    cap(r.id, 'joke', r.joke, 10)
+    if (r.theirSide) cap(r.id, 'theirSide', r.theirSide, 16)
+    cap(r.id, 'who', r.who, 6)
+  }
+  const paras = (field: 'survived' | 'caught', max: number) => {
+    const list = era.epilogue[field]
+    if (list.length > max) out.push(`epilogue: ${field} too many paragraphs (${list.length}, max ${max})`)
+    list.forEach((p, i) => cap('epilogue', `${field}[${i}]`, p, 28))
+  }
+  paras('survived', 3)
+  paras('caught', 2)
+  return out
+}
+
 const isDay = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 14
 
 const isIsoDate = (s: string): boolean => {
@@ -12,7 +88,7 @@ const isIsoDate = (s: string): boolean => {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s
 }
 
-export function validateEra(era: Era): string[] {
+export function validateEra(era: Era, opts: { wordLimits?: boolean } = {}): string[] {
   const problems: string[] = []
   const add = (id: string, msg: string) => problems.push(id ? `${id}: ${msg}` : msg)
 
@@ -118,6 +194,8 @@ export function validateEra(era: Era): string[] {
   era.epilogue.survived.forEach((p, i) => l10n('epilogue', `survived[${i}]`, p))
   era.epilogue.caught.forEach((p, i) => l10n('epilogue', `caught[${i}]`, p))
   refs('epilogue', 'epilogue', era.epilogue.sources, true)
+
+  if (opts.wordLimits ?? ENFORCE_WORD_LIMITS) problems.push(...wordLimits(era))
 
   return problems
 }

@@ -22,7 +22,7 @@ const era: Era = {
   facts: [
     {
       id: 'f1',
-      label: { en: 'Day of the week', hi: 'सप्ताह का दिन' },
+      label: { en: 'Weekday', hi: 'वार' },
       value: { en: 'The rising began on a Monday.', hi: 'विद्रोह सोमवार को शुरू हुआ।' },
       sources: [{ id: 's1', loc: 'p. 12' }],
     },
