@@ -88,3 +88,12 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   period-styled cards and buttons.
 - It should look Indian and of its era, and be more beautiful than the reference: period paper
   forms, saffron, indigo and maroon, block-print borders.
+
+## 2026-10-24: Voices
+
+- Read-aloud uses ElevenLabs voices in the style of each era (an older court munshi in 1857, a young
+  Punjabi voice in 1929, a woman radio announcer through an old-radio filter in 1942, a crisp official
+  in 1947), in Hindi and English. The browser voice was too poor.
+- Two separate controls: a sound on/off toggle, and a speaker icon that reads the message aloud.
+- The ElevenLabs key lives only on the server (never in the repo or the browser). The voice endpoint
+  accepts only our own message ids, and each clip is generated once and cached.
