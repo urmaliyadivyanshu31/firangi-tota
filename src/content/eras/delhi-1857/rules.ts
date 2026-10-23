@@ -56,8 +56,8 @@ export const rules: Rule[] = [
     id: 'found-letters',
     arrivesOnDay: 9,
     text: {
-      en: "Beware of letters 'found' at a gate that accuse the King's own ministers.",
-      hi: "दरवाज़े पर 'मिली' उस चिट्ठी से बचिए जो बादशाह के अपने वज़ीरों पर इल्ज़ाम लगाए।",
+      en: "Beware of letters 'found' at a gate that accuse the King's own men.",
+      hi: "दरवाज़े पर 'मिली' उस चिट्ठी से बचिए जो बादशाह के अपने लोगों पर इल्ज़ाम लगाए।",
     },
   },
 ]

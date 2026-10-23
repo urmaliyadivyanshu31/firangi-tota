@@ -1,14 +1,15 @@
-import type { Era, Lang } from '../../content/types'
+import type { Era, Lang, Receipt, SourceRef } from '../../content/types'
 import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
-import type { SheetSpec, VoiceState, VoiceStyle } from '../contract'
-import { announce, h, mount } from '../h'
+import type { VoiceState } from '../../audio/voice'
+import type { ScreenRect, SheetSpec } from '../../scene/index'
+import { announce, h, mount, svg } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
 import { relatedFacts } from '../pencil'
-import { proofFold, tellLines, truthEl } from '../reveal'
+import { formatSource, sourceList } from '../reveal'
 
 // A day over the live room. The message itself is on the 3D paper; the DOM keeps a visually
 // hidden copy for screen readers, and a Listen button plays the era's recorded voice. Around it: the thin top bar, the case file and
@@ -32,25 +33,42 @@ export interface DayProps {
   secs: number
   /** The paper is in view: the stamps work. Before that the arrival plays and a tap skips it. */
   readable: boolean
-  /** Show the result card (right/wrong, kind, why or tells, sources, Next). */
+  /** The verdict is in: it is on the paper's back; the DOM shows Next (or the end's buttons). */
   revealed: boolean
   soundOn: boolean
   /** Read-aloud is available (the era voices are loaded), and what it is doing now. */
   voice?: VoiceState
-  /** Which voice reads. Defaults to the era voice. */
-  voiceStyle?: VoiceStyle
+  /** The voices on offer (the dastango, and a guest once enabled) and the one that reads. */
+  voices?: VoiceOption[]
+  voiceStyle?: string
   /** The Aaj ka Taar number: the mode chip names the puzzle instead of the difficulty. */
   daily?: number
   /** Show every rule, none tagged new (the daily puzzle plays with the whole rulebook). */
   allRules?: boolean
+  /** The verdict is on the 3D paper's back: the DOM keeps only the buttons, the source and a mirror. */
+  onPaper?: PaperReveal
+}
+
+export interface PaperReveal {
+  /** Everything the paper's back says, for screen readers. */
+  mirror: string
+  /** Where the paper's source line is on screen (CSS px), for the button over it. */
+  sourceRect: ScreenRect | null
+  /** Where the paper is on screen, to set the buttons under it. */
+  paperRect?: ScreenRect | null
+  /** The citations that button opens, and the honest note on what kind of text this was. */
+  sources: SourceRef[]
+  kind?: string
+  /** The chapter ends here: Play again, Home and Share, with the receipts behind a tap. */
+  end?: { receipts: Receipt[] }
 }
 
 export interface DayHandlers {
   stamp(v: Verdict): void
   /** Listen: play the message aloud, or stop it while it plays. */
   listen(): void
-  /** The player picked the era voice or the dastango. */
-  voiceStyle?(s: VoiceStyle): void
+  /** The player picked a voice (only offered when there is more than one). */
+  voiceStyle?(id: string): void
   tab(t: Tab): void
   next(): void
   /** A tap during an animation: finish it now. */
@@ -59,6 +77,17 @@ export interface DayHandlers {
   lang(): void
   /** Leave for home. When given, a home button shows in the top bar. */
   quit?(): void
+  /** The chapter's end, on the paper: play again, go home, share. */
+  again?(): void
+  home?(): void
+  share?(): void
+}
+
+export interface VoiceOption {
+  id: string
+  label: string
+  /** Shown whenever this voice is selected (a voice used with someone's permission). */
+  credit?: string
 }
 
 const MODE_LABEL = { easy: 'modeEasy', medium: 'modeMedium', hard: 'modeHard' } as const
@@ -127,7 +156,10 @@ export function setReadable(root: HTMLElement): void {
   if (!a || a.root !== root || a.props.readable) return
   a.props = { ...a.props, readable: true }
   a.screen.classList.remove('is-arriving')
-  for (const b of stampButtons(a.screen)) b.disabled = false
+  for (const b of stampButtons(a.screen)) {
+    b.disabled = false
+    b.classList.add('is-ready') // a small wobble: they have come alive
+  }
   const listen = a.screen.querySelector<HTMLButtonElement>('[data-action="listen"]')
   if (listen) listen.disabled = false
   const copy = a.screen.querySelector<HTMLElement>('.day__message')
@@ -287,16 +319,19 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     tabs[k] = b
     return b
   }
+  // A rubber stamp on a wooden mount: the handle on the left, the inked face with both names, the meaning and the key
   const stampBtn = (v: Verdict, arrow: string, key: string) =>
     h('button', { class: `stamp stamp--${v}`, type: 'button', 'data-stamp': v, disabled: waiting, onclick: () => on.stamp(v) },
+      stampHandle(),
       h('span', { class: 'stamp__face' },
-        h('span', { class: 'stamp__dev', lang: 'hi' }, t(v, 'hi')),
-        h('span', { class: 'stamp__lat', lang: 'en' }, t(v, 'en'))),
-      h('span', { class: 'stamp__foot' },
-        h('span', { class: 'stamp__hint' }, t(v === 'asli' ? 'asliHint' : 'totaHint', lang)),
-        h('kbd', { class: 'stamp__key', 'aria-hidden': 'true' }, `${arrow} ${key}`)))
+        h('span', { class: 'stamp__names' },
+          h('span', { class: 'stamp__dev', lang: 'hi' }, t(v, 'hi')),
+          h('span', { class: 'stamp__lat', lang: 'en' }, t(v, 'en'))),
+        h('span', { class: 'stamp__foot' },
+          h('span', { class: 'stamp__hint' }, t(v === 'asli' ? 'asliHint' : 'totaHint', lang)),
+          h('kbd', { class: 'stamp__key', 'aria-hidden': 'true' }, `${arrow} ${key}`))))
 
-  // Listen, with a chevron (or a long press) for the choice of voice
+  // Listen; with more than one voice, a chevron (or a long press) picks the voice
   let listenGroup: HTMLElement | null = null
   let picker: HTMLElement | null = null
   let more: HTMLButtonElement | null = null
@@ -315,6 +350,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       },
       onpointerdown: () => {
         longPressed = false
+        if (!picker) return
         pressTimer = window.setTimeout(() => {
           longPressed = true
           setPicker(true)
@@ -326,18 +362,25 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     h('span', { class: 'listen__icon' }, micIcon(), h('span', { class: 'listen__spin', 'aria-hidden': 'true' })),
     h('span', { class: 'listen__label' }, t('listen', lang)))
     applyVoice(listenBtn, p.voice, lang)
-    const style = p.voiceStyle ?? 'era'
-    const option = (s: VoiceStyle) =>
-      h('button', { class: 'voice-opt', type: 'button', role: 'radio', 'aria-checked': String(style === s), 'data-style': s,
-        onclick: () => {
-          for (const o of picker?.querySelectorAll('.voice-opt') ?? []) o.setAttribute('aria-checked', String((o as HTMLElement).dataset.style === s))
-          setPicker(false)
-          on.voiceStyle?.(s)
-        } }, t(s === 'era' ? 'voiceEra' : 'voiceDastango', lang))
-    picker = h('div', { class: 'voice-picker', role: 'radiogroup', 'aria-label': t('voiceStyle', lang) }, option('era'), option('dastango'))
-    more = h('button', { class: 'listen__more', type: 'button', 'data-action': 'voice-style', 'aria-label': t('voiceStyle', lang), title: t('voiceStyle', lang),
-      'aria-expanded': 'false', onclick: () => setPicker(!picker?.classList.contains('is-open')) }, chevronIcon())
-    listenGroup = h('div', { class: 'listen-group' }, listenBtn, more, picker)
+    const voices = p.voices ?? []
+    const chosen = voices.find((v) => v.id === p.voiceStyle) ?? voices[0]
+    const credit = h('p', { class: 'voice-credit' }, chosen?.credit ?? '')
+    credit.hidden = !chosen?.credit
+    if (voices.length > 1) {
+      const option = (v: VoiceOption) =>
+        h('button', { class: 'voice-opt', type: 'button', role: 'radio', 'aria-checked': String(chosen?.id === v.id), 'data-style': v.id,
+          onclick: () => {
+            for (const o of picker?.querySelectorAll('.voice-opt') ?? []) o.setAttribute('aria-checked', String((o as HTMLElement).dataset.style === v.id))
+            credit.textContent = v.credit ?? ''
+            credit.hidden = !v.credit
+            setPicker(false)
+            on.voiceStyle?.(v.id)
+          } }, v.label)
+      picker = h('div', { class: 'voice-picker', role: 'radiogroup', 'aria-label': t('voiceStyle', lang) }, voices.map(option))
+      more = h('button', { class: 'listen__more', type: 'button', 'data-action': 'voice-style', 'aria-label': t('voiceStyle', lang), title: t('voiceStyle', lang),
+        'aria-expanded': 'false', onclick: () => setPicker(!picker?.classList.contains('is-open')) }, chevronIcon())
+    }
+    listenGroup = h('div', { class: `listen-group${picker ? ' has-picker' : ''}` }, listenBtn, more, picker, credit)
   }
 
   const controls = revealed ? null : h('footer', { class: 'day__controls' },
@@ -345,21 +388,51 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     h('div', { class: 'tabs' }, tab('file', t('caseFile', lang), null), tab('rules', t('rulebook', lang), anyNew ? newTag() : null), listenGroup),
     h('div', { class: 'stamps' }, stampBtn('asli', '←', '1'), stampBtn('tota', '→', '2')))
 
-  // ---- the result card
+  // ---- the result is on the 3D paper's back: here only the buttons, the source and a mirror
   let nextBtn: HTMLButtonElement | null = null
   let result: HTMLElement | null = null
   if (revealed) {
-    const correct = state.lastCorrect === true
-    nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang))
-    result = h('div', { class: 'result' },
-      h('section', { class: `pcard reveal reveal--${correct ? 'right' : 'wrong'}`, role: 'dialog', 'aria-labelledby': 'ft-verdict' },
-        jaali('pcard__jaali'),
-        h('div', { class: 'pcard__scroll' },
-          h('h2', { id: 'ft-verdict', class: 'reveal__word' }, h('span', null, t(verdictKey(state), lang))),
-          truthEl(msg, lang),
-          tellLines(msg, lang),
-          proofFold(msg, era, lang)),
-        h('footer', { class: 'pcard__foot' }, nextBtn)))
+    const r: PaperReveal = p.onPaper ?? { mirror: '', sourceRect: null, sources: [] }
+    const pop = h('div', { class: 'source-pop pcard', role: 'dialog', 'aria-label': t('source', lang), id: 'ft-source-pop' },
+      h('div', { class: 'pcard__scroll' }, r.kind ? h('p', { class: 'kind' }, r.kind) : null, sourceList(r.sources, era)))
+    pop.hidden = true
+    const toggleSource = () => {
+      pop.hidden = !pop.hidden
+      srcBtn.setAttribute('aria-expanded', String(!pop.hidden))
+    }
+    const label = `${t('source', lang)}: ${r.sources[0] ? formatSource(r.sources[0], era) : ''}`
+    const rect = r.sourceRect
+    const srcBtn = h('button', { class: rect ? 'source-hit' : 'btn btn--chit source-slip', type: 'button', 'data-action': 'source', 'aria-label': label,
+      'aria-controls': 'ft-source-pop', 'aria-expanded': 'false', onclick: toggleSource,
+      ...(rect ? { style: `left:${Math.round(rect.x)}px;top:${Math.round(rect.y + rect.h / 2 - Math.max(48, rect.h) / 2)}px;width:${Math.max(48, Math.round(rect.w))}px;height:${Math.max(48, Math.round(rect.h))}px` } : {}) },
+      rect ? null : t('source', lang))
+    const end = r.end
+    const again = on.again
+    const home = on.home
+    const share = on.share
+    const actions = end
+      ? [
+          share ? h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'share', onclick: () => share() }, t('share', lang)) : null,
+          h('div', { class: 'row2' },
+            h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'again', onclick: () => again?.() }, t('playAgain', lang)),
+            h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'home', onclick: () => home?.() }, t('home', lang))),
+          end.receipts.length
+            ? h('details', { class: 'fold fold--receipts paper-receipts' }, h('summary', { class: 'fold__head' }, t('receipts', lang)),
+                h('div', { class: 'receipts' }, end.receipts.slice(0, 2).map((rc, i) =>
+                  h('article', { class: 'receipt', 'data-receipt': rc.id, style: `--i:${i}` },
+                    h('blockquote', { class: 'receipt__quote' }, h('p', null, rc.quote[lang])),
+                    h('p', { class: 'receipt__who' }, rc.who[lang]),
+                    h('p', { class: 'receipt__joke' }, rc.joke[lang]),
+                    h('p', { class: 'receipt__source' }, formatSource(rc.source, era))))))
+            : null,
+        ]
+      : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
+    // under the paper: centred on it in landscape, along the bottom on a phone
+    const under = r.paperRect && isWide() ? `left:${Math.round(r.paperRect.x)}px;width:${Math.round(r.paperRect.w)}px;right:auto` : ''
+    result = h('div', { class: 'paper-result' },
+      h('p', { class: 'sr-only paper-result__mirror', 'aria-live': 'polite' }, r.mirror),
+      rect ? srcBtn : null, pop,
+      h('footer', { class: 'paper-result__actions', ...(under ? { style: under } : {}) }, rect ? null : srcBtn, actions))
   }
 
   const copy = h('article', { class: 'day__message sr-only', lang, 'aria-live': 'polite', 'aria-atomic': 'true' })
@@ -401,4 +474,15 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     announce(`${t(verdictKey(state), lang)}${stop} ${t(msg.real ? 'wasGenuine' : 'wasForged', lang)}${stop}`)
     nextBtn?.focus({ preventScroll: true })
   }
+}
+
+/** The wooden handle of a rubber stamp, seen from the side. */
+function stampHandle(): SVGSVGElement {
+  return svg(`<svg class="stamp__handle" viewBox="0 0 30 40" aria-hidden="true" focusable="false">
+  <ellipse cx="15" cy="8.5" rx="8" ry="7" fill="#8a5a32"/>
+  <ellipse cx="13" cy="6.5" rx="3.6" ry="2.4" fill="#c99a62" opacity=".7"/>
+  <path d="M11.5 14h7l1.4 12h-9.8z" fill="#6e4424"/>
+  <path d="M4 26h22v6H4z" fill="#9b6a3c"/>
+  <path d="M5 32h20v4.5H5z" fill="currentColor"/>
+</svg>`)
 }

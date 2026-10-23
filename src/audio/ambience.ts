@@ -1,7 +1,8 @@
 // Era ambience: a synthesized layer (always available) plus a recorded bed (lazy, optional).
 import type { EraId } from '../content/types'
 import {
-  callBell, naqqaraHit, staticBed, tanpuraDrone, telegraphClick, tuningWhistle, valveHum, windBed,
+  arpSiren, callBell, crows, hooves, naqqaraHit, smallBell, staticBed, tanpuraDrone, telegraphClick, thunder, tramBell,
+  trainWhistle, tuningWhistle, valveHum, wash, windBed,
   type Stoppable,
 } from './synth'
 
@@ -19,6 +20,33 @@ export interface AmbienceHandle { stop(): void }
 type Schedule = (ctx: AudioContext, dest: AudioNode, later: (ms: number, fn: () => void) => void) => Stoppable[]
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a)
+
+type OneShot = (ctx: AudioContext, dest: AudioNode, t: number) => void
+
+// The street beyond the room, now and then (every 20–60 s, far off and low). Nothing religious and
+// no slogans.
+const LIFE: Record<EraId, OneShot[]> = {
+  'delhi-1857': [
+    (c, d, t) => { naqqaraHit(c, d, t); naqqaraHit(c, d, t + 0.32); naqqaraHit(c, d, t + 0.64) },
+    (c, d, t) => hooves(c, d, t),
+    (c, d, t) => crows(c, d, t),
+  ],
+  'lahore-1929': [
+    (c, d, t) => smallBell(c, d, t, 1760, false), // a tonga's bell
+    (c, d, t) => trainWhistle(c, d, t),
+    (c, d, t) => smallBell(c, d, t, 2349, true), // a bicycle's thumb bell
+  ],
+  'bombay-1942': [
+    (c, d, t) => tramBell(c, d, t),
+    (c, d, t) => arpSiren(c, d, t), // wartime Bombay tested its air-raid sirens
+    (c, d, t) => wash(c, d, t, 500, 3.5, 0.05), // the sea
+  ],
+  'delhi-1947': [
+    (c, d, t) => wash(c, d, t, 1500, 2.6, 0.06), // a gust of rain on the glass
+    (c, d, t) => thunder(c, d, t),
+    (c, d, t) => { let at = t; for (let i = 0; i < 7; i++) { telegraphClick(c, d, at); at += rand(0.08, 0.22) } },
+  ],
+}
 
 // Each era mixes its own procedural layer. Nothing religious or political; no telegraph in 1857.
 const LAYERS: Record<EraId, Schedule> = {
@@ -76,6 +104,17 @@ export function startAmbience(
     timers.push(setTimeout(() => { if (!stopped) fn() }, ms))
   }
   const layers = LAYERS[id](ctx, bus, later)
+  // the occasional sound from outside, never the same one twice running
+  let lastLife = -1
+  const life = (): void => later(rand(20000, 60000), () => {
+    const shots = LIFE[id]
+    let i = Math.floor(Math.random() * shots.length)
+    if (i === lastLife && shots.length > 1) i = (i + 1) % shots.length
+    lastLife = i
+    try { shots[i]?.(ctx, bus, ctx.currentTime + 0.05) } catch { /* never break the bed */ }
+    life()
+  })
+  life()
   let bed: AudioBufferSourceNode | null = null
 
   void loadBed(BED_FILES[id]).then((buf) => {

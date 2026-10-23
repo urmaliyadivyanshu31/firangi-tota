@@ -12,7 +12,7 @@ const en = {
   langShort: 'EN',
 
   // Home
-  premise: 'Four desks of the freedom struggle, and one forger: the Firangi Tota',
+  premise: 'Four desks of the freedom struggle. Among the true messages, the Firangi Tota slips in forgeries',
   continue: 'Continue',
   dailyTitle: 'Aaj ka Taar',
   dailyPlay: 'Play',
@@ -39,10 +39,13 @@ const en = {
 
   // Intro
   introYou: 'You',
+  forgerLabel: 'Tota',
+  chaptersLabel: 'Chapters',
+  homeCredits: 'Inspired by Politburo or Parrot · Credits',
   introHow: 'Check each message against the case file. Stamp ASLI if genuine, TOTA if forged.',
   introStakes: 'One wrong stamp, or a burnt-out agarbatti, and you are caught.',
   next: 'Next',
-  begin: 'Start day 1',
+  begin: 'Begin',
 
   // Day
   dayOf: 'Day {n} of {total}',
@@ -62,8 +65,6 @@ const en = {
   listenStop: 'Stop',
   voiceError: 'Voice unavailable',
   voiceStyle: 'Choose the voice',
-  voiceEra: 'Era voice',
-  voiceDastango: 'Dastango',
   timerLabel: 'Agarbatti, time left',
   fieldFrom: 'From',
   fieldTo: 'To',
@@ -81,14 +82,13 @@ const en = {
   kindWritten: 'Written for the game · every detail checks out',
   kindForged: 'Forged by the Tota · written for the game',
   source: 'Source',
-  tellLabel: 'The tell',
-  whyLabel: 'Why it checks out',
 
   // End
-  survivedTitle: 'You survived',
-  caughtTitle: 'You were caught',
-  nextHappened: 'What happened next',
-  caughtHappened: 'What happened to people like you',
+  caughtStamp: 'Caught',
+  survivedStamp: 'Survived',
+  verdictPassed: 'You passed the Tota\'s forgery',
+  verdictRejected: 'You rejected a genuine message',
+  receipts: 'Receipts',
   theirSide: 'Their side',
   playAgain: 'Play again',
   home: 'Home',
@@ -114,7 +114,7 @@ const hi: Strings = {
   langChange: 'भाषा बदलें',
   langShort: 'हिंदी',
 
-  premise: 'आज़ादी की लड़ाई की चार मेज़ें, और एक जालसाज़: फ़िरंगी तोता',
+  premise: 'आज़ादी की लड़ाई की चार मेज़ें। सच्चे संदेशों के बीच फ़िरंगी तोता जाली संदेश मिला देता है',
   continue: 'आगे खेलें',
   dailyTitle: 'आज का तार',
   dailyPlay: 'खेलें',
@@ -139,10 +139,13 @@ const hi: Strings = {
   back: 'वापस',
 
   introYou: 'आप',
+  forgerLabel: 'तोता',
+  chaptersLabel: 'अध्याय',
+  homeCredits: 'Politburo or Parrot से प्रेरित · क्रेडिट',
   introHow: 'हर संदेश को केस फ़ाइल से मिलाएँ। सच्चा हो तो असली, जाली हो तो तोता।',
   introStakes: 'एक ग़लत मुहर, या अगरबत्ती बुझी, और आप पकड़े गए।',
   next: 'आगे',
-  begin: 'पहला दिन शुरू करें',
+  begin: 'शुरू करें',
 
   dayOf: 'दिन {n} / {total}',
   dayLabel: 'दिन',
@@ -161,8 +164,6 @@ const hi: Strings = {
   listenStop: 'रोको',
   voiceError: 'आवाज़ नहीं आ पाई',
   voiceStyle: 'आवाज़ चुनें',
-  voiceEra: 'युग की आवाज़',
-  voiceDastango: 'दास्तानगो',
   timerLabel: 'अगरबत्ती, बचा हुआ समय',
   fieldFrom: 'भेजने वाला',
   fieldTo: 'पाने वाला',
@@ -179,13 +180,12 @@ const hi: Strings = {
   kindWritten: 'खेल के लिए लिखा गया · हर बात सच है',
   kindForged: 'तोते की जालसाज़ी · खेल के लिए लिखी गई',
   source: 'स्रोत',
-  tellLabel: 'चूक कहाँ थी',
-  whyLabel: 'यह सच्चा क्यों है',
 
-  survivedTitle: 'आप बच निकले',
-  caughtTitle: 'आप पकड़े गए',
-  nextHappened: 'आगे क्या हुआ',
-  caughtHappened: 'आप जैसे लोगों के साथ क्या हुआ',
+  caughtStamp: 'पकड़े गए',
+  survivedStamp: 'बच गए',
+  verdictPassed: 'आपने जाली संदेश को असली माना',
+  verdictRejected: 'आपने असली संदेश को जाली माना',
+  receipts: 'उन दिनों…',
   theirSide: 'उनकी बात',
   playAgain: 'फिर खेलें',
   home: 'होम',
@@ -212,13 +212,14 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'back', 'introYou', 'next', 'begin', 'dayOf', 'asli',
   'tota', 'asliHint', 'totaHint', 'caseFile', 'rulebook', 'newTag', 'closePanel',
   'right', 'wrong', 'wasGenuine', 'wasForged', 'kindReal', 'kindWritten',
-  'kindForged', 'survivedTitle', 'caughtTitle', 'nextHappened', 'caughtHappened',
+  'kindForged', 
   'theirSide', 'playAgain', 'home', 'share', 'creditsInspired', 'creditsCode',
   'tooSlow', 'copied', 'copyFailed', 'shareWhatsApp', 'dailyChapter',
+  'forgerLabel', 'chaptersLabel', 'homeCredits', 'caughtStamp', 'survivedStamp', 'verdictPassed', 'verdictRejected', 'receipts',
   'langShort', 'premise', 'dailyScore', 'dailyTomorrow', 'dailyNext', 'shareGrid', 'dayLabel',
   'dayTitle', 'skip', 'blankFact', 'sheetPetitionHead', 'sheetRadioHead',
-  'sheetTelegramHead', 'tellLabel', 'whyLabel', 'source', 'sound', 'listen', 'listenStop', 'voiceError',
-  'voiceStyle', 'voiceEra', 'voiceDastango',
+  'sheetTelegramHead', 'source', 'sound', 'listen', 'listenStop', 'voiceError',
+  'voiceStyle',
 ]
 
 export function t(key: keyof Strings, lang: Lang): string {

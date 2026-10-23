@@ -45,6 +45,46 @@ export interface DayTitle {
   small: string
 }
 
+/** The era-styled rubber stamp on the back of the paper after the verdict. */
+export interface RevealStamp {
+  text: string
+  tone: 'caught' | 'survived' | 'right' | 'wrong'
+  /** A Mughal seal (1857), a police stamp (1929), RAIDED (1942), a telegraph office stamp (1947). */
+  style: 'seal' | 'police' | 'raided' | 'telegraph'
+}
+
+/** The verdict, played out on the same paper: marks on the front, then the back. */
+export interface RevealSpec {
+  outcome: 'right' | 'wrong' | 'timeout'
+  /** Was the message genuine. */
+  real: boolean
+  /** Show the real-document tag now (it is after the stamp). */
+  documentMark: boolean
+  /** Substrings of the sheet (body, from, to) to ring in pencil: the slip, or the details that check out. */
+  highlight: string[]
+  /** One handwritten line in the margin ("X, not Y"). */
+  note: string
+  /** The paper's reverse side, set in the same form typography. */
+  back: {
+    verdictLine: string
+    tell: string
+    /** Only when caught: the era's ending title and its first line. */
+    consequence?: string
+    stamp?: RevealStamp
+    /** Short "Author, Title (Year), p." */
+    source: string
+  }
+  lang: Lang
+}
+
+/** A rectangle on screen in CSS pixels, for an accessible button laid over the paper. */
+export interface ScreenRect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export type FlashKind = 'right' | 'wrong'
 
 /**
@@ -106,7 +146,13 @@ export interface EraDressing {
 }
 
 /** Moments the stage marks, for sound: a title lands, a seal cracks, a typewriter dings … */
-export type StageCueName = 'title' | 'flip' | 'arrive' | 'seal' | 'unfold' | 'flap' | 'type' | 'ding' | 'stamp' | 'right' | 'wrong'
+export type StageCueName =
+  | 'title' | 'flip' | 'arrive' | 'seal' | 'unfold' | 'flap'
+  // the typewriter: one 'key' per struck character, 'space' per space, 'ding' near the margin, 'return' per line
+  | 'key' | 'space' | 'ding' | 'return'
+  | 'stamp' | 'right' | 'wrong'
+  // the verdict on the paper: the stamp that comes down on its back
+  | 'verdictStamp'
 
 export interface StageOptions {
   reducedMotion: boolean
@@ -150,6 +196,18 @@ export interface Stage {
   flash(kind: FlashKind): void
   /** Finishes the current animation (title, arrival, camera move, stamp) at once. */
   skip(): void
+
+  /**
+   * The verdict on the paper itself (about 3 s, skippable): pencil rings round `highlight` and the
+   * margin note write themselves, then the sheet lifts and turns over to its back, which carries
+   * the verdict, the tell, the consequence, an era stamp and the source. Calling it again for the
+   * same message (a language change) redraws at once, without the animation.
+   */
+  reveal(s: RevealSpec): Promise<void>
+  /** Where the source line on the paper's back is on screen (CSS px), for an accessible button. */
+  getSourceRect(): ScreenRect | null
+  /** Where the paper is on screen (CSS px), to place a Next button below it. */
+  getPaperRect(): ScreenRect | null
 }
 
 /**

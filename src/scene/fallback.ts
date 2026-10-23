@@ -3,8 +3,8 @@
 // No three.js here, so the app can show it without loading the 3D chunk.
 import type { EraId } from '../content/types'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
-import { TITLE_TONE, drawDayTitle, drawSheet, loadSheetFonts, measureSheet } from './sheet'
-import type { DayTitle, FlashKind, SheetSpec, SheetStamp, StampKind } from './types'
+import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type PageRect } from './sheet'
+import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StampKind } from './types'
 
 export interface Fallback {
   setEra(id: EraId): void
@@ -18,6 +18,10 @@ export interface Fallback {
   dayTitle(t: DayTitle): Promise<void>
   /** The stamp's imprint on the paper. */
   stamp(kind: StampKind): Promise<void>
+  /** The verdict on the same paper: the pencil marks and note, then its back (see Stage.reveal). */
+  reveal(r: RevealSpec): Promise<void>
+  getSourceRect(): ScreenRect | null
+  getPaperRect(): ScreenRect | null
   dispose(): void
 }
 
@@ -46,6 +50,10 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   let current = era
   let sheet: SheetSpec | null = null
   let stamp: SheetStamp | null = null
+  // the verdict: marks over the front, then the back in its place
+  let verdict: { r: RevealSpec; side: 'front' | 'back' } | null = null
+  let paperBox: { x: number; y: number; w: number; h: number } | null = null
+  let sourceRect: PageRect | null = null
   let title: DayTitle | null = null
   let flashK: { kind: FlashKind; t0: number } | null = null
   let raf = 0
@@ -71,7 +79,23 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
     drawDesk(g, W, H, ERA_PALETTES[current])
     if (title) drawTitleOver(g, W, H, title, current)
-    if (sheet) drawPaper(g, W, H, sheet, stamp, el)
+    if (sheet) {
+      const v = verdict
+      const out = drawPaper(g, W, H, sheet, stamp, el, (c, pw, ph) => {
+        if (!v || !sheet) return
+        if (v.side === 'back') {
+          sourceRect = drawSheetBack(c, pw, ph, sheet, v.r, { stamp: true }).source
+          return
+        }
+        const marks = highlightRects(c, sheet, v.r.highlight, ph / pw)
+        const m = measureSheet(c, sheet, ph / pw)
+        c.save()
+        const at = stamp?.at ?? m.stampAt
+        drawRevealMarks(c, pw, ph, marks, { color: v.r.real ? MARK_COLORS.verified : MARK_COLORS.slip, note: v.r.note, lang: v.r.lang, body: m.body, bodyEnd: m.bodyEnd, progress: 1, keep: true, avoid: [stampBox(at[0], at[1], ph / pw)] })
+        c.restore()
+      })
+      paperBox = out
+    }
     if (flashK) {
       // keep the still for the flash frames (one canvas, resized only with the screen)
       base ??= document.createElement('canvas')
@@ -120,6 +144,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       sheet = null
       stamp = null
       title = null
+      verdict = null
       compose()
     },
     async showMessage(s) {
@@ -128,7 +153,31 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       title = null
       sheet = s
       stamp = null
+      verdict = null
       compose()
+    },
+    async reveal(r) {
+      if (!sheet) return
+      await fonts(r.lang)
+      if (disposed || !sheet) return
+      const again = verdict !== null
+      sheet = { ...sheet, documentMark: r.documentMark, revealed: true }
+      verdict = { r, side: again || reduced ? 'back' : 'front' }
+      compose()
+      if (verdict.side === 'back') return
+      await new Promise<void>((done) => setTimeout(done, 1500))
+      if (disposed || !verdict || verdict.r !== r) return
+      verdict = { r, side: 'back' }
+      compose()
+    },
+    getSourceRect() {
+      const b = paperBox
+      const s = sourceRect
+      if (!b || !s || verdict?.side !== 'back') return null
+      return { x: b.x + s.u0 * b.w, y: b.y + s.v0 * b.h, w: (s.u1 - s.u0) * b.w, h: (s.v1 - s.v0) * b.h }
+    },
+    getPaperRect() {
+      return sheet && paperBox ? { ...paperBox } : null
     },
     redrawMessage(s) {
       sheet = s
@@ -167,8 +216,19 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   }
 }
 
-/** The message's paper, as big as the screen allows between the HUD bars, turned a hair. */
-function drawPaper(g: CanvasRenderingContext2D, W: number, H: number, s: SheetSpec, stamp: SheetStamp | null, el: Element): void {
+/**
+ * The message's paper, as big as the screen allows between the HUD bars, turned a hair. `face`
+ * draws over (or instead of) the front: the verdict's marks, or the back. Returns its box.
+ */
+function drawPaper(
+  g: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  s: SheetSpec,
+  stamp: SheetStamp | null,
+  el: Element,
+  face?: (g: CanvasRenderingContext2D, pw: number, ph: number) => void,
+): { x: number; y: number; w: number; h: number } {
   // the app's layout (as in shots.ts): wide screens pin the case file in the left 366 px
   const wide = W >= 900 && W > H
   const top = insetPx(el, '--ft-hud-top', wide ? 96 : 90)
@@ -197,7 +257,10 @@ function drawPaper(g: CanvasRenderingContext2D, W: number, H: number, s: SheetSp
   g.shadowBlur = 0
   g.shadowOffsetY = 0
   drawSheet(g, pw, ph, s, stamp ?? undefined)
+  face?.(g, pw, ph)
   g.restore()
+  // (the turn is a hair; for hit boxes the upright box is close enough)
+  return { x: left + freeW / 2 - pw / 2, y: top + freeH / 2 - ph / 2, w: pw, h: ph }
 }
 
 function drawTitleOver(g: CanvasRenderingContext2D, W: number, H: number, t: DayTitle, era: EraId): void {
