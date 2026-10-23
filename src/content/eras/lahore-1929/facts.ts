@@ -51,7 +51,8 @@ export const facts: Fact[] = [
   {
     id: 'room',
     label: { en: 'McLeod Road room', hi: 'मैक्लोड रोड का कमरा' },
-    value: { en: 'No. 69, Rs 13 a month', hi: 'नंबर 69, 13 रुपये महीना' },
+    value: { en: 'No. 69, Rs 13, tenant B.C.', hi: 'नंबर 69, 13 रुपये, किरायेदार बी.सी.' },
+    // B.C. = Bhagwati Charan, the name in the landlord's register.
     sources: [{ id: 'noorani-1996', loc: "ch. 'Hour of Trial', p. 64 (the landlord's evidence)" }],
   },
   {

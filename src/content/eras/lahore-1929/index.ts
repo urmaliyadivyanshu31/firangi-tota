@@ -20,8 +20,8 @@ const era: Era = {
   },
   intro: [
     {
-      en: "Lahore, April 1929. Since December's shooting, HSRA comrades live in hiding. Their notes come to your rented room, and you pass them on by the rules.",
-      hi: 'लाहौर, अप्रैल 1929। दिसंबर की गोलीबारी के बाद से एच.एस.आर.ए. के साथी छिपकर रहते हैं। उनके पर्चे तुम्हारे किराए के कमरे में आते हैं, और तुम उन्हें नियमों से आगे भेजते हो।',
+      en: "Lahore, April 1929. Since December's shooting, HSRA comrades hide in the city; Bhagat Singh is away in Delhi. Their notes come to your room, and you pass them on.",
+      hi: 'लाहौर, अप्रैल 1929। दिसंबर की गोलीबारी के बाद से एच.एस.आर.ए. के साथी शहर में छिपे हैं; भगत सिंह दिल्ली गए हुए हैं। उनके पर्चे तुम्हारे कमरे में आते हैं, और तुम उन्हें आगे भेजते हो।',
     },
     {
       en: "The CID plants notes in the comrades' voice. Check each against your case file and rules. Stamp ASLI or TOTA. One mistake, and the next knock is the police.",
