@@ -4,7 +4,8 @@ import { ERAS, eraById } from '../src/content/registry'
 import type { EraId, Message } from '../src/content/types'
 import { TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, type Difficulty } from '../src/game/config'
 import { dailyFrom } from '../src/game/daily'
-import { mulberry32 } from '../src/game/rng'
+import { mulberry32, seedFrom } from '../src/game/rng'
+import { earnedLine, jackpotLine, rollReward } from '../src/game/rewards'
 import { chapterPost, chapterStory, dailyFact, dailyPost } from '../src/game/share'
 import { closeShareSlip } from '../src/ui/share-slip'
 import { createChapter } from '../src/game/state'
@@ -1926,5 +1927,114 @@ describe('Music mode: the gramophone record beside the horn', () => {
     click(ui, '.hud [data-action="music"]')
     expect($(ui, '.hud [data-action="music"]')!.title).toBe('कमरे की आवाज़')
     expect(gramo()!.hidden).toBe(true)
+  })
+})
+
+describe('rewards', () => {
+  const draws = (seed: string, era: EraId = 'delhi-1857', mode = 'easy') => mulberry32(seedFrom(`rewards|${seed}|${era}|${mode}`))
+  const earnCalls = () => m.stage.earn.mock.calls.map((c) => c[0] as EarnSpec)
+
+  it('a right stamp draws one seeded reward, keeps it, and drops it on the paper; a wrong one earns nothing', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    // the corner starts the chapter empty
+    expect(m.stage.setPile).toHaveBeenLastCalledWith({ era: 'delhi-1857', counts: {} })
+    const q = queueFor('delhi-1857', 'easy', 3)
+    const rng = draws('3')
+    const first = rollReward('delhi-1857', q[0]!.tier, rng)
+    click(ui, `[data-stamp="${right(q[0]!)}"]`)
+    await flush()
+    expect(earnCalls()).toEqual([{ drops: [first], after: { [first.item]: first.qty } }])
+    expect(JSON.parse(localStorage.getItem('ft:rewards')!)).toEqual({ 'delhi-1857': { [first.item]: first.qty } })
+    // the hold is not held up by it
+    holdOut()
+    await flush()
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    click(ui, `[data-stamp="${wrong(q[1]!)}"]`)
+    await flush()
+    expect(m.stage.earn).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(localStorage.getItem('ft:rewards')!)).toEqual({ 'delhi-1857': { [first.item]: first.qty } })
+    // a caught run says what it earned under the paper
+    expect($(ui, '.paper-result__earned')!.textContent).toBe(earnedLine({ [first.item]: first.qty }, 'en'))
+  })
+
+  it('surviving adds the keepsake on top, says the run in one line, and the collection shows between chapters', async () => {
+    const { ui } = boot('?lang=en&seed=8')
+    await toDay1(ui)
+    const q = queueFor('delhi-1857', 'easy', 8)
+    const rng = draws('8')
+    const expected: Record<string, number> = {}
+    for (let day = 1; day <= 7; day++) {
+      const d = rollReward('delhi-1857', q[day - 1]!.tier, rng)
+      expected[d.item] = (expected[d.item] ?? 0) + d.qty
+      click(ui, `[data-stamp="${right(q[day - 1]!)}"]`)
+      await flush()
+      if (day < 7) await onward(ui)
+    }
+    expected['seal-1857'] = (expected['seal-1857'] ?? 0) + 1
+    const last = earnCalls()[earnCalls().length - 1]!
+    expect(last.drops[last.drops.length - 1]).toEqual({ item: 'seal-1857', qty: 1, jackpot: false })
+    expect(last.after).toEqual(expected)
+    expect(m.stage.earn).toHaveBeenCalledTimes(7)
+    const line = $(ui, '.paper-result__earned')!.textContent!
+    expect(line).toBe(earnedLine(expected, 'en'))
+    expect(line).toMatch(/^You earned a court seal/)
+    expect(line).not.toMatch(/\.$/)
+    // in Hindi too
+    click(ui, '.hud [data-action="lang"] [data-lang="hi"]')
+    expect($(ui, '.paper-result__earned')!.textContent).toBe(earnedLine(expected, 'hi'))
+    // home: the desk's corner holds the whole collection, and the box on the paper opens a tag of counts
+    click(ui, '[data-action="home"]')
+    expect(m.stage.setPile).toHaveBeenLastCalledWith({ era: 'delhi-1857', counts: expected })
+    const box = $(ui, '[data-action="treasure"]')!
+    expect($(ui, '#ft-treasure')!.hidden).toBe(true)
+    box.click()
+    expect($(ui, '#ft-treasure')!.hidden).toBe(false)
+    expect(box.getAttribute('aria-expanded')).toBe('true')
+    expect($(ui, '#ft-treasure')!.textContent).toContain('दरबार की एक मुहर')
+    // another chapter with nothing earned shows no box
+    click(ui, '[data-era="lahore-1929"]')
+    expect($(ui, '[data-action="treasure"]')).toBeNull()
+    expect(m.stage.setPile).toHaveBeenLastCalledWith({ era: 'lahore-1929', counts: {} })
+  })
+
+  it('a jackpot says so on a chit by the treasure for a moment', async () => {
+    reduceMotion()
+    // a seed whose first draw is a jackpot
+    let seed = 0
+    for (let s = 1; s < 4000 && !seed; s++) {
+      const q = queueFor('delhi-1857', 'easy', s)
+      if (rollReward('delhi-1857', q[0]!.tier, draws(String(s))).jackpot) seed = s
+    }
+    expect(seed).toBeGreaterThan(0)
+    const { ui } = boot(`?lang=en&seed=${seed}`)
+    await toDay1(ui)
+    const q = queueFor('delhi-1857', 'easy', seed)
+    const d = rollReward('delhi-1857', q[0]!.tier, draws(String(seed)))
+    m.stage.getEarnRect.mockImplementation(() => ({ x: 100, y: 400, w: 40, h: 30 }))
+    click(ui, `[data-stamp="${right(q[0]!)}"]`)
+    await flush()
+    await new Promise((r) => setTimeout(r, 200))
+    const chit = document.querySelector<HTMLElement>('.reward-slip')!
+    expect(chit.textContent).toBe(jackpotLine(d, 'en'))
+    expect(chit.getAttribute('role')).toBe('status')
+    expect(chit.classList.contains('is-on')).toBe(true)
+    expect(chit.style.left).toBe('120px')
+    // gone with the day
+    click(ui, '[data-action="quit"]')
+    expect(document.querySelector('.reward-slip')).toBeNull()
+  })
+
+  it('a new desk mid-verdict shows today’s rewards already landed, and the pile without them', async () => {
+    const { ui, stage } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const q = queueFor('delhi-1857', 'easy', 3)
+    const first = rollReward('delhi-1857', q[0]!.tier, draws('3'))
+    click(ui, `[data-stamp="${right(q[0]!)}"]`)
+    await flush()
+    stage.dispatchEvent(new CustomEvent('ft:stage-lost', { cancelable: true }))
+    await flush()
+    expect(m.fallback.setPile).toHaveBeenCalledWith({ era: 'delhi-1857', counts: { [first.item]: 0 } })
+    expect(m.fallback.earn).toHaveBeenCalledWith({ drops: [first], after: { [first.item]: first.qty }, now: true })
   })
 })
