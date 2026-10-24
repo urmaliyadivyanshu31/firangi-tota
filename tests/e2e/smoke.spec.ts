@@ -395,3 +395,48 @@ test('plays under the production security headers (vercel.json) with no policy v
   await page.locator('[data-action="source"]').click()
   expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
 })
+
+test('the gramophone record switches to Music: YouTube’s own player from youtube-nocookie, kept for the next visit, nothing played', async ({ page }) => {
+  // the test never reaches YouTube: the player page is answered with a blank page, and under
+  // automation the game never asks for the IFrame API (?yt=1 only lets the frame get its address)
+  const asked: string[] = []
+  await page.route(/^https:\/\/(www\.)?youtube(-nocookie)?\.com\//, (r) => {
+    asked.push(r.request().url())
+    return r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>player</title>' })
+  })
+  await page.addInitScript(() => {
+    const w = window as unknown as { __csp: string[] }
+    w.__csp = []
+    document.addEventListener('securitypolicyviolation', (e) => w.__csp.push(`${e.violatedDirective} ${e.blockedURI}`))
+  })
+  await page.goto(`${START}&yt=1`)
+  await expect(page.locator('.screen--main')).toBeVisible()
+  await page.locator('[data-era="lahore-1929"]').click()
+  const rec = page.locator('.controls-dock [data-action="music"]')
+  await expect(rec).toHaveAttribute('aria-pressed', 'false')
+  await expect(rec).toHaveAttribute('aria-label', 'संगीत')
+  expect(asked).toEqual([]) // nothing of YouTube on page load
+  await rec.click()
+  await expect(rec).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.controls-dock [data-action="sound"]')).toHaveAttribute('aria-pressed', 'true')
+  const player = page.locator('.gramo .gramo__player')
+  await expect(player).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/Ha_P2DW9VR4\?.*enablejsapi=1/)
+  await expect(page.locator('.gramo')).toContainText('मेरा रंग दे बसंती चोला')
+  // YouTube's player is always visible and, once the cabinet has opened, at least 200 x 200 px
+  await expect.poll(async () => { const b = await player.boundingBox(); return b ? Math.min(b.width, b.height) : 0 }).toBeGreaterThanOrEqual(200)
+  expect(asked.some((u) => u.includes('iframe_api'))).toBe(false)
+  expect(await noHorizontalScroll(page)).toBe(true)
+  expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
+  // the next visit remembers Music, and still loads nothing until the first tap
+  asked.length = 0
+  await page.reload()
+  await expect(page.locator('.controls-dock [data-action="music"]')).toHaveAttribute('aria-pressed', 'true')
+  expect(asked).toEqual([])
+  await expect(page.locator('.gramo')).toHaveCount(0)
+  // put away from the cabinet: back to the room
+  await page.locator('[data-mode="easy"]').click()
+  await expect(page.locator('.gramo .gramo__player')).toBeVisible()
+  await page.locator('[data-action="music-fold"]').click()
+  await expect(page.locator('.gramo')).toBeHidden()
+  await expect(page.locator('.controls-dock [data-action="music"]')).toHaveAttribute('aria-pressed', 'false')
+})
