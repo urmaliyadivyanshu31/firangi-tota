@@ -79,7 +79,9 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
   let title: DayTitle | null = null
   let flashK: { kind: FlashKind; t0: number } | null = null
   // the caught sequence in progress, and the dark it leaves over the desk
-  let caughtRun: { t0: number; score: CaughtScore; next: number; sounded: boolean; done: () => void } | null = null
+  // (`ms` is its own clock: each frame adds at most 100 ms, so a tab hidden mid-alarm picks up
+  // where it left off instead of firing every beat at once)
+  let caughtRun: { last: number; ms: number; score: CaughtScore; next: number; sounded: boolean; done: () => void } | null = null
   let darkK = 0
   let raf = 0
   let disposed = false
@@ -166,7 +168,11 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     let dx = 0
     let dy = 0
     const c = caughtRun
-    const ms = c ? now - c.t0 : 0
+    if (c) {
+      c.ms += Math.min(100, Math.max(0, now - c.last))
+      c.last = now
+    }
+    const ms = c ? c.ms : 0
     if (c) {
       // the beats due by now: their sounds, and the knocks' shakes
       for (let b = c.score.beats[c.next]; b && b.at <= ms; b = c.score.beats[++c.next]) {
@@ -308,7 +314,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
       if (disposed || typeof requestAnimationFrame !== 'function') return Promise.resolve()
       return new Promise<void>((done) => {
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
-        caughtRun = { t0: now, score: caughtScore(current), next: 0, sounded: false, done }
+        caughtRun = { last: now, ms: 0, score: caughtScore(current), next: 0, sounded: false, done }
         compose() // keeps the still for the frames
         if (!raf) raf = requestAnimationFrame(frame)
       })

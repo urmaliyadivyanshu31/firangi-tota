@@ -282,6 +282,20 @@ describe('mountFallback: the caught sequence', () => {
     fb.dispose()
   })
 
+  it('a tab hidden mid-alarm picks up where it left off, never every beat at once', async () => {
+    const { fb, cues } = await desk('bombay-1942')
+    const p = fb.caught()
+    await pump(400)
+    expect(cues).toEqual(['whistleLong'])
+    now += 10_000 // the tab was hidden: no frames for ten seconds
+    await pump(16)
+    expect(cues).toEqual(['whistleLong'])
+    expect(await settled(p)).toBe(false)
+    await pump(4500)
+    expect(await settled(p)).toBe(true)
+    fb.dispose()
+  })
+
   it('dispose mid-sequence resolves it', async () => {
     const { fb } = await desk('delhi-1857')
     const p = fb.caught()
