@@ -75,6 +75,9 @@ interface Desk {
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
+// The caught sequence runs about 4.2 s (scene/caught.ts); the guard leaves it room, and a slow
+// frame or two, but never lets a desk that stopped ticking hold the verdict back.
+const CAUGHT_GUARD_MS = 6500
 // The paper's arrival. The 1947 telegram types itself out over 5-6 s by design, so the arrival gets
 // the long guard: with the short one the stamps woke before the telegram could be read.
 const ARRIVAL_GUARD_MS = 9000
@@ -250,7 +253,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       desk = d
       if (deskEra) d.setEra(deskEra)
     } else {
-      desk = fallbackDesk(mountFallback(root.stage, deskEra ?? ERAS[0]?.id ?? 'delhi-1857'))
+      desk = fallbackDesk(mountFallback(root.stage, deskEra ?? ERAS[0]?.id ?? 'delhi-1857', { onCue }))
     }
     const p = play
     if (p && screen === 'day') {
@@ -349,7 +352,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       redrawMessage: (x) => f.redrawMessage(x),
       stamp: (k) => f.stamp(k),
       flash: (k) => f.flash(k),
-      caught: () => Promise.resolve(),
+      caught: () => f.caught(),
       skip: () => f.skip(),
       setPaused: () => undefined,
       dispose: () => f.dispose(),
@@ -801,13 +804,15 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       await stampDesk(v)
       if (token !== gen) return
     }
-    // the room flashes and the camera eases back to the desk for the card (caught() overrides it);
-    // the stage sounds right or wrong inside flash(), the flat desk needs the game to
+    // a right stamp flashes the room (the stage sounds it inside flash(), the flat desk needs the
+    // game to); a wrong one, or the agarbatti burning out, plays the caught sequence: a beat of
+    // silence, the era's alarm, the room answering it, then the dark (both desks voice its beats)
     const flash: FlashKind = correct ? 'right' : 'wrong'
     desk?.flash(flash)
-    if (!desk?.cues) audio.cue(correct ? 'correct' : 'caught')
+    if (!desk?.cues && correct) audio.cue('correct')
     if (!correct) {
-      await guard(desk ? desk.caught() : Promise.resolve())
+      // a desk lost mid-sequence never finishes it: stop waiting as soon as a new desk is attached
+      await guard(desk ? Promise.race([desk.caught(), deskSwapped.promise]) : Promise.resolve(), CAUGHT_GUARD_MS)
       if (token !== gen) return
     }
     // The verdict goes on the paper's back when the desk can turn it over: the slip circled, a margin
