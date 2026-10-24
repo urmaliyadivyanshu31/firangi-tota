@@ -41,6 +41,7 @@ const m = vi.hoisted(() => {
     loadStage: vi.fn(),
     fallback: {
       setEra: vi.fn(), dispose: vi.fn(), redrawMessage: vi.fn(), flash: vi.fn(), skip: vi.fn(),
+      caught: vi.fn(() => Promise.resolve()),
       showMessage: vi.fn((_s: SheetSpec) => Promise.resolve()),
       dayTitle: vi.fn((_t: { big: string; small: string }) => Promise.resolve()),
       stamp: vi.fn((_k: string) => Promise.resolve()),
@@ -585,7 +586,7 @@ describe('the 3D stage (Ruling R10)', () => {
     m.createStage.mockImplementation(() => null)
     const { ui, stage } = boot('?lang=en&seed=3')
     await toDay1(ui)
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857')
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', { onCue: expect.any(Function) })
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
@@ -597,7 +598,7 @@ describe('the 3D stage (Ruling R10)', () => {
     const { ui, stage } = boot('?lang=en')
     click(ui, '[data-era="lahore-1929"]')
     await flush()
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'lahore-1929')
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'lahore-1929', { onCue: expect.any(Function) })
   })
 
   it('swaps in the fallback when the WebGL context is lost, keeping the current day', async () => {
@@ -615,7 +616,7 @@ describe('the 3D stage (Ruling R10)', () => {
     stage.dispatchEvent(lost)
     expect(lost.defaultPrevented).toBe(true)
     expect(m.stage.dispose).toHaveBeenCalledTimes(1)
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857')
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', { onCue: expect.any(Function) })
     expect(text(ui)).toContain('Day 2 of 7')
 
     m.stage.stamp.mockClear()
@@ -694,6 +695,52 @@ describe('the 3D stage (Ruling R10)', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('waits out the caught sequence before the paper turns over, and never hangs on one that does not finish', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      // a sequence that takes its full four seconds and more
+      m.stage.caught.mockImplementation(() => new Promise<void>((r) => setTimeout(r, 4400)))
+      const { ui } = boot('?lang=en&seed=5')
+      click(ui, '[data-era="delhi-1857"]')
+      click(ui, '[data-mode="easy"]')
+      click(ui, '[data-action="begin"]')
+      await vi.advanceTimersByTimeAsync(10)
+      click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+      await vi.advanceTimersByTimeAsync(4300) // past the old 3.5 s guard: still the alarm
+      expect(m.stage.reveal).not.toHaveBeenCalled()
+      expect($(ui, '.screen--day.is-stamping')).not.toBeNull() // a tap on the room skips it
+      await vi.advanceTimersByTimeAsync(200)
+      expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+      // one that never ends: the verdict still comes, after the guard
+      m.stage.caught.mockImplementation(() => new Promise<void>(() => undefined))
+      m.stage.reveal.mockClear()
+      click(ui, '[data-action="again"]')
+      await vi.advanceTimersByTimeAsync(10)
+      click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`) // (the same seed, the same first paper)
+      await vi.advanceTimersByTimeAsync(6000)
+      expect(m.stage.reveal).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(600)
+      expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a desk lost during the caught sequence goes straight on to the verdict on the new one', async () => {
+    m.stage.caught.mockImplementation(() => new Promise<void>(() => undefined))
+    const { ui, stage } = boot('?lang=en&seed=5')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+    await flush()
+    expect(m.stage.caught).toHaveBeenCalledTimes(1)
+    expect(m.stage.reveal).not.toHaveBeenCalled()
+    stage.dispatchEvent(new CustomEvent('ft:stage-lost', { cancelable: true, detail: { era: 'delhi-1857', reason: 'context-lost' } }))
+    await flush()
+    expect(m.fallback.reveal).toHaveBeenCalledTimes(1)
+    expect(m.fallback.reveal.mock.calls[0]![0].outcome).toBe('wrong')
+    expect($(ui, '.paper-result')).not.toBeNull()
   })
 
   it('keeps the stamps asleep through a slow arrival (the 1947 telegram types for ~6 s)', async () => {
@@ -962,7 +1009,14 @@ describe('the 2D desk mirrors the stage', () => {
     expect(f.stamp).toHaveBeenCalledWith(wrong(msg))
     expect(f.flash).toHaveBeenCalledWith('wrong')
     expect(m.audio.cue).toHaveBeenCalledWith(wrong(msg) === 'asli' ? 'stampAsli' : 'stampTota')
-    expect(m.audio.cue).toHaveBeenCalledWith('caught') // the flat desk has no flash sound of its own
+    // the caught sequence plays on the flat desk too, its beats voiced through the app's onCue
+    expect(f.caught).toHaveBeenCalledTimes(1)
+    const onCue = (m.mountFallback.mock.calls[0] as unknown as [HTMLElement, string, { onCue: (n: StageCueName) => void }])[2].onCue
+    onCue('whistleLong')
+    onCue('knockDoor')
+    expect(m.audio.cue).toHaveBeenCalledWith('whistleLong')
+    expect(m.audio.cue).toHaveBeenCalledWith('knockDoor')
+    expect(m.audio.cue).not.toHaveBeenCalledWith('caught') // no sting at the stamp: the alarm comes after the silence
     expect($(ui, '.paper-result')).not.toBeNull()
   })
 })
