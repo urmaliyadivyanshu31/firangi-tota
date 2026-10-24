@@ -12,7 +12,7 @@ import { DAYS, TIMER_S, TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, pencilOn, t
 import { dailyFrom, type Daily } from './game/daily'
 import { dayDate } from './game/dates'
 import { mulberry32, seedFrom } from './game/rng'
-import { addDrops, earnedLine, jackpotLine, loadCollection, rollReward, saveDrops, survivalDrops, type Counts, type Drop } from './game/rewards'
+import { addDrops, earnedLine, loadCollection, rollReward, saveDrops, survivalDrops, toastLine, type Counts, type Drop } from './game/rewards'
 import { unitOf } from './game/run'
 import { chapterPost, chapterStory, dailyFact, dailyPost } from './game/share'
 import { codeFromPath, isShareResult, parseShareCode, shareCode, type ShareResult } from './game/share-code'
@@ -38,6 +38,7 @@ import { renderDailyEnd } from './ui/screens/daily'
 import { renderDay, setMusic, setReadable, setSound, setStamping, setTimer, setTossing, setVoiceState } from './ui/screens/day'
 import { renderIntro, setIntroSettled } from './ui/screens/intro'
 import { renderMain, suggestedEra, type Best } from './ui/screens/main'
+import { createRewardToast } from './ui/reward-toast'
 import { closeShareSlip, openShareSlip } from './ui/share-slip'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
@@ -204,8 +205,33 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let runEarned: Counts = {}
   let todayDrops: Drop[] | null = null
   let rewardRng: () => number = env.random
-  let rewardSlip: HTMLElement | null = null
-  let rewardSlipTimer = 0
+
+  // The reward toast: a paper chit from the top right for each reward, under the top bar (and under
+  // Music's cabinet when it is docked there). Its icon is the desk's own art, drawn when first needed.
+  const rewardToast = createRewardToast({
+    parent: document.body,
+    reduced: reducedMotion,
+    top: () => {
+      const rect = (el: Element | null | undefined) => {
+        const r = el?.getBoundingClientRect()
+        return r && r.height > 0 ? r : null
+      }
+      let y = (rect(ui.querySelector('.hud'))?.bottom ?? 62) + 8
+      if (gramophone?.isOpen()) y = Math.max(y, (rect(gramophone.el)?.bottom ?? 0) + 8)
+      return y
+    },
+    icon: (canvas, item) => {
+      void import('./scene/reward-art')
+        .then((art) => {
+          const g = canvas.getContext('2d')
+          if (!g) return
+          const k = canvas.width / 40
+          g.scale(k, k)
+          art.drawIcon(g, item, 0, 0, 40)
+        })
+        .catch(() => undefined) // the chit reads without its picture
+    },
+  })
 
   // the intro after Begin, and its wait before going on by itself
   let intro: { era: Era; difficulty: Difficulty; started: boolean; settled: boolean } | null = null
@@ -579,40 +605,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     todayDrops = drops
     for (const d of drops) gameEvent('reward', { era: p.era.id, item: d.item, qty: d.qty, jackpot: d.jackpot })
     void desk?.earn({ drops, after: runEarned })
-    const jackpot = drops.find((d) => d.jackpot)
-    if (jackpot) showRewardSlip(jackpot)
-  }
-
-  /** A jackpot's short line on a paper chit by the treasure, for a moment ("A gold mohur!"). */
-  function showRewardSlip(d: Drop): void {
-    hideRewardSlip()
-    const token = gen
+    // a toast from the top right for each, after the treasure has landed on the paper
     const lang = getLang()
-    const el = h('p', { class: 'reward-slip', role: 'status', lang }, jackpotLine(d, lang))
-    rewardSlip = el
-    document.body.appendChild(el)
-    const place = () => {
-      if (rewardSlip !== el || token !== gen) return
-      const r = desk?.getEarnRect() ?? desk?.getPaperRect() ?? null
-      const W = window.innerWidth || 390
-      const x = r ? r.x + r.w / 2 : W / 2
-      const y = r ? r.y : window.innerHeight * 0.5
-      const half = (el.offsetWidth || 180) / 2 + 8
-      el.style.left = `${Math.round(Math.min(W - half, Math.max(half, x)))}px`
-      el.style.top = `${Math.round(Math.max(70, y - 10))}px`
-      el.classList.add('is-on')
-    }
-    // after the treasure has landed
-    rewardSlipTimer = window.setTimeout(() => {
-      place()
-      rewardSlipTimer = window.setTimeout(hideRewardSlip, 2600)
-    }, reducedMotion ? 150 : 650)
-  }
-
-  function hideRewardSlip(): void {
-    window.clearTimeout(rewardSlipTimer)
-    rewardSlip?.remove()
-    rewardSlip = null
+    for (const d of drops) rewardToast.push({ item: d.item, jackpot: d.jackpot, lang, ...toastLine(d, lang) }, reducedMotion ? 150 : 700)
   }
 
   /** The wide shot of the room, behind the cards. */
@@ -730,7 +725,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     endHold()
     stopVoice()
     disarmTimer()
-    hideRewardSlip()
+    rewardToast.clear()
     closeShareSlip() // the slip belongs to the screen it was opened on
   }
 
@@ -1076,7 +1071,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     verdictEnd = null
     endHold()
     todayDrops = null
-    hideRewardSlip()
     deskDirty = true
     timerArmed = false
     timeLeft = timeTotal = TIMER_S[p.state.difficulty]

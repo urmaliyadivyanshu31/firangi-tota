@@ -1310,20 +1310,96 @@ a { color: inherit; }
   .gramo.is-resized { animation: none; }
 }
 
-/* ---------- Rewards: a jackpot's chit, the run's earnings line, the home page's treasure tag ---------- */
+/* ---------- Rewards: the reward toast, the run's earnings line, the home page's treasure tag ---------- */
 
-/* ada: a jackpot's line is pencilled on a scrap of paper that pops up by the treasure and goes */
-.reward-slip {
-  position: fixed; z-index: 9; left: 50%; top: 40%; margin: 0; padding: 6px 14px 5px;
-  font: 400 19px/1.2 var(--display); color: var(--maroon); white-space: nowrap; pointer-events: none;
-  background: #f1e2bd var(--grain); border: 1px solid rgba(125, 31, 44, .28);
-  clip-path: polygon(0 6%, 9% 0, 26% 4%, 44% 0, 63% 5%, 81% 0, 100% 4%, 98% 52%, 100% 96%, 82% 100%, 61% 95%, 40% 100%, 22% 96%, 4% 100%, 2% 50%);
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45));
-  opacity: 0; transform: translate(-50%, -100%) rotate(-2.5deg) scale(.85);
-  transition: opacity .22s ease-out, transform .38s var(--ease-spring);
+/* ada: a reward comes in as a paper chit on a brass token, dropped from the top right with a little
+   swing; a jackpot's chit is gold-warm, with a ring round its token and a sheen that crosses it once */
+.rtoast-host {
+  position: fixed; z-index: 9; right: max(12px, env(safe-area-inset-right)); top: 70px;
+  display: flex; flex-direction: column; align-items: flex-end;
+  max-width: calc(100vw - 24px); pointer-events: none;
 }
-.reward-slip:lang(hi) { font-weight: 400; }
-.reward-slip.is-on { opacity: 1; transform: translate(-50%, -100%) rotate(-2.5deg) scale(1); }
+.rtoast {
+  position: relative; display: flex; align-items: center; gap: 10px; max-width: min(320px, calc(100vw - 24px));
+  padding: 9px 20px 9px 8px; color: var(--ink); pointer-events: none;
+  background: #f1e2bd var(--grain);
+  clip-path: polygon(0 5%, 3% 0, 14% 4%, 32% 0, 52% 4%, 71% 0, 88% 4%, 100% 0, 98% 48%, 100% 97%, 84% 100%, 63% 95%, 42% 100%, 21% 96%, 6% 100%, 1% 94%, 2% 50%);
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .5));
+  transform-origin: 100% 0; opacity: 0; transform: translateX(130%) rotate(7deg);
+}
+/* a brass pin through the top right corner */
+.rtoast::after {
+  content: ''; position: absolute; top: 5px; right: 8px; width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff0c0, #c58b24 58%, #6e4a10); box-shadow: 1px 2px 2px rgba(0, 0, 0, .4);
+}
+.rtoast.is-in { animation: rtoast-in .62s var(--ease-out) both; }
+.rtoast.is-out { opacity: 1; animation: rtoast-out .34s cubic-bezier(.5, 0, .9, .4) both; }
+@keyframes rtoast-in {
+  0% { opacity: 0; transform: translateX(130%) rotate(8deg); }
+  14% { opacity: 1; }
+  58% { opacity: 1; transform: translateX(-5%) rotate(-3.2deg); }
+  78% { opacity: 1; transform: translateX(1.5%) rotate(.9deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-1.2deg); }
+}
+@keyframes rtoast-out {
+  from { opacity: 1; transform: translateX(0) rotate(-1.2deg); }
+  to { opacity: 0; transform: translateX(125%) rotate(5deg); }
+}
+.rtoast__token {
+  position: relative; flex: 0 0 auto; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #5a3a22 0 60%, #3a2314 100%);
+  border: 2px solid #b48a3c; box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .35), inset 0 2px 3px rgba(255, 228, 160, .25), 0 2px 3px rgba(0, 0, 0, .4);
+}
+.rtoast.is-in .rtoast__token { animation: rtoast-token .5s .26s var(--ease-spring) both; }
+@keyframes rtoast-token { from { transform: scale(1.7) translateY(-8px); opacity: 0; } 55% { opacity: 1; } to { transform: none; opacity: 1; } }
+.rtoast__icon { display: block; }
+.rtoast__words { font: 400 16px/1.25 var(--display); color: var(--ink); min-width: 0; }
+.rtoast__kicker { display: block; margin-bottom: 1px; font: italic 700 13.5px/1.1 var(--display-en); letter-spacing: .06em; text-transform: uppercase; color: #8a4a0c; }
+:lang(hi) .rtoast__kicker { font: 400 15px/1.2 var(--display-hi); letter-spacing: 0; text-transform: none; }
+.rtoast__line { display: block; }
+.rtoast:lang(hi) .rtoast__words { font-weight: 400; }
+
+.rtoast--jackpot {
+  background: var(--grain), linear-gradient(160deg, #fff3c6, #f4d27a 55%, #e6b64e); color: #2d1705;
+  filter: drop-shadow(0 0 7px rgba(255, 205, 90, .75)) drop-shadow(0 4px 5px rgba(0, 0, 0, .5));
+  padding-right: 24px;
+}
+.rtoast--jackpot .rtoast__words { color: #2d1705; font-weight: 700; }
+.rtoast--jackpot:lang(hi) .rtoast__words { font-weight: 400; }
+.rtoast--jackpot .rtoast__kicker { color: #7a1c0e; }
+.rtoast--jackpot .rtoast__token {
+  background: radial-gradient(circle at 50% 42%, #7d4a1e 0 55%, #4a2a12 100%); border-color: #ffd877;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .3), 0 0 0 3px rgba(255, 216, 119, .45), 0 0 14px rgba(255, 205, 90, .9);
+}
+.rtoast--jackpot.is-in .rtoast__token { animation: rtoast-token .5s .26s var(--ease-spring) both, rtoast-glow 1.1s .75s ease-in-out 2; }
+@keyframes rtoast-glow { 50% { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .3), 0 0 0 6px rgba(255, 216, 119, .28), 0 0 22px rgba(255, 220, 120, 1); } }
+/* the sheen: a pale band that crosses the chit once, just after it settles */
+.rtoast--jackpot .rtoast__words { position: relative; }
+.rtoast--jackpot::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, .7) 50%, rgba(255, 255, 255, 0) 65%) -120% 0 / 220% 100% no-repeat;
+}
+.rtoast--jackpot.is-in::before { animation: rtoast-sheen 1s .7s ease-out both; }
+@keyframes rtoast-sheen { 0% { opacity: 1; background-position: 140% 0; } 100% { opacity: 1; background-position: -60% 0; } }
+
+/* a wide, tall desk gets a larger chit and token */
+@media (min-width: 900px) and (min-height: 600px) {
+  .rtoast { gap: 12px; padding: 11px 24px 11px 10px; max-width: 380px; }
+  .rtoast__token { width: 58px; height: 58px; }
+  .rtoast__words { font-size: 19px; }
+  .rtoast__kicker { font-size: 15px; }
+}
+
+/* reduced motion: no slide, swing or sheen; the chit fades in and out where it stands */
+@media (prefers-reduced-motion: reduce) {
+  .rtoast { transform: rotate(-1deg); }
+  .rtoast.is-in { animation: rtoast-fade .2s ease-out both; }
+  .rtoast.is-out { animation: rtoast-fade-out .16s ease-in both; }
+  .rtoast.is-in .rtoast__token, .rtoast--jackpot.is-in .rtoast__token, .rtoast--jackpot.is-in::before { animation: none; }
+  .rtoast--jackpot::before { display: none; }
+}
+@keyframes rtoast-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rtoast-fade-out { from { opacity: 1; } to { opacity: 0; } }
 
 /* the run's earnings, one line in ink above the end's buttons */
 .paper-result__earned {

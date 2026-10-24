@@ -263,3 +263,29 @@ export function earnedLine(counts: Counts, lang: Lang): string {
   const list = parts.length === 1 ? parts[0]! : `${parts.slice(0, -1).join(', ')}${and}${parts[parts.length - 1]}`
   return lang === 'hi' ? `आपकी कमाई: ${list}` : `You earned ${list}`
 }
+
+// ------------------------------------------------------------------ the toast's words
+
+/** The two Hindi items that are feminine (मोहर, मुहर): the verb "मिला" agrees with them. */
+const FEMININE = new Set(['mohur-1857', 'seal-1857'])
+
+/**
+ * What the reward toast says (no full stops: it is display copy). A plain drop reads "You got a
+ * silver rupee" / "आपको चाँदी का एक रुपया मिला"; a jackpot adds its cry as a kicker over the item's
+ * own line: "Jackpot!" and "A gold mohur" / "किस्मत चमकी!" and "एक सोने की मोहर".
+ */
+export function toastLine(d: Drop, lang: Lang): { kicker: string | null; text: string } {
+  const it = BY_ID.get(d.item)
+  if (!it) return { kicker: null, text: '' }
+  const what = countPhrase(d.item, d.qty, lang)
+  if (d.jackpot) {
+    const line = d.qty === 1 ? what : `${WORDS[lang][d.qty] ?? d.qty} ${it.name[lang].many}`
+    return { kicker: lang === 'hi' ? 'किस्मत चमकी!' : 'Jackpot!', text: `${line.charAt(0).toUpperCase()}${line.slice(1)}` }
+  }
+  if (lang === 'hi') {
+    const f = FEMININE.has(d.item)
+    const verb = d.qty === 1 ? (f ? 'मिली' : 'मिला') : f ? 'मिलीं' : 'मिले'
+    return { kicker: null, text: `आपको ${what} ${verb}` }
+  }
+  return { kicker: null, text: `You got ${what}` }
+}
