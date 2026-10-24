@@ -597,7 +597,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       const W = window.innerWidth || 390
       const x = r ? r.x + r.w / 2 : W / 2
       const y = r ? r.y : window.innerHeight * 0.5
-      el.style.left = `${Math.round(Math.min(W - 90, Math.max(90, x)))}px`
+      const half = (el.offsetWidth || 180) / 2 + 8
+      el.style.left = `${Math.round(Math.min(W - half, Math.max(half, x)))}px`
       el.style.top = `${Math.round(Math.max(70, y - 10))}px`
       el.classList.add('is-on')
     }

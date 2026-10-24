@@ -178,3 +178,16 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   ball into the basket. Skip, or Enter, puts it in at once and starts the next day.
 - Google Analytics and Vercel Analytics count visits and a few game events. Share cards are drawn
   ahead of time so previews load at once on WhatsApp and X.
+
+## 2026-10-24: Rewards for right stamps
+
+- Every right stamp earns a period-true treasure of its chapter, drawn at random like a loot drop:
+  mostly the everyday coin or a sweet, now and then a silver (1947: nickel) rupee, and about once
+  every two or three chapters a jackpot (the rare treasure, five rupees at once, or three sweets).
+  Surviving a chapter adds its keepsake; surviving on Hard adds the rare treasure too.
+- Collect only: rewards never pardon, hint or add time. One wrong stamp still ends the chapter.
+- The treasures drop onto the paper's back beside its stamp, then sit as small real objects in the
+  desk's free front-right corner: this run's during a chapter, the whole collection between
+  chapters, the coin stacks capped with a count slip. A small treasure box on the home paper opens a
+  tag of counts. The chapter's end says what the run earned in one line.
+- Nothing religious. Each item and its reason are listed in `src/game/rewards.ts`.

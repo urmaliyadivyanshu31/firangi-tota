@@ -89,7 +89,7 @@ export const REWARD_ITEMS: readonly RewardItem[] = [
   { id: 'mohur-1857', era: 'delhi-1857', slot: 'rare', rarity: 'rare', name: n('a gold mohur', 'gold mohurs', 'एक सोने की मोहर', 'सोने की मोहरें') },
   { id: 'seal-1857', era: 'delhi-1857', slot: 'keepsake', rarity: 'keepsake', name: n('a court seal', 'court seals', 'दरबार की एक मुहर', 'दरबार की मुहरें') },
 
-  { id: 'anna-1929', era: 'lahore-1929', slot: 'coin', rarity: 'common', name: n('a one-anna coin', 'one-anna coins', 'एक आने का सिक्का', 'एक आने के सिक्के') },
+  { id: 'anna-1929', era: 'lahore-1929', slot: 'coin', rarity: 'common', name: n('a one\u2011anna coin', 'one\u2011anna coins', 'एक आने का सिक्का', 'एक आने के सिक्के') },
   { id: 'barfi-1929', era: 'lahore-1929', slot: 'sweet', rarity: 'common', name: n('a packet of barfi', 'packets of barfi', 'बर्फ़ी का एक पुड़ा', 'बर्फ़ी के पुड़े') },
   { id: 'rupee-1929', era: 'lahore-1929', slot: 'fine', rarity: 'fine', name: n('a silver rupee', 'silver rupees', 'चाँदी का एक रुपया', 'चाँदी के रुपये') },
   { id: 'note-1929', era: 'lahore-1929', slot: 'rare', rarity: 'rare', name: n('a ten-rupee note', 'ten-rupee notes', 'दस रुपये का एक नोट', 'दस रुपये के नोट') },
@@ -101,7 +101,7 @@ export const REWARD_ITEMS: readonly RewardItem[] = [
   { id: 'valve-1942', era: 'bombay-1942', slot: 'rare', rarity: 'rare', name: n('a spare radio valve', 'spare radio valves', 'रेडियो का एक फ़ालतू वाल्व', 'रेडियो के फ़ालतू वाल्व') },
   { id: 'card-1942', era: 'bombay-1942', slot: 'keepsake', rarity: 'keepsake', name: n('a Congress Radio wavelength card', 'Congress Radio wavelength cards', 'कांग्रेस रेडियो का एक वेवलेंथ कार्ड', 'कांग्रेस रेडियो के वेवलेंथ कार्ड') },
 
-  { id: 'anna-1947', era: 'delhi-1947', slot: 'coin', rarity: 'common', name: n('a one-anna coin', 'one-anna coins', 'एक आने का सिक्का', 'एक आने के सिक्के') },
+  { id: 'anna-1947', era: 'delhi-1947', slot: 'coin', rarity: 'common', name: n('a one\u2011anna coin', 'one\u2011anna coins', 'एक आने का सिक्का', 'एक आने के सिक्के') },
   { id: 'jalebi-1947', era: 'delhi-1947', slot: 'sweet', rarity: 'common', name: n('a box of jalebis', 'boxes of jalebis', 'जलेबी का एक डिब्बा', 'जलेबी के डिब्बे') },
   { id: 'rupee-1947', era: 'delhi-1947', slot: 'fine', rarity: 'fine', name: n('a nickel rupee', 'nickel rupees', 'निकल का एक रुपया', 'निकल के रुपये') },
   { id: 'pass-1947', era: 'delhi-1947', slot: 'rare', rarity: 'rare', name: n('a midnight session pass', 'midnight session passes', 'आधी रात की सभा का एक पास', 'आधी रात की सभा के पास') },

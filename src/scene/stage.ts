@@ -1552,6 +1552,14 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       for (let i = 0; i < qty; i++) {
         const p = w.rewards.piece(d.item)
         if (!p) continue
+        if (look?.kind === 'valve') {
+          // a spare valve lies on its side on the paper (it stands on the pile)
+          for (const c of p.obj.children) {
+            c.rotation.z = Math.PI / 2
+            c.position.set(p.h / 2, p.r, 0)
+          }
+          p.h = p.r * 2
+        }
         let dx = 0
         let dz = 0
         let dy = 0
