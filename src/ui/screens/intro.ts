@@ -4,22 +4,22 @@ import { h, mount } from '../h'
 import { skipIcon } from '../ornament'
 
 // After Begin: the room shows two cards on the desk, YOU and THE TOTA (drawn by the stage). The DOM
-// keeps only what the room cannot: their words for screen readers, a tap anywhere to go on, and
-// one paper chip, Continue, under a slow-burning agarbatti that goes on by itself when it is out.
+// keeps only what the room cannot: their words for screen readers, a tap that finishes the cards'
+// motion, and one paper chip, Continue, the only way on (owner 10-24: no timer).
 
 export interface IntroProps {
   era: Era
   lang: Lang
   you: { label: string; line: string }
   tota: { label: string; line: string }
-  /** The cards have settled: the agarbatti on the chip is lit. */
+  /** The cards have settled: the Continue chip shows. */
   settled: boolean
 }
 
 export interface IntroHandlers {
   /** Continue to day 1. */
   go(): void
-  /** A tap on the room (or Space or Enter): finishes the cards' motion, or goes on once they are down. */
+  /** A tap on the room (or Space or Enter): finishes the cards' motion. */
   tap(): void
 }
 
@@ -44,8 +44,7 @@ export function renderIntro(root: HTMLElement, p: IntroProps, on: IntroHandlers)
   const { lang } = p
   const stop = lang === 'hi' ? '।' : '.'
   const go = h('button', { class: 'btn intro__go', type: 'button', 'data-action': 'intro-go', onclick: () => on.go() },
-    h('span', { class: 'intro__label' }, t('continue', lang)), skipIcon(),
-    h('span', { class: 'intro__fuse', 'aria-hidden': 'true' }, h('span', { class: 'intro__burn' }), h('span', { class: 'intro__ember' })))
+    h('span', { class: 'intro__label' }, t('continue', lang)), skipIcon())
   const screen = h('div', { class: `screen screen--intro era-${p.era.id}${p.settled ? ' is-settled' : ''}`, lang },
     h('div', { class: 'tapcatch intro__tap', 'aria-hidden': 'true', onpointerdown: () => on.tap() }),
     h('section', { class: 'sr-only intro__copy', 'aria-live': 'polite' },
@@ -62,12 +61,9 @@ export function renderIntro(root: HTMLElement, p: IntroProps, on: IntroHandlers)
   }
 }
 
-/** The cards are down: light the agarbatti on the chip (it burns down over the wait). */
+/** The cards are down: the Continue chip comes up. */
 export function setIntroSettled(root: HTMLElement): void {
   const screen = root.querySelector<HTMLElement>('.screen--intro')
   if (!screen) return
-  // restart the burn from the top (a tab that came back starts its wait again)
-  screen.classList.remove('is-settled')
-  void screen.offsetWidth
   screen.classList.add('is-settled')
 }

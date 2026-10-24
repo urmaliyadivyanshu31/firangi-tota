@@ -98,7 +98,10 @@ export function renderMain(root: HTMLElement, p: MainProps, on: MainHandlers): v
   const modes = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': t('setupQuestion', lang) }, MODES.map((d) =>
     h('button', { class: `mode mode--${d}${d === p.difficulty ? ' is-on' : ''}`, type: 'button', role: 'radio', 'aria-checked': String(d === p.difficulty),
       'data-mode': d, onclick: () => on.difficulty(d) },
-      h('span', { class: 'mode__days' }, String(DAYS[d]), d === p.difficulty ? inkLoop() : null),
+      // the number is the chapter's length in days: say so beside it, small, outside the ink loop
+      h('span', { class: 'mode__count' },
+        h('span', { class: 'mode__days' }, String(DAYS[d]), d === p.difficulty ? inkLoop() : null),
+        h('span', { class: 'mode__unit' }, t('modeDaysUnit', lang))),
       h('span', { class: 'mode__name' }, t(MODE_KEY[d], lang)),
       h('span', { class: 'mode__secs' }, tf('modeSeconds', lang, { s: TIMER_S[d] })))))
 

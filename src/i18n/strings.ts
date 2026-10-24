@@ -34,6 +34,7 @@ const en = {
   modeMedium: 'Medium',
   modeHard: 'Hard',
   modeDays: '{n} days',
+  modeDaysUnit: 'days',
   modeSeconds: '{s} seconds each',
   back: 'Back',
 
@@ -144,6 +145,7 @@ const hi: Strings = {
   modeMedium: 'मध्यम',
   modeHard: 'मुश्किल',
   modeDays: '{n} दिन',
+  modeDaysUnit: 'दिन',
   modeSeconds: 'हर संदेश {s} सेकंड',
   back: 'वापस',
 
@@ -225,7 +227,7 @@ export const strings: Record<Lang, Strings> = { en, hi }
 export const DISPLAY_KEYS: (keyof Strings)[] = [
   'appName', 'langSelf', 'langChange', 'continue', 'dailyTitle', 'dailyPlay',
   'dailyDone', 'bestSurvived', 'bestDays', 'soundOn', 'soundOff', 'credits', 'setupQuestion',
-  'modeEasy', 'modeMedium', 'modeHard', 'modeDays', 'modeSeconds', 
+  'modeEasy', 'modeMedium', 'modeHard', 'modeDays', 'modeDaysUnit', 'modeSeconds', 
   'back', 'introYou', 'next', 'begin', 'dayOf', 'asli',
   'tota', 'asliHint', 'totaHint', 'caseFile', 'rulebook', 'newTag', 'closePanel',
   'right', 'wrong', 'wasGenuine', 'wasForged', 'kindReal', 'kindWritten',

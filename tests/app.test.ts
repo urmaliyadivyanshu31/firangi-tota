@@ -772,7 +772,7 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
     await flush()
   }
 
-  it('lays the two cards on the desk in the live room, then waits for a tap', async () => {
+  it('lays the two cards on the desk in the live room, then waits for Continue', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toIntro(ui)
     expect($(ui, '.screen--intro')).not.toBeNull()
@@ -783,10 +783,15 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
     // the room is the scene: no day yet, no stamps; the plaques stay for sound and language
     expect(m.stage.dayTitle).not.toHaveBeenCalled()
     expect(dock('[data-action="sound"]')!.closest('.controls-dock')!.hasAttribute('hidden')).toBe(false)
-    // screen readers get both cards' words, and the cards are settled: the slip's agarbatti is lit
+    // screen readers get both cards' words, and the cards are settled: the Continue slip is up
     expect($(ui, '.intro__copy')!.textContent).toBe('You: a clerk.The Tota: a rival.')
     expect($(ui, '.screen--intro.is-settled')).not.toBeNull()
+    expect($(ui, '.intro__fuse')).toBeNull() // no timer on the slip (owner 10-24)
+    // a tap on the room never goes on by itself; only Continue does
     $(ui, '.intro__tap')!.dispatchEvent(new Event('pointerdown'))
+    await flush()
+    expect($(ui, '.screen--intro')).not.toBeNull()
+    click(ui, '[data-action="intro-go"]')
     await flush()
     expect($(ui, '.screen--day')).not.toBeNull()
     expect(m.stage.clearIntro).toHaveBeenCalledTimes(1)
@@ -805,19 +810,21 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
     await flush()
     $(ui, '.intro__tap')!.dispatchEvent(new Event('pointerdown'))
     await flush()
-    expect($(ui, '.screen--day')).not.toBeNull()
+    expect($(ui, '.screen--intro')).not.toBeNull()
+    expect(m.stage.skip).toHaveBeenCalledTimes(1) // the settled cards are not skipped again
   })
 
-  it('Space or Enter goes on once the cards are down; a held key does not', async () => {
+  it('Space or Enter on the room never goes on once the cards are down; Continue does', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toIntro(ui)
-    key('Enter', { repeat: true })
-    expect($(ui, '.screen--intro')).not.toBeNull()
+    key('Enter')
     key(' ')
     await flush()
-    expect($(ui, '.screen--day')).not.toBeNull()
-    // the same key never also skipped the day's title
+    expect($(ui, '.screen--intro')).not.toBeNull()
     expect(m.stage.skip).not.toHaveBeenCalled()
+    click(ui, '[data-action="intro-go"]')
+    await flush()
+    expect($(ui, '.screen--day')).not.toBeNull()
   })
 
   it('the Enter that pressed Begin never also skips the cards', async () => {
@@ -838,23 +845,7 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
     expect(m.stage.skip).not.toHaveBeenCalled()
   })
 
-  it('goes on by itself about 6 s after the cards settle', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
-    try {
-      const { ui } = boot('?lang=en&seed=3')
-      click(ui, '[data-action="begin"]')
-      await vi.advanceTimersByTimeAsync(10)
-      expect($(ui, '.screen--intro.is-settled')).not.toBeNull()
-      await vi.advanceTimersByTimeAsync(5900)
-      expect($(ui, '.screen--intro')).not.toBeNull()
-      await vi.advanceTimersByTimeAsync(200)
-      expect($(ui, '.screen--day')).not.toBeNull()
-    } finally {
-      vi.useRealTimers()
-    }
-  })
-
-  it('the wait counts only while the tab is visible, and starts over when it comes back', async () => {
+  it('waits for Continue however long it takes, hidden tab or not', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     try {
       const { ui } = boot('?lang=en&seed=3')
@@ -862,18 +853,18 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
       await vi.advanceTimersByTimeAsync(3000)
       setHidden(true)
       await vi.advanceTimersByTimeAsync(20_000)
-      expect($(ui, '.screen--intro')).not.toBeNull()
       setHidden(false)
-      await vi.advanceTimersByTimeAsync(5900)
+      await vi.advanceTimersByTimeAsync(60_000)
       expect($(ui, '.screen--intro')).not.toBeNull()
-      await vi.advanceTimersByTimeAsync(200)
+      click(ui, '[data-action="intro-go"]')
+      await vi.advanceTimersByTimeAsync(10)
       expect($(ui, '.screen--day')).not.toBeNull()
     } finally {
       vi.useRealTimers()
     }
   })
 
-  it('never stalls on cards that do not settle: the wait starts after a guard', async () => {
+  it('never stalls on cards that do not settle: Continue comes up after a guard', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     try {
       m.stage.intro.mockImplementation(() => new Promise<void>(() => undefined))
@@ -883,7 +874,8 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
       expect($(ui, '.screen--intro.is-settled')).toBeNull()
       await vi.advanceTimersByTimeAsync(200)
       expect($(ui, '.screen--intro.is-settled')).not.toBeNull()
-      await vi.advanceTimersByTimeAsync(6100)
+      click(ui, '[data-action="intro-go"]')
+      await vi.advanceTimersByTimeAsync(10)
       expect($(ui, '.screen--day')).not.toBeNull()
     } finally {
       vi.useRealTimers()

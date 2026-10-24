@@ -92,7 +92,7 @@ test('loads in Hindi, begins 1857 Easy and the paper becomes readable', async ({
   expect(paper!.y + paper!.h).toBeLessThanOrEqual(stampsTop + 1)
 })
 
-test('Begin shows who you are and who the Tota is, with their portraits, then goes on by itself', async ({ page }) => {
+test('Begin shows who you are and who the Tota is, with their portraits, and waits for Continue', async ({ page }) => {
   const art = new Map<string, number>()
   page.on('response', (r) => {
     const p = new URL(r.url()).pathname
@@ -111,8 +111,11 @@ test('Begin shows who you are and who the Tota is, with their portraits, then go
   await expect.poll(() => ft(page, (f) => f.intro?.settled ?? null), { timeout: 15_000 }).toBe(true)
   expect(art.get('/art/bombay-1942-you.webp')).toBe(200)
   expect(art.get('/art/bombay-1942-tota.webp')).toBe(200)
-  // about 6 s after the cards settle, day 1 begins without a tap
-  await expect(page.locator('.screen--day')).toBeVisible({ timeout: 12_000 })
+  // nothing goes on by itself: the cards wait for Continue
+  await page.waitForTimeout(8000)
+  await expect(page.locator('.screen--intro')).toBeVisible()
+  await page.locator('[data-action="intro-go"]').click()
+  await expect(page.locator('.screen--day')).toBeVisible()
   await readable(page)
   expect(await ft(page, (f) => f.play?.era.id)).toBe('bombay-1942')
 })

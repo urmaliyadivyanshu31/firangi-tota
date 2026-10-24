@@ -90,9 +90,8 @@ const CAUGHT_GUARD_MS = 6500
 // the long guard: with the short one the stamps woke before the telegram could be read.
 const ARRIVAL_GUARD_MS = 9000
 // The intro after Begin: the cards load their portraits (about a second at most), slide in and
-// settle, then the game goes on by itself after INTRO_AUTO_MS unless a tap goes on sooner.
+// settle, then wait for Continue (owner 10-24: never go on by itself).
 const INTRO_GUARD_MS = 5000
-const INTRO_AUTO_MS = 6000
 
 
 type Play =
@@ -178,7 +177,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   // the intro after Begin, and its wait before going on by itself
   let intro: { era: Era; difficulty: Difficulty; started: boolean; settled: boolean } | null = null
-  let introTimer = 0
 
   // the agarbatti
   let timerArmed = false
@@ -207,14 +205,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // back on the tab, the verdict gets a fresh moment before the paper goes
     if (document.hidden !== true) extendHold()
     syncHold()
-    // the intro's wait counts only while it can be seen; back on the tab, it starts over
-    if (screen === 'intro' && intro?.settled) {
-      if (document.hidden) clearIntroTimer()
-      else {
-        setIntroSettled(ui)
-        armIntroTimer()
-      }
-    }
   })
   let insetTimer = 0
   window.addEventListener('resize', () => {
@@ -597,7 +587,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       intro = null
       void desk?.clearIntro()
     }
-    clearIntroTimer()
     play = null
     readable = false
     revealed = false
@@ -723,10 +712,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     renderIntro(ui, { era: it.era, lang, you: spec.you, tota: spec.tota, settled: it.settled }, { go: continueIntro, tap: tapIntro })
     syncIntroInsets()
     if (it.settled) placeIntroChip()
-    // a language change redraws the cards on the desk in the new language, and the agarbatti on
-    // the slip (drawn again from the top) starts the wait over
+    // a language change redraws the cards on the desk in the new language
     if (it.started) void desk?.intro(spec)
-    if (it.settled) armIntroTimer()
   }
 
   async function playIntro(token: number): Promise<void> {
@@ -745,7 +732,6 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     it.settled = true
     placeIntroChip()
     setIntroSettled(ui)
-    armIntroTimer()
   }
 
   /**
@@ -765,22 +751,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     foot.style.top = under ? `${top}px` : ''
   }
 
-  function clearIntroTimer(): void {
-    window.clearTimeout(introTimer)
-    introTimer = 0
-  }
-
-  function armIntroTimer(): void {
-    clearIntroTimer()
-    if (!intro?.settled || document.hidden === true) return
-    introTimer = window.setTimeout(continueIntro, INTRO_AUTO_MS)
-  }
-
-  /** A tap on the room: the cards' motion finishes; once they are down, the game goes on. */
+  /** A tap on the room finishes the cards' motion; only Continue goes on. */
   function tapIntro(): void {
-    if (!intro) return
-    if (intro.settled) continueIntro()
-    else desk?.skip()
+    if (intro && !intro.settled) desk?.skip()
   }
 
   function continueIntro(): void {
