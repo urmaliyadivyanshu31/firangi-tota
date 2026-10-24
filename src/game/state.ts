@@ -18,8 +18,8 @@ export interface ChapterState {
 
 export type Verdict = 'asli' | 'tota' | 'timeout'
 
-export function createChapter(era: Era, d: Difficulty, rng: () => number): ChapterState {
-  return { era: era.id, difficulty: d, day: 1, days: DAYS[d], queue: buildRun(era, d, rng), phase: 'reading' }
+export function createChapter(era: Era, d: Difficulty, rng: () => number, recent?: ReadonlySet<string>): ChapterState {
+  return { era: era.id, difficulty: d, day: 1, days: DAYS[d], queue: buildRun(era, d, rng, recent), phase: 'reading' }
 }
 
 export function stamp(s: ChapterState, verdict: Verdict): ChapterState {

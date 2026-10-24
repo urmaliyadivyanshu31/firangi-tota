@@ -10,6 +10,7 @@ import { DAYS, TIMER_S, pencilOn, type Difficulty } from './game/config'
 import { dailyFrom, type Daily } from './game/daily'
 import { dayDate } from './game/dates'
 import { mulberry32, seedFrom } from './game/rng'
+import { unitOf } from './game/run'
 import { chapterShareText, shareText } from './game/share'
 import { createChapter, nextDay, stamp, type ChapterState, type Verdict } from './game/state'
 import { store } from './game/storage'
@@ -603,17 +604,31 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function startChapter(era: Era, d: Difficulty): void {
     let state: ChapterState
     try {
-      state = createChapter(era, d, seed === null ? env.random : mulberry32(seed))
+      // a replay steers away from the player's last two runs of this chapter (a ?seed run stays fixed)
+      state = seed === null ? createChapter(era, d, env.random, recentUnits(era.id)) : createChapter(era, d, mulberry32(seed))
     } catch (err) {
       console.error('[app] could not build the chapter', err)
       showMain()
       return
     }
+    if (seed === null) rememberRun(era.id, state.queue)
     leave()
     setDeskEra(era.id)
     audio.ambience(era.id)
     play = { kind: 'chapter', era, difficulty: d, state }
     beginDay()
+  }
+
+  /** The message units of the player's last two runs of a chapter. */
+  function recentUnits(id: EraId): Set<string> {
+    const runs = store.get<unknown>(`recent:${id}`, [])
+    return new Set(Array.isArray(runs) ? runs.flat().filter((u): u is string => typeof u === 'string') : [])
+  }
+
+  function rememberRun(id: EraId, queue: Message[]): void {
+    const runs = store.get<unknown>(`recent:${id}`, [])
+    const last = Array.isArray(runs) && Array.isArray(runs[0]) ? [runs[0]] : []
+    store.set(`recent:${id}`, [queue.map(unitOf), ...last])
   }
 
   // ------------------------------------------------------------------ a day
