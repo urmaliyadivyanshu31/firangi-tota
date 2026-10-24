@@ -21,6 +21,9 @@ const MAP: Record<StageCueName, Cue | null> = {
   stamp: null,
   // the era's stamp coming down on the back of the paper after the verdict
   verdictStamp: 'stampAsli',
+  // after Begin: the intro cards slide onto the desk, the clip snaps onto the YOU photo
+  cardSlide: 'cardSlide',
+  clipSnap: 'clipSnap',
 }
 
 /** The sound for a stage cue, or null when the stage moment has no sound of its own. */

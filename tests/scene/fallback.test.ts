@@ -192,3 +192,62 @@ describe('mountFallback: the message on paper', () => {
     fb.dispose()
   })
 })
+
+describe('the intro on the flat desk', () => {
+  const intro = (lang: 'en' | 'hi' = 'en') => ({
+    era: 'delhi-1857' as const,
+    lang,
+    you: { label: lang === 'en' ? 'You' : 'आप', line: 'a munshi at the Red Fort', art: '/art/fb-you.webp' },
+    tota: { label: lang === 'en' ? 'The Tota' : 'तोता', line: 'an agent for the Firangi', art: '/art/fb-tota.webp' },
+  })
+  class InstantImage {
+    onload: (() => void) | null = null
+    onerror: (() => void) | null = null
+    decoding = ''
+    naturalWidth = 480
+    naturalHeight = 640
+    set src(_v: string) {
+      queueMicrotask(() => this.onload?.())
+    }
+  }
+
+  it('fades both cards up, skip() finishes the fade, and clearIntro or a day title takes them away', async () => {
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => frames.push(cb))
+    vi.stubGlobal('cancelAnimationFrame', () => undefined)
+    vi.stubGlobal('Image', InstantImage)
+    try {
+      const f = fakeCanvas()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+      const el = document.createElement('div')
+      document.body.appendChild(el)
+      const fb = mountFallback(el, 'delhi-1857')
+      let done = false
+      void fb.intro(intro()).then(() => (done = true))
+      await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0))
+      frames.shift()!(performance.now() + 100)
+      expect(f.texts.some((t) => t.text === 'Y')).toBe(true)
+      expect(done).toBe(false)
+      fb.skip()
+      await vi.waitFor(() => expect(done).toBe(true))
+      expect(fb.getPaperRect()).toBeNull() // no message paper during the intro
+      // a second call (a language change) redraws at once
+      f.texts.length = 0
+      await fb.intro(intro('hi'))
+      expect(f.texts.some((t) => t.text === 'आप')).toBe(true)
+      f.texts.length = 0
+      await fb.clearIntro()
+      expect(f.texts.some((t) => t.text === 'आप')).toBe(false)
+      const third = fb.intro(intro())
+      fb.skip() // (a desk attached mid-intro shows the cards at once)
+      await third
+      expect(f.texts.some((t) => t.text === 'Y')).toBe(true)
+      f.texts.length = 0
+      await fb.dayTitle({ big: 'Day 1', small: 'Sunday, 17 May 1857' }).catch(() => undefined)
+      expect(f.texts.some((t) => t.text.includes('Firangi'))).toBe(false)
+      fb.dispose()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  }, 10_000)
+})

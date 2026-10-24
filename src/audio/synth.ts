@@ -14,6 +14,8 @@ export type Cue =
   | 'incense' | 'clockTick' | 'tensionTick'
   // the caught or survived telegram arriving on the teleprinter
   | 'endTelegram'
+  // after Begin: an intro card slid across the desk, the paper clip snapping onto the YOU photo
+  | 'cardSlide' | 'clipSnap'
 
 /** What some cues need to know: the era (the day title's settle) and how close the end is (0..1). */
 export interface CueOptions {
@@ -298,6 +300,18 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
     }
     case 'page':
       rustle(ctx, dest, t, 0.3, 0.18)
+      break
+    case 'cardSlide':
+      // a stiff card pushed across the wood: a short dry hiss that falls, and a soft settle
+      noiseBurst(ctx, dest, t, { type: 'bandpass', freq: 2600, q: 0.6, peak: 0.07, attack: 0.04, decay: 0.2 })
+      noiseBurst(ctx, dest, t + 0.06, { type: 'bandpass', freq: 1500, q: 0.7, peak: 0.05, attack: 0.03, decay: 0.18 })
+      tone(ctx, dest, t + 0.26, { type: 'sine', from: 150, to: 95, peak: 0.07, attack: 0.004, decay: 0.08 })
+      break
+    case 'clipSnap':
+      // a steel paper clip springing shut on a photo: a bright tick and a tiny ring
+      noiseBurst(ctx, dest, t, { type: 'highpass', freq: 3800, q: 0.8, peak: 0.09, attack: 0.001, decay: 0.012 })
+      tone(ctx, dest, t, { type: 'triangle', from: 3150, to: 2900, peak: 0.035, attack: 0.001, decay: 0.07 })
+      tone(ctx, dest, t + 0.004, { type: 'sine', from: 420, to: 300, peak: 0.05, attack: 0.002, decay: 0.03 })
       break
     case 'arrive':
       // A sheet slid across the desk, then a soft tap as it lands.

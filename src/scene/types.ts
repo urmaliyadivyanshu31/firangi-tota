@@ -87,6 +87,24 @@ export interface ScreenRect {
 
 export type FlashKind = 'right' | 'wrong'
 
+/** One of the two intro cards: its heading, its one line and its portrait. */
+export interface IntroCard {
+  /** YOU / आप, THE TOTA / तोता. */
+  label: string
+  /** The era's one line about the person (era.persona, era.forger). */
+  line: string
+  /** The portrait's URL (a small WebP in /art/, fetched when Begin is pressed). */
+  art: string
+}
+
+/** After Begin: who you are and who the Tota is, as two illustrated cards on the desk. */
+export interface IntroSpec {
+  era: EraId
+  lang: Lang
+  you: IntroCard
+  tota: IntroCard
+}
+
 /**
  * Optional places in an era's room that the stage uses for its choreography. Everything is in
  * world metres (desk top y = 0, +z toward the player). A dressing without hooks gets defaults:
@@ -153,6 +171,8 @@ export type StageCueName =
   | 'stamp' | 'right' | 'wrong'
   // the verdict on the paper: the stamp that comes down on its back
   | 'verdictStamp'
+  // after Begin: an intro card slides onto the desk; the paper clip snaps onto the YOU photo
+  | 'cardSlide' | 'clipSnap'
 
 export interface StageOptions {
   reducedMotion: boolean
@@ -208,6 +228,16 @@ export interface Stage {
   getSourceRect(): ScreenRect | null
   /** Where the paper is on screen (CSS px), to place a Next button below it. */
   getPaperRect(): ScreenRect | null
+
+  /**
+   * After Begin: the YOU dossier card and the Tota's police notice slide onto the desk and the
+   * camera looks down on them (about 1.8 s; skip() finishes it). Resolves once they have settled.
+   * Called again while they are there (a language switch, a turned phone), it redraws and
+   * re-places them at once.
+   */
+  intro(s: IntroSpec): Promise<void>
+  /** The intro cards leave the desk (about 0.4 s). It is queued, so a day title asked for next plays after it. */
+  clearIntro(): Promise<void>
 }
 
 /**

@@ -2,9 +2,10 @@
 // context is lost, with the message drawn big on its paper by the same drawer as the 3D sheet.
 // No three.js here, so the app can show it without loading the 3D chunk.
 import type { EraId } from '../content/types'
+import { drawIntroSpread, introReady } from './intro-card'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
 import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type PageRect } from './sheet'
-import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StampKind } from './types'
+import type { DayTitle, FlashKind, IntroSpec, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StampKind } from './types'
 
 export interface Fallback {
   setEra(id: EraId): void
@@ -27,6 +28,9 @@ export interface Fallback {
   skip(): void
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
+  /** After Begin: the YOU and Tota cards fade up on the desk (see Stage.intro); skip() finishes it. */
+  intro(s: IntroSpec): Promise<void>
+  clearIntro(): Promise<void>
   dispose(): void
 }
 
@@ -67,6 +71,10 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   let shown: Promise<void> = Promise.resolve()
   let skipReveal = false
   let finishWait: (() => void) | null = null
+  // the intro cards after Begin, and how far they have faded up (0..1)
+  let intro: { spec: IntroSpec; k: number } | null = null
+  let skipIntro = false
+  let finishIntro: (() => void) | null = null
   // the composed still (desk, title, paper), kept so a flash only repaints an overlay on top
   let base: HTMLCanvasElement | null = null
   let W = 390
@@ -87,6 +95,13 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
     drawDesk(g, W, H, ERA_PALETTES[current])
+    if (intro) {
+      const wide = W >= 900 && W > H
+      const top = insetPx(el, '--ft-hud-top', 70)
+      const bottom = insetPx(el, '--ft-hud-bottom', wide ? 100 : 110)
+      const pad = Math.min(W, H) * 0.04
+      drawIntroSpread(g, { x: pad, y: top + pad * 0.5, w: W - 2 * pad, h: H - top - bottom - pad }, intro.spec, intro.k, !reduced)
+    }
     if (title) drawTitleOver(g, W, H, title, current)
     if (sheet) {
       const v = verdict
@@ -150,6 +165,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   return {
     setEra(id) {
       current = id
+      intro = null
       sheet = null
       stamp = null
       title = null
@@ -161,6 +177,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
         await fonts(s.lang)
         if (disposed) return
         title = null
+        intro = null
         sheet = s
         stamp = null
         verdict = null
@@ -195,6 +212,55 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     skip() {
       skipReveal = true
       finishWait?.()
+      skipIntro = true
+      finishIntro?.()
+    },
+    async intro(s) {
+      skipIntro = false
+      const again = intro !== null
+      intro = { spec: s, k: again ? 1 : 0 }
+      sheet = null
+      title = null
+      verdict = null
+      await introReady(s, 1200, () => !disposed && intro?.spec === s && compose())
+      const it = intro
+      if (disposed || !it || it.spec !== s) return
+      if (again || reduced || skipIntro || typeof requestAnimationFrame !== 'function') {
+        it.k = 1
+        compose()
+        return
+      }
+      // the cards fade up and settle, one after the other (about half a second)
+      const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now()
+      await new Promise<void>((done) => {
+        let id = 0
+        const end = () => {
+          cancelAnimationFrame(id)
+          finishIntro = null
+          done()
+        }
+        finishIntro = end
+        const step = (now: number) => {
+          if (disposed || intro !== it) return end()
+          it.k = Math.min(1, (now - t0) / 560)
+          compose()
+          if (it.k >= 1) return end()
+          id = requestAnimationFrame(step)
+        }
+        id = requestAnimationFrame(step)
+      })
+      if (intro === it && it.k < 1) {
+        it.k = 1
+        compose()
+      }
+    },
+    clearIntro() {
+      if (intro) {
+        intro = null
+        finishIntro?.()
+        compose()
+      }
+      return Promise.resolve()
     },
     getSourceRect() {
       const b = paperBox
@@ -221,6 +287,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       if (disposed) return
       sheet = null
       stamp = null
+      intro = null
       title = t
       compose()
       await new Promise<void>((r) => setTimeout(r, reduced ? 900 : 1600))

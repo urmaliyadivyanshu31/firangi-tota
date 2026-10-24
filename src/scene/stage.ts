@@ -7,6 +7,8 @@ import * as THREE from 'three'
 import type { Lang } from '../content/types'
 import { mulberry32, seedFrom } from '../game/rng'
 import { arrive, placeAtRest, type ArrivalCtx, type StageCue } from './arrivals'
+import { createIntroCards, introPose, type IntroCards, type IntroPlay } from './intro'
+import { introReady } from './intro-card'
 import { bindParallax, createParallaxModel } from './parallax'
 import { mountFallback, type Fallback } from './fallback'
 import {
@@ -66,6 +68,7 @@ import {
   type DressingHooks,
   type EraDressing,
   type FlashKind,
+  type IntroSpec,
   type QualityTier,
   type RevealSpec,
   type ScreenRect,
@@ -247,6 +250,12 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   let ops = 0 // choreography in flight (title, arrival, stamp); skip() finishes them
   let skipping = false
   let msgToken = 0
+  // after Begin: the two intro cards on the desk (rebuilt at rest with the world)
+  let introSpec: IntroSpec | null = null
+  let introCards: IntroCards | null = null
+  let introToken = 0
+  let introJobs = 0 // intro choreography in flight
+  let introRush = false // Continue was pressed mid-intro: the cards jump home, then leave
 
   // the verdict on the paper: what was revealed for which message, and where its source line is
   let revealState: { spec: RevealSpec; token: number; back: BackLayout | null } | null = null
@@ -411,6 +420,26 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     if (w.calendar && calDays !== null) w.calendar.show(calDays)
     if (msg?.shown && revealState && revealState.token === msgToken) paintReveal(w, revealState.spec, 1, true, true)
+    if (introSpec) {
+      const c = introCardsOn(w)
+      c.draw(introSpec)
+      c.rest(rig.aspect())
+    } else dropIntroCards()
+  }
+
+  const dropIntroCards = () => {
+    introCards?.dispose()
+    introCards = null
+  }
+
+  /** The intro cards on this world, made the first time they are needed. */
+  const introCardsOn = (w: World): IntroCards => {
+    if (introCards && introCards.group.parent === w.scene) return introCards
+    dropIntroCards()
+    const c = createIntroCards(tier)
+    w.scene.add(c.group)
+    introCards = c
+    return c
   }
 
   /** Returns false when the dressing failed to build; the stage then falls back like a lost context. */
@@ -798,10 +827,12 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
    * Queues a piece of choreography after whatever is running. It is counted from the moment it is
    * asked for, so skip() also finishes work still waiting its turn; it never rejects.
    */
-  const run = (fn: () => Promise<void>): Promise<void> => {
+  const run = (fn: () => Promise<void>, now = false): Promise<void> => {
     ops++
     busy++
-    const job = queue
+    // `now` starts at once instead of after the queue (the intro cuts in on the wide shot); what is
+    // queued later still waits for it
+    const job = (now ? Promise.resolve() : queue)
       .then(fn)
       .catch((err: unknown) => {
         console.warn('[stage] animation failed', err)
@@ -814,7 +845,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
           if (!lost && !disposed) tweens.setInstant(false)
         }
       })
-    queue = job
+    queue = now ? Promise.all([queue, job]).then(() => undefined) : job
     return job
   }
 
@@ -1143,6 +1174,63 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     await tweens.wait(300)
   }
 
+  // (the margin is a share of the width: a short landscape screen takes a thinner one, or the
+  // cards would lose a third of the little height there is)
+  const introPoseFn: PoseFn = (aspect) => introPose(aspect, box(0.05 * Math.min(1, 1.2 / aspect)))
+
+  const introPlay = (token: number): IntroPlay => {
+    const gen = worldGen
+    return {
+      tw: tweens,
+      reduced,
+      aspect: rig.aspect(),
+      cue,
+      alive: () => gen === worldGen && token === introToken && !lost && !disposed,
+      skipping: () => skipping || introRush,
+    }
+  }
+
+  /** The intro cards slide onto the desk under the camera; again for the same intro, they redraw in place. */
+  const runIntro = async (s: IntroSpec) => {
+    const token = ++introToken
+    const again = !!introCards?.shown() && introSpec?.era === s.era
+    introSpec = s
+    // the camera heads for the desk at once, while the faces and the portraits load
+    rig.setSway(1)
+    rig.setParallaxScale(0.3)
+    // (again, the camera stays: a turned screen re-fits the shot by itself)
+    const move = again ? Promise.resolve() : reduced ? (rig.jumpTo(introPoseFn), Promise.resolve()) : rig.goTo(introPoseFn, 1100, ease.inOut)
+    const t0 = clock
+    await introReady(s, 1200, () => {
+      if (token === introToken && introSpec === s && world) introCardsOn(world).draw(s)
+    })
+    const w = world
+    if (!w || lost || disposed || token !== introToken) return
+    const c = introCardsOn(w)
+    c.draw(s)
+    if (again) {
+      c.rest(rig.aspect())
+      return
+    }
+    const gen = worldGen
+    // the cards come in once the camera is most of the way down, so their landing is seen close
+    await c.play({ ...introPlay(token), delay: Math.max(0, 520 - (clock - t0)) })
+    await move
+    // a beat after the cards settle, the parrot on the notice winks
+    if (!reduced && gen === worldGen) {
+      void tweens.wait(900).then(() => {
+        if (token === introToken && introCards === c) return c.wink(introPlay(token))
+      })
+    }
+  }
+
+  const runClearIntro = async () => {
+    const c = introCards
+    if (!c || lost || disposed) return
+    await c.leave(introPlay(introToken))
+    if (introCards === c && !introSpec) dropIntroCards()
+  }
+
   /** The screen box (CSS px) round some world points, or null off screen. */
   const screenRect = (pts: THREE.Vector3[]): ScreenRect | null => {
     camera.updateMatrixWorld()
@@ -1174,6 +1262,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       revealState = null
       calDays = null
       msgToken++
+      introSpec = null
+      introToken++
       exposureTok++
       exposure = EXPOSURE
       if (lost) {
@@ -1242,6 +1332,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     dayTitle(t) {
       if (lost) return fallback ? fallback.dayTitle(t) : Promise.resolve()
       if (disposed || !world) return Promise.resolve()
+      if (introSpec) void stage.clearIntro() // the cards never stay under a day
       return run(() => runTitle(t))
     },
     showMessage(s) {
@@ -1319,6 +1410,33 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       if (disposed || !world) return Promise.resolve()
       return run(() => runReveal(r))
     },
+    intro(s) {
+      if (lost) return fallback ? fallback.intro(s) : Promise.resolve()
+      if (disposed || !world) return Promise.resolve()
+      liftCaught()
+      introJobs++
+      return run(() => runIntro(s), true).finally(() => {
+        introJobs--
+        if (introRush && introJobs === 0) {
+          introRush = false
+          if (!skipping && !lost && !disposed) tweens.setInstant(false)
+        }
+      })
+    },
+    clearIntro() {
+      if (lost) return fallback ? fallback.clearIntro() : Promise.resolve()
+      if (disposed || !world || (!introSpec && !introCards)) return Promise.resolve()
+      const animating = introSpec !== null && introJobs > 0
+      introSpec = null
+      introToken++
+      if (animating) {
+        // the cards are still on their way: they jump home, then leave as usual
+        introRush = true
+        tweens.setInstant(true)
+        tweens.clear()
+      }
+      return run(runClearIntro)
+    },
     getSourceRect() {
       if (lost) return fallback?.getSourceRect() ?? null
       const w = world
@@ -1357,6 +1475,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       ro?.disconnect()
       if (overlayTimer) window.clearInterval(overlayTimer)
       overlay?.remove()
+      dropIntroCards()
       world?.dispose()
       world = null
       renderer.dispose()
