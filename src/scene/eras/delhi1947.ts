@@ -13,9 +13,9 @@
 // across the desk and wall, and the shadow maps re-render each time the blades turn a few degrees.
 import * as THREE from 'three'
 import { ERA_PALETTES, mix } from '../palette'
-import { DESK, SPOTS, createBasket, createBatch, createDesk, createWarmLight, disposeTree, markShadowsDirty, material, type WarmLight } from '../props'
+import { BLOTTER_TOP, DESK, SPOTS, createBasket, createBatch, createDesk, createWarmLight, disposeTree, markShadowsDirty, material, type WarmLight } from '../props'
 import { TIER_SETTINGS } from '../quality'
-import { blobTexture, clothTexture, glowTexture, paperTexture, plasterTexture, stoneTexture, toTexture, woodTexture } from '../textures'
+import { blobTexture, clothTexture, glowTexture, makeNoise, paperTexture, plasterTexture, stoneTexture, toTexture, woodTexture } from '../textures'
 import { mulberry32 } from '../../game/rng'
 import type { EraDressing, QualityTier } from '../types'
 
@@ -48,6 +48,11 @@ const PAD = (() => {
   const h = w * 1.21
   return { w, h, y: CAL.y - CAL.h / 2 + 0.014 + h / 2 }
 })()
+/**
+ * The leather desk pad on the baize, under the paper and the intro cards: the size and place of the
+ * other eras' blotter (props.ts createDesk), so the intro and desk shots frame it the same way.
+ */
+const DESK_PAD = { x: SPOTS.paper.x, z: SPOTS.paper.z, w: 0.42, d: 0.34 }
 /** The typewriter in the back right corner, turned a little toward the chair. */
 const TYPEWRITER = { x: 0.29, z: -0.16, yaw: -0.24 }
 /** The wastepaper basket, on the durrie in front of the right pedestal: a read telegram is tossed in. */
@@ -456,6 +461,127 @@ function drawerTexture(w: number, rng: () => number, anisotropy: number): THREE.
   return toTexture(c, { anisotropy })
 }
 
+/**
+ * The top of the desk pad: oxblood morocco with its pebbled grain, the leather turned darker over
+ * the edge, a blind-tooled rule, a gilt double fillet with small gilt rosettes at its corners (worn
+ * thin in places), a patch rubbed paler where forearms rest, and one old ink spot. `w` px wide; the
+ * canvas has the pad's own shape, its top edge at the back of the desk.
+ */
+function deskPadTexture(w: number, rng: () => number, anisotropy: number): THREE.CanvasTexture {
+  const h = Math.round((w * DESK_PAD.d) / DESK_PAD.w)
+  const [c, g] = canvas2d(w, h)
+  if (g) {
+    const mm = w / (DESK_PAD.w * 1000) // pixels per millimetre
+    g.fillStyle = '#401517'
+    g.fillRect(0, 0, w, h)
+    // the grain: one small tile of pebbles painted pixel by pixel, then repeated across the pad
+    const tw = Math.max(32, Math.min(128, Math.round(w / 8)))
+    const [tc, tg] = canvas2d(tw, tw)
+    if (tg) {
+      const n = makeNoise(rng)
+      const img = tg.createImageData(tw, tw)
+      const cells = Math.max(8, Math.round(tw / (1.6 * mm)))
+      for (let y = 0; y < tw; y++) {
+        for (let x = 0; x < tw; x++) {
+          const u = x / tw
+          const v = y / tw
+          const pebble = n(u * cells, v * cells, cells, cells)
+          const fine = n(u * cells * 2.3, v * cells * 2.3, Math.round(cells * 2.3), Math.round(cells * 2.3))
+          const k = 0.8 + 0.3 * pebble * pebble + 0.1 * fine
+          const i = (y * tw + x) * 4
+          img.data[i] = 64 * k
+          img.data[i + 1] = 22 * k
+          img.data[i + 2] = 21 * k
+          img.data[i + 3] = 255
+        }
+      }
+      tg.putImageData(img, 0, 0)
+      const pat = g.createPattern(tc, 'repeat')
+      if (pat) {
+        g.fillStyle = pat
+        g.fillRect(0, 0, w, h)
+      }
+    }
+    // rubbed paler toward the front middle, where forearms rest; darker toward the corners
+    const rub = g.createRadialGradient(w * 0.5, h * 0.78, 0, w * 0.5, h * 0.78, w * 0.42)
+    rub.addColorStop(0, 'rgba(140,78,62,0.16)')
+    rub.addColorStop(1, 'rgba(140,78,62,0)')
+    g.fillStyle = rub
+    g.fillRect(0, 0, w, h)
+    const dark = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.hypot(w, h) * 0.55)
+    dark.addColorStop(0, 'rgba(20,4,6,0)')
+    dark.addColorStop(1, 'rgba(20,4,6,0.35)')
+    g.fillStyle = dark
+    g.fillRect(0, 0, w, h)
+    // an old ink spot toward the front left, where a nib was shaken, with a splash beside it
+    g.fillStyle = 'rgba(14,10,24,0.55)'
+    g.beginPath()
+    g.ellipse(w * 0.1, h * 0.85, 3.2 * mm, 2.6 * mm, 0.4, 0, Math.PI * 2)
+    g.fill()
+    g.beginPath()
+    g.arc(w * 0.1 + 5 * mm, h * 0.85 - 2.5 * mm, 0.9 * mm, 0, Math.PI * 2)
+    g.fill()
+    // the leather turned over the edge: darker, with a fine crease where it folds
+    const edge = 4 * mm
+    g.strokeStyle = 'rgba(16,3,5,0.6)'
+    g.lineWidth = edge * 2
+    g.strokeRect(0, 0, w, h)
+    g.strokeStyle = 'rgba(190,110,90,0.18)'
+    g.lineWidth = Math.max(1, 0.5 * mm)
+    g.strokeRect(edge, edge, w - 2 * edge, h - 2 * edge)
+    // the blind-tooled rule: pressed in, so a dark line with a pale lip below it
+    const blind = 9 * mm
+    g.lineWidth = Math.max(1, 0.9 * mm)
+    g.strokeStyle = 'rgba(12,2,4,0.55)'
+    g.strokeRect(blind, blind, w - 2 * blind, h - 2 * blind)
+    g.strokeStyle = 'rgba(200,120,100,0.12)'
+    g.strokeRect(blind + 0.8 * mm, blind + 0.8 * mm, w - 2 * blind - 1.6 * mm, h - 2 * blind - 1.6 * mm)
+    // the gilt double fillet, worn thin in places, then a rosette at each corner
+    const gilt = (alpha: number) => `rgba(214,170,84,${alpha.toFixed(3)})`
+    const fillet = (inset: number, lw: number) => {
+      const x0 = inset
+      const y0 = inset
+      const x1 = w - inset
+      const y1 = h - inset
+      const sides: [number, number, number, number][] = [[x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]]
+      g.lineWidth = Math.max(1, lw)
+      g.lineCap = 'butt'
+      for (const [ax, ay, bx, by] of sides) {
+        const len = Math.hypot(bx - ax, by - ay)
+        const steps = Math.max(4, Math.round(len / (12 * mm)))
+        for (let i = 0; i < steps; i++) {
+          // the gold rubs off a little where hands pass
+          g.strokeStyle = gilt(0.55 + 0.4 * rng())
+          g.beginPath()
+          g.moveTo(ax + ((bx - ax) * i) / steps, ay + ((by - ay) * i) / steps)
+          g.lineTo(ax + ((bx - ax) * (i + 1)) / steps, ay + ((by - ay) * (i + 1)) / steps)
+          g.stroke()
+        }
+      }
+    }
+    const f1 = 14 * mm
+    fillet(f1, 0.9 * mm)
+    fillet(f1 + 2.2 * mm, 0.45 * mm)
+    const rosette = (x: number, y: number) => {
+      const r = 3.2 * mm
+      g.fillStyle = gilt(0.85)
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2
+        g.beginPath()
+        g.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.42, r * 0.2, a, 0, Math.PI * 2)
+        g.fill()
+      }
+      g.fillStyle = '#3c1416'
+      g.beginPath()
+      g.arc(x, y, r * 0.22, 0, Math.PI * 2)
+      g.fill()
+    }
+    const ri = f1 + 1.1 * mm
+    for (const [x, y] of [[ri, ri], [w - ri, ri], [w - ri, h - ri], [ri, h - ri]] as const) rosette(x, y)
+  }
+  return toTexture(c, { anisotropy })
+}
+
 /** A cotton durrie in madder, indigo and ochre stripes, with a border and the weave. */
 function durrieTexture(w: number, rng: () => number, anisotropy: number): THREE.CanvasTexture {
   const [c, g] = canvas2d(w, w)
@@ -663,6 +789,18 @@ const delhi1947: EraDressing = {
     root.add(desk.group)
     // the baize lies a hair above the wood and below the low tier's stamp shadows (y 0.0008)
     b.add(new THREE.PlaneGeometry(DESK.w - 0.07, DESK.d - 0.07).rotateX(-Math.PI / 2), baizeMat, [0, 0.0005, 0], [0, 0, 0], false, true)
+    // the leather desk pad on the baize, its top where the other eras' blotter is (BLOTTER_TOP), so
+    // the paper and the intro cards lie on it at the same height
+    {
+      const padMat = material(tier, {
+        map: deskPadTexture(low ? 256 : high ? 1024 : 512, mulberry32(0x1947), aniso), // its own rng: the rest of the room is unchanged
+        bump: 0.25,
+        shininess: 14,
+        specular: 0x2a1610,
+      })
+      const th = BLOTTER_TOP - 0.0005
+      b.add(box(DESK_PAD.w, th, DESK_PAD.d), padMat, [DESK_PAD.x, 0.0005 + th / 2, DESK_PAD.z], [0, 0, 0], false, true)
+    }
     // drawer pedestals under it, as on a government pedestal desk, with a modesty panel between
     const carcassMat = material(tier, {
       map: woodTexture('walnut', { size: Math.min(256, T), rng, anisotropy: aniso, repeat: [1, 1], planks: 4, joints: false }),
@@ -963,12 +1101,13 @@ const delhi1947: EraDressing = {
     // -------------------------------------------------------- low tier: soft contact shadows instead of shadow maps
     if (low) {
       const blobMat = new THREE.MeshBasicMaterial({ map: blobTexture(64), transparent: true, depthWrite: false, opacity: 0.8 })
-      const blob = (x: number, z: number, w: number, d: number, yaw = 0) =>
-        b.add(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), blobMat, [x, 0.0009, z], [0, yaw, 0], false, false)
+      // (the tray and the typewriter reach onto the desk pad, so theirs lie just above its top)
+      const blob = (x: number, z: number, w: number, d: number, yaw = 0, y = 0.0009) =>
+        b.add(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), blobMat, [x, y, z], [0, yaw, 0], false, false)
       blob(SPOTS.lamp.x, SPOTS.lamp.z, 0.17, 0.17)
       blob(-0.13, -0.245, 0.13, 0.13)
-      blob(0.035, -0.215, 0.24, 0.21, 0.04)
-      blob(TYPEWRITER.x, TYPEWRITER.z, 0.34, 0.3, TYPEWRITER.yaw)
+      blob(0.035, -0.215, 0.24, 0.21, 0.04, BLOTTER_TOP + 0.0001)
+      blob(TYPEWRITER.x, TYPEWRITER.z, 0.34, 0.3, TYPEWRITER.yaw, BLOTTER_TOP + 0.0001)
     }
 
     const statics = b.build()
