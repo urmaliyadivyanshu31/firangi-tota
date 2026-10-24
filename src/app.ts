@@ -3,6 +3,7 @@
 // the agarbatti. The room is always on screen: the stage establishes it behind the cards, titles
 // each day, brings the message in on its paper, stamps it and flashes. Nothing here imports
 // three.js: the stage and the era desks arrive by dynamic import after the first paint (R10).
+import { gameEvent } from './analytics'
 import { audio, cueForStage } from './audio/engine'
 import { ERAS, eraById } from './content/registry'
 import type { Era, EraId, Message } from './content/types'
@@ -797,6 +798,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     setDeskEra(era.id)
     audio.ambience(era.id)
     play = { kind: 'chapter', era, difficulty: d, state }
+    gameEvent('chapter_start', { era: era.id, mode: d, lang: getLang() })
     beginDay()
   }
 
@@ -1035,6 +1037,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (outcome === 'survived') p.state = nextDay(p.state)
     const survived = outcome === 'survived' ? p.state.days : p.state.day - 1
     recordBest(p.era.id, p.difficulty, survived)
+    gameEvent('chapter_end', { era: p.era.id, mode: p.difficulty, outcome, days: survived, lang: getLang() })
     if (outcome === 'survived') audio.cue('survived')
   }
 
