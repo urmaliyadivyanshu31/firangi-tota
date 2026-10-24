@@ -1,4 +1,4 @@
-// Frames of the toss from the dev preview (dev/crumple.html): the hands, the crumple, the flick.
+// Frames of the toss from the dev preview (dev/crumple.html): the hands, the crumple, the drop.
 // Start the dev server first (npx vite --port 5186 --strictPort --host 127.0.0.1), then:
 //   node dev/shoot-crumple.mjs [base] [outDir]
 //   env SIZES=390x844,1440x900  ERAS=delhi-1857,...  LANG=en  TIER=low  AT=0,200,500,...  STRIP=1

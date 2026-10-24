@@ -1,5 +1,5 @@
 // Plays the real app through a right stamp and records the toss: the verdict held on the paper,
-// the hands screwing the paper up into a ball and flicking it into the desk's basket, and the next
+// the hands screwing the paper up into a ball and dropping it into the desk's basket, and the next
 // day starting by itself.
 // Start the dev server first (npx vite --port 5180 --strictPort --host 127.0.0.1), then:
 //   node dev/shoot-toss.mjs [base] [outDir]
@@ -18,7 +18,7 @@ const REDUCED = !!process.env.REDUCED
 const FALLBACK = !!process.env.FALLBACK
 const DAYS = Number(process.env.DAYS ?? 1)
 // moments after the verdict is up (ms): the held verdict (TOSS_HOLD_MS is 3.5 s), then the toss frame
-// by frame: the hands in, three squeezes, the ball on the palm, the flick, the flight, the landing
+// by frame: the hands in, three squeezes, the hand over the ball, the carry, the drop, the landing
 const SHOTS = (process.env.SHOTS ?? '1500,3700,3950,4250,4550,4850,5100,5300,5500,5750,6000,6400').split(',').map(Number)
 mkdirSync(OUT, { recursive: true })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))

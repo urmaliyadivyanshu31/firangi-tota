@@ -279,7 +279,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     if (more) raf = requestAnimationFrame(frame)
   }
 
-  /** The toss's beats, in order: each squeeze's crinkle, the flick, the landing (or, faded, a crinkle and the landing). */
+  /** The toss's beats, in order: each squeeze's crinkle, the letting go, the landing (or, faded, a crinkle and the landing). */
   const tossBeats = (): [number, StageCueName][] =>
     reduced ? [[0, 'crumple'], [TOSS.fade, 'tossLand']] : [...TOSS_AT.squeezes.map((at): [number, StageCueName] => [at, 'crumple']), [TOSS_AT.release, 'toss'], [TOSS_AT.land, 'tossLand']]
 
