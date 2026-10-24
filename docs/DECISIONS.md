@@ -128,3 +128,13 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - A Vercel preview goes up first, with the read-aloud voice on. The voice key is an encrypted
   Vercel environment variable and `/api/voice` is rate limited. firangitota.com and production go
   live only after the owner checks the preview.
+
+## 2026-10-24: After a right stamp, and after a wrong one
+
+- The day-count picker marks the chosen card by lifting it and looping its number in ink. No box,
+  and no keyboard digits in the corners.
+- No "Next" button after a right stamp. When the verdict has been read, the paper lifts off the desk
+  and is tossed into the desk's basket, and the next day starts by itself. A tap hurries it.
+- A wrong stamp plays out over a few seconds instead of all at once: the alarm sounds first, then
+  the room reacts in time with it (red light, shaking, darkness), with more sounds, before the
+  verdict turns over on the paper.
