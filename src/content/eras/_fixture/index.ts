@@ -52,10 +52,10 @@ const era: Era = {
       from: { en: 'The Subedar', hi: 'सूबेदार' },
       to: { en: 'The Clerk', hi: 'मुंशी' },
       text: {
-        en: 'On {date} the guards changed at the gate.',
-        hi: '{date} को फाटक पर पहरेदार बदले गए।',
+        en: 'On {date} the guards changed at the Delhi gate.',
+        hi: '{date} को दिल्ली फाटक पर पहरा बदला।',
       },
-      checks: { en: ['guards changed'], hi: ['पहरेदार बदले'] },
+      checks: { en: ['the Delhi gate'], hi: ['दिल्ली फाटक'] },
       why: {
         text: { en: 'The gate rota is recorded.', hi: 'फाटक की बारी दर्ज है।' },
         sources: [{ id: 's1', loc: 'p. 14' }],

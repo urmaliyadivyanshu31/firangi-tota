@@ -1,6 +1,6 @@
 import type { Fact } from '../../types.js'
 
-// The case file. hardHidden lines are blank in Hard: a history buff knows them.
+// The case file. Every line is readable in every mode it is in (owner 10-24: every check is in the file).
 // It grows with the mode (owner 10-24): lines with minMode 'medium' join in Medium and Hard, 'hard' in
 // Hard only. Easy keeps the ten lines without a minMode.
 // Each line backs at least one forgery's slip (see messages.ts). In story order: the days of freedom
@@ -42,7 +42,6 @@ export const facts: Fact[] = [
       hi: 'नेहरू का भाषण [[संविधान सभा]] में, [[14 अगस्त देर रात]] होता है।',
     },
     sources: [{ id: 'cad-14aug1947' }],
-    hardHidden: true,
   },
   {
     id: 'delhi-flags',
@@ -54,7 +53,6 @@ export const facts: Fact[] = [
       hi: 'लाल क़िले पर झंडा [[शनिवार 16 अगस्त]] को [[बहुत सुबह]] फहराया जाता है।',
     },
     sources: [{ id: 'campbell-johnson-1951', loc: 'entries for 15 and 16 August 1947' }],
-    hardHidden: true,
   },
   {
     id: 'delhi-programme',

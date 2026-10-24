@@ -38,7 +38,15 @@ export interface Message {
   document?: { sources: SourceRef[] };            // present => "📜 Real document"
   why?: { text: L10n; sources: SourceRef[] };     // required when real
   tells?: Tell[];                                 // required (≥1) when forged
+  /**
+   * Where a player checks a pencil mark whose words cannot match the case file or the rules word for
+   * word (keyed by the check, EN or HI): a fact or a rule that settles it, or the calendar (the era's
+   * weekday rule). The validator checks the reference exists and is visible wherever the message can come.
+   */
+  verify?: Record<string, Verify>;
 }
+/** An explicit coverage route for one check. */
+export type Verify = `fact:${string}` | `rule:${string}` | 'calendar'
 export interface Receipt { id: string; who: L10n; quote: L10n; joke: L10n; theirSide?: L10n; source: SourceRef }
 export interface Epilogue { survived: L10n[]; caught: L10n[]; sources: SourceRef[] }
 export interface Era {

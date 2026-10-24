@@ -29,8 +29,8 @@ export const rules: Rule[] = [
   {
     id: 'council-house',
     text: {
-      en: "No Lok Sabha and no President of India yet; Prasad is the Assembly's President.",
-      hi: 'अभी न लोकसभा है, न भारत का राष्ट्रपति; प्रसाद संविधान सभा के अध्यक्ष हैं।',
+      en: 'No Lok Sabha or President of India yet; Rajendra Prasad presides over the Assembly.',
+      hi: 'अभी न लोकसभा है, न भारत का राष्ट्रपति; संविधान सभा के अध्यक्ष राजेंद्र प्रसाद हैं।',
     },
     arrivesOnDay: 3,
   },
@@ -53,8 +53,8 @@ export const rules: Rule[] = [
   {
     id: 'renames',
     text: {
-      en: "From 15 August, Mountbatten is no longer Viceroy, and Viceroy's House is Government House.",
-      hi: '15 अगस्त से माउंटबेटन वायसराय नहीं रहे, और वायसराय हाउस अब गवर्नमेंट हाउस है।',
+      en: "From 15 August, Mountbatten is India's Governor-General, not Viceroy; Viceroy's House is Government House.",
+      hi: '15 अगस्त से माउंटबेटन वायसराय नहीं, भारत के गवर्नर-जनरल हैं; वायसराय हाउस अब गवर्नमेंट हाउस है।',
     },
     arrivesOnDay: 9,
   },

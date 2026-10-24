@@ -12,12 +12,12 @@ describe('the sheet the paper shows', () => {
     m.from = { en: 'The Subedar, {weekday}', hi: 'सूबेदार, {weekday}' }
     const s = buildSheet({ era: e, msg: m, isoDate: '1857-05-11', lang: 'en', pencil: true })
     expect(s).toMatchObject({ era: e.id, channel: 'petition', lang: 'en', pencil: true, heading: strings.en.sheetPetitionHead })
-    expect(s.body).toBe('On 11 May 1857 the guards changed at the gate.')
+    expect(s.body).toBe('On 11 May 1857 the guards changed at the Delhi gate.')
     expect(s.body).toBe(messageText(m, '1857-05-11', 'en'))
     expect(s.from).toBe('The Subedar, Monday')
     expect(s.to).toBe('The Clerk')
     expect(s.dateLine).toBe('Monday, 11 May 1857')
-    expect(s.checks).toEqual(['guards changed'])
+    expect(s.checks).toEqual(['the Delhi gate'])
     expect(s.documentMark).toBe(false)
   })
 

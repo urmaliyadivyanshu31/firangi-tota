@@ -1,6 +1,7 @@
-import type { Era, Fact, L10n, Lang, Message, SourceRef } from './types'
+import type { Era, Fact, L10n, Lang, Message, Rule, SourceRef } from './types'
 import { addDays, fillTemplate } from '../game/dates'
-import { earliestDay } from '../game/run'
+import { earliestDay, inMode } from '../game/run'
+import { DAYS, type Difficulty } from '../game/config'
 import { plainStory, storyParts, strayBrackets } from './story'
 
 const LANGS: Lang[] = ['en', 'hi']
@@ -13,6 +14,9 @@ export const ENFORCE_SURFACE_TELLS = true
 
 /** Pencil marks must not reveal genuine vs forged (count per pair, era-wide mean and 2+ share). */
 export const ENFORCE_PENCIL_TELLS = true
+
+/** Every check of every message must be verifiable from that mode's case file, its rules or the calendar (owner 10-24). */
+export const ENFORCE_COVERAGE = true
 
 /** Every day of the 14-day window: a message may be shown on any of them. */
 const WINDOW_DAYS = Array.from({ length: 14 }, (_, i) => i + 1)
@@ -244,7 +248,172 @@ export function storyChecks(era: Era, f: Fact): string[] {
   return out
 }
 
-export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells?: boolean; pencilTells?: boolean } = {}): string[] {
+// ── Coverage: a player can only judge a message by its case file and rules (owner 10-24) ──
+
+const MODES: Difficulty[] = ['easy', 'medium', 'hard']
+const WEEKDAY_WORDS = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b|रविवार|सोमवार|मंगलवार|बुधवार|गुरुवार|शुक्रवार|शनिवार/
+const MONTH_WORDS = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b|जनवरी|फ़रवरी|फरवरी|मार्च|अप्रैल|मई|जून|जुलाई|अगस्त|सितंबर|अक्टूबर|नवंबर|दिसंबर/
+/** English words that carry no checkable detail, capitalised or not. */
+const EN_STOP = new Set(['a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'on', 'at', 'by', 'for', 'from', 'with', 'into', 'onto', 'upon', 'as', 'is',
+  'are', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'do', 'does', 'did', 'it', 'its', 'he', 'she', 'they', 'them', 'his', 'her',
+  'their', 'him', 'we', 'our', 'us', 'you', 'your', 'i', 'my', 'me', 'this', 'that', 'these', 'those', 'there', 'here', 'all', 'any', 'each', 'every',
+  'no', 'not', 'nor', 'so', 'than', 'then', 'too', 'very', 'will', 'shall', 'would', 'should', 'can', 'could', 'may', 'might', 'must', 'who', 'whom',
+  'which', 'what', 'when', 'where', 'why', 'how', 'if', 'out', 'up', 'down', 'over', 'under', 'about', 'after', 'before', 'also', 'only', 'just',
+  'now', 'one', 'own', 'same', 'such', 'some', 'more', 'most', 'other', 'again', 'once', 'like', 'per', 'via', 'mr', 'mrs', 'sir', 'shri', 'sri',
+  'th', 'st', 'nd', 'rd', 'am', 'pm', 'let', 'yet', 'still', 'even', 'well', 'quite', 'said', 'says', 'say'])
+/** Hindi words that carry no checkable detail. */
+const HI_STOP = new Set(['का', 'की', 'के', 'को', 'में', 'से', 'ने', 'पर', 'तक', 'और', 'या', 'भी', 'ही', 'तो', 'है', 'हैं', 'था', 'थी', 'थे', 'हो', 'होगा',
+  'होगी', 'होंगे', 'हुआ', 'हुई', 'हुए', 'कर', 'करके', 'किया', 'किए', 'गया', 'गई', 'गए', 'यह', 'वह', 'ये', 'वे', 'इस', 'उस', 'इन', 'उन', 'एक',
+  'नहीं', 'न', 'कोई', 'कुछ', 'सब', 'अब', 'जो', 'जब', 'तब', 'लिए', 'साथ', 'बाद', 'पहले', 'हम', 'हमारे', 'हमारी', 'हमारा', 'आप', 'आपके', 'आपकी', 'मैं',
+  'मेरे', 'उनके', 'उनकी', 'उनका', 'उसके', 'उसकी', 'उसका', 'अपने', 'अपनी', 'अपना', 'श्री', 'जी', 'वाले', 'वाली', 'वाला', 'रहा', 'रही', 'रहे', 'दिया', 'दी',
+  'दिए', 'लिया', 'ली', 'सकता', 'सकते', 'सकती', 'बहुत', 'यहां', 'वहां', 'क्या', 'कि'])
+
+/** Hindi spellings vary by nukta and nasal sign; English by case. */
+const norm = (s: string): string => s.toLowerCase().replace(/़/g, '').replace(/ँ/g, 'ं').replace(/[’‘]/g, "'")
+
+/** Hindi words in their stem: the oblique, plural and vowel endings off (छोटा/छोटे, अंग्रेज़/अंग्रेज़ों). */
+const stemHi = (w: string): string => w.replace(/(ियों|ियां|ओं|ों|ें|ां)$/u, '').replace(/[ा-ौं]+$/u, '')
+
+const wordsOf = (s: string): string[] => (norm(s).match(/[\p{L}\p{M}]+/gu) ?? [])
+
+/** Titles that go with a name but are not the name: "Mirza Abu Bakr" is checked as "Abu Bakr". */
+const TITLES = new Set(['mirza', 'maulvi', 'moulvie', 'hakim', 'sir', 'lord', 'raja', 'rajah', 'maharaja', 'maharajah', 'nawab', 'kazi', 'qazi',
+  'pandit', 'general', 'colonel', 'captain', 'major', 'lieutenant', 'sardar', 'seth', 'begum', 'prince', 'princess', 'kumar', 'lady', 'miss',
+  'dr', 'mahatma', 'maulana', 'babu', 'lala', 'comrade', 'smt'])
+
+/**
+ * The key tokens of a check: every digit run, then the capitalised names (EN) or the content words.
+ * A capital that only opens a sentence of the message ("Remember February") is not a name when the
+ * check has other tokens.
+ */
+export function checkTokens(check: string, lang: Lang, text = ''): { digits: string[]; words: string[] } {
+  const digits = digitRuns(check)
+  const raw = check.match(/[\p{L}\p{M}]+/gu) ?? []
+  if (lang === 'hi') return { digits, words: raw.map(norm).filter((w) => w.length >= 2 && !HI_STOP.has(w)) }
+  const content = raw.filter((w) => !EN_STOP.has(w.toLowerCase()) && w.length >= 3)
+  let names = content.filter((w) => isCapital(w) && !TITLES.has(w.toLowerCase()))
+  const at = text.indexOf(check)
+  const opens = at === 0 || (at > 0 && /[.!?:;…'‘“"(]\s*$/u.test(text.slice(0, at)))
+  if (opens && names.length + digits.length > 1 && raw[0] === names[0] && !CALENDAR.test(names[0]!)) names = names.slice(1)
+  const titled = content.some((w) => TITLES.has(w.toLowerCase()) && isCapital(w))
+  return { digits, words: (names.length > 0 || digits.length > 0 || titled ? names : content).map(norm) }
+}
+
+/** A word matches its inflections: Hindu/Hindus, अंग्रेज़/अंग्रेज़ों, English/Englishmen. */
+function wordMatch(tok: string, w: string, lang: Lang): boolean {
+  if (tok === w) return true
+  const [x, y] = lang === 'hi' ? [stemHi(tok), stemHi(w)] : [tok, w]
+  if (lang === 'hi' && x.length >= 2 && x === y) return true
+  const [a, b] = x.length <= y.length ? [x, y] : [y, x]
+  return a.length >= 3 && b.startsWith(a) && b.length - a.length <= 4
+}
+
+/** Every key token of the check sits in this one text. */
+export function covers(text: string, check: string, lang: Lang, context = ''): boolean {
+  const { digits, words } = checkTokens(check, lang, context)
+  if (digits.length === 0 && words.length === 0) return false
+  const have = new Set(digitRuns(text))
+  const ws = wordsOf(text)
+  return digits.every((d) => have.has(d)) && words.every((t) => ws.some((w) => wordMatch(t, w, lang)))
+}
+
+/**
+ * A Hindi mark read in the line its English mark matched: every number of it is there, and so is
+ * at least one of its words (Hindi has no capitals to pick the names out by).
+ */
+function coversHi(text: string, check: string): boolean {
+  const { digits, words } = checkTokens(check, 'hi')
+  const have = new Set(digitRuns(text))
+  const ws = wordsOf(text)
+  return digits.every((d) => have.has(d)) && (words.length === 0 || words.some((t) => ws.some((w) => wordMatch(t, w, 'hi'))))
+}
+
+/** What a fact's case-file line shows in this mode: its story, with Hard's blanks where a hidden line's highlights were. */
+const factText = (f: Fact, lang: Lang, mode: Difficulty): string =>
+  storyParts(f.story?.[lang] ?? '').map((p) => (p.hl && mode === 'hard' && f.hardHidden ? ' … ' : p.text)).join('')
+
+/** A rule that settles weekdays: it names a weekday and a date. */
+const isCalendarRule = (r: Rule): boolean => WEEKDAY_WORDS.test(r.text?.en ?? '') && /\d/.test(r.text?.en ?? '')
+
+/** A check the calendar settles: it names a weekday, or a date in a message that names a weekday. */
+const dateLike = (check: string, text: string): boolean =>
+  WEEKDAY_WORDS.test(check) || (MONTH_WORDS.test(check) && /\d/.test(check) && WEEKDAY_WORDS.test(text))
+
+/** The modes a message can come in: its minMode, and a first day that falls within that mode's run. */
+export function modesOf(era: Era, m: Message): Difficulty[] {
+  const first = m.onDay ?? earliestDay(era, m)
+  return MODES.filter((d) => inMode(m, d) && first <= DAYS[d])
+}
+
+/**
+ * Every pencil mark (check) of every message is verifiable in every mode the message can come in:
+ * its key tokens sit in one case-file line of that mode or in one rule arrived by the message's first
+ * day, or it is a weekday or date the era's weekday rule settles, or `verify` names the fact, rule or
+ * calendar that settles it. A forgery's slip (a mark its genuine twin does not carry) is settled by a
+ * tell whose fact or rule is visible; every forgery needs such a tell.
+ */
+export function coverage(era: Era): string[] {
+  const out: string[] = []
+  for (const m of era.messages) {
+    const first = m.onDay ?? earliestDay(era, m)
+    const twin = m.pair !== undefined && !m.real ? era.messages.find((o) => o.pair === m.pair && o.real) : undefined
+    const dateLine = (day: number, lang: Lang) => fillTemplate('{weekday}, {date}', addDays(era.windowStart, day - 1), lang)
+    const calendarDay = Math.min(...era.rules.filter(isCalendarRule).map((r) => r.arrivesOnDay))
+    /**
+     * A weekday or date is settled on every day the message can fall on: by the paper's own date line
+     * (a dated event's date is today's; a day-1 message's date can be day 1's), and by the weekday rule
+     * from the day it arrives.
+     */
+    const calendarOk = (c: string, text: string, lang: Lang): boolean => {
+      const today = (day: number) => (WEEKDAY_WORDS.test(c) || MONTH_WORDS.test(c)) && covers(dateLine(day, lang), c, lang)
+      if (m.onDay !== undefined) return today(m.onDay) || (calendarDay <= m.onDay && dateLike(c, text))
+      return dateLike(c, text) && (calendarDay <= first || (calendarDay === first + 1 && today(first)))
+    }
+    for (const mode of modesOf(era, m)) {
+      const facts = era.facts.filter((f) => inMode(f, mode))
+      const rules = era.rules.filter((r) => r.arrivesOnDay <= first)
+      // a fact Hard leaves blank cannot catch a slip in Hard
+      const seen = (f: Fact) => !(mode === 'hard' && f.hardHidden)
+      const caught = (m.tells ?? []).some((t) =>
+        (t.factId !== undefined && facts.some((f) => f.id === t.factId && seen(f))) || (t.ruleId !== undefined && rules.some((r) => r.id === t.ruleId)))
+      if (!m.real && !caught) out.push(`${m.id}: no tell whose fact or rule is in the ${mode} case file or rules`)
+      for (const lang of LANGS) {
+        const text = fillTemplate(m.text?.[lang] ?? '', era.windowStart, lang)
+        const list = m.checks?.[lang] ?? []
+        const enList = m.checks?.en ?? []
+        list.forEach((c, i) => {
+          // a Hindi mark is the translation of the English mark at its place: it is read in the same line
+          const en = lang === 'hi' && enList.length === list.length ? enList[i] : undefined
+          const ref = m.verify?.[c] ?? (en !== undefined ? m.verify?.[en] : undefined)
+          if (ref !== undefined) {
+            const [kind, id] = ref === 'calendar' ? ['calendar', ''] : [ref.slice(0, 4), ref.slice(5)]
+            const fact = kind === 'fact' ? era.facts.find((f) => f.id === id) : undefined
+            const rule = kind === 'rule' ? era.rules.find((r) => r.id === id) : undefined
+            if (kind === 'fact' && !fact) out.push(`${m.id}: verify "${c}" names unknown fact "${id}"`)
+            else if (fact && !inMode(fact, mode)) out.push(`${m.id}: verify "${c}" needs fact "${id}", which is not in the ${mode} case file [${lang}]`)
+            else if (fact && mode === 'hard' && fact.hardHidden) out.push(`${m.id}: verify "${c}" needs fact "${id}", which Hard leaves blank [${lang}]`)
+            else if (kind === 'rule' && !rule) out.push(`${m.id}: verify "${c}" names unknown rule "${id}"`)
+            else if (rule && rule.arrivesOnDay > first) out.push(`${m.id}: verify "${c}" needs rule "${id}", which arrives on day ${rule.arrivesOnDay}, after day ${first} [${lang}]`)
+            // a mark that points at a weekday and date the paper fills in: the weekday rule must be in by its first day
+            else if (kind === 'calendar' && calendarDay > first) out.push(`${m.id}: verify "${c}" needs the weekday rule by day ${first} [${lang}]`)
+            return
+          }
+          const enText = fillTemplate(m.text?.en ?? '', era.windowStart, 'en')
+          const texts = [...facts.map((f) => [factText(f, 'en', mode), factText(f, lang, mode)]), ...rules.map((r) => [r.text?.en ?? '', r.text?.[lang] ?? ''])]
+          if (texts.some(([enLine, own]) => (en !== undefined ? covers(enLine!, en, 'en', enText) && coversHi(own!, c) : covers(own!, c, lang, text)))) return
+          if (calendarOk(c, text, lang)) return
+          // a forgery's slip: a mark its genuine twin does not say, caught by a visible tell
+          const twinText = twin ? fillTemplate(twin.text?.[lang] ?? '', era.windowStart, lang) : ''
+          if (!m.real && caught && !twinText.includes(c)) return
+          out.push(`${m.id}: check "${c}" is not in the ${mode} case file or rules [${lang}]`)
+        })
+      }
+    }
+  }
+  return out
+}
+
+export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells?: boolean; pencilTells?: boolean; coverage?: boolean } = {}): string[] {
   const problems: string[] = []
   const add = (id: string, msg: string) => problems.push(id ? `${id}: ${msg}` : msg)
 
@@ -392,6 +561,8 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
   if (opts.surfaceTells ?? ENFORCE_SURFACE_TELLS) problems.push(...surfaceTells(era))
 
   if (opts.pencilTells ?? ENFORCE_PENCIL_TELLS) problems.push(...pencilTells(era))
+
+  if (opts.coverage ?? ENFORCE_COVERAGE) problems.push(...coverage(era))
 
   return problems
 }

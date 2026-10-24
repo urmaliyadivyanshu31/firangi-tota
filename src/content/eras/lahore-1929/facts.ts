@@ -264,7 +264,6 @@ export const facts: Fact[] = [
       { id: 'chaman-lal-reader', loc: 'introduction' },
       { id: 'chaman-lal-2009' },
     ],
-    hardHidden: true,
   },
   {
     id: 'lajpat-rai',
@@ -276,7 +275,6 @@ export const facts: Fact[] = [
       hi: '1928 में लाजपत राय [[30 अक्टूबर]] को पीटे गए, और [[17 नवंबर]] को उनकी मौत हो गई।',
     },
     sources: [{ id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
-    hardHidden: true,
   },
   {
     // Noorani: the plan was 'to kill the Superintendent of Police, J.A. Scott'; only after the deed
@@ -319,7 +317,6 @@ export const facts: Fact[] = [
       { id: 'sanyal-1931', loc: 'ch. IV, the escape' },
       { id: 'maclean-durga' },
     ],
-    hardHidden: true,
   },
   {
     // 'The Meerut Conspiracy Case began in camera on March 15, 1929 when the District Magistrate of
