@@ -16,7 +16,8 @@ const MAP: Record<StageCueName, Cue | null> = {
   flip: 'page',
   arrive: 'arrive',
   right: 'correct',
-  wrong: 'caught',
+  // a wrong verdict is voiced beat by beat by the caught sequence (below), never at the stamp
+  wrong: null,
   // the stamp's own thunk depends on which stamp, so the app plays stampAsli or stampTota itself
   stamp: null,
   // the era's stamp coming down on the back of the paper after the verdict

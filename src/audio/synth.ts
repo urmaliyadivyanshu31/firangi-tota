@@ -4,7 +4,7 @@ import type { EraId } from '../content/types'
 import { BUGLE_FIGURES_MS, DRUM_ACCENT_MS, KNOCK_RAPS_MS, PHONE_RINGS_MS, WAIL_RISE_MS, type KnockKind } from '../scene/caught'
 
 export type Cue =
-  | 'arrive' | 'stampAsli' | 'stampTota' | 'tick' | 'correct' | 'caught' | 'survived' | 'page'
+  | 'arrive' | 'stampAsli' | 'stampTota' | 'tick' | 'correct' | 'survived' | 'page'
   // the stage's choreography: the 1947 typewriter, the 1857 seal, the 1929 note, the 1942 envelope,
   // and the day title pressed onto the wall
   | 'typeKey' | 'typeSpace' | 'typeDing' | 'typeReturn' | 'sealCrack' | 'paperUnfold' | 'envelopeFlap' | 'titleSettle'
@@ -340,13 +340,6 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
       // A small brass bell struck once, bright and kind, over a soft tick (0.8 s).
       noiseBurst(ctx, dest, t, { type: 'highpass', freq: 4200, q: 0.8, peak: 0.07, attack: 0.001, decay: 0.012 })
       brassTing(ctx, dest, t + 0.012, 1046.5, 0.16)
-      break
-    case 'caught':
-      // A low thud with the red flash, then a siren wail that rises and falls (about 1.4 s),
-      // held well under full scale.
-      tone(ctx, dest, t, { type: 'sine', from: 92, to: 40, peak: 0.55, attack: 0.004, decay: 0.38 })
-      noiseBurst(ctx, dest, t, { type: 'lowpass', freq: 380, peak: 0.25, attack: 0.003, decay: 0.16 })
-      siren(ctx, dest, t + 0.05, 1.35, 0.075)
       break
     case 'typeKey':
       // (until the recorded strikes load) a dry typebar click

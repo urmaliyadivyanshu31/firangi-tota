@@ -1174,11 +1174,14 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const d = deskPose(aspect)
     return { pos: d.pos.clone().add(new THREE.Vector3(0, -0.025, 0.03)), look: d.look.clone().add(new THREE.Vector3(0, 0.08, -0.06)), fov: d.fov }
   }
-  /** Closing in: pushed along the desk shot's line toward the paper, the room tilting. */
+  /**
+   * Closing in: the camera moves straight in toward the paper from where it sat back, so the paper
+   * holds its place on the screen while the view tilts down onto it and the room leans.
+   */
   const closingPose: PoseFn = (aspect) => {
-    const d = deskPose(aspect)
+    const s = startledPose(aspect)
     const paper = world ? sheetRest(world).pos : paperRest()
-    return { pos: paper.clone().addScaledVector(d.pos.clone().sub(d.look), 0.55), look: paper, fov: d.fov, roll: 0.035 }
+    return { pos: s.pos.clone().lerp(paper, 0.42), look: paper, fov: s.fov, roll: 0.035 }
   }
   /** Where the beam comes from (the window the dressing keeps in its wide shot), and how far along it the light is carried. */
   const beamSource = (w: World): { origin: THREE.Vector3; travel: THREE.Vector3 } => {
@@ -1265,9 +1268,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       if (!alarmed && ms >= score.alarm) {
         alarmed = true
         lamps(ALARM_LAMP)
-        if (!reduced) void rig.goTo(startledPose, 950, ease.out)
+        if (!reduced) void rig.goTo(startledPose, 1150, ease.inOut)
       }
-      // 2. the room closes in: back over the paper, nearer, tilting, while the knocks come
+      // 2. the room closes in: the camera moves in on the paper, tilting, while the knocks come
       if (!pushed && ms >= score.push[0]) {
         pushed = true
         if (!reduced) void rig.goTo(closingPose, score.push[1] - score.push[0], ease.inOutSine)

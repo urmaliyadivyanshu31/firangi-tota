@@ -873,7 +873,7 @@ export function readShot(paper: THREE.Vector3, aspect: number): Pose {
   return { pos: look.clone().addScaledVector(dir, dist), look, fov }
 }
 
-export type ShotName = 'intro' | 'desk' | 'read' | 'caught' | 'custom'
+export type ShotName = 'intro' | 'desk' | 'read' | 'custom'
 
 /** A shot computed for the current aspect, so it re-fits when the screen turns or resizes. */
 export type PoseFn = (aspect: number) => Pose
@@ -946,13 +946,6 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
     if (name === 'desk' || name === 'custom') return desk
     if (name === 'read') return readShot(paper, aspect)
     const off = desk.pos.clone().sub(desk.look)
-    if (name === 'caught') {
-      return {
-        pos: desk.look.clone().addScaledVector(off, 0.94).add(new THREE.Vector3(0, -0.07, 0)),
-        look: desk.look.clone().add(new THREE.Vector3(0, -0.09, 0)),
-        fov: desk.fov,
-      }
-    }
     // intro: further back and higher, looking at the wall above the desk
     return {
       pos: desk.look.clone().addScaledVector(off, 1.5).add(new THREE.Vector3(0.16, 0.3, 0)),
