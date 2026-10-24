@@ -247,14 +247,7 @@ export function createAudioEngine(): AudioEngine {
     if (!c) return Promise.resolve(null)
     let p = beds.get(file)
     if (!p) {
-      const env = (import.meta as { env?: { BASE_URL?: string; AUDIO_REV?: string } }).env
-      const base = env?.BASE_URL ?? '/'
-      // the build's audio revision: a changed recording under the same name is never served stale
-      const rev = env?.AUDIO_REV ? `?v=${env.AUDIO_REV}` : ''
-      p = fetch(`${base}audio/${file}${rev}`)
-        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('bed missing'))))
-        .then((data) => c.decodeAudioData(data))
-        .catch(() => null)
+      p = fetchAudio(file)
       beds.set(file, p)
     }
     return p

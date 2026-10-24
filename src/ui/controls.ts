@@ -79,7 +79,7 @@ function musicTitle(on: boolean, lang: Lang): string {
 
 export function musicToggle(m: MusicState, lang: Lang, onToggle: () => void): HTMLButtonElement {
   const btn = h('button', { class: 'plaque__btn plaque__btn--disc', type: 'button', 'data-action': 'music', 'aria-pressed': String(m.on),
-    'aria-label': t('music', lang), title: musicTitle(m.on, lang), onclick: () => onToggle() }, record())
+    'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': t('music', lang), title: musicTitle(m.on, lang), onclick: () => onToggle() }, record())
   btn.classList.toggle('is-spinning', m.on && m.playing)
   return btn
 }

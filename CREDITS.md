@@ -78,9 +78,24 @@ synthesized in `src/audio/synth.ts`: the seal crack, the paper and envelope soun
 settle (a tabla "dha" in 1857), the bell for a right answer and the siren for a wrong one, the
 interface sounds, the agarbatti and clock ticks, and the teleprinter burst of the ending telegram.
 
-## Songs (Music mode)
+## Focus tracks (the record's menu)
 
-Music mode plays songs in YouTube's own player, embedded from `youtube-nocookie.com`. They are the
+The record's Focus tracks are field recordings of the Indian subcontinent, each CC0 1.0 (public domain
+dedication; the licence was checked on each sound's page on 2026-10-24). They are cut from the sounds'
+Freesound HQ previews by `dev/focus-assets.mjs` into seamless mono AAC loops (64 kbps, -26 LUFS):
+filtered, gently levelled and crossfaded at the seam. No instruments and no voices are added.
+
+| File | Source sound | Author | URL | Licence |
+|---|---|---|---|---|
+| `public/audio/focus-rain.m4a` (Monsoon on the roof: rain on a roof in Kolkata at midnight) | "Rain On Fiber Roof at Night" | Sagnik_Basu | https://freesound.org/people/Sagnik_Basu/sounds/398581/ | CC0 1.0 |
+| `public/audio/focus-river.m4a` (By the river: the Chalakudy river, Kerala) | "River side ambience in India, water flowing, birds, breeze" | seventhsamurai | https://freesound.org/people/seventhsamurai/sounds/332419/ | CC0 1.0 |
+| `public/audio/focus-sunrise.m4a` (Birds at sunrise: a hillside in Goa) | "Arpora 06:00.mp3" | 130221 | https://freesound.org/people/130221/sounds/137116/ | CC0 1.0 |
+| `public/audio/focus-birds.m4a` (After the rain: birds and crickets in a village garden) | "crickets and tropical birds village or backyard day like after rain India.flac" | kyles | https://freesound.org/people/kyles/sounds/451945/ | CC0 1.0 |
+| `public/audio/focus-crickets.m4a` (Crickets at night: a lakeside near Lonavala) | "Maharashtra Lake side night ambience" | DragonOfDoom | https://freesound.org/people/DragonOfDoom/sounds/732907/ | CC0 1.0 |
+
+## Songs (the record's menu)
+
+The record's two Songs play in YouTube's own player, embedded from `youtube-nocookie.com`. They are the
 labels' official uploads, played from YouTube as the labels published them: nothing is downloaded,
 copied or hosted by this game or its site, and no song file is in this repository. All rights stay
 with the labels, composers, writers and singers. The list lives in `src/content/songs.ts`; each video
@@ -89,14 +104,7 @@ was checked on 2026-10-24 to come from the label's own channel and to allow embe
 | Song | Film (year) | Official channel | YouTube video |
 |---|---|---|---|
 | Aarambh Hai Prachand (Piyush Mishra) | Gulaal (2009) | T-Series | https://www.youtube.com/watch?v=x9feF5rtMAc |
-| Pagdi Sambhal Jatta | The Legend of Bhagat Singh (2002) | Tips Official | https://www.youtube.com/watch?v=U_Pf1FHKnJM |
-| Mera Rang De Basanti Chola | The Legend of Bhagat Singh (2002) | Tips Official | https://www.youtube.com/watch?v=Ha_P2DW9VR4 |
-| Sarfaroshi Ki Tamanna | The Legend of Bhagat Singh (2002) | Tips Official | https://www.youtube.com/watch?v=MxWz46Fm_J8 |
 | Ik Bagal Mein Chaand Hoga (Piyush Mishra) | Gangs of Wasseypur (2012) | T-Series | https://www.youtube.com/watch?v=67_CU8E9sdY |
-| Rang De Basanti | Rang De Basanti (2006) | Sony Music India | https://www.youtube.com/watch?v=Azhtn4ptHQI |
-| Duniya (Piyush Mishra) | Gulaal (2009) | T-Series | https://www.youtube.com/watch?v=gkKcddq0J4U |
-| Kandhon Se Milte Hain Kandhe | Lakshya (2004) | Sony Music India | https://www.youtube.com/watch?v=FGjQIHVUECk |
-| Sheher (Piyush Mishra) | Gulaal (2009) | T-Series | https://www.youtube.com/watch?v=yQ0t8LcL498 |
 
 ## Voice
 

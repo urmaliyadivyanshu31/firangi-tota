@@ -29,13 +29,15 @@ import {
 } from './scene/index'
 import { controlCluster, setMusicToggle, setSoundToggle, type MusicState } from './ui/controls'
 import type { Gramophone } from './ui/gramophone'
+import type { MusicChoice, MusicMenu } from './ui/music-menu'
+import { FOCUS_TRACKS, focusTrack } from './content/focus'
 import type { YTApi } from './audio/youtube'
 import { h } from './ui/h'
 import { buildSheet, dayTitleFor } from './ui/message'
 import { buildReveal, kindLine, messageSources } from './ui/reveal'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
-import { renderDay, setMusic, setReadable, setSound, setStamping, setTimer, setTossing, setVoiceState } from './ui/screens/day'
+import { renderDay, setReadable, setSound, setStamping, setTimer, setTossing, setVoiceState } from './ui/screens/day'
 import { renderIntro, setIntroSettled } from './ui/screens/intro'
 import { renderMain, suggestedEra, type Best } from './ui/screens/main'
 import { createRewardToast } from './ui/reward-toast'
@@ -142,12 +144,26 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // sound starts off; the player's first tap on the speaker turns it on, and that choice is kept
   // for the next visit (owner 10-24)
   let muted = store.get<unknown>('muted', true) !== false
-  // Music (songs in YouTube's own player, src/ui/gramophone.ts) or the room's own sound; the room
-  // by default, and the choice is kept for the next visit
-  let soundMode: 'music' | 'room' = store.get<unknown>('soundMode', 'room') === 'music' ? 'music' : 'room'
-  let musicPlaying = false
+  // What the record plays, picked from its menu (src/ui/music-menu.ts): a calm Focus track through
+  // the audio engine, a song in YouTube's own player (src/ui/gramophone.ts), or the room's own sound;
+  // the room by default, and the choice is kept for the next visit. A Music mode kept from before
+  // the menu becomes the first Focus track.
+  let musicChoice: MusicChoice = (() => {
+    const saved = store.get<unknown>('musicChoice', null)
+    if (typeof saved === 'string' && /^(room|focus:[a-z-]+|song:[a-z-]+)$/.test(saved)) return saved as MusicChoice
+    return store.get<unknown>('soundMode', 'room') === 'music' ? `focus:${FOCUS_TRACKS[0]?.id ?? 'rain'}` : 'room'
+  })()
+  let musicVolume = (() => {
+    const v = store.get<unknown>('musicVolume', 65)
+    return typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : 65
+  })()
+  let songPlaying = false
+  let focusPlaying = false
   let gramophone: Gramophone | null = null
   let gramophoneLoad: Promise<Gramophone | null> | null = null
+  let songIndexOf: (id: string) => number = () => 0
+  let musicMenu: MusicMenu | null = null
+  let musicMenuLoad: Promise<typeof import('./ui/music') | null> | null = null
 
   // A friend's share link picks their chapter and mode: /s/<code> when the offline copy answers
   // it, or the link page's ?chapter=…&mode=… (server/share.ts). Neither is remembered.
@@ -257,7 +273,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   const unlock = () => {
     audio.unlock()
     // a Music mode kept from the last visit starts on the first gesture (never on page load)
-    if (soundMode === 'music' && !muted && !gramophone?.isOpen()) applyMusic()
+    if (musicChoice.startsWith('song:') && !muted && !gramophone?.isOpen()) applyMusic()
   }
   for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, unlock, { capture: true, passive: true })
   document.addEventListener('visibilitychange', () => {
@@ -321,6 +337,15 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   document.body.appendChild(controls)
   // the songs dip under the read-aloud voice and the caught alarm
   audio.onDuck((on) => gramophone?.duck(on))
+  // a Focus track kept from the last visit is asked for now: the engine starts it on the first
+  // gesture's unlock, with the room already quiet
+  audio.setMusicVolume(musicVolume / 100)
+  audio.onFocus((s) => {
+    focusPlaying = s === 'playing'
+    if (s === 'failed' && musicChoice.startsWith('focus:')) setMusicChoice('room') // offline, or the file would not load
+    syncSoundButtons()
+  })
+  if (musicChoice.startsWith('focus:')) applyMusic()
   // the address bar drops the share link's path and picks once they are read
   if (sharedCode !== null || params.has('chapter') || params.has('mode')) cleanShareUrl()
   // the daily puzzle is off the main page for now; ?daily (or a shared daily result) still opens it
@@ -726,6 +751,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     stopVoice()
     disarmTimer()
     rewardToast.clear()
+    musicMenu?.close(false)
     closeShareSlip() // the slip belongs to the screen it was opened on
   }
 
@@ -740,7 +766,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // ------------------------------------------------------------------ music mode
 
   function musicState(): MusicState {
-    return { on: soundMode === 'music', playing: musicPlaying }
+    const c = musicChoice
+    return { on: c !== 'room', playing: c.startsWith('song:') ? songPlaying : c.startsWith('focus:') && focusPlaying }
   }
 
   /** Every record and horn button on screen (the dock and the day's top bar) shows the current state. */
@@ -750,18 +777,31 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     for (const b of document.querySelectorAll<HTMLButtonElement>('[data-action="sound"]')) setSoundToggle(b, !muted, lang)
   }
 
-  function setSoundMode(m: 'music' | 'room'): void {
-    soundMode = m
-    store.set('soundMode', m)
+  /** A new choice for the record (`apply` false: the cabinet already gave way to the room itself). */
+  function setMusicChoice(c: MusicChoice, apply = true): void {
+    musicChoice = c
+    store.set('musicChoice', c)
+    musicMenu?.setChoice(c)
     syncSoundButtons()
+    if (apply) applyMusic()
   }
 
-  /** The cabinet is made the first time Music is picked: its code and YouTube load only then. */
+  function setMusicVolume(v: number): void {
+    if (v === musicVolume) return
+    musicVolume = v
+    store.set('musicVolume', v)
+    audio.setMusicVolume(v / 100)
+    gramophone?.setVolume(v)
+    musicMenu?.setVolume(v)
+  }
+
+  /** The cabinet is made the first time a song is picked: its code and YouTube load only then. */
   function ensureGramophone(): Promise<Gramophone | null> {
     if (!gramophoneLoad) {
       const automation = typeof navigator !== 'undefined' && navigator.webdriver === true
-      gramophoneLoad = import('./ui/gramophone').then(async (mod) => {
+      gramophoneLoad = import('./ui/music').then(async (mod) => {
         const loadApi = env.youtube ?? (async () => (await import('./audio/youtube')).loadYouTubeApi())
+        songIndexOf = mod.songIndex
         gramophone = mod.createGramophone({
           parent: document.body,
           lang: getLang,
@@ -774,46 +814,122 @@ export function startApp(root: AppRoot, env: AppEnv): void {
             requestAnimationFrame(() => { if (alive() && screen === 'day') syncHudInsets() })
           },
           onPlaying: (p) => {
-            musicPlaying = p
+            songPlaying = p
             syncSoundButtons()
           },
-          onFold: () => setSoundMode('room'),
-          onFail: () => setSoundMode('room'),
+          onVolume: setMusicVolume,
+          onSong: (i) => {
+            const id = mod.SONGS[i]?.id
+            if (id && musicChoice.startsWith('song:')) {
+              musicChoice = `song:${id}`
+              store.set('musicChoice', musicChoice)
+              musicMenu?.setChoice(musicChoice)
+            }
+          },
+          onFold: () => setMusicChoice('room', false),
+          onFail: () => setMusicChoice('room', false),
           // the cabinet went small or large: the day's shot takes the room it gave back, or gives it
           onResize: () => requestAnimationFrame(() => { if (alive() && screen === 'day') syncHudInsets() }),
         })
         gramophone.setScreen(screen)
         gramophone.setHidden(document.hidden === true)
+        gramophone.setVolume(musicVolume)
         return gramophone
       }).catch(() => {
         gramophoneLoad = null // offline before the chunk was cached: the room carries on
-        setSoundMode('room')
+        setMusicChoice('room')
         return null
       })
     }
     return gramophoneLoad
   }
 
-  /** Opens or folds the cabinet to match the mode and the sound switch. */
+  /**
+   * Plays what the record's choice and the sound switch ask for: a Focus track through the engine
+   * (the room fades out), the cabinet for a song, or the room. Sound off quiets all of it.
+   */
   function applyMusic(): void {
-    if (soundMode === 'music' && !muted) {
-      void ensureGramophone().then((g) => {
-        if (g && soundMode === 'music' && !muted) g.open(play?.era.id ?? selected)
-      })
-    } else gramophone?.close()
+    const c = musicChoice
+    const focus = !muted && c.startsWith('focus:') ? focusTrack(c.slice(6)) ?? FOCUS_TRACKS[0] ?? null : null
+    const song = !muted && c.startsWith('song:') ? c.slice(5) : null
+    if (!song) gramophone?.close()
+    audio.focus(focus ? { file: focus.file, seconds: focus.seconds } : null)
+    if (!song) {
+      audio.setRoom(!focus)
+      return
+    }
+    void ensureGramophone().then((g) => {
+      if (g && musicChoice === c && !muted) g.open(Math.max(0, songIndexOf(song)))
+    })
   }
 
-  /** The record button: Music or the room. Picking Music with the sound off turns the sound on too. */
-  function toggleMusic(): void {
-    const next = soundMode === 'music' ? 'room' : 'music'
-    if (next === 'music' && muted) {
+  /** The record now on screen: the day's top bar, or the controls in the corner. */
+  function visibleRecord(): HTMLElement | null {
+    for (const b of document.querySelectorAll<HTMLElement>('[data-action="music"]')) {
+      if (b.getClientRects().length > 0) return b
+    }
+    return document.querySelector<HTMLElement>('[data-action="music"]')
+  }
+
+  /** A redraw replaced the record: the open menu hangs from the new one (or goes, if none shows). */
+  function reanchorMusicMenu(): void {
+    if (!musicMenu) return
+    const a = visibleRecord()
+    if (!a) {
+      musicMenu.close(false)
+      return
+    }
+    a.setAttribute('aria-expanded', 'true')
+    musicMenu.moveTo(a)
+  }
+
+  /** The record button opens (or puts away) its menu; the menu's code loads on the first tap. */
+  function toggleMusicMenu(): void {
+    if (musicMenu) {
+      musicMenu.close(false)
+      return
+    }
+    const anchor = visibleRecord()
+    if (!anchor) return
+    audio.cue('toggleClick')
+    musicMenuLoad ??= import('./ui/music').catch(() => {
+      musicMenuLoad = null // offline before the chunk was cached
+      return null
+    })
+    void musicMenuLoad.then((mod) => {
+      if (!mod || !alive() || musicMenu || !anchor.isConnected) return
+      anchor.setAttribute('aria-expanded', 'true')
+      musicMenu = mod.openMusicMenu({
+        anchor,
+        lang: getLang(),
+        choice: musicChoice,
+        volume: musicVolume,
+        onPick: pickMusic,
+        onVolume: setMusicVolume,
+        onClose: (refocus) => {
+          musicMenu = null
+          const a = visibleRecord()
+          a?.setAttribute('aria-expanded', 'false')
+          if (refocus) a?.focus({ preventScroll: true })
+        },
+      })
+    })
+  }
+
+  /** A pick from the record's menu. Picking anything with the sound off turns the sound on too. */
+  function pickMusic(c: MusicChoice): void {
+    const wasMuted = muted
+    if (muted) {
       muted = false
       store.set('muted', false)
       audio.setMuted(false)
     }
-    setSoundMode(next)
-    applyMusic()
-    audio.cue('toggleClick')
+    if (c === musicChoice) {
+      if (wasMuted) applyMusic()
+      syncSoundButtons()
+      return
+    }
+    setMusicChoice(c)
   }
 
   /** Sound and language, top right; during a day they live in the top bar instead. */
@@ -822,7 +938,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     gramophone?.setScreen(screen)
     gramophone?.relabel()
     controls.replaceChildren(controlCluster({ soundOn: !muted, music: musicState(), lang: getLang() }, {
-      music: toggleMusic,
+      music: toggleMusicMenu,
       sound: () => {
         const btn = controls.querySelector<HTMLButtonElement>('[data-action="sound"]')
         const on = toggleSound()
@@ -835,6 +951,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         redraw()
       },
     }))
+    reanchorMusicMenu()
   }
 
   /** Shows a screen: remembers how to redraw it (a language change) and refreshes the controls. */
@@ -1150,10 +1267,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         setSound(ui, toggleSound(), getLang())
         audio.cue('toggleClick')
       },
-      music: () => {
-        toggleMusic()
-        setMusic(ui, musicState(), getLang())
-      },
+      music: toggleMusicMenu,
       lang: () => {
         setLang(getLang() === 'en' ? 'hi' : 'en')
         audio.cue('plaqueFlick')
@@ -1178,6 +1292,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     controls.hidden = true
     syncHudInsets()
     syncHold()
+    reanchorMusicMenu()
   }
 
   /** What the DOM keeps while the verdict is on the paper: a mirror, the source button and the end's receipts. */

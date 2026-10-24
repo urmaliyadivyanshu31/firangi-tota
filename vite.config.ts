@@ -103,7 +103,7 @@ export default defineConfig(({ mode }) => {
             {
               urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/audio/'),
               handler: 'StaleWhileRevalidate',
-              options: { cacheName: 'ft-audio', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 24 }, cacheableResponse: { statuses: [200] } },
+              options: { cacheName: 'ft-audio', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 32 }, cacheableResponse: { statuses: [200] } },
             },
             // the other font files in /fonts/ (Devanagari UI, bolder weights, typewriter), on first use
             {

@@ -4,6 +4,7 @@ import { t } from '../i18n/strings'
 import { store } from '../game/storage'
 import { YT_STATE, type YTApi, type YTPlayer } from '../audio/youtube'
 import { h, svg } from './h'
+import { clampVolume, volumeKnob } from './knob'
 
 // Music mode: the songs play in YouTube's own player, set in a walnut radio cabinet docked in a
 // corner (a strip under the top bar on phones), with a cream "Now playing" card and brass knobs
@@ -17,15 +18,11 @@ import { h, svg } from './h'
 export const VOLUME = 65
 /** Under the read-aloud voice and the caught alarm the songs dip to this share of the chosen volume. */
 export const DUCK_RATIO = 0.6
-/** One arrow-key step of the volume knob, and one PageUp/PageDown step. */
-export const VOLUME_STEP = 5
-export const VOLUME_PAGE = 10
-/** Pixels of drag across the knob's full turn (up or right turns it up). */
-const DRAG_RANGE_PX = 160
+export { VOLUME_PAGE, VOLUME_STEP, clampVolume } from './knob'
+export { SONGS, songIndex } from '../content/songs'
 
 export type PlayerSize = 'full' | 'mini'
 
-export const clampVolume = (v: number): number => Math.max(0, Math.min(100, Math.round(v)))
 /** The kept volume, 0-100 (65 when none was kept or it was not a number). */
 export function storedVolume(): number {
   const v = store.get<unknown>('musicVolume', VOLUME)
@@ -52,6 +49,8 @@ export interface GramophoneDeps {
   onRoom(on: boolean): void
   /** A song is (or stopped) actually playing: the record button spins. */
   onPlaying(playing: boolean): void
+  /** The cabinet's knob set a new volume (0-100): the rest of the music follows it. */
+  onVolume?(v: number): void
   /** The cabinet moved to another song (its knobs, or the song ended): the menu ticks it. */
   onSong?(index: number): void
   /** The player put the music away from the cabinet: back to Room mode. */
@@ -133,9 +132,8 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
   const largeBtn = knob('large', () => setSize('full', true))
   const playBtn = knob('play', () => togglePlay())
   // the volume: a ridged brass knob in a ring that lights up to the level, a slider to assistive tech
-  const volKnob = h('span', { class: 'gramo__vol-knob', 'aria-hidden': 'true' })
-  const vol = h('div', { class: 'gramo__vol', role: 'slider', tabindex: '0', 'data-action': 'music-volume',
-    'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-orientation': 'vertical' }, volKnob)
+  const knobCtl = volumeKnob(() => volume, (v) => setVolume(v))
+  const vol = knobCtl.el
   // the small frame's brass plate: the song's title running past, twice so the loop never shows a seam
   const tickerText = h('span', { class: 'gramo__ticker-run' })
   const ticker = h('div', { class: 'gramo__ticker', 'aria-hidden': 'true' }, h('div', { class: 'gramo__ticker-window' }, tickerText))
@@ -220,12 +218,7 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
   /** What the player should be at right now: the chosen volume, or its dipped share. */
   const heard = (): number => ducked ? duckedVolume(volume) : volume
 
-  function showVolume(): void {
-    vol.setAttribute('aria-valuenow', String(volume))
-    vol.setAttribute('aria-valuetext', `${volume}%`)
-    // the knob turns through 270 degrees, from seven o'clock to five o'clock
-    vol.style.setProperty('--vol', String(volume / 100))
-  }
+  const showVolume = (): void => knobCtl.show(volume)
 
   function setVolume(v: number): void {
     const next = clampVolume(v)
@@ -233,6 +226,7 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
     volume = next
     store.set('musicVolume', volume)
     showVolume()
+    d.onVolume?.(volume)
     if (player && ready) {
       try { player.setVolume(heard()) } catch { /* gone */ }
     }
@@ -250,43 +244,6 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
     if (fromKnob) (size === 'mini' ? largeBtn : smallBtn).focus({ preventScroll: true })
     d.onResize?.()
   }
-
-  // the knob answers arrow keys, PageUp/PageDown, Home/End, a drag (up or right is louder) and the wheel
-  vol.addEventListener('keydown', (e) => {
-    const by: Record<string, number> = {
-      ArrowUp: VOLUME_STEP, ArrowRight: VOLUME_STEP, ArrowDown: -VOLUME_STEP, ArrowLeft: -VOLUME_STEP,
-      PageUp: VOLUME_PAGE, PageDown: -VOLUME_PAGE, Home: -100, End: 100,
-    }
-    const by1 = by[e.key]
-    if (by1 === undefined) return
-    e.preventDefault()
-    setVolume(volume + by1)
-  })
-  let drag: { id: number; x: number; y: number; from: number } | null = null
-  vol.addEventListener('pointerdown', (e) => {
-    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, from: volume }
-    try { vol.setPointerCapture(e.pointerId) } catch { /* not capturable here */ }
-    vol.classList.add('is-turning')
-    e.preventDefault()
-    vol.focus({ preventScroll: true })
-  })
-  vol.addEventListener('pointermove', (e) => {
-    if (!drag || e.pointerId !== drag.id) return
-    const moved = (e.clientX - drag.x) - (e.clientY - drag.y)
-    setVolume(drag.from + (moved / DRAG_RANGE_PX) * 100)
-  })
-  const endDrag = (e: PointerEvent) => {
-    if (!drag || e.pointerId !== drag.id) return
-    drag = null
-    vol.classList.remove('is-turning')
-  }
-  vol.addEventListener('pointerup', endDrag)
-  vol.addEventListener('pointercancel', endDrag)
-  vol.addEventListener('wheel', (e) => {
-    if (e.deltaY === 0) return
-    e.preventDefault()
-    setVolume(volume + (e.deltaY < 0 ? VOLUME_STEP : -VOLUME_STEP))
-  }, { passive: false })
 
   /** The address of the current song; under automation it is kept aside, never loaded. */
   function point(f: HTMLIFrameElement): void {
