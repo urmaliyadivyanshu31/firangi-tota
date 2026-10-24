@@ -26,12 +26,15 @@ export interface AudioEngine {
   /** `level` (0..1) is for the tension tick: how close the agarbatti is to burning out. */
   cue(c: Cue, o?: { level?: number }): void
   ambience(id: EraId | null): void
+  /** The tab was hidden (the context sleeps) or shown again (it wakes, unless muted). */
+  setHidden(hidden: boolean): void
 }
 
 export function createAudioEngine(): AudioEngine {
   let ctx: AudioContext | null = null
   let master: GainNode | null = null
   let muted = false
+  let hidden = false
   let wanted: EraId | null = null
   let current: AmbienceHandle | null = null
   let sampler: Sampler | null = null
@@ -39,6 +42,16 @@ export function createAudioEngine(): AudioEngine {
 
   function applyMute(): void {
     if (master) master.gain.value = muted ? 0 : MASTER_LEVEL
+  }
+
+  /** Sleeps while the tab is hidden, wakes when it is visible and not muted (saves the battery). */
+  function syncRunning(): void {
+    const c = ctx
+    if (!c) return
+    try {
+      if (hidden) void c.suspend?.()?.catch?.(() => undefined)
+      else if (!muted) void c.resume?.()?.catch?.(() => undefined)
+    } catch { /* a context that cannot change state keeps its state */ }
   }
 
   function loadBed(file: string): Promise<AudioBuffer | null> {
@@ -64,7 +77,10 @@ export function createAudioEngine(): AudioEngine {
 
   return {
     unlock(): void {
-      if (ctx) { void ctx.resume?.(); return }
+      if (ctx) {
+        if (!hidden) void ctx.resume?.()?.catch?.(() => undefined)
+        return
+      }
       const Ctor = contextCtor()
       if (!Ctor) return
       try {
@@ -85,6 +101,7 @@ export function createAudioEngine(): AudioEngine {
     setMuted(m: boolean): void {
       muted = m
       applyMute()
+      if (!m) syncRunning() // unmuting on a visible tab wakes a context that slept while hidden
     },
     cue(c: Cue, o?: { level?: number }): void {
       if (!ctx || !master || muted) return
@@ -99,6 +116,11 @@ export function createAudioEngine(): AudioEngine {
     ambience(id: EraId | null): void {
       wanted = id
       restartAmbience()
+    },
+    setHidden(h: boolean): void {
+      if (h === hidden) return
+      hidden = h
+      syncRunning()
     },
   }
 }

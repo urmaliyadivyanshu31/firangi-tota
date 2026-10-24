@@ -1,29 +1,32 @@
 // Text-to-speech providers behind one small interface. Server only.
-// Fish Audio is the default (model s2.1-pro-free, $0); ElevenLabs stays for later.
+// Fish Audio is the default (model s2.1-pro-free, $0); ElevenLabs stays for later. Both are plain
+// `fetch` calls, so the voice function has no runtime dependency beyond Node itself.
 // Neither ever logs a key, a request body or an upstream error body.
-import type { ElevenLabs } from '@elevenlabs/elevenlabs-js'
+//
+// One attempt per request, never a retry: a timed-out or dropped request may still have generated
+// (and billed) the audio upstream, so trying again could pay twice for one clip. A failure answers
+// 503 and the player can tap again.
 import type { Lang } from '../src/content/types.js'
 import type { ElevenVoice, FishVoice } from '../src/content/voices.js'
 import { FISH_MODEL, FISH_MP3_BITRATE, MODEL_ID, OUTPUT_FORMAT } from './voices.js'
 
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024
-const UPSTREAM_TIMEOUT_MS = 25_000
+export const UPSTREAM_TIMEOUT_MS = 25_000
 export const FISH_TTS_URL = 'https://api.fish.audio/v1/tts'
-
-/** The slice of ElevenLabsClient used here, so tests can pass a mock. */
-export interface TtsClient {
-  textToSpeech: {
-    convert(
-      voiceId: string,
-      request: ElevenLabs.BodyTextToSpeechFull,
-      requestOptions?: { timeoutInSeconds?: number; maxRetries?: number },
-    ): PromiseLike<ReadableStream<Uint8Array>>
-  }
-}
+export const ELEVENLABS_TTS_URL = 'https://api.elevenlabs.io/v1/text-to-speech'
 
 export type Synth =
   | { provider: 'fish'; synthesize(voice: FishVoice, text: string, lang: Lang): Promise<Uint8Array> }
   | { provider: 'elevenlabs'; synthesize(voice: ElevenVoice, text: string, lang: Lang): Promise<Uint8Array> }
+
+/** The slice of `fetch` the providers use, so tests can pass a mock. */
+export type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal }) => Promise<{
+  ok: boolean
+  status: number
+  body: ReadableStream<Uint8Array> | null
+}>
+
+const defaultFetch = (): FetchLike => fetch as unknown as FetchLike
 
 /** An upstream failure. Carries only the HTTP status, never the body. */
 export class UpstreamError extends Error {
@@ -55,30 +58,59 @@ export async function readAll(stream: ReadableStream<Uint8Array>): Promise<Uint8
   return out
 }
 
+/** One POST, one answer: no retry (see the top of the file). */
+async function postOnce(fetchImpl: FetchLike, url: string, headers: Record<string, string>, body: unknown): Promise<Uint8Array> {
+  let res: Awaited<ReturnType<FetchLike>>
+  try {
+    res = await fetchImpl(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    })
+  } catch {
+    throw new UpstreamError() // a timeout or a network error; the cause may carry the URL or headers
+  }
+  if (!res.ok || !res.body) {
+    void res.body?.cancel()
+    throw new UpstreamError(res.status)
+  }
+  return readAll(res.body)
+}
+
 // ------------------------------------------------------------------ ElevenLabs
 
-export function elevenLabsRequest(voice: ElevenVoice, text: string, lang: Lang): ElevenLabs.BodyTextToSpeechFull {
+/** The JSON body for POST /v1/text-to-speech/{voice_id} (snake_case, as the REST API takes it). */
+export function elevenLabsRequestBody(voice: ElevenVoice, text: string, lang: Lang): Record<string, unknown> {
+  const fx = voice.effects
   return {
     text,
-    modelId: MODEL_ID,
-    languageCode: lang,
-    applyTextNormalization: 'on',
-    outputFormat: OUTPUT_FORMAT,
-    voiceSettings: { stability: voice.settings.stability, similarityBoost: voice.settings.similarityBoost },
-    ...(voice.effects ? { audioEffects: { ...voice.effects } } : {}),
+    model_id: MODEL_ID,
+    language_code: lang,
+    apply_text_normalization: 'on',
+    voice_settings: { stability: voice.settings.stability, similarity_boost: voice.settings.similarityBoost },
+    ...(fx
+      ? {
+          audio_effects: {
+            ...(fx.filterPresetId !== undefined ? { filter_preset_id: fx.filterPresetId } : {}),
+            ...(fx.environmentId !== undefined ? { environment_id: fx.environmentId } : {}),
+            ...(fx.sendLevel !== undefined ? { send_level: fx.sendLevel } : {}),
+            ...(fx.distance !== undefined ? { distance: fx.distance } : {}),
+          },
+        }
+      : {}),
   }
 }
 
-export function elevenLabsSynth(client: TtsClient): Synth {
+export function elevenLabsUrl(voice: ElevenVoice): string {
+  return `${ELEVENLABS_TTS_URL}/${encodeURIComponent(voice.voiceId)}?output_format=${OUTPUT_FORMAT}`
+}
+
+export function elevenLabsSynth(apiKey: string, fetchImpl: FetchLike = defaultFetch()): Synth {
   return {
     provider: 'elevenlabs',
-    async synthesize(voice, text, lang) {
-      const stream = await client.textToSpeech.convert(voice.voiceId, elevenLabsRequest(voice, text, lang), {
-        timeoutInSeconds: UPSTREAM_TIMEOUT_MS / 1000,
-        maxRetries: 1,
-      })
-      return readAll(stream)
-    },
+    synthesize: (voice, text, lang) =>
+      postOnce(fetchImpl, elevenLabsUrl(voice), { 'xi-api-key': apiKey, Accept: 'audio/mpeg' }, elevenLabsRequestBody(voice, text, lang)),
   }
 }
 
@@ -101,38 +133,10 @@ export function fishRequestBody(voice: FishVoice, text: string, lang: Lang): Rec
   }
 }
 
-type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal }) => Promise<{
-  ok: boolean
-  status: number
-  body: ReadableStream<Uint8Array> | null
-}>
-
-const retryable = (status: number) => status === 429 || status >= 500
-
-export function fishSynth(apiKey: string, fetchImpl: FetchLike = fetch as unknown as FetchLike): Synth {
-  async function once(voice: FishVoice, text: string, lang: Lang): Promise<Uint8Array> {
-    const res = await fetchImpl(FISH_TTS_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', model: FISH_MODEL },
-      body: JSON.stringify(fishRequestBody(voice, text, lang)),
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    })
-    if (!res.ok || !res.body) {
-      void res.body?.cancel()
-      throw new UpstreamError(res.status)
-    }
-    return readAll(res.body)
-  }
+export function fishSynth(apiKey: string, fetchImpl: FetchLike = defaultFetch()): Synth {
   return {
     provider: 'fish',
-    async synthesize(voice, text, lang) {
-      try {
-        return await once(voice, text, lang)
-      } catch (err) {
-        const status = err instanceof UpstreamError ? err.statusCode : undefined
-        if (status !== undefined && !retryable(status)) throw err
-        return once(voice, text, lang) // one retry for 429, 5xx and network errors
-      }
-    },
+    synthesize: (voice, text, lang) =>
+      postOnce(fetchImpl, FISH_TTS_URL, { Authorization: `Bearer ${apiKey}`, model: FISH_MODEL }, fishRequestBody(voice, text, lang)),
   }
 }

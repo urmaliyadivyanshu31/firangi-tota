@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderMain, suggestedEra, type MainProps } from '../../src/ui/screens/main'
 import { renderCredits } from '../../src/ui/screens/credits'
+import { VOICES } from '../../src/content/voices'
 import { controlCluster } from '../../src/ui/controls'
 import { setLang } from '../../src/i18n/lang'
 import { strings } from '../../src/i18n/strings'
@@ -129,6 +130,11 @@ describe('renderCredits', () => {
     expect(root.textContent).toContain('MIT')
     expect(root.textContent).toContain('CC BY 4.0')
     expect(root.textContent).toContain('CREDITS.md')
+    // every font family is named, Kalam (the handwriting) included, and the source code is linked
+    for (const f of ['Mukta', 'Tiro Devanagari Hindi', 'Old Standard TT', 'Kalam', 'Special Elite']) expect(root.querySelector('.credits__list')!.textContent).toContain(f)
+    const repo = root.querySelector<HTMLAnchorElement>('.credits__source a')!
+    expect(repo.getAttribute('href')).toBe('https://github.com/urmaliyadivyanshu31/firangi-tota')
+    expect(repo.getAttribute('rel')).toBe('noopener noreferrer')
     click(root, '[data-action="back"]')
     expect(back).toHaveBeenCalledTimes(1)
   })
@@ -146,6 +152,10 @@ describe('renderCredits', () => {
     expect(doc.textContent).toContain('CC0 1.0')
     expect(doc.querySelector('a[href="https://fonts.google.com/specimen/Mukta"]')).not.toBeNull()
     expect(doc.querySelector('a[href="https://freesound.org/people/MrFossy/sounds/521773/"]')).not.toBeNull()
+    // the read-aloud voice and its provider's terms
+    expect(doc.textContent).toContain(VOICES.dastango.fish!.referenceId) // the voice the game actually uses
+    expect(doc.querySelector('a[href="https://fish.audio/terms"]')).not.toBeNull()
+    expect(doc.textContent).toContain('OFL-Mukta.txt')
     for (const a of doc.querySelectorAll('a')) {
       expect(a.getAttribute('href')).toMatch(/^https:\/\//)
       expect(a.getAttribute('rel')).toBe('noopener noreferrer')

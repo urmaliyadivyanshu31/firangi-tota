@@ -1,8 +1,8 @@
 # Asset manifest: the desk game (Delhi 1857, Lahore/Delhi 1928–29, Bombay 1942, Delhi Aug 1947)
 
-Researched 23 Oct 2026. Candidates are in
-`/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/assets-candidates/`
-(184 files, 57.1 MB in total). Every local path below is relative to that folder.
+Researched 23 Oct 2026. The candidates were downloaded to a local working folder outside this
+repository (184 files, 57.1 MB in total), which is not kept. Every local path below is relative to
+that folder; the source URL beside each one is where to get the file again.
 
 **What the local files are.** They are copies for listening tests, not files to ship.
 - Freesound sounds are the site's public HQ previews (MP3). Anything longer than 45 s was cut to a 45 s excerpt and re-encoded to Ogg q3.

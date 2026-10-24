@@ -6,7 +6,16 @@ playwright-report/
 .vercel/
 .DS_Store
 .claude/
+# screenshots and shoot output stay local: the only committed images are the app icons
+# (public/icons/) and the share image (public/og.jpg)
 docs/screens/
+docs/**/*.png
+docs/**/*.jpg
+docs/**/*.jpeg
+docs/**/*.webp
+docs/**/*-shots/
+*-shots/
+screenshots/
 
 # secrets: never commit
 .env

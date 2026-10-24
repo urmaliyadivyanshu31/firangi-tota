@@ -10,6 +10,11 @@
 // text. A request without the right `v` (or with a day the text does not depend on) gets a cheap
 // redirect to the canonical URL. So a fact-check fix, a voice swap or a provider switch changes
 // the URL instead of leaving a year-long cached clip that reads the old words.
+//
+// The CDN caches by the raw URL, so audio is served only when the raw query string equals the
+// canonical one byte for byte. Reordered keys, percent-encoded letters (`%2D`, `%64`), `+` or
+// anything else that decodes to the same clip gets the short-lived redirect instead: otherwise
+// every spelling of one clip would be a fresh cache entry, a fresh provider call and a fresh bill.
 import type { Era, Lang, Message } from '../src/content/types.js'
 import { DEFAULT_VOICE, isVoiceChoice, type ElevenVoice, type FishVoice, type VoiceChoice } from '../src/content/voices.js'
 import { dayDate, fillTemplate } from '../src/game/dates.js'
@@ -17,7 +22,7 @@ import { isEraId, SERVER_ERAS } from './eras.js'
 import type { Synth } from './providers.js'
 import { FISH_MODEL, FISH_MP3_BITRATE, MODEL_ID, OUTPUT_FORMAT, voiceFor, type ProviderId } from './voices.js'
 
-export type { Synth, TtsClient } from './providers.js'
+export type { Synth } from './providers.js'
 
 export interface VoiceDeps {
   /** The active provider. It is part of every cache key, even when no key is configured. */
@@ -27,7 +32,7 @@ export interface VoiceDeps {
   now?: () => number
 }
 
-/** Query parameters, as parsed by the dev server or the Vercel function. */
+/** Query parameters, decoded. A repeated key becomes an array (and is refused). */
 export type VoiceQuery = Readonly<Record<string, unknown>>
 
 export interface VoiceResult {
@@ -154,15 +159,20 @@ export function canonicalParams(c: Pick<ResolvedClip, 'era' | 'message' | 'lang'
   }
 }
 
+/** The canonical query string, with its leading `?` (the redirect's relative Location). */
 export function canonicalQuery(c: Pick<ResolvedClip, 'era' | 'message' | 'lang' | 'day' | 'choice' | 'rev'>): string {
   return `?${new URLSearchParams(canonicalParams(c)).toString()}`
 }
 
-/** True when the request is exactly the canonical URL (same keys, same values). */
-function isCanonical(query: VoiceQuery, clip: ResolvedClip): boolean {
-  const want = canonicalParams(clip)
-  const keys = Object.keys(query)
-  return keys.length === Object.keys(want).length && keys.every((k) => single(query, k) === want[k])
+/** Decodes a raw query string (with or without its `?`); a repeated key becomes an array. */
+export function parseQuery(raw: string): Record<string, string | string[]> {
+  const params = new URLSearchParams(raw)
+  const query: Record<string, string | string[]> = {}
+  for (const key of new Set(params.keys())) {
+    const all = params.getAll(key)
+    query[key] = all.length === 1 ? all[0]! : all
+  }
+  return query
 }
 
 function synthesize(synth: Synth, clip: ResolvedClip): Promise<Uint8Array> {
@@ -181,11 +191,15 @@ function upstreamStatus(err: unknown): number | undefined {
   return typeof s === 'number' ? s : undefined
 }
 
-export async function handleVoice(query: VoiceQuery, deps: VoiceDeps): Promise<VoiceResult> {
-  const clip = resolveClip(query, deps.provider)
+/**
+ * Answers one request. `rawQuery` is the query string exactly as received, without the `?` and
+ * undecoded: only the canonical spelling is ever answered with audio.
+ */
+export async function handleVoice(rawQuery: string, deps: VoiceDeps): Promise<VoiceResult> {
+  const clip = resolveClip(parseQuery(rawQuery), deps.provider)
   if ('status' in clip) return clip
 
-  if (!isCanonical(query, clip)) {
+  if (rawQuery !== canonicalQuery(clip).slice(1)) {
     return {
       status: 307,
       headers: { Location: canonicalQuery(clip), 'Cache-Control': REDIRECT_CACHE },

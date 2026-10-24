@@ -102,7 +102,8 @@ const en = {
   creditsInspired: 'Inspired by {title} by atomiquest',
   creditsCode: 'Code: MIT licence',
   creditsText: 'Game text: CC BY 4.0. Quotes from books and documents are not covered and stay with their owners.',
-  creditsFonts: 'Fonts: Mukta, Tiro Devanagari Hindi and Old Standard TT (SIL Open Font License), Special Elite (Apache 2.0).',
+  creditsFonts: 'Fonts: Mukta, Tiro Devanagari Hindi, Old Standard TT and Kalam (SIL Open Font License), Special Elite (Apache 2.0).',
+  creditsSource: 'Source code, open on GitHub: {link}',
   creditsAssets: 'Every font, sound and picture is listed with its source and licence in CREDITS.md, in the game’s source code.',
 }
 
@@ -198,7 +199,8 @@ const hi: Strings = {
   creditsInspired: 'atomiquest के {title} से प्रेरित',
   creditsCode: 'कोड: MIT लाइसेंस',
   creditsText: 'खेल की लिखाई: CC BY 4.0। किताबों और दस्तावेज़ों से ली गई बातें इसमें शामिल नहीं हैं, वे उनके मालिकों की हैं।',
-  creditsFonts: 'फ़ॉन्ट: Mukta, Tiro Devanagari Hindi और Old Standard TT (SIL Open Font License), Special Elite (Apache 2.0)।',
+  creditsFonts: 'फ़ॉन्ट: Mukta, Tiro Devanagari Hindi, Old Standard TT और Kalam (SIL Open Font License), Special Elite (Apache 2.0)।',
+  creditsSource: 'सोर्स कोड, GitHub पर खुला: {link}',
   creditsAssets: 'हर फ़ॉन्ट, आवाज़ और तस्वीर अपने स्रोत और लाइसेंस के साथ गेम के सोर्स कोड में CREDITS.md में दर्ज है।',
 }
 

@@ -1,10 +1,11 @@
 // @vitest-environment node
-// handleVoice tests, run against the ElevenLabs provider with a mocked SDK client.
-// Fish Audio and provider selection are covered in providers.test.ts.
+// handleVoice tests, run against the ElevenLabs provider id with a fake synthesizer (no network).
+// The provider requests (Fish Audio and ElevenLabs over fetch) are covered in providers.test.ts.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { elevenLabsSynth } from '../../server/providers'
+import type { Synth } from '../../server/providers'
 import { ERAS } from '../../src/content/registry'
 import type { EraId, Lang, Message } from '../../src/content/types'
+import type { ElevenVoice } from '../../src/content/voices'
 import { dayDate, fillTemplate } from '../../src/game/dates'
 import { SERVER_ERAS } from '../../server/eras'
 import {
@@ -12,35 +13,40 @@ import {
   MAX_DAY,
   MAX_TEXT_CHARS,
   REDIRECT_CACHE,
-  handleVoice,
+  handleVoice as handleRaw,
+  parseQuery,
   resolveClip,
   revision,
-  type TtsClient,
   type VoiceQuery,
   type VoiceResult,
 } from '../../server/voice'
 import { MODEL_ID, OUTPUT_FORMAT, VOICES } from '../../server/voices'
 import { voiceChoices } from '../../src/content/voices'
 
-const BYTES = [new Uint8Array([0x49, 0x44, 0x33]), new Uint8Array([1, 2, 3, 4])]
+const BYTES = new Uint8Array([0x49, 0x44, 0x33, 1, 2, 3, 4])
 
-function streamOf(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
-  return new ReadableStream({
-    start(c) {
-      for (const ch of chunks) c.enqueue(ch)
-      c.close()
-    },
-  })
-}
+type Synthesize = (voice: ElevenVoice, text: string, lang: Lang) => Promise<Uint8Array>
 
-function mockClient(impl?: () => Promise<ReadableStream<Uint8Array>>) {
-  const convert = vi.fn<TtsClient['textToSpeech']['convert']>(impl ?? (() => Promise.resolve(streamOf(BYTES))))
-  const client: TtsClient = { textToSpeech: { convert } }
-  return { client, convert }
+/** A fake ElevenLabs synthesizer: `synthesize` records the voice, text and language it was asked for. */
+function mockClient(impl?: Synthesize) {
+  const synthesize = vi.fn<Synthesize>(impl ?? (() => Promise.resolve(BYTES)))
+  const client: Synth = { provider: 'elevenlabs', synthesize }
+  return { client, synthesize }
 }
 
 /** Deps for the ElevenLabs provider; null means no key is configured. */
-const el = (client: TtsClient | null) => ({ provider: 'elevenlabs' as const, synth: client ? elevenLabsSynth(client) : null })
+const el = (client: Synth | null) => ({ provider: 'elevenlabs' as const, synth: client })
+
+/** A query object written out as a raw query string, keys in the order given. */
+function rawOf(query: VoiceQuery): string {
+  const p = new URLSearchParams()
+  for (const [k, v] of Object.entries(query)) for (const x of Array.isArray(v) ? v : [v]) p.append(k, String(x))
+  return p.toString()
+}
+
+/** handleVoice takes the raw query; tests mostly build it from an object. */
+const handleVoice = (query: VoiceQuery | string, deps: Parameters<typeof handleRaw>[1]) =>
+  handleRaw(typeof query === 'string' ? query : rawOf(query), deps)
 
 const PLACEHOLDER = /\{(?:date|weekday)(?:\+\d+)?\}/
 function find(pred: (m: Message) => boolean): { era: EraId; msg: Message } {
@@ -63,17 +69,23 @@ function location(r: VoiceResult): Record<string, string> {
   return Object.fromEntries(new URLSearchParams(loc.slice(1)))
 }
 
+/** The redirect's canonical query string, raw (without the `?`). */
+function canonicalRaw(r: VoiceResult): string {
+  expect(r.status).toBe(307)
+  return String(r.headers.Location).slice(1)
+}
+
 /** Follow the redirect to the canonical, cacheable URL. */
-async function fetchClip(query: VoiceQuery, client: TtsClient | null): Promise<VoiceResult> {
+async function fetchClip(query: VoiceQuery, client: Synth | null): Promise<VoiceResult> {
   const first = await handleVoice(query, el(client))
   if (first.status !== 307) return first
-  return handleVoice(location(first), el(client))
+  return handleVoice(canonicalRaw(first), el(client))
 }
 
 afterEach(() => { vi.restoreAllMocks() })
 
 describe('handleVoice: bad and unknown params', () => {
-  const { client, convert } = mockClient()
+  const { client, synthesize } = mockClient()
   const id = plain.msg.id
   const cases: [string, VoiceQuery][] = [
     ['no params', {}],
@@ -119,28 +131,28 @@ describe('handleVoice: bad and unknown params', () => {
     expect(r.status).toBe(404)
   })
 
-  it('bad params are refused before the key is checked, and never reach ElevenLabs', async () => {
+  it('bad params are refused before the key is checked, and never reach the provider', async () => {
     expect((await handleVoice(q(plain.era, id, 'fr', 1), el(null))).status).toBe(400)
     expect((await handleVoice(q('agra-1600', id, 'en', 1), el(null))).status).toBe(404)
-    expect(convert).not.toHaveBeenCalled()
+    expect(synthesize).not.toHaveBeenCalled()
   })
 })
 
 describe('handleVoice: text resolution and canonical URLs', () => {
   it('a text without placeholders ignores the day and normalises it to 1', async () => {
-    const { client, convert } = mockClient()
+    const { client, synthesize } = mockClient()
     const a = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 9), el(client)))
     const b = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 2), el(client)))
     expect(a.day).toBe('1')
     expect(a).toEqual(b) // one cache entry for every day
     const r = await handleVoice(a, el(client))
     expect(r.status).toBe(200)
-    expect(convert).toHaveBeenCalledTimes(1)
-    expect(convert.mock.calls[0]![1].text).toBe(plain.msg.text.en.trim())
+    expect(synthesize).toHaveBeenCalledTimes(1)
+    expect(synthesize.mock.calls[0]![1]).toBe(plain.msg.text.en.trim())
   })
 
   it('a text with placeholders is filled with that day’s date', async () => {
-    const { client, convert } = mockClient()
+    const { client, synthesize } = mockClient()
     const era = SERVER_ERAS[dated.era]
     const loc3 = location(await handleVoice(q(dated.era, dated.msg.id, 'en', 3), el(client)))
     const loc4 = location(await handleVoice(q(dated.era, dated.msg.id, 'en', 4), el(client)))
@@ -148,25 +160,25 @@ describe('handleVoice: text resolution and canonical URLs', () => {
     expect(loc4.day).toBe('4')
     expect(loc3.v).not.toBe(loc4.v)
     await handleVoice(loc3, el(client))
-    const text = convert.mock.calls[0]![1].text
+    const text = synthesize.mock.calls[0]![1]
     expect(text).toBe(fillTemplate(dated.msg.text.en, dayDate(era, 3), 'en').trim())
     expect(text).not.toMatch(/[{}]/)
   })
 
   it('reads the Hindi text with language code hi', async () => {
-    const { client, convert } = mockClient()
+    const { client, synthesize } = mockClient()
     expect((await fetchClip(q(plain.era, plain.msg.id, 'hi', 1), client)).status).toBe(200)
-    const req = convert.mock.calls[0]![1]
-    expect(req.languageCode).toBe('hi')
-    expect(req.text).toBe(plain.msg.text.hi.trim())
+    const [, text, lang] = synthesize.mock.calls[0]!
+    expect(lang).toBe('hi')
+    expect(text).toBe(plain.msg.text.hi.trim())
   })
 
   it('a request with a stale version is redirected, not synthesised', async () => {
-    const { client, convert } = mockClient()
+    const { client, synthesize } = mockClient()
     const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { v: '00000000' }), el(client))
     expect(r.status).toBe(307)
     expect(r.headers['Cache-Control']).toBe(REDIRECT_CACHE)
-    expect(convert).not.toHaveBeenCalled()
+    expect(synthesize).not.toHaveBeenCalled()
   })
 
   it('every message in every era resolves, for both languages and every day', () => {
@@ -190,6 +202,71 @@ describe('handleVoice: text resolution and canonical URLs', () => {
   })
 })
 
+describe('handleVoice: only the byte-exact canonical query is served (the CDN caches raw URLs)', () => {
+  // Every spelling below decodes to the same clip. Served as audio, each would be its own CDN
+  // entry with a year-long immutable header, and its own provider call.
+  async function canonical(): Promise<string> {
+    return canonicalRaw(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(null)))
+  }
+  const encodeFirst = (raw: string, ch: string, enc: string) => raw.replace(ch, enc)
+
+  it('serves the canonical query itself', async () => {
+    const { client, synthesize } = mockClient()
+    const r = await handleVoice(await canonical(), el(client))
+    expect(r.status).toBe(200)
+    expect(r.headers['Cache-Control']).toBe(AUDIO_CACHE)
+    expect(synthesize).toHaveBeenCalledTimes(1)
+  })
+
+  const variants: [string, (raw: string) => string][] = [
+    ['reordered keys', (raw) => raw.split('&').reverse().join('&')],
+    ['v moved to the front', (raw) => { const parts = raw.split('&'); return [parts.pop()!, ...parts].join('&') }],
+    ['%2D for a hyphen', (raw) => encodeFirst(raw, '-', '%2D')],
+    ['%2d for a hyphen', (raw) => encodeFirst(raw, '-', '%2d')],
+    ['%64 for a d', (raw) => raw.replace('day=', '%64ay=')],
+    ['%65 inside a value', (raw) => raw.replace('lang=en', 'lang=%65n')],
+    ['+ for a space in a value', (raw) => raw.replace('lang=en', 'lang=en+')],
+    ['a trailing &', (raw) => `${raw}&`],
+    ['a leading &', (raw) => `&${raw}`],
+    ['an empty key', (raw) => `${raw}&=`],
+    ['a leading ?', (raw) => `?${raw}`],
+    ['upper-case %-escape of the =', (raw) => raw.replace('lang=', 'lang%3D')],
+    ['a duplicate key with the same value', (raw) => `${raw}&lang=en`],
+    ['a duplicate key, the copy first', (raw) => `lang=en&${raw}`],
+  ]
+  for (const [name, spell] of variants) {
+    it(`${name}: never an immutable 200, never a provider call`, async () => {
+      const { client, synthesize } = mockClient()
+      const raw = spell(await canonical())
+      const r = await handleVoice(raw, el(client))
+      expect(r.status).not.toBe(200)
+      expect(r.headers['Cache-Control']).not.toContain('immutable')
+      expect([307, 400]).toContain(r.status)
+      if (r.status === 307) {
+        expect(r.headers['Cache-Control']).toBe(REDIRECT_CACHE)
+        expect(r.headers.Location).toBe(`?${await canonical()}`)
+      }
+      expect(synthesize).not.toHaveBeenCalled()
+    })
+  }
+
+  it('the decoded variants redirect to the one canonical URL', async () => {
+    const canon = await canonical()
+    for (const raw of [canon.split('&').reverse().join('&'), encodeFirst(canon, '-', '%2D'), canon.replace('day=', '%64ay=')]) {
+      expect(parseQuery(raw)).toEqual(parseQuery(canon)) // the same clip once decoded
+      const r = await handleVoice(raw, el(null))
+      expect(r.status).toBe(307)
+      expect(r.headers.Location).toBe(`?${canon}`)
+    }
+  })
+
+  it('parses a raw query and turns repeated keys into arrays', () => {
+    expect(parseQuery('era=a&id=b&lang=en&day=1')).toEqual({ era: 'a', id: 'b', lang: 'en', day: '1' })
+    expect(parseQuery('?era=a&era=b')).toEqual({ era: ['a', 'b'] })
+    expect(parseQuery('')).toEqual({})
+  })
+})
+
 describe('handleVoice: audio response', () => {
   it('returns the MP3 with year-long immutable cache headers', async () => {
     const { client } = mockClient()
@@ -210,7 +287,7 @@ describe('handleVoice: audio response', () => {
     expect(String(r.body)).not.toMatch(/key|eleven/i)
   })
 
-  it('503 with a generic body when ElevenLabs fails, and the log leaks nothing', async () => {
+  it('503 with a generic body when the provider fails, and the log leaks nothing', async () => {
     const secretish = 'upstream said: invalid api key sk_' + 'x'.repeat(8)
     const err = Object.assign(new Error(secretish), { statusCode: 401, body: { detail: secretish } })
     const { client } = mockClient(() => Promise.reject(err))
@@ -226,56 +303,55 @@ describe('handleVoice: audio response', () => {
     expect(logged).not.toContain('sk_')
   })
 
-  it('503 when ElevenLabs returns no audio', async () => {
-    const { client } = mockClient(() => Promise.resolve(streamOf([])))
+  it('503 when the provider returns no audio', async () => {
+    const { client } = mockClient(() => Promise.resolve(new Uint8Array(0)))
     expect((await fetchClip(q(plain.era, plain.msg.id, 'en', 1), client)).status).toBe(503)
   })
 
-  it('concurrent requests for one clip share one ElevenLabs call', async () => {
+  it('concurrent requests for one clip share one provider call', async () => {
     let release: () => void = () => {}
     const gate = new Promise<void>((r) => { release = r })
-    const { client, convert } = mockClient(() => gate.then(() => streamOf(BYTES)))
-    const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
+    const { client, synthesize } = mockClient(() => gate.then(() => BYTES))
+    const canon = canonicalRaw(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
     const both = Promise.all([handleVoice(canon, el(client)), handleVoice(canon, el(client))])
     release()
     const [a, b] = await both
     expect(a.status).toBe(200)
     expect(b.status).toBe(200)
-    expect(convert).toHaveBeenCalledTimes(1)
+    expect(synthesize).toHaveBeenCalledTimes(1)
   })
 })
 
 describe('one voice: Dastango everywhere, guest slot off', () => {
   it('every era is read by the Dastango voice', async () => {
     for (const eraId of Object.keys(SERVER_ERAS) as EraId[]) {
-      const { client, convert } = mockClient()
+      const { client, synthesize } = mockClient()
       const msg = SERVER_ERAS[eraId].messages[0]!
       expect((await fetchClip(q(eraId, msg.id, 'hi', 1), client)).status).toBe(200)
-      const [voiceId, req] = convert.mock.calls[0]!
-      expect(voiceId).toBe(VOICES.dastango.elevenlabs!.voiceId)
-      expect(req.voiceSettings).toEqual(VOICES.dastango.elevenlabs!.settings)
-      expect(req.languageCode).toBe('hi')
+      const [voice, , lang] = synthesize.mock.calls[0]!
+      expect(voice).toBe(VOICES.dastango.elevenlabs)
+      expect(lang).toBe('hi')
     }
   })
 
   it('Dastango is the default: the canonical URL has no voice parameter', async () => {
-    const { client, convert } = mockClient()
+    const { client, synthesize } = mockClient()
     const canon = location(await handleVoice(q(plain.era, plain.msg.id, 'en', 1), el(client)))
     expect(canon.voice).toBeUndefined()
     // An explicit voice=dastango redirects to the same plain URL.
     const r = await handleVoice({ ...canon, voice: 'dastango' }, el(client))
     expect(location(r)).toEqual(canon)
-    expect(convert).not.toHaveBeenCalled()
+    expect(synthesize).not.toHaveBeenCalled()
   })
 
   it('the guest voice answers 404 while it is disabled', async () => {
     expect(VOICES.guest.enabled).toBe(false)
     expect(VOICES.guest.fish).toBeUndefined()
     expect(VOICES.guest.elevenlabs).toBeUndefined()
-    const { client, convert } = mockClient()
+    const { client, synthesize } = mockClient()
     const r = await handleVoice(q(plain.era, plain.msg.id, 'en', 1, { voice: 'guest' }), el(client))
     expect(r.status).toBe(404)
-    expect(convert).not.toHaveBeenCalled()
+    expect(synthesize).not.toHaveBeenCalled()
   })
 
   const badVoices: [string, unknown][] = [

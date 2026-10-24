@@ -2,9 +2,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Message } from '../../src/content/types'
 import { SERVER_ERAS } from '../../server/eras'
-import { FISH_TTS_URL, fishRequestBody, fishSynth, UpstreamError, type Synth } from '../../server/providers'
-import { handleVoice, type VoiceResult } from '../../server/voice'
-import { FISH_MODEL, parseProvider, VOICES } from '../../server/voices'
+import { ELEVENLABS_TTS_URL, elevenLabsRequestBody, elevenLabsSynth, FISH_TTS_URL, fishRequestBody, fishSynth, UPSTREAM_TIMEOUT_MS, UpstreamError, type FetchLike, type Synth } from '../../server/providers'
+import { handleVoice as handleRaw, type VoiceQuery, type VoiceResult } from '../../server/voice'
+import { FISH_MODEL, MODEL_ID, OUTPUT_FORMAT, parseProvider, VOICES } from '../../server/voices'
+
+/** handleVoice takes the raw query string; these tests build it from an object, in key order. */
+const handleVoice = (query: VoiceQuery, deps: Parameters<typeof handleRaw>[1]) =>
+  handleRaw(new URLSearchParams(query as Record<string, string>).toString(), deps)
 
 const streamOf = (bytes: number[]) =>
   new ReadableStream<Uint8Array>({ start(c) { c.enqueue(new Uint8Array(bytes)); c.close() } })
@@ -59,11 +63,37 @@ describe('Fish Audio request', () => {
     expect(body).toMatchObject({ temperature: 0.7, top_p: 0.7, language: 'en', prosody: { speed: 1 } })
   })
 
-  it('retries once on 5xx or 429, never on 4xx, and never exposes the body', async () => {
-    const flaky = mockFetch([{ status: 503 }, { status: 200, bytes: [1] }])
-    expect(Array.from(await fishSynth(key, flaky.impl).synthesize({ referenceId: 'x', title: 't' } as never, 'a', 'en'))).toEqual([1])
-    expect(flaky.calls).toHaveLength(2)
+  it('makes one attempt only: no retry on 5xx or 429, which might bill twice for one clip', async () => {
+    for (const status of [500, 503, 429]) {
+      const flaky = mockFetch([{ status }, { status: 200, bytes: [1] }])
+      const err = await fishSynth(key, flaky.impl).synthesize({ referenceId: 'x', title: 't' } as never, 'a', 'en').catch((e: unknown) => e)
+      expect(err).toBeInstanceOf(UpstreamError)
+      expect((err as UpstreamError).statusCode).toBe(status)
+      expect(flaky.calls).toHaveLength(1)
+    }
+  })
 
+  it('makes one attempt only after a timeout or a network error, and the error carries nothing of the request', async () => {
+    for (const cause of [new DOMException('The operation timed out.', 'TimeoutError'), new TypeError(`fetch failed ${FISH_TTS_URL} Bearer ${key}`)]) {
+      const impl = vi.fn(async () => { throw cause })
+      const err = await fishSynth(key, impl as unknown as FetchLike).synthesize({ referenceId: 'x', title: 't' } as never, 'a', 'en').catch((e: unknown) => e)
+      expect(err).toBeInstanceOf(UpstreamError)
+      expect((err as UpstreamError).statusCode).toBeUndefined()
+      expect(String((err as Error).message)).not.toContain(key)
+      expect((err as Error).cause).toBeUndefined()
+      expect(impl).toHaveBeenCalledTimes(1)
+    }
+  })
+
+  it('gives every request a timeout signal', async () => {
+    const { impl } = mockFetch([{ status: 200 }])
+    await fishSynth(key, impl).synthesize({ referenceId: 'x', title: 't' } as never, 'a', 'en')
+    const init = impl.mock.calls[0]![1] as { signal?: AbortSignal }
+    expect(init.signal).toBeInstanceOf(AbortSignal)
+    expect(UPSTREAM_TIMEOUT_MS).toBeLessThanOrEqual(25_000)
+  })
+
+  it('never exposes the body of a refusal', async () => {
     const denied = mockFetch([{ status: 402 }])
     const err = await fishSynth(key, denied.impl).synthesize({ referenceId: 'x', title: 't' } as never, 'a', 'en').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(UpstreamError)
@@ -74,6 +104,44 @@ describe('Fish Audio request', () => {
 
   it('every enabled voice has a Fish model', () => {
     for (const v of Object.values(VOICES)) if (v.enabled) expect(v.fish?.referenceId).toMatch(/^[0-9a-f]{32}$/)
+  })
+})
+
+describe('ElevenLabs request (plain fetch, no SDK)', () => {
+  const voice = VOICES.dastango.elevenlabs!
+
+  it('posts the REST body to /v1/text-to-speech/{voice} with the key header and small MP3s', async () => {
+    const elKey = ['test', 'el', 'key'].join('-')
+    const { impl, calls } = mockFetch([{ status: 200, bytes: [5, 6] }])
+    const audio = await elevenLabsSynth(elKey, impl).synthesize(voice as never, 'नमस्ते', 'hi')
+    expect(Array.from(audio)).toEqual([5, 6])
+    expect(calls).toHaveLength(1)
+    const { url, init } = calls[0]!
+    expect(url).toBe(`${ELEVENLABS_TTS_URL}/${voice.voiceId}?output_format=${OUTPUT_FORMAT}`)
+    expect(url.startsWith('https://api.elevenlabs.io/v1/text-to-speech/')).toBe(true)
+    expect(init.method).toBe('POST')
+    expect(init.headers).toMatchObject({ 'xi-api-key': elKey, 'Content-Type': 'application/json' })
+    expect(JSON.parse(init.body)).toEqual({
+      text: 'नमस्ते',
+      model_id: MODEL_ID,
+      language_code: 'hi',
+      apply_text_normalization: 'on',
+      voice_settings: { stability: voice.settings.stability, similarity_boost: voice.settings.similarityBoost },
+      audio_effects: { environment_id: voice.effects!.environmentId, send_level: voice.effects!.sendLevel },
+    })
+  })
+
+  it('leaves audio effects out when the voice has none', () => {
+    const { effects: _fx, ...plain } = voice
+    expect(elevenLabsRequestBody(plain, 'a', 'en')).not.toHaveProperty('audio_effects')
+  })
+
+  it('makes one attempt only and keeps the body out of the error', async () => {
+    const flaky = mockFetch([{ status: 503 }, { status: 200 }])
+    const err = await elevenLabsSynth(key, flaky.impl).synthesize(voice as never, 'a', 'en').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(UpstreamError)
+    expect((err as UpstreamError).statusCode).toBe(503)
+    expect(flaky.calls).toHaveLength(1)
   })
 })
 

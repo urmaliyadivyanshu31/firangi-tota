@@ -104,6 +104,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let readable = false // the paper is in view: stamps work, the agarbatti burns
   let revealed = false
   let busy = false // a stamp is being animated
+  let stampedWith: Verdict | null = null // the stamp being animated, so a redraw keeps the stamps asleep
   let gen = 0 // bumps on every navigation and every new day; async work started before it is dropped
 
   let muted = store.get<unknown>('muted', false) === true
@@ -121,6 +122,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let deskEra: EraId | null = suggestedEra(ERAS, bests())?.id ?? null
   let deskDirty = false // a paper, a stamp or the caught dimming is on it
   let stageLoad: Promise<void> | null = null
+  // settles whenever a new desk is attached, so a reveal on a lost desk is not waited for
+  let deskSwapped = signal()
 
   // read-aloud
   let voice: Voice | null = null
@@ -158,7 +161,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // later gestures in case the system suspended it.
   const unlock = () => audio.unlock()
   for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, unlock, { capture: true, passive: true })
-  document.addEventListener('visibilitychange', syncPause)
+  document.addEventListener('visibilitychange', () => {
+    // a hidden tab makes no sound: the audio context sleeps and wakes (unless muted) on return
+    audio.setHidden(document.hidden === true)
+    syncPause()
+  })
   let insetTimer = 0
   window.addEventListener('resize', () => {
     // after the layout settles (the 900 px switch moves the case file), tell the stage again
@@ -238,14 +245,64 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (p && screen === 'day') {
       // A desk that arrives once the paper was readable (a lost context) shows it at once; during
       // the arrival, arrive() brings it in on whichever desk is there.
-      if (readable || revealed) {
-        void desk.showMessage(sheetFor(p, getLang()))
-        desk.skip()
-      }
+      if (readable || revealed) catchUp(p)
     } else if (screen === 'main') {
       void desk.establish()
     }
     syncPause()
+    deskSwapped.resolve()
+    deskSwapped = signal()
+  }
+
+  /**
+   * Brings a new desk up to the day at once: the paper, and when the verdict shows, its back (the
+   * reveal, finished by skip()). The day is drawn again once the back is up, so the source button
+   * sits over the new desk's source line (getSourceRect), not the lost one's.
+   */
+  function catchUp(p: Play): void {
+    const d = desk
+    if (!d) return
+    void d.showMessage(sheetFor(p))
+    const spec = revealed ? paperInLang(p)?.spec : undefined
+    if (!spec) {
+      d.skip()
+      return
+    }
+    const token = gen
+    const done = d.reveal(spec)
+    d.skip()
+    drawDay()
+    void guard(done, REVEAL_GUARD_MS).then(() => {
+      if (token === gen && desk === d && play === p && revealed) drawDay()
+    })
+  }
+
+  /** The verdict's back in the language on screen (rebuilt when the language changed). */
+  function paperInLang(p: Play): typeof paper {
+    const msg = currentMessage(p)
+    const lang = getLang()
+    if (paper && msg && paper.spec.lang !== lang) {
+      paper = { ...paper, spec: buildReveal({ era: p.era, msg, verdict: p.state.lastVerdict ?? 'timeout', lang, ...(paper.end ? { end: paper.end } : {}) }) }
+    }
+    return paper
+  }
+
+  /**
+   * Both sides of the paper in the language on screen: the front (its real-document tag only once
+   * revealed) and, when the verdict shows, the back. Never during the stamp or the reveal: onStamp
+   * calls it once they settle.
+   */
+  function syncPaper(p: Play): void {
+    const d = desk
+    if (!d) return
+    if (readable || revealed) d.redrawMessage(sheetFor(p))
+    const before = paper?.spec
+    const now = paperInLang(p)
+    if (!now || now.spec === before) return
+    const token = gen
+    void guard(d.reveal(now.spec), REVEAL_GUARD_MS).then(() => {
+      if (token === gen && desk === d && play === p && revealed) drawDay()
+    })
   }
 
   function stageDesk(s: Stage, dressingFor: (id: EraId) => EraDressing): Desk {
@@ -282,7 +339,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       stamp: (k) => f.stamp(k),
       flash: (k) => f.flash(k),
       caught: () => Promise.resolve(),
-      skip: () => undefined,
+      skip: () => f.skip(),
       setPaused: () => undefined,
       dispose: () => f.dispose(),
       cues: false,
@@ -464,6 +521,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     readable = false
     revealed = false
     busy = false
+    stampedWith = null
     stopVoice()
     disarmTimer()
     clearToast()
@@ -591,6 +649,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     readable = false
     revealed = false
     busy = false
+    stampedWith = null
     paper = null
     verdictEnd = null
     deskDirty = true
@@ -659,13 +718,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         setLang(getLang() === 'en' ? 'hi' : 'en')
         audio.cue('plaqueFlick')
         stopVoice()
-        const msg = currentMessage(p)
-        if (readable || revealed) desk?.redrawMessage(sheetFor(p))
-        if (paper && msg && desk) {
-          // the paper's back in the new language: the same message, so it redraws at once
-          paper = { ...paper, spec: buildReveal({ era: p.era, msg, verdict: p.state.lastVerdict ?? 'timeout', lang: getLang(), ...(paper.end ? { end: paper.end } : {}) }) }
-          void desk.reveal(paper.spec)
-        }
+        // During the stamp or the reveal the paper keeps its language until the animation settles,
+        // then onStamp redraws both sides in the new one; the stamps stay asleep meanwhile.
+        if (!busy) syncPaper(p)
         drawDay()
       },
       quit: showMain,
@@ -677,6 +732,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         if (p.kind === 'chapter' && paper?.end) void share(chapterLine(p, paper.end))
       },
     })
+    // a redraw mid-stamp (a language switch) keeps the stamps asleep until the verdict is up
+    if (busy && stampedWith) setStamping(ui, stampedWith)
     controls.hidden = true
     syncHudInsets()
   }
@@ -700,7 +757,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const p = play
     if (!p || busy || revealed || !readable || p.state.phase !== 'reading') return
     busy = true
+    stampedWith = v
     const token = gen
+    const langAtStamp = getLang()
     stopVoice()
     disarmTimer()
     p.state = stamp(p.state, v)
@@ -730,19 +789,26 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // note, then the verdict, the tell and, at the chapter's end, the era's ending and its stamp.
     const msg = currentMessage(p)
     const end = p.kind !== 'chapter' ? undefined : !correct ? 'caught' : p.state.day >= p.state.days ? 'survived' : undefined
-    if (desk && msg) {
+    const revealDesk = desk
+    if (revealDesk && msg) {
+      // the language switched during the stamp: the front catches up before the paper turns over
+      if (getLang() !== langAtStamp) revealDesk.redrawMessage(sheetFor(p))
       const spec = buildReveal({ era: p.era, msg, verdict: v, lang: getLang(), ...(end ? { end } : {}) })
       // the buttons below (or beside) the paper's back take more room than the stamps did at the end
       verdictEnd = !!end
       syncHudInsets()
       if (end && p.era.channel === 'telegram') audio.cue('endTelegram') // the ending comes off the teleprinter
-      await guard(desk.reveal(spec), REVEAL_GUARD_MS)
+      // a desk lost mid-reveal never finishes it: stop waiting as soon as a new desk is attached
+      await guard(Promise.race([revealDesk.reveal(spec), deskSwapped.promise]), REVEAL_GUARD_MS)
       if (token !== gen) return
       paper = { spec, ...(end ? { end } : {}) }
       if (end && p.kind === 'chapter') closeChapter(p, end)
     }
     revealed = true
     busy = false
+    stampedWith = null
+    if (paper && desk && desk !== revealDesk) catchUp(p) // the desk was lost during the reveal
+    else if (paper && paper.spec.lang !== getLang()) syncPaper(p) // the language switched during the reveal
     drawDay()
   }
 
@@ -900,6 +966,13 @@ function parseSeed(raw: string | null): number | null {
 /** The next Aaj ka Taar opens at midnight IST. */
 export function nextDailyAt(now: number): number {
   return (Math.floor((now + IST_OFFSET_MS) / DAY_MS) + 1) * DAY_MS - IST_OFFSET_MS
+}
+
+/** A one-shot signal: `promise` settles when `resolve` is called. */
+function signal(): { promise: Promise<void>; resolve: () => void } {
+  let resolve!: () => void
+  const promise = new Promise<void>((r) => (resolve = r))
+  return { promise, resolve }
 }
 
 /** Resolves when `p` settles or after `ms`, whichever is first. */

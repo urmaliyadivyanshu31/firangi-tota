@@ -6,17 +6,20 @@ import { backButton, card } from '../card'
 import { h, mount, type Child } from '../h'
 
 const INSPIRATION = 'https://github.com/atomiquest/Politburo-or-Parrot'
+export const REPO = 'https://github.com/urmaliyadivyanshu31/firangi-tota'
 
 export function renderCredits(root: HTMLElement, on: { back(): void }): void {
   const lang = getLang()
   const [before = '', after = ''] = t('creditsInspired', lang).split('{title}')
+  const [srcBefore = '', srcAfter = ''] = t('creditsSource', lang).split('{link}')
   const body = [
     h('h1', { class: 'credits__title' }, t('credits', lang)),
     h('p', { class: 'credits__inspired' }, before, h('a', { href: INSPIRATION, target: '_blank', rel: 'noopener noreferrer' }, 'Politburo or Parrot'), after),
     h('ul', { class: 'credits__list' },
       h('li', null, t('creditsCode', lang)),
       h('li', null, t('creditsText', lang)),
-      h('li', null, t('creditsFonts', lang))),
+      h('li', null, t('creditsFonts', lang)),
+      h('li', { class: 'credits__source' }, srcBefore, h('a', { href: REPO, target: '_blank', rel: 'noopener noreferrer' }, REPO.replace(/^https:\/\//, '')), srcAfter)),
     h('p', null, t('creditsAssets', lang)),
     ...voiceChoices().map((id) => VOICES[id].credit).filter(Boolean).map((c) => h('p', { class: 'credits__voice' }, c)),
     creditsDoc(creditsMd),
