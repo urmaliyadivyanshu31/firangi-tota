@@ -4,7 +4,8 @@
 import type { EraId } from '../content/types'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
 import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type PageRect } from './sheet'
-import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StampKind } from './types'
+import { beamAt, caughtScore, redAt, type CaughtScore, type KnockKind } from './caught'
+import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StageCueName, StampKind } from './types'
 
 export interface Fallback {
   setEra(id: EraId): void
@@ -12,8 +13,14 @@ export interface Fallback {
   showMessage(s: SheetSpec): Promise<void>
   /** Language or pencil change: the same sheet, redrawn. */
   redrawMessage(s: SheetSpec): void
-  /** A short saffron glow (right) or red ink from the edges (wrong). */
+  /** A short saffron glow after a right stamp. A wrong one stays still: its red comes in caught(). */
   flash(kind: FlashKind): void
+  /**
+   * The caught sequence (see Stage.caught and caught.ts), drawn flat: the lamp flickers, red pulses
+   * on the alarm's rhythm, a beam sweeps across, the knocks shake the desk, then the dark. Its sounds
+   * go out through `onCue`, beat by beat, as the stage's do. skip() ends it.
+   */
+  caught(): Promise<void>
   /** The day's title over the wall, about 1.6 s. */
   dayTitle(t: DayTitle): Promise<void>
   /** The stamp's imprint on the paper. */
@@ -41,7 +48,17 @@ const insetPx = (el: Element, name: string, fallback: number): number => {
 
 const DEVANAGARI = /[ऀ-ॿ]/
 
-export function mountFallback(el: HTMLElement, era: EraId): Fallback {
+export interface FallbackOptions {
+  /** The caught sequence's beats, for sound (the same names the stage sends). */
+  onCue?: (name: StageCueName) => void
+}
+
+/** How hard each rap of a knock shakes the flat desk (px), closer each time. */
+const RAP_PX: Record<KnockKind, number> = { far: 1, near: 3, door: 6 }
+/** How dark the desk stays after the sequence, until the verdict turns over. */
+const CAUGHT_DARK = 0.5
+
+export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions = {}): Fallback {
   const canvas = document.createElement('canvas')
   canvas.style.cssText = 'display:block;width:100%;height:100%'
   canvas.setAttribute('aria-hidden', 'true')
@@ -61,6 +78,9 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   let sourceRect: PageRect | null = null
   let title: DayTitle | null = null
   let flashK: { kind: FlashKind; t0: number } | null = null
+  // the caught sequence in progress, and the dark it leaves over the desk
+  let caughtRun: { t0: number; score: CaughtScore; next: number; sounded: boolean; done: () => void } | null = null
+  let darkK = 0
   let raf = 0
   let disposed = false
   // the last showMessage, which a reveal waits for; skip() lands the reveal on its back at once
@@ -105,7 +125,11 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       })
       paperBox = out
     }
-    if (flashK) {
+    if (darkK > 0) {
+      g.fillStyle = `rgba(0,0,0,${darkK.toFixed(3)})`
+      g.fillRect(0, 0, W, H)
+    }
+    if (flashK || caughtRun) {
       // keep the still for the flash frames (one canvas, resized only with the screen)
       base ??= document.createElement('canvas')
       if (base.width !== pw || base.height !== ph) {
@@ -116,19 +140,73 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     }
   }
 
+  const say = (name: StageCueName) => {
+    try {
+      opts.onCue?.(name)
+    } catch {
+      /* a listener's error never breaks the desk */
+    }
+  }
+
+  /** Ends the caught sequence: silently when skipped or cut short, leaving the dark over the desk. */
+  const finishCaught = (quiet: boolean) => {
+    const c = caughtRun
+    if (!c) return
+    caughtRun = null
+    if (quiet && c.sounded) say('caughtHush')
+    darkK = CAUGHT_DARK
+    if (!disposed) compose()
+    c.done()
+  }
+
   const frame = (now: number) => {
     raf = 0
-    if (!g || disposed || !flashK) return
-    const t = (now - flashK.t0) / (flashK.kind === 'right' ? 1000 : 1300)
-    g.setTransform(1, 0, 0, 1, 0, 0)
-    if (base) g.drawImage(base, 0, 0)
-    g.setTransform(dpr, 0, 0, dpr, 0, 0)
-    if (t >= 1) {
-      flashK = null
-      return
+    if (disposed || (!flashK && !caughtRun)) return
+    let more = false
+    let dx = 0
+    let dy = 0
+    const c = caughtRun
+    const ms = c ? now - c.t0 : 0
+    if (c) {
+      // the beats due by now: their sounds, and the knocks' shakes
+      for (let b = c.score.beats[c.next]; b && b.at <= ms; b = c.score.beats[++c.next]) {
+        if (b.cue) {
+          say(b.cue)
+          c.sounded = b.cue !== 'caughtHush' && b.cue !== 'caughtDark'
+        }
+      }
+      if (!reduced) {
+        for (const b of c.score.beats) {
+          if (!b.rap || b.at > ms || ms - b.at > 400) continue
+          const k = RAP_PX[b.rap] * Math.exp(-(ms - b.at) / 90)
+          dx += Math.sin(b.at * 7.1 + ms * 0.09) * k
+          dy += Math.cos(b.at * 3.3 + ms * 0.11) * k
+        }
+      }
     }
-    drawFlash(g, W, H, flashK.kind, t)
-    raf = requestAnimationFrame(frame)
+    if (g) {
+      g.setTransform(1, 0, 0, 1, 0, 0)
+      if (base) {
+        // shaken: drawn a hair larger, so the edges never show
+        const s = dx || dy ? 1.03 : 1
+        const bw = base.width * s
+        const bh = base.height * s
+        g.drawImage(base, (base.width - bw) / 2 + dx * dpr, (base.height - bh) / 2 + dy * dpr, bw, bh)
+      }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0)
+      if (flashK) {
+        const t = (now - flashK.t0) / (flashK.kind === 'right' ? 1000 : 1300)
+        if (t >= 1) flashK = null
+        else {
+          drawFlash(g, W, H, flashK.kind, t)
+          more = true
+        }
+      }
+      if (c) drawCaught(g, W, H, c.score, ms, reduced)
+    }
+    if (c && ms >= c.score.end) finishCaught(false)
+    else if (c) more = true
+    if (more) raf = requestAnimationFrame(frame)
   }
 
   let timer = 0
@@ -149,6 +227,8 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
 
   return {
     setEra(id) {
+      finishCaught(true)
+      darkK = 0
       current = id
       sheet = null
       stamp = null
@@ -157,6 +237,8 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       compose()
     },
     showMessage(s) {
+      finishCaught(true)
+      darkK = 0
       const job = (async () => {
         await fonts(s.lang)
         if (disposed) return
@@ -171,6 +253,9 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     },
     async reveal(r) {
       skipReveal = false
+      // the verdict turns over in the light: the dark (or a sequence cut short) lifts
+      finishCaught(true)
+      darkK = 0
       await shown
       if (!sheet) return
       await fonts(r.lang)
@@ -193,6 +278,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       compose()
     },
     skip() {
+      if (caughtRun) return finishCaught(true) // a tap during the alarm skips to the verdict
       skipReveal = true
       finishWait?.()
     },
@@ -211,10 +297,21 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       compose()
     },
     flash(kind) {
+      if (kind === 'wrong') return
       if (!g || disposed || reduced || typeof requestAnimationFrame !== 'function') return
       flashK = { kind, t0: typeof performance !== 'undefined' ? performance.now() : Date.now() }
       compose()
       if (!raf) raf = requestAnimationFrame(frame)
+    },
+    caught() {
+      finishCaught(true)
+      if (disposed || typeof requestAnimationFrame !== 'function') return Promise.resolve()
+      return new Promise<void>((done) => {
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+        caughtRun = { t0: now, score: caughtScore(current), next: 0, sounded: false, done }
+        compose() // keeps the still for the frames
+        if (!raf) raf = requestAnimationFrame(frame)
+      })
     },
     async dayTitle(t) {
       await loadSheetFonts(DEVANAGARI.test(t.big + t.small) ? 'hi' : 'en', 1500)
@@ -232,6 +329,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     },
     dispose() {
       disposed = true
+      finishCaught(true)
       window.clearTimeout(timer)
       if (raf) cancelAnimationFrame(raf)
       ro?.disconnect()
@@ -319,6 +417,88 @@ function drawFlash(g: CanvasRenderingContext2D, W: number, H: number, kind: Flas
     g.fillStyle = grd
   }
   g.fillRect(0, 0, W, H)
+  g.restore()
+}
+
+/**
+ * One frame of the caught sequence over the still: the lamp's flicker, the red light pulsing in from
+ * the edges, the beam swung across from the window (top right), the flame guttering at the door's
+ * raps, then the dark. Under reduced motion: one slow red tint and the dark, nothing moving.
+ */
+function drawCaught(g: CanvasRenderingContext2D, W: number, H: number, score: CaughtScore, ms: number, reduced: boolean): void {
+  const R = Math.hypot(W, H) / 2
+  g.save()
+  // the beam: a soft wedge of light in three layers for its edge, brightest near the window
+  if (!reduced) {
+    const b = beamAt(score.beam, ms)
+    if (b.amount > 0.002) {
+      // carried along past the window, its patch of light crossing the other way
+      const ox = W * (0.8 + 0.16 * b.sweep)
+      const oy = -H * 0.06
+      const a = Math.atan2(H * 0.5 - oy, W * 0.5 - ox) - b.sweep * 0.34
+      const [r, gr, bl] = score.beam.color.map((x) => Math.round(x * 255))
+      const reach = Math.hypot(W, H) * 1.2
+      g.globalCompositeOperation = 'lighter'
+      for (const [spread, alpha] of [[1, 0.35], [0.66, 0.35], [0.36, 0.3]] as const) {
+        const w = score.beam.width * spread
+        const grd = g.createRadialGradient(ox, oy, 0, ox, oy, reach)
+        grd.addColorStop(0, `rgba(${r},${gr},${bl},${(alpha * b.amount * score.beam.strength * 1.6).toFixed(3)})`)
+        grd.addColorStop(1, `rgba(${r},${gr},${bl},0)`)
+        g.fillStyle = grd
+        g.beginPath()
+        g.moveTo(ox, oy)
+        g.lineTo(ox + Math.cos(a - w) * reach, oy + Math.sin(a - w) * reach)
+        g.lineTo(ox + Math.cos(a + w) * reach, oy + Math.sin(a + w) * reach)
+        g.closePath()
+        g.fill()
+      }
+      g.globalCompositeOperation = 'source-over'
+    }
+  }
+  // the red light
+  let amount = 0
+  let spread = 1
+  let wash = 0
+  if (ms >= score.alarm) {
+    if (reduced) {
+      const e = ms - score.alarm
+      amount = e < 260 ? (e / 260) * 0.85 : 0.85 * Math.max(0, 1 - (e - 260) / 1700)
+      wash = amount * 0.5
+    } else {
+      const red = redAt(score, ms)
+      amount = 0.3 + 0.7 * red.pulse
+      spread = red.creep
+      wash = red.pulse * 0.8
+    }
+    if (ms > score.dark) amount *= Math.max(0, 1 - (ms - score.dark) / 600)
+  }
+  if (amount > 0.002) {
+    const inner = R * (1 - 0.62 * spread)
+    const grd = g.createRadialGradient(W / 2, H / 2, Math.max(0, inner - R * 0.1), W / 2, H / 2, R)
+    grd.addColorStop(0, 'rgba(163,23,14,0)')
+    grd.addColorStop(0.35, `rgba(140,18,10,${(0.5 * amount).toFixed(3)})`)
+    grd.addColorStop(1, `rgba(40,4,2,${(0.75 * amount).toFixed(3)})`)
+    g.fillStyle = grd
+    g.fillRect(0, 0, W, H)
+    if (wash > 0.002) {
+      g.fillStyle = `rgba(170,24,14,${(0.3 * wash).toFixed(3)})`
+      g.fillRect(0, 0, W, H)
+    }
+  }
+  // the lamp: one flicker in the silence, and the flame guttering at the raps on the door
+  let shade = 0
+  if (ms >= score.flicker[0] && ms < score.flicker[1]) shade = reduced ? 0.25 : 0.55
+  if (!reduced) {
+    for (const b of score.beats) {
+      if (b.rap === 'door' && ms >= b.at && ms - b.at < 300) shade = Math.max(shade, 0.3 * Math.exp(-(ms - b.at) / 110))
+    }
+  }
+  // the dark closing in at the end
+  if (ms >= score.dark) shade = Math.max(shade, CAUGHT_DARK * Math.min(1, (ms - score.dark) / (reduced ? 300 : 600)))
+  if (shade > 0.002) {
+    g.fillStyle = `rgba(0,0,0,${shade.toFixed(3)})`
+    g.fillRect(0, 0, W, H)
+  }
   g.restore()
 }
 
