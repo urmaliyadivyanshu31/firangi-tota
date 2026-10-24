@@ -1632,4 +1632,844 @@ export const messages: Message[] = [
       },
     ],
   },
+
+  // ═════════════ Medium (minMode 'medium'): Medium and Hard runs only ═════════════
+  // Slips caught by the Medium case file (courier, dutt, durga, kashmir, bills, irwin, meerut,
+  // scott) or the calendar. Dated ones sit on their true day of the window.
+
+  {
+    id: 'lh-prabhat-g',
+    tier: 1,
+    real: true,
+    pair: 'lh-prabhat',
+    minMode: 'medium',
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'If Prabhat comes from Delhi, give him the cycle and ask nothing. He knows the way. — Villager',
+      hi: 'प्रभात दिल्ली से आए, तो उसे साइकिल दे देना और कुछ मत पूछना। उसे रास्ता पता है। — विलेजर',
+    },
+    checks: { en: ['Prabhat', 'from Delhi'], hi: ['प्रभात', 'दिल्ली से'] },
+    why: {
+      text: {
+        en: "Prabhat was Shiv Verma's party name; he carried our friend's letter from Delhi.",
+        hi: "'प्रभात' शिव वर्मा का पार्टी नाम था; वही दिल्ली से हमारे दोस्त की चिट्ठी लाए।",
+      },
+      sources: [SCHEDULE, { id: 'bs-letter-sukhdev', loc: 'editorial note' }],
+    },
+  },
+  {
+    id: 'lh-prabhat-f',
+    tier: 1,
+    real: false,
+    pair: 'lh-prabhat',
+    minMode: 'medium',
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'If Prakash comes from Delhi, give him the cycle and ask nothing. He knows the way. — Villager',
+      hi: 'प्रकाश दिल्ली से आए, तो उसे साइकिल दे देना और कुछ मत पूछना। उसे रास्ता पता है। — विलेजर',
+    },
+    checks: { en: ['Prakash', 'from Delhi'], hi: ['प्रकाश', 'दिल्ली से'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: "Shiv Verma's party name was Prabhat, not Prakash.", hi: "शिव वर्मा का पार्टी नाम 'प्रभात' था, 'प्रकाश' नहीं।" },
+        factId: 'courier',
+        sources: [SCHEDULE],
+      },
+    ],
+  },
+
+  {
+    id: 'lh-bhabhi-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-bhabhi',
+    minMode: 'medium',
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "Durga Bhabhi, B.C.'s wife, played our friend's wife in December, little Sachi in her arms. If anyone asks, you have never met her.",
+      hi: 'दुर्गा भाभी, बी.सी. की पत्नी, दिसंबर में नन्हे शची को गोद में लिए हमारे दोस्त की पत्नी बनी थीं। कोई पूछे, तो तुम उनसे कभी नहीं मिले।',
+    },
+    checks: { en: ["B.C.'s wife", 'little Sachi'], hi: ['बी.सी. की पत्नी', 'नन्हे शची'] },
+    why: {
+      text: {
+        en: "Durga Devi, Bhagwati Charan's wife, posed as his wife, with her son.",
+        hi: 'भगवती चरण की पत्नी दुर्गा देवी अपने बेटे के साथ उनकी पत्नी बनी थीं।',
+      },
+      sources: [{ id: 'maclean-durga' }, { id: 'noorani-1996', loc: "ch. 'Saunders Murder', p. 25" }],
+    },
+  },
+  {
+    id: 'lh-bhabhi-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-bhabhi',
+    minMode: 'medium',
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "Durga Bhabhi, Hans Raj's wife, played our friend's wife in December, little Sachi in her arms. If anyone asks, you have never met her.",
+      hi: 'दुर्गा भाभी, हंसराज की पत्नी, दिसंबर में नन्हे शची को गोद में लिए हमारे दोस्त की पत्नी बनी थीं। कोई पूछे, तो तुम उनसे कभी नहीं मिले।',
+    },
+    checks: { en: ["Hans Raj's wife", 'little Sachi'], hi: ['हंसराज की पत्नी', 'नन्हे शची'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: 'She was B.C., Bhagwati Charan\'s wife; Hans Raj Vohra is another man.',
+          hi: 'वे बी.सी., यानी भगवती चरण की पत्नी थीं; हंसराज वोहरा दूसरे आदमी हैं।',
+        },
+        factId: 'durga',
+        sources: [{ id: 'maclean-durga' }, { id: 'vaidik-2016' }],
+      },
+    ],
+  },
+
+  {
+    id: 'lh-kashmir-g',
+    tier: 1,
+    real: true,
+    pair: 'lh-kashmir',
+    minMode: 'medium',
+    from: BC,
+    to: POST_BOX,
+    text: {
+      en: 'The room in Kashmir Buildings has been ours since 16 March. Go up only after dark, and never twice in a day.',
+      hi: 'कश्मीर बिल्डिंग्स वाला कमरा 16 मार्च से हमारा है। ऊपर सिर्फ़ अँधेरे के बाद जाना, और दिन में दो बार कभी नहीं।',
+    },
+    checks: { en: ['Kashmir Buildings', 'since 16 March'], hi: ['कश्मीर बिल्डिंग्स', '16 मार्च से'] },
+    why: {
+      text: {
+        en: 'House No. 69 was leased to Bhagwati Charan on 16 March 1929.',
+        hi: 'मकान नंबर 69 भगवती चरण को 16 मार्च 1929 को किराए पर दिया गया।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Hour of Trial', pp. 58, 64" }],
+    },
+  },
+  {
+    id: 'lh-kashmir-f',
+    tier: 1,
+    real: false,
+    pair: 'lh-kashmir',
+    minMode: 'medium',
+    from: BC,
+    to: POST_BOX,
+    text: {
+      en: 'The room in Kashmir Buildings has been ours since 16 February. Go up only after dark, and never twice in a day.',
+      hi: 'कश्मीर बिल्डिंग्स वाला कमरा 16 फ़रवरी से हमारा है। ऊपर सिर्फ़ अँधेरे के बाद जाना, और दिन में दो बार कभी नहीं।',
+    },
+    checks: { en: ['Kashmir Buildings', 'since 16 February'], hi: ['कश्मीर बिल्डिंग्स', '16 फ़रवरी से'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: 'The room was taken on 16 March, not in February.', hi: 'कमरा 16 मार्च को लिया गया था, फ़रवरी में नहीं।' },
+        factId: 'kashmir',
+        sources: [{ id: 'noorani-1996', loc: "ch. 'Hour of Trial', p. 64" }],
+      },
+    ],
+  },
+
+  // Day 1, Tuesday 2 April: Patel's statement on the Public Safety Bill and the Meerut case;
+  // 'He promised to give his ruling on April 8' (Noorani p. 29).
+  {
+    id: 'lh-ruling-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-ruling',
+    minMode: 'medium',
+    onDay: 1,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: 'In Delhi today President Patel said the Safety Bill rests on the same ground as the Meerut case. He gives his ruling on Monday, 8 April.',
+      hi: 'आज दिल्ली में प्रेसिडेंट पटेल ने कहा कि सेफ़्टी बिल की बुनियाद वही है जो मेरठ केस की। अपना फ़ैसला वे सोमवार, 8 अप्रैल को देंगे।',
+    },
+    checks: { en: ['Meerut case', 'Monday, 8 April'], hi: ['मेरठ केस', 'सोमवार, 8 अप्रैल'] },
+    why: {
+      text: {
+        en: 'On 2 April 1929 Patel tied the Bill to Meerut; ruling due 8 April.',
+        hi: '2 अप्रैल 1929 को पटेल ने बिल को मेरठ केस से जोड़ा; फ़ैसला 8 अप्रैल को।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 29" }],
+    },
+  },
+  {
+    id: 'lh-ruling-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-ruling',
+    minMode: 'medium',
+    onDay: 1,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: 'In Delhi today President Patel said the Safety Bill rests on the same ground as the Meerut case. He gives his ruling on Monday, 9 April.',
+      hi: 'आज दिल्ली में प्रेसिडेंट पटेल ने कहा कि सेफ़्टी बिल की बुनियाद वही है जो मेरठ केस की। अपना फ़ैसला वे सोमवार, 9 अप्रैल को देंगे।',
+    },
+    checks: { en: ['Meerut case', 'Monday, 9 April'], hi: ['मेरठ केस', 'सोमवार, 9 अप्रैल'] },
+    tells: [
+      {
+        kind: 'weekday',
+        explain: { en: 'Today is Tuesday 2 April, so Monday is the 8th, not the 9th.', hi: 'आज मंगलवार, 2 अप्रैल है, तो सोमवार 8 तारीख़ है, 9 नहीं।' },
+        sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 29" }],
+      },
+    ],
+  },
+
+  {
+    id: 'lh-meerut-g',
+    tier: 1,
+    real: true,
+    pair: 'lh-meerut',
+    minMode: 'medium',
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: 'After the Meerut arrests in March, trust the post less than ever. Send this on by hand.',
+      hi: 'मार्च में मेरठ की गिरफ़्तारियों के बाद डाक पर पहले से भी कम भरोसा करना। इसे हाथों-हाथ आगे भेजना।',
+    },
+    checks: { en: ['Meerut arrests', 'in March'], hi: ['मेरठ की गिरफ़्तारियों', 'मार्च में'] },
+    why: {
+      text: {
+        en: 'The Meerut warrants against labour leaders came on 15 March 1929.',
+        hi: 'मज़दूर नेताओं पर मेरठ केस के वारंट 15 मार्च 1929 को निकले।',
+      },
+      sources: [{ id: 'noorani-1996', loc: 'p. 134' }, { id: 'nehru-1936', loc: 'pp. 188–189' }],
+    },
+  },
+  {
+    id: 'lh-meerut-f',
+    tier: 1,
+    real: false,
+    pair: 'lh-meerut',
+    minMode: 'medium',
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: 'After the Meerut arrests in January, trust the post less than ever. Send this on by hand.',
+      hi: 'जनवरी में मेरठ की गिरफ़्तारियों के बाद डाक पर पहले से भी कम भरोसा करना। इसे हाथों-हाथ आगे भेजना।',
+    },
+    checks: { en: ['Meerut arrests', 'in January'], hi: ['मेरठ की गिरफ़्तारियों', 'जनवरी में'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: 'The Meerut arrests came in March 1929, not January.', hi: 'मेरठ की गिरफ़्तारियाँ मार्च 1929 में हुईं, जनवरी में नहीं।' },
+        factId: 'meerut',
+        sources: [{ id: 'nehru-1936', loc: 'pp. 188–189' }],
+      },
+    ],
+  },
+
+  {
+    id: 'lh-scott-g',
+    tier: 1,
+    real: true,
+    pair: 'lh-scott',
+    minMode: 'medium',
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: "In December the target was Scott, the Superintendent, not young Saunders. Never boast of it; our notice said sorry for a man's death.",
+      hi: 'दिसंबर में निशाना स्कॉट थे, सुपरिंटेंडेंट, नौजवान सॉन्डर्स नहीं। इस पर कभी शेख़ी मत मारना; हमारे नोटिस ने एक इंसान की मौत पर अफ़सोस जताया था।',
+    },
+    checks: { en: ['Scott, the Superintendent', 'young Saunders'], hi: ['स्कॉट थे, सुपरिंटेंडेंट', 'नौजवान सॉन्डर्स'] },
+    why: {
+      text: {
+        en: 'The plan was to kill Scott; Saunders, his junior, was shot instead.',
+        hi: 'योजना स्कॉट को मारने की थी; गोली उनके जूनियर सॉन्डर्स को लगी।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "pp. 1–2; ch. 'Saunders Murder', pp. 19–20" }, { id: 'hsra-notice-1928' }],
+    },
+  },
+  {
+    id: 'lh-scott-f',
+    tier: 1,
+    real: false,
+    pair: 'lh-scott',
+    minMode: 'medium',
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: "In December the target was Stead, the Inspector-General, not young Saunders. Never boast of it; our notice said sorry for a man's death.",
+      hi: 'दिसंबर में निशाना स्टेड थे, इंस्पेक्टर-जनरल, नौजवान सॉन्डर्स नहीं। इस पर कभी शेख़ी मत मारना; हमारे नोटिस ने एक इंसान की मौत पर अफ़सोस जताया था।',
+    },
+    checks: { en: ['Stead, the Inspector-General', 'young Saunders'], hi: ['स्टेड थे, इंस्पेक्टर-जनरल', 'नौजवान सॉन्डर्स'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'The target was Scott; Stead was the Inspector-General of Police.', hi: 'निशाना स्कॉट थे; स्टेड पुलिस के इंस्पेक्टर-जनरल थे।' },
+        factId: 'scott',
+        sources: [{ id: 'noorani-1996', loc: "pp. 1–2; ch. 'Hour of Trial', p. 58" }],
+      },
+    ],
+  },
+
+  // Day 8, Tuesday 9 April: the Official Report of 8 April, 'The motion was adopted by 56 to 38.
+  // Mr. President: As the Trades Dispute Bill is now out of the way, I propose to give my ruling...
+  // At this stage two bombs were thrown' (Noorani pp. 29–30).
+  {
+    id: 'lh-bills-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-bills',
+    minMode: 'medium',
+    onDay: 8,
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: 'Yesterday the Trade Disputes Bill passed first. President Patel was rising to rule on the Safety Bill when the bombs fell.',
+      hi: 'कल पहले ट्रेड डिस्प्यूट्स बिल पास हुआ। प्रेसिडेंट पटेल सेफ़्टी बिल पर फ़ैसला सुनाने उठ ही रहे थे कि बम गिरे।',
+    },
+    checks: { en: ['Trade Disputes Bill', 'the Safety Bill'], hi: ['ट्रेड डिस्प्यूट्स बिल', 'सेफ़्टी बिल'] },
+    why: {
+      text: {
+        en: 'On 8 April the Trade Disputes Bill passed, 56 to 38; then the bombs.',
+        hi: '8 अप्रैल को ट्रेड डिस्प्यूट्स बिल 56 के मुक़ाबले 38 से पास हुआ; फिर बम।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 29–30" }],
+    },
+  },
+  {
+    id: 'lh-bills-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-bills',
+    minMode: 'medium',
+    onDay: 8,
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: 'Yesterday the Press Sedition Bill passed first. President Patel was rising to rule on the Safety Bill when the bombs fell.',
+      hi: 'कल पहले प्रेस सेडिशन बिल पास हुआ। प्रेसिडेंट पटेल सेफ़्टी बिल पर फ़ैसला सुनाने उठ ही रहे थे कि बम गिरे।',
+    },
+    checks: { en: ['Press Sedition Bill', 'the Safety Bill'], hi: ['प्रेस सेडिशन बिल', 'सेफ़्टी बिल'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'The two Bills were Public Safety and Trade Disputes; Press Sedition waited.',
+          hi: 'दो बिल पब्लिक सेफ़्टी और ट्रेड डिस्प्यूट्स थे; प्रेस सेडिशन बिल बाद के लिए रखा गया।',
+        },
+        factId: 'bills',
+        sources: [{ id: 'hsra-leaflet-1929' }, { id: 'noorani-1996', loc: 'pp. 29–31' }],
+      },
+    ],
+  },
+
+  // Day 8: who stood beside him. Dutt's party names: Battu, Mohan (schedule).
+  {
+    id: 'lh-mohan-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-mohan',
+    minMode: 'medium',
+    onDay: 8,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'Yesterday our friend and Mohan threw the bombs, then stood still until Sergeant Terry came for them.',
+      hi: 'कल हमारे दोस्त और मोहन ने बम फेंके, फिर सार्जेंट टेरी के आने तक वहीं खड़े रहे।',
+    },
+    checks: { en: ['our friend and Mohan', 'Sergeant Terry'], hi: ['हमारे दोस्त और मोहन', 'सार्जेंट टेरी'] },
+    why: {
+      text: {
+        en: 'Bhagat Singh and Dutt, alias Mohan, surrendered to Sergeant Terry.',
+        hi: 'भगत सिंह और दत्त, यानी मोहन, ने सार्जेंट टेरी को गिरफ़्तारी दी।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }, SCHEDULE],
+    },
+  },
+  {
+    id: 'lh-mohan-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-mohan',
+    minMode: 'medium',
+    onDay: 8,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'Yesterday our friend and M threw the bombs, then stood still until Sergeant Terry came for them.',
+      hi: 'कल हमारे दोस्त और एम ने बम फेंके, फिर सार्जेंट टेरी के आने तक वहीं खड़े रहे।',
+    },
+    checks: { en: ['our friend and M', 'Sergeant Terry'], hi: ['हमारे दोस्त और एम', 'सार्जेंट टेरी'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'M is Rajguru; the man beside our friend was Dutt, called Mohan.', hi: "'एम' राजगुरु हैं; हमारे दोस्त के साथ दत्त थे, यानी मोहन।" },
+        factId: 'dutt',
+        sources: [SCHEDULE, { id: 'bs-joint-statement' }],
+      },
+    ],
+  },
+
+  // Day 11, Friday 12 April: Irwin addresses both Houses in joint session and announces an
+  // ordinance to give himself the Bill's powers (Noorani pp. 43–44).
+  {
+    id: 'lh-irwin-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-irwin',
+    minMode: 'medium',
+    onDay: 11,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "Today Lord Irwin spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
+      hi: 'आज लॉर्ड इरविन दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
+    },
+    checks: { en: ['Lord Irwin', 'both Houses'], hi: ['लॉर्ड इरविन', 'दोनों सदनों'] },
+    why: {
+      text: {
+        en: 'On 12 April 1929 Irwin addressed both Houses and announced an ordinance.',
+        hi: '12 अप्रैल 1929 को इरविन ने दोनों सदनों में ऑर्डिनेंस का ऐलान किया।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 43–44" }],
+    },
+  },
+  {
+    id: 'lh-irwin-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-irwin',
+    minMode: 'medium',
+    onDay: 11,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "Today Lord Halifax spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
+      hi: 'आज लॉर्ड हैलिफ़ैक्स दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
+    },
+    checks: { en: ['Lord Halifax', 'both Houses'], hi: ['लॉर्ड हैलिफ़ैक्स', 'दोनों सदनों'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'The Viceroy was Lord Irwin; he became Halifax years later.', hi: 'वायसराय लॉर्ड इरविन थे; हैलिफ़ैक्स वे बरसों बाद बने।' },
+        factId: 'irwin',
+        sources: [{ id: 'noorani-1996', loc: 'pp. 43–44, 245' }],
+      },
+    ],
+  },
+
+  // Day 14, Monday 15 April: 'Sukh Dev ... was arrested along with Kishori Lal and Jai Gopal'
+  // in the Kashmir Building on McLeod Road (Noorani p. 45).
+  {
+    id: 'lh-taken-g',
+    tier: 1,
+    real: true,
+    pair: 'lh-taken',
+    minMode: 'medium',
+    onDay: 14,
+    from: BC,
+    to: POST_BOX,
+    text: {
+      en: 'This morning they took Villager, Kishori Lal and Jai Gopal at Kashmir Buildings. Burn every note I ever sent you.',
+      hi: 'आज सुबह कश्मीर बिल्डिंग्स में विलेजर, किशोरी लाल और जय गोपाल पकड़े गए। मेरी भेजी हर चिट्ठी जला देना।',
+    },
+    checks: { en: ['Kishori Lal and Jai Gopal', 'Kashmir Buildings'], hi: ['किशोरी लाल और जय गोपाल', 'कश्मीर बिल्डिंग्स'] },
+    why: {
+      text: {
+        en: 'Sukhdev, Kishori Lal and Jai Gopal were arrested there, 15 April 1929.',
+        hi: 'सुखदेव, किशोरी लाल और जय गोपाल वहीं 15 अप्रैल 1929 को पकड़े गए।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "p. 45; ch. 'Hour of Trial', pp. 58–64" }],
+    },
+  },
+  {
+    id: 'lh-taken-f',
+    tier: 1,
+    real: false,
+    pair: 'lh-taken',
+    minMode: 'medium',
+    onDay: 14,
+    from: BC,
+    to: POST_BOX,
+    text: {
+      en: 'This morning they took Villager, Kishori Lal and Jai Gopal at Kashmir House on the Mall. Burn every note I ever sent you.',
+      hi: 'आज सुबह माल रोड के कश्मीर हाउस में विलेजर, किशोरी लाल और जय गोपाल पकड़े गए। मेरी भेजी हर चिट्ठी जला देना।',
+    },
+    checks: { en: ['Kishori Lal and Jai Gopal', 'Kashmir House on the Mall'], hi: ['किशोरी लाल और जय गोपाल', 'माल रोड के कश्मीर हाउस'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'Our room was in Kashmir Buildings, on McLeod Road, not the Mall.', hi: 'हमारा कमरा मैक्लोड रोड की कश्मीर बिल्डिंग्स में था, माल रोड पर नहीं।' },
+        factId: 'kashmir',
+        sources: [{ id: 'noorani-1996', loc: 'p. 45' }],
+      },
+    ],
+  },
+
+  // ═════════════ Hard (minMode 'hard'): Hard runs only ═════════════
+  // Deeper, but well known to anyone who loves this history: the Hard case file (age, balwant,
+  // ajit, crerar, jallianwala, kakori), famous scenes of 8 April, and myths from people-and-moments.md §2C.
+
+  {
+    id: 'lh-age-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-age',
+    minMode: 'hard',
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: 'Our friend is only 21, yet he plans like an old hand. Do exactly as his note says.',
+      hi: 'हमारा दोस्त सिर्फ़ 21 साल का है, फिर भी पुराने उस्ताद की तरह योजना बनाता है। उसकी चिट्ठी में जो लिखा है, ठीक वही करना।',
+    },
+    checks: { en: ['only 21', 'his note'], hi: ['सिर्फ़ 21 साल', 'उसकी चिट्ठी'] },
+    why: {
+      text: { en: 'Born in 1907, Bhagat Singh was 21 in April 1929.', hi: '1907 में जन्मे भगत सिंह अप्रैल 1929 में 21 साल के थे।' },
+      sources: [{ id: 'sanyal-1931', loc: "ch. 'The Family and the Boy', pp. 5–6" }],
+    },
+  },
+  {
+    id: 'lh-age-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-age',
+    minMode: 'hard',
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: 'Our friend is only 23, yet he plans like an old hand. Do exactly as his note says.',
+      hi: 'हमारा दोस्त सिर्फ़ 23 साल का है, फिर भी पुराने उस्ताद की तरह योजना बनाता है। उसकी चिट्ठी में जो लिखा है, ठीक वही करना।',
+    },
+    checks: { en: ['only 23', 'his note'], hi: ['सिर्फ़ 23 साल', 'उसकी चिट्ठी'] },
+    tells: [
+      {
+        kind: 'number',
+        explain: { en: 'He was 21 in 1929; 23 was his age in 1931.', hi: '1929 में वे 21 साल के थे; 23 के 1931 में हुए।' },
+        factId: 'age',
+        sources: [{ id: 'sanyal-1931', loc: "ch. 'The Family and the Boy', pp. 5–6" }],
+      },
+    ],
+  },
+
+  {
+    id: 'lh-balwant-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-balwant',
+    minMode: 'hard',
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "Copy our friend's article for the magazine, and sign it Balwant, his pen name. Never his own name.",
+      hi: "हमारे दोस्त का लेख पत्रिका के लिए नक़ल करना, और नीचे 'बलवंत' लिखना, उसका लिखने वाला नाम। उसका अपना नाम कभी नहीं।",
+    },
+    checks: { en: ['sign it Balwant', 'his pen name'], hi: ["'बलवंत' लिखना", 'लिखने वाला नाम'] },
+    why: {
+      text: {
+        en: "Sanyal (1931): he wrote for magazines under the party name 'Balwant'.",
+        hi: "सान्याल (1931): वे 'बलवंत' नाम से पत्रिकाओं में लिखते थे।",
+      },
+      sources: [{ id: 'sanyal-1931', loc: "ch. 'Hindusthan Republican Association', p. 13" }],
+    },
+  },
+  {
+    id: 'lh-balwant-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-balwant',
+    minMode: 'hard',
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "Copy our friend's article for the magazine, and sign it Balraj, his pen name. Never his own name.",
+      hi: "हमारे दोस्त का लेख पत्रिका के लिए नक़ल करना, और नीचे 'बलराज' लिखना, उसका लिखने वाला नाम। उसका अपना नाम कभी नहीं।",
+    },
+    checks: { en: ['sign it Balraj', 'his pen name'], hi: ["'बलराज' लिखना", 'लिखने वाला नाम'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: "Balraj signs the party's notices; our friend writes as Balwant.", hi: "'बलराज' पार्टी के नोटिसों पर लिखा जाता है; हमारा दोस्त 'बलवंत' नाम से लिखता है।" },
+        factId: 'balwant',
+        sources: [{ id: 'sanyal-1931', loc: 'p. 13' }, { id: 'yashpal-1955', loc: "'Balraj', the name Azad signed with" }],
+      },
+    ],
+  },
+
+  {
+    id: 'lh-kakori-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-kakori',
+    minMode: 'hard',
+    from: M,
+    to: POST_BOX,
+    text: {
+      en: 'Tell the new boys we are the old HRA of Kakori, 1925. Panditji is one man they never caught.',
+      hi: 'नए लड़कों को बताओ कि हम 1925 वाले काकोरी की पुरानी एचआरए हैं। पंडितजी वह आदमी हैं जिन्हें वे कभी पकड़ नहीं पाए।',
+    },
+    checks: { en: ['Kakori, 1925', 'never caught'], hi: ['1925 वाले काकोरी', 'कभी पकड़ नहीं पाए'] },
+    why: {
+      text: {
+        en: 'Azad was never arrested for the 1925 Kakori train action (Manmathnath Gupta).',
+        hi: 'आज़ाद 1925 के काकोरी ट्रेन ऐक्शन में कभी पकड़े नहीं गए (मन्मथनाथ गुप्त)।',
+      },
+      sources: [{ id: 'gupta-1972', loc: 'pp. 107–109' }, SCHEDULE],
+    },
+  },
+  {
+    id: 'lh-kakori-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-kakori',
+    minMode: 'hard',
+    from: M,
+    to: POST_BOX,
+    text: {
+      en: 'Tell the new boys we are the old HRA of Kakori, 1927. Panditji is one man they never caught.',
+      hi: 'नए लड़कों को बताओ कि हम 1927 वाले काकोरी की पुरानी एचआरए हैं। पंडितजी वह आदमी हैं जिन्हें वे कभी पकड़ नहीं पाए।',
+    },
+    checks: { en: ['Kakori, 1927', 'never caught'], hi: ['1927 वाले काकोरी', 'कभी पकड़ नहीं पाए'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: 'Kakori was 1925; four were hanged for it in December 1927.', hi: 'काकोरी 1925 में हुआ; उसके लिए चार को दिसंबर 1927 में फाँसी हुई।' },
+        factId: 'kakori',
+        sources: [{ id: 'gupta-1972', loc: 'pp. 107–110' }],
+      },
+    ],
+  },
+
+  // Day 8: 'Two bombs were thrown in quick succession to land behind the Home Member, James Crerar'
+  // (Noorani p. 30); 'Sir Bomanji Dalal was wounded in the thigh' (p. 32). Simon was in the galleries.
+  {
+    id: 'lh-crerar-g',
+    tier: 2,
+    real: true,
+    pair: 'lh-crerar',
+    minMode: 'hard',
+    onDay: 8,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: 'Yesterday both bombs fell behind Sir James Crerar, the Home Member. Sir Bomanji Dalal was hurt worst; no one died.',
+      hi: 'कल दोनों बम होम मेंबर सर जेम्स क्रेरार के पीछे गिरे। सबसे ज़्यादा चोट सर बोमनजी दलाल को आई; कोई नहीं मरा।',
+    },
+    checks: { en: ['Sir James Crerar', 'the Home Member'], hi: ['सर जेम्स क्रेरार', 'होम मेंबर'] },
+    why: {
+      text: {
+        en: 'The bombs landed behind Crerar, the Home Member; Dalal took a thigh wound.',
+        hi: 'बम होम मेंबर क्रेरार के पीछे गिरे; दलाल की जाँघ में चोट आई।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 30, 32" }],
+    },
+  },
+  {
+    id: 'lh-crerar-f',
+    tier: 2,
+    real: false,
+    pair: 'lh-crerar',
+    minMode: 'hard',
+    onDay: 8,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: 'Yesterday both bombs fell behind Sir John Simon, the Home Member. Sir Bomanji Dalal was hurt worst; no one died.',
+      hi: 'कल दोनों बम होम मेंबर सर जॉन साइमन के पीछे गिरे। सबसे ज़्यादा चोट सर बोमनजी दलाल को आई; कोई नहीं मरा।',
+    },
+    checks: { en: ['Sir John Simon', 'the Home Member'], hi: ['सर जॉन साइमन', 'होम मेंबर'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Crerar was the Home Member; Simon sat up in the gallery.', hi: 'होम मेंबर क्रेरार थे; साइमन ऊपर गैलरी में बैठे थे।' },
+        factId: 'crerar',
+        sources: [{ id: 'noorani-1996', loc: 'pp. 30, 32' }, { id: 'bs-joint-statement' }],
+      },
+    ],
+  },
+
+  // Day 9, Wednesday 10 April: the farewell picnic of 8 April. Chaman Lal 2009 ('Kudsiya Gardens',
+  // 'his favourite rasgullas and oranges', Susheela's blood tika); Maclean: 'Qudsia Park'.
+  {
+    id: 'lh-qudsia-g',
+    tier: 3,
+    real: true,
+    pair: 'lh-qudsia',
+    minMode: 'hard',
+    onDay: 9,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'Word from Delhi: on Monday morning, at Qudsia Garden, they fed our friend rasgullas and oranges. Sushila Didi gave him a tika of her own blood.',
+      hi: 'दिल्ली से ख़बर: सोमवार सुबह क़ुदसिया बाग़ में उन्होंने हमारे दोस्त को रसगुल्ले और संतरे खिलाए। सुशीला दीदी ने अपने ख़ून का टीका लगाया।',
+    },
+    checks: { en: ['Qudsia Garden', 'rasgullas and oranges'], hi: ['क़ुदसिया बाग़', 'रसगुल्ले और संतरे'] },
+    why: {
+      text: {
+        en: '8 April 1929, Qudsia Garden: rasgullas, oranges and a tika of blood.',
+        hi: '8 अप्रैल 1929, क़ुदसिया बाग़: रसगुल्ले, संतरे और ख़ून का टीका।',
+      },
+      sources: [{ id: 'chaman-lal-2009' }, { id: 'maclean-durga' }],
+    },
+  },
+  {
+    id: 'lh-qudsia-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-qudsia',
+    minMode: 'hard',
+    onDay: 9,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'Word from Delhi: on Monday morning, at Roshanara Garden, they fed our friend rasgullas and oranges. Sushila Didi gave him a tika of her own blood.',
+      hi: 'दिल्ली से ख़बर: सोमवार सुबह रोशनआरा बाग़ में उन्होंने हमारे दोस्त को रसगुल्ले और संतरे खिलाए। सुशीला दीदी ने अपने ख़ून का टीका लगाया।',
+    },
+    checks: { en: ['Roshanara Garden', 'rasgullas and oranges'], hi: ['रोशनआरा बाग़', 'रसगुल्ले और संतरे'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'The farewell picnic was at Qudsia Garden, not Roshanara.', hi: 'विदाई की पिकनिक क़ुदसिया बाग़ में हुई थी, रोशनआरा में नहीं।' },
+        sources: [{ id: 'chaman-lal-2009' }, { id: 'maclean-durga' }],
+      },
+    ],
+  },
+
+  // Day 10, Thursday 11 April: 'Sir John Simon was a witness to the scene. He was in the galleries
+  // and so were Vallabhbhai Patel, Devdas Gandhi and Mahadev Desai' (Noorani p. 32). It looks forged; it is not.
+  {
+    id: 'lh-patels-g',
+    tier: 3,
+    real: true,
+    pair: 'lh-patels',
+    minMode: 'hard',
+    onDay: 10,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "On Monday Vallabhbhai Patel watched from the galleries, while Vithalbhai Patel sat in the President's chair.",
+      hi: 'सोमवार को वल्लभभाई पटेल गैलरी से देख रहे थे, और विट्ठलभाई पटेल प्रेसिडेंट की कुर्सी पर थे।',
+    },
+    checks: { en: ['Vallabhbhai Patel watched', 'Vithalbhai Patel sat'], hi: ['वल्लभभाई पटेल गैलरी से', 'विट्ठलभाई पटेल प्रेसिडेंट'] },
+    why: {
+      text: {
+        en: 'Noorani: Vallabhbhai Patel was in the galleries; Vithalbhai presided.',
+        hi: 'नूरानी: वल्लभभाई पटेल गैलरी में थे; विट्ठलभाई प्रेसिडेंट थे।',
+      },
+      sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 30, 32" }],
+    },
+  },
+  {
+    id: 'lh-patels-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-patels',
+    minMode: 'hard',
+    onDay: 10,
+    from: SWAMI,
+    to: POST_BOX,
+    text: {
+      en: "On Monday Vithalbhai Patel watched from the galleries, while Vallabhbhai Patel sat in the President's chair.",
+      hi: 'सोमवार को विट्ठलभाई पटेल गैलरी से देख रहे थे, और वल्लभभाई पटेल प्रेसिडेंट की कुर्सी पर थे।',
+    },
+    checks: { en: ['Vithalbhai Patel watched', 'Vallabhbhai Patel sat'], hi: ['विट्ठलभाई पटेल गैलरी से', 'वल्लभभाई पटेल प्रेसिडेंट'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Vithalbhai was the President; Vallabhbhai only watched.', hi: 'प्रेसिडेंट विट्ठलभाई थे; वल्लभभाई सिर्फ़ देख रहे थे।' },
+        factId: 'assembly',
+        sources: [{ id: 'noorani-1996', loc: 'pp. 30, 32' }],
+      },
+    ],
+  },
+
+  // Day 12, Saturday 13 April: Jaidev Kapoor 'left the Assembly minutes before'; Bhagat Singh gave
+  // him a watch and 'exchanged his new shoes for Kapoor's old ones' (Chaman Lal 2009).
+  {
+    id: 'lh-jaidev-g',
+    tier: 3,
+    real: true,
+    pair: 'lh-jaidev',
+    minMode: 'hard',
+    onDay: 12,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: "Word from Delhi: before going in, our friend gave Jaidev his watch, and took Jaidev's old shoes for his new ones.",
+      hi: 'दिल्ली से ख़बर: अंदर जाने से पहले हमारे दोस्त ने जयदेव को अपनी घड़ी दी, और अपने नए जूतों के बदले जयदेव के पुराने जूते ले लिए।',
+    },
+    checks: { en: ['gave Jaidev his watch', "Jaidev's old shoes"], hi: ['जयदेव को अपनी घड़ी दी', 'जयदेव के पुराने जूते'] },
+    why: {
+      text: {
+        en: 'Chaman Lal, from the records: the watch, and the swapped shoes.',
+        hi: 'चमन लाल, रिकॉर्ड से: घड़ी दी, और जूते बदले।',
+      },
+      sources: [{ id: 'chaman-lal-2009' }],
+    },
+  },
+  {
+    id: 'lh-jaidev-f',
+    tier: 3,
+    real: false,
+    pair: 'lh-jaidev',
+    minMode: 'hard',
+    onDay: 12,
+    from: VILLAGER,
+    to: POST_BOX,
+    text: {
+      en: 'Word from Delhi: before going in, our friend gave Jaidev his watch, and Jaidev threw the second bomb beside him.',
+      hi: 'दिल्ली से ख़बर: अंदर जाने से पहले हमारे दोस्त ने जयदेव को अपनी घड़ी दी, और दूसरा बम उनके साथ खड़े जयदेव ने फेंका।',
+    },
+    checks: { en: ['gave Jaidev his watch', 'Jaidev threw the second bomb'], hi: ['जयदेव को अपनी घड़ी दी', 'जयदेव ने फेंका'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'Jaidev left minutes before; Dutt stood beside our friend.', hi: 'जयदेव कुछ मिनट पहले निकल गए थे; हमारे दोस्त के साथ दत्त थे।' },
+        sources: [{ id: 'chaman-lal-2009' }, { id: 'bs-joint-statement' }],
+      },
+    ],
+  },
+
+  // Day 12: a myth (people-and-moments §2C, 8). Asaf Ali 'appeared for the defence' from 7 May
+  // (Noorani p. 32) and read their statement on 6 June.
+  {
+    id: 'lh-jinnah-f',
+    tier: 3,
+    real: false,
+    minMode: 'hard',
+    onDay: 12,
+    from: DYAL,
+    to: POST_BOX,
+    text: {
+      en: 'Jinnah himself will defend our two friends in court. Collect money for his fee, quietly.',
+      hi: 'ख़ुद जिन्ना अदालत में हमारे दोनों दोस्तों का मुक़दमा लड़ेंगे। उनकी फ़ीस के लिए चुपचाप पैसा इकट्ठा करो।',
+    },
+    checks: { en: ['Jinnah himself', 'defend our two friends'], hi: ['ख़ुद जिन्ना', 'मुक़दमा लड़ेंगे'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'Asaf Ali was their counsel in court; Jinnah never was.', hi: 'अदालत में उनके वकील आसफ़ अली थे; जिन्ना कभी नहीं।' },
+        sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }, { id: 'bs-joint-statement' }],
+      },
+    ],
+  },
+
+  // Day 13: Nehru 'saw Bhagat Singh for the first time' in Lahore jail when the hunger strike was
+  // 'already a month old' (Nehru 1936, p. 193): months after April.
+  {
+    id: 'lh-nehru-f',
+    tier: 3,
+    real: false,
+    minMode: 'hard',
+    onDay: 13,
+    from: PANDITJI,
+    to: POST_BOX,
+    text: {
+      en: 'Jawaharlal Nehru went to see our two friends in jail yesterday, and shook their hands.',
+      hi: 'जवाहरलाल नेहरू कल जेल में हमारे दोनों दोस्तों से मिलने गए, और उनसे हाथ मिलाया।',
+    },
+    checks: { en: ['Jawaharlal Nehru', 'in jail yesterday'], hi: ['जवाहरलाल नेहरू', 'कल जेल में'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'Nehru first saw him months later, in Lahore jail, during the hunger strike.', hi: 'नेहरू उनसे पहली बार महीनों बाद, भूख हड़ताल के दिनों में, लाहौर जेल में मिले।' },
+        sources: [{ id: 'nehru-1936', loc: 'p. 193' }],
+      },
+    ],
+  },
 ]

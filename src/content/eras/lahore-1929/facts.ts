@@ -43,6 +43,92 @@ export const facts: Fact[] = [
       { id: 'chaman-lal-reader', loc: 'appendix, schedule of accused' },
     ],
   },
+  // ── Medium and Hard (owner 10-24): the case file grows with the mode. Read against Noorani's
+  // archive.org text, Sanyal 1931, Gupta 1972, Nehru 1936, Chaman Lal 2009 and Maclean (Scroll).
+  {
+    // The schedule spells it 'Parbhat' (Shiv Varma alias Parbhat alias Har Narain); in Hindi, प्रभात.
+    id: 'courier',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'Our courier', hi: 'हमारा हरकारा' },
+    value: { en: 'Shiv Verma, called Prabhat', hi: 'शिव वर्मा, यानी प्रभात' },
+    story: {
+      en: 'Our courier is [[Shiv Verma]], whom we call [[Prabhat]].',
+      hi: 'हमारा हरकारा [[शिव वर्मा]] है, जिसे हम [[प्रभात]] कहते हैं।',
+    },
+    sources: [
+      { id: 'noorani-1996', loc: 'Ordinance No. III of 1930, Schedule, pp. 295–296' },
+      { id: 'bs-letter-sukhdev', loc: 'editorial note: Shiv Verma carried the letter to Lahore' },
+    ],
+  },
+  {
+    // In Delhi with Bhagat Singh in the first week of April (Chaman Lal 2009); 'Battu' or 'Mohan' in the schedule.
+    id: 'dutt',
+    para: 1,
+    minMode: 'medium',
+    label: { en: "Our friend's partner", hi: 'हमारे दोस्त का साथी' },
+    value: { en: 'Batukeshwar Dutt, called Mohan', hi: 'बटुकेश्वर दत्त, यानी मोहन' },
+    story: {
+      en: 'In Delhi our friend has [[Batukeshwar Dutt]] beside him, whom we call [[Mohan]].',
+      hi: 'दिल्ली में हमारे दोस्त के साथ [[बटुकेश्वर दत्त]] हैं, जिन्हें हम [[मोहन]] कहते हैं।',
+    },
+    sources: [
+      { id: 'noorani-1996', loc: 'Ordinance No. III of 1930, Schedule, pp. 295–296' },
+      { id: 'chaman-lal-2009' },
+    ],
+  },
+  {
+    id: 'durga',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'Durga Bhabhi', hi: 'दुर्गा भाभी' },
+    value: { en: "B.C.'s wife; son Sachi", hi: 'बी.सी. की पत्नी; बेटा शची' },
+    story: {
+      en: "[[Durga Bhabhi]] is [[B.C.]]'s wife, and little [[Sachi]] is their son.",
+      hi: '[[दुर्गा भाभी]] [[बी.सी.]] की पत्नी हैं, और नन्हा [[शची]] उनका बेटा है।',
+    },
+    sources: [{ id: 'maclean-durga' }],
+  },
+  {
+    // Born 1907 (Sanyal: 'on a Saturday, in October, 1907'; most later books say 27 or 28 September).
+    // Either way he was 21 in April 1929.
+    id: 'age',
+    para: 1,
+    minMode: 'hard',
+    label: { en: "Our friend's age", hi: 'हमारे दोस्त की उम्र' },
+    value: { en: '21, born 1907', hi: '21 साल, 1907 में जन्म' },
+    story: {
+      en: 'Our friend, born in [[1907]], is just [[21]].',
+      hi: 'हमारा दोस्त [[1907]] में पैदा हुआ, और अभी सिर्फ़ [[21 साल]] का है।',
+    },
+    sources: [{ id: 'sanyal-1931', loc: "ch. 'The Family and the Boy', pp. 5–6" }],
+  },
+  {
+    // Sanyal: in the HRA at Cawnpore his 'party-name then became "Balwant," under which name he used
+    // to contribute articles occasionally to the magazines'.
+    id: 'balwant',
+    para: 1,
+    minMode: 'hard',
+    label: { en: 'His pen name', hi: 'उसका लिखने वाला नाम' },
+    value: { en: 'Balwant', hi: 'बलवंत' },
+    story: {
+      en: 'For his magazine articles our friend uses his party name, [[Balwant]].',
+      hi: 'पत्रिकाओं के लेखों के लिए हमारा दोस्त अपना पार्टी नाम लिखता है: [[बलवंत]]।',
+    },
+    sources: [{ id: 'sanyal-1931', loc: "ch. 'Hindusthan Republican Association', p. 13" }],
+  },
+  {
+    id: 'ajit',
+    para: 1,
+    minMode: 'hard',
+    label: { en: "Our friend's uncle", hi: 'हमारे दोस्त के चाचा' },
+    value: { en: 'Ajit Singh, in exile abroad', hi: 'अजीत सिंह, विदेश में देश-निकाला' },
+    story: {
+      en: "Our friend's uncle, [[Ajit Singh]], lives [[in exile abroad]].",
+      hi: 'हमारे दोस्त के चाचा [[अजीत सिंह]] [[विदेश में देश-निकाले]] में रहते हैं।',
+    },
+    sources: [{ id: 'nehru-1936', loc: 'pp. 193–194' }, { id: 'tribune-2010' }],
+  },
   {
     id: 'room',
     para: 2,
@@ -54,6 +140,20 @@ export const facts: Fact[] = [
     },
     // B.C. = Bhagwati Charan, the name in the landlord's register.
     sources: [{ id: 'noorani-1996', loc: "ch. 'Hour of Trial', p. 64 (the landlord's evidence)" }],
+  },
+  {
+    // 'proprietor of the Kashmir Buildings and had leased out House No. 69 on March 16, 1929 to
+    // Bhagwati Charan on Rs. 13 a month' (Noorani p. 64).
+    id: 'kashmir',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'Our building', hi: 'हमारी इमारत' },
+    value: { en: 'Kashmir Buildings, taken 16 March', hi: 'कश्मीर बिल्डिंग्स, 16 मार्च से' },
+    story: {
+      en: 'Our room is in [[Kashmir Buildings]], taken on [[16 March]].',
+      hi: 'हमारा कमरा [[कश्मीर बिल्डिंग्स]] में है, जो [[16 मार्च]] को लिया गया।',
+    },
+    sources: [{ id: 'noorani-1996', loc: "ch. 'Hour of Trial', pp. 58, 64" }],
   },
   {
     id: 'notices',
@@ -87,6 +187,71 @@ export const facts: Fact[] = [
     ],
   },
   {
+    // The leaflet of 8 April names them ('the Public Safety and the Trade Disputes Bill, while
+    // reserving the Press Sedition Bill for the next session'); Noorani p. 29.
+    id: 'bills',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'The two Bills', hi: 'दो बिल' },
+    value: { en: 'Public Safety, Trade Disputes', hi: 'पब्लिक सेफ़्टी, ट्रेड डिस्प्यूट्स' },
+    story: {
+      en: 'The two Bills waiting in Delhi are [[Public Safety]] and [[Trade Disputes]].',
+      hi: 'दिल्ली में दो बिल अटके हैं: [[पब्लिक सेफ़्टी]] और [[ट्रेड डिस्प्यूट्स]]।',
+    },
+    sources: [{ id: 'hsra-leaflet-1929' }, { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 29" }],
+  },
+  {
+    id: 'irwin',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'The Viceroy', hi: 'वायसराय' },
+    value: { en: 'Lord Irwin', hi: 'लॉर्ड इरविन' },
+    story: {
+      en: 'The Viceroy in Delhi is [[Lord Irwin]].',
+      hi: 'दिल्ली में वायसराय [[लॉर्ड इरविन]] हैं।',
+    },
+    sources: [{ id: 'noorani-1996', loc: 'pp. 43–45 (Irwin to the Secretary of State, 19 April 1929)' }],
+  },
+  {
+    // 'Two bombs were thrown in quick succession to land behind the Home Member, James Crerar' (Noorani p. 30).
+    id: 'crerar',
+    para: 2,
+    minMode: 'hard',
+    label: { en: 'The Home Member', hi: 'होम मेंबर' },
+    value: { en: 'Sir James Crerar', hi: 'सर जेम्स क्रेरार' },
+    story: {
+      en: 'The Home Member is [[Sir James Crerar]].',
+      hi: 'होम मेंबर [[सर जेम्स क्रेरार]] हैं।',
+    },
+    sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', pp. 29–30" }],
+  },
+  {
+    id: 'jallianwala',
+    para: 3,
+    minMode: 'hard',
+    label: { en: 'Jallianwala Bagh', hi: 'जलियाँवाला बाग़' },
+    value: { en: 'Amritsar, 13 April 1919', hi: 'अमृतसर, 13 अप्रैल 1919' },
+    story: {
+      en: 'At [[Amritsar]], troops fired on the crowd in Jallianwala Bagh on [[13 April 1919]].',
+      hi: '[[अमृतसर]] के जलियाँवाला बाग़ में [[13 अप्रैल 1919]] को फ़ौज ने भीड़ पर गोली चलाई।',
+    },
+    sources: [{ id: 'collett-2005' }],
+  },
+  {
+    // Gupta (himself a Kakori accused): the 8-Down train stopped near Kakori, Lucknow district; the
+    // arrests of 26 September 1925; Lahiri hanged 17 December, Bismil, Ashfaqulla, Roshan Singh 19 December 1927.
+    id: 'kakori',
+    para: 3,
+    minMode: 'hard',
+    label: { en: 'Kakori', hi: 'काकोरी' },
+    value: { en: '1925; four hanged, December 1927', hi: '1925; चार को फाँसी, दिसंबर 1927' },
+    story: {
+      en: 'For the [[1925]] train action at Kakori, [[four]] comrades were hanged in [[December 1927]].',
+      hi: '[[1925]] के काकोरी ट्रेन ऐक्शन के लिए [[चार]] साथियों को [[दिसंबर 1927]] में फाँसी हुई।',
+    },
+    sources: [{ id: 'gupta-1972', loc: 'pp. 107–110' }],
+  },
+  {
     id: 'hsra',
     para: 3,
     label: { en: 'HRA became HSRA', hi: 'एच.आर.ए. बनी एच.एस.आर.ए.' },
@@ -112,6 +277,20 @@ export const facts: Fact[] = [
     },
     sources: [{ id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
     hardHidden: true,
+  },
+  {
+    // Noorani: the plan was 'to kill the Superintendent of Police, J.A. Scott'; only after the deed
+    // did Bhagat Singh learn 'it was not Scott but his junior' (pp. 1–2, 19–20).
+    id: 'scott',
+    para: 3,
+    minMode: 'medium',
+    label: { en: "December's target", hi: 'दिसंबर का निशाना' },
+    value: { en: 'J.A. Scott, Superintendent of Police', hi: 'जे.ए. स्कॉट, पुलिस सुपरिंटेंडेंट' },
+    story: {
+      en: 'In December the target was [[J.A. Scott]], the [[Superintendent of Police]].',
+      hi: 'दिसंबर में निशाना [[जे.ए. स्कॉट]] थे, [[पुलिस सुपरिंटेंडेंट]]।',
+    },
+    sources: [{ id: 'noorani-1996', loc: "pp. 1–2; ch. 'Saunders Murder', pp. 19–20" }],
   },
   {
     id: 'saunders',
@@ -141,5 +320,19 @@ export const facts: Fact[] = [
       { id: 'maclean-durga' },
     ],
     hardHidden: true,
+  },
+  {
+    // 'The Meerut Conspiracy Case began in camera on March 15, 1929 when the District Magistrate of
+    // Meerut issued warrants of arrest' against communist and trade union leaders (Noorani p. 134).
+    id: 'meerut',
+    para: 3,
+    minMode: 'medium',
+    label: { en: 'Meerut arrests', hi: 'मेरठ की गिरफ़्तारियाँ' },
+    value: { en: 'Labour leaders, March 1929', hi: 'मज़दूर नेता, मार्च 1929' },
+    story: {
+      en: 'In [[March 1929]] the Meerut warrants took the [[labour leaders]].',
+      hi: '[[मार्च 1929]] में मेरठ के वारंटों पर [[मज़दूर नेता]] पकड़े गए।',
+    },
+    sources: [{ id: 'noorani-1996', loc: 'p. 134' }, { id: 'nehru-1936', loc: 'pp. 188–189' }],
   },
 ]
