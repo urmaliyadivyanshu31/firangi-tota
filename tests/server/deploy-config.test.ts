@@ -53,3 +53,42 @@ describe('vercel.json', () => {
     for (const f of ['/index.html', '/sw.js', '/registerSW.js']) expect(cache(f)).toBe('no-cache')
   })
 })
+
+/** Width and height from a baseline or progressive JPEG's frame header. */
+function jpegSize(buf: Buffer): { w: number; h: number } | null {
+  let i = 2
+  while (i + 9 < buf.length) {
+    if (buf[i] !== 0xff) return null
+    const marker = buf[i + 1]!
+    const len = buf.readUInt16BE(i + 2)
+    if (marker >= 0xc0 && marker <= 0xc3) return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) }
+    i += 2 + len
+  }
+  return null
+}
+
+describe('link previews (index.html and public/og.jpg)', () => {
+  const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf8')
+  const meta = (attr: 'name' | 'property', key: string) =>
+    html.match(new RegExp(`<meta\\s+${attr}="${key}"\\s+content="([^"]*)"`))?.[1]
+
+  it('has a description and Open Graph and Twitter tags in both languages', () => {
+    const title = 'Firangi Tota · फ़िरंगी तोता'
+    expect(meta('property', 'og:title')).toBe(title)
+    expect(meta('name', 'twitter:title')).toBe(title)
+    for (const d of [meta('name', 'description'), meta('property', 'og:description'), meta('name', 'twitter:description')]) {
+      expect(d).toMatch(/[A-Za-z]/)
+      expect(d).toMatch(/[ऀ-ॿ]/)
+      expect(d).not.toMatch(/[.।]$/) // no full stop at the end of display copy
+    }
+    expect(meta('property', 'og:image')).toBe('https://firangitota.com/og.jpg')
+    expect(meta('name', 'twitter:image')).toBe('https://firangitota.com/og.jpg')
+    expect(meta('name', 'twitter:card')).toBe('summary_large_image')
+  })
+
+  it('ships a 1200×630 share image under 200 KB', () => {
+    const img = readFileSync(resolve(__dirname, '../../public/og.jpg'))
+    expect(img.length).toBeLessThanOrEqual(200 * 1024)
+    expect(jpegSize(img)).toEqual({ w: 1200, h: 630 })
+  })
+})
