@@ -94,13 +94,12 @@ export function renderMain(root: HTMLElement, p: MainProps, on: MainHandlers): v
       bestLine ? h('span', { class: 'sr-only' }, `, ${bestLine}`) : null)
   }))
 
-  const modes = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': t('setupQuestion', lang) }, MODES.map((d, i) =>
+  const modes = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': t('setupQuestion', lang) }, MODES.map((d) =>
     h('button', { class: `mode mode--${d}${d === p.difficulty ? ' is-on' : ''}`, type: 'button', role: 'radio', 'aria-checked': String(d === p.difficulty),
       'data-mode': d, onclick: () => on.difficulty(d) },
-      h('span', { class: 'mode__days' }, String(DAYS[d])),
+      h('span', { class: 'mode__days' }, String(DAYS[d]), d === p.difficulty ? inkLoop() : null),
       h('span', { class: 'mode__name' }, t(MODE_KEY[d], lang)),
-      h('span', { class: 'mode__secs' }, tf('modeSeconds', lang, { s: TIMER_S[d] })),
-      h('kbd', { class: 'mode__key', 'aria-hidden': 'true' }, String(i + 1)))))
+      h('span', { class: 'mode__secs' }, tf('modeSeconds', lang, { s: TIMER_S[d] })))))
 
   const doc = h('article', { class: `doc doc--${era.channel} era-${era.id}`, lang },
     h('span', { class: 'doc__paper', 'aria-hidden': 'true' }),
@@ -182,6 +181,13 @@ function inkTick(): SVGSVGElement {
   return svg(`<svg class="tick" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
   <circle cx="11" cy="11" r="9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 1.2"/>
   <path d="M6.5 11.4l3 3L15.6 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`)
+}
+
+/** The chosen length: one quick loop of ink round the number, the way a clerk marks a form. */
+function inkLoop(): SVGSVGElement {
+  return svg(`<svg class="mode__loop" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <path pathLength="1" d="M80 9C58 0 20 3 9 21C0 37 19 56 50 56C81 56 98 44 94 27C91 13 75 5 54 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
 </svg>`)
 }
 
