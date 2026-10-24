@@ -113,6 +113,33 @@ test('a stamp brings the reveal, then the next day', async ({ page }) => {
   expect(await ft(page, (f) => f.play?.state.day)).toBe(2)
 })
 
+test('a wrong stamp plays out over time, then ends the chapter on the paper; a tap skips it', async ({ page }) => {
+  const wrongStamp = async () => {
+    await readable(page)
+    const t0 = Date.now()
+    await page.locator(`[data-stamp="${(await rightStamp(page)) === 'asli' ? 'tota' : 'asli'}"]`).click()
+    await expect(page.locator('.screen--day.is-stamping')).toBeVisible()
+    return t0
+  }
+  await page.goto(START)
+  await begin1857Easy(page)
+  // the stamp, a beat of silence, the alarm, the room answering it and the dark, then the verdict
+  const t0 = await wrongStamp()
+  await expect(page.locator('.paper-result')).toBeVisible({ timeout: 30_000 })
+  const whole = Date.now() - t0
+  expect(whole).toBeGreaterThan(3500)
+  await expect(page.locator('[data-action="again"]')).toBeVisible()
+  expect(await ft(page, (f) => f.revealed)).toBe(true)
+  // again, and this time a tap on the Skip chip during the alarm goes straight to the verdict
+  await page.locator('[data-action="again"]').click()
+  const t1 = await wrongStamp()
+  await page.waitForTimeout(1600) // the stamp has come home and the alarm is sounding
+  await page.locator('[data-action="skip"]').click()
+  await expect(page.locator('.paper-result')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('[data-action="again"]')).toBeVisible()
+  expect(Date.now() - t1).toBeLessThan(whole - 1500) // the rest of the alarm and the dark were skipped
+})
+
 test('plays day 1 on the 2D fallback when WebGL is disabled', async ({ page, browserName, playwright }) => {
   let p = page
   let browser: Browser | null = null
