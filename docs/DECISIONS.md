@@ -178,3 +178,11 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   ball into the basket. Skip, or Enter, puts it in at once and starts the next day.
 - Google Analytics and Vercel Analytics count visits and a few game events. Share cards are drawn
   ahead of time so previews load at once on WhatsApp and X.
+- The case file grows with the mode. Easy keeps today's short file with highlights and pencil
+  ticks; Medium shows a longer, scrolling file with highlights but no ticks; Hard shows the longest
+  file, plain, with no highlights. Medium and Hard get many more real moments of each era, so long
+  runs live the time instead of repeating it.
+- Rewards are collect-only, random, with rare jackpots, and sit as small objects on the desk. One
+  wrong stamp still ends a chapter.
+- The music player can shrink to a small corner player (YouTube's minimum size) and has a volume
+  knob.
