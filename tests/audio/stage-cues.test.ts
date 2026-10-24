@@ -119,6 +119,30 @@ describe('era voices', () => {
   })
 })
 
+describe('the toss', () => {
+  it('the paper leaving the desk and landing in the basket each sound, held well under full scale, and stay silent when muted', () => {
+    expect(cueForStage('toss')).toBe('paperToss')
+    expect(cueForStage('tossLand')).toBe('basketLand')
+    const a = createAudioEngine()
+    a.unlock()
+    for (const c of ['paperToss', 'basketLand'] as const) {
+      const before = made.nodes.length
+      a.cue(c)
+      const mine = made.nodes.slice(before)
+      expect(mine.length, c).toBeGreaterThan(0)
+      // every gain stage peaks well under full scale
+      const peaks = mine.flatMap((n) => (n.gain as ReturnType<typeof param>).linearRampToValueAtTime.mock.calls.map((x) => x[0] as number))
+      expect(peaks.length, c).toBeGreaterThan(0)
+      expect(Math.max(...peaks), c).toBeLessThanOrEqual(0.2)
+    }
+    a.setMuted(true)
+    const before = made.nodes.length
+    a.cue('paperToss')
+    a.cue('basketLand')
+    expect(made.nodes.length).toBe(before)
+  })
+})
+
 describe('cueForStage', () => {
   it('maps every stage cue to a sound, except the stamp the app voices itself', () => {
     const all: StageCueName[] = ['title', 'flip', 'arrive', 'seal', 'unfold', 'flap', 'key', 'space', 'ding', 'return', 'stamp', 'right', 'wrong', 'verdictStamp']

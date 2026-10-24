@@ -56,11 +56,12 @@ async function rightStamp(page: Page): Promise<'asli' | 'tota'> {
   return real ? 'asli' : 'tota'
 }
 
-/** Stamp today's paper correctly and wait for the verdict on its back. */
+/** Stamp today's paper correctly and wait for the verdict on its back (no Next: it leads on by itself). */
 async function stampAndReveal(page: Page): Promise<void> {
   await page.locator(`[data-stamp="${await rightStamp(page)}"]`).click()
   await expect(page.locator('.paper-result')).toBeVisible({ timeout: 30_000 })
-  await expect(page.locator('[data-action="next"]')).toBeVisible()
+  await expect(page.locator('.screen--day.is-auto')).toBeVisible()
+  await expect(page.locator('[data-action="next"]')).toHaveCount(0)
   await expect(page.locator('.paper-result__mirror')).not.toBeEmpty()
   expect(await ft(page, (f) => f.revealed)).toBe(true)
 }
@@ -103,14 +104,29 @@ test('no horizontal scroll at 360 px', async ({ page }) => {
   expect(await noHorizontalScroll(page)).toBe(true)
 })
 
-test('a stamp brings the reveal, then the next day', async ({ page }) => {
+test('a right stamp brings the reveal, then the paper goes in the basket and the next day starts by itself', async ({ page }) => {
   await page.goto(START)
   await begin1857Easy(page)
   await readable(page)
   await stampAndReveal(page)
-  await page.locator('[data-action="next"]').click()
+  // the verdict holds to be read: still day 1 a moment later
+  await page.waitForTimeout(1200)
+  expect(await ft(page, (f) => f.play?.state.day)).toBe(1)
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 15_000 }).toBe(2)
   await readable(page)
-  expect(await ft(page, (f) => f.play?.state.day)).toBe(2)
+})
+
+test('a tap on the room sends the read paper on at once', async ({ page }) => {
+  await page.goto(START)
+  await begin1857Easy(page)
+  await readable(page)
+  await stampAndReveal(page)
+  await page.waitForTimeout(700) // the first moment is the tail of a skip, not a toss
+  const vp = page.viewportSize()!
+  await page.mouse.click(vp.width / 2, vp.height * 0.4)
+  // the toss takes about 1.5 s; without the tap the hold alone would run 3 s first
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 2600, intervals: [100] }).toBe(2)
+  await readable(page)
 })
 
 test('plays day 1 on the 2D fallback when WebGL is disabled', async ({ page, browserName, playwright }) => {

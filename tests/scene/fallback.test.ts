@@ -183,6 +183,102 @@ describe('mountFallback: the message on paper', () => {
     }
   })
 
+  describe('toss: the read card into the drawn basket', () => {
+    const verdict = {
+      outcome: 'right' as const, real: true, documentMark: false, highlight: [], note: '',
+      back: { verdictLine: 'Right — genuine', tell: 'Congress Radio called on 42.34 metres.', source: 'Usha Mehta (1969), p. 12' },
+      lang: 'en' as const,
+    }
+    let frames: FrameRequestCallback[] = []
+    let now = 0
+    const pump = (ms: number) => {
+      for (let t = 0; t < ms; t += 16) {
+        now += 16
+        const due = frames
+        frames = []
+        for (const f of due) f(now)
+      }
+    }
+    async function readCard(o: { reduced?: boolean } = {}) {
+      frames = []
+      now = 0
+      vi.spyOn(performance, 'now').mockImplementation(() => now)
+      vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => frames.push(f))
+      vi.stubGlobal('cancelAnimationFrame', () => undefined)
+      if (o.reduced) vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce'), addEventListener() {}, removeEventListener() {} }))
+      const f = fakeCanvas()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+      const el = document.createElement('div')
+      document.body.appendChild(el)
+      const cues: string[] = []
+      const fb = mountFallback(el, 'bombay-1942', { onCue: (c) => cues.push(c) })
+      await fb.showMessage(sheet())
+      const r = fb.reveal(verdict)
+      fb.skip()
+      await r
+      return { fb, f, cues }
+    }
+    afterEach(() => vi.unstubAllGlobals())
+
+    it('flies the card on frames, naming both beats, with the same timing as the 3D toss', async () => {
+      const { fb, f, cues } = await readCard()
+      expect(fb.getPaperRect()).not.toBeNull()
+      let done = false
+      void fb.toss().then(() => (done = true))
+      expect(cues).toEqual(['toss'])
+      expect(fb.getPaperRect()).toBeNull() // off the desk: no source button over it
+      expect(fb.getSourceRect()).toBeNull()
+      const drawn = f.calls.filter((c) => c === 'drawImage').length
+      pump(600)
+      expect(f.calls.filter((c) => c === 'drawImage').length).toBeGreaterThan(drawn + 20) // the card, frame by frame
+      expect(cues).toEqual(['toss'])
+      pump(450) // past the lift and the arc (1000 ms)
+      expect(cues).toEqual(['toss', 'tossLand'])
+      await Promise.resolve()
+      expect(done).toBe(false) // the settle and a held breath
+      pump(600)
+      await Promise.resolve()
+      expect(done).toBe(true)
+      fb.dispose()
+    })
+
+    it('skip lands it at once; dispose never leaves it hanging', async () => {
+      const a = await readCard()
+      const p = a.fb.toss()
+      pump(100)
+      a.fb.skip()
+      await p
+      expect(a.cues).toEqual(['toss', 'tossLand'])
+      a.fb.dispose()
+      const b = await readCard()
+      const q = b.fb.toss()
+      b.fb.dispose()
+      await expect(q).resolves.toBeUndefined()
+    })
+
+    it('under reduced motion the card fades where it lies, then is gone', async () => {
+      const { fb, cues } = await readCard({ reduced: true })
+      let done = false
+      void fb.toss().then(() => (done = true))
+      pump(200)
+      await Promise.resolve()
+      expect(done).toBe(false)
+      pump(200)
+      await Promise.resolve()
+      expect(done).toBe(true)
+      expect(cues).toEqual(['toss', 'tossLand'])
+      fb.dispose()
+    })
+
+    it('resolves at once with no paper on the desk', async () => {
+      const f = fakeCanvas()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+      const fb = mountFallback(document.createElement('div'), 'delhi-1857')
+      await expect(fb.toss()).resolves.toBeUndefined()
+      fb.dispose()
+    })
+  })
+
   it('copes without a 2D context', async () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => null) as unknown as HTMLCanvasElement['getContext'])
     const fb = mountFallback(document.createElement('div'), 'delhi-1947')

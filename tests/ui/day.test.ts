@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { renderDay, setReadable, setStamping, setTimer, setVoiceState, type DayProps } from '../../src/ui/screens/day'
+import { renderDay, setReadable, setStamping, setTimer, setTossing, setVoiceState, type DayProps } from '../../src/ui/screens/day'
 import { strings } from '../../src/i18n/strings'
 import type { Era } from '../../src/content/types'
 import type { ChapterState } from '../../src/game/state'
@@ -507,6 +507,54 @@ describe('renderDay: the verdict on the paper', () => {
     expect(pop.hidden).toBe(true)
     // without a rect from the stage, the source is a small slip among the buttons
     expect(root.querySelector('.paper-result__actions [data-action="source"]')!.textContent).toBe(strings.en.source)
+  })
+
+  it('a verdict that leads on has no Next: a tap on the room, Space or Enter sends the paper on, and the source card reports itself', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), toss: vi.fn(), pop: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true, lastVerdict: 'asli' }), {
+      revealed: true,
+      onPaper: { mirror: 'Right · This message was genuine', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 2' }], auto: true },
+    }), on)
+    const screen = root.querySelector<HTMLElement>('.screen--day')!
+    expect(root.querySelector('[data-action="next"]')).toBeNull()
+    expect(root.querySelector('.paper-result__actions')!.children).toHaveLength(0) // nothing waits under the paper
+    expect(screen.classList.contains('is-auto')).toBe(true)
+    root.querySelector<HTMLElement>('.tapcatch')!.dispatchEvent(new Event('pointerdown'))
+    expect(on.toss).toHaveBeenCalledTimes(1)
+    expect(on.skip).not.toHaveBeenCalled()
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(on.toss).toHaveBeenCalledTimes(3)
+    // a focused control keeps its own keys; the stamp keys stay asleep
+    const src = root.querySelector<HTMLButtonElement>('.source-hit')!
+    src.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
+    expect(on.toss).toHaveBeenCalledTimes(3)
+    expect(on.stamp).not.toHaveBeenCalled()
+    // the source card opening and closing is reported, so the hold can wait for it
+    src.click()
+    expect(on.pop).toHaveBeenLastCalledWith(true)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(on.pop).toHaveBeenLastCalledWith(false)
+    // on its way to the basket, the source button goes with the paper
+    setTossing(root)
+    expect(screen.classList.contains('is-tossing')).toBe(true)
+  })
+
+  it('a verdict that does not lead on keeps Next, and a tap on the room does nothing', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), toss: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: false, lastVerdict: 'asli' }), {
+      revealed: true,
+      onPaper: { mirror: 'Wrong', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 2' }] },
+    }), on)
+    expect(root.querySelector('[data-action="next"]')).not.toBeNull()
+    expect(root.querySelector('.screen--day')!.classList.contains('is-auto')).toBe(false)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
+    expect(on.toss).not.toHaveBeenCalled()
   })
 
   it('closes the source and receipts cards by touch: their close slip or a tap on the shade', () => {
