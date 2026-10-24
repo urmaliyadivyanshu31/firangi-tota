@@ -2,7 +2,7 @@
 //
 // GET /s/<code>: a tiny page with Open Graph and Twitter `summary_large_image` tags whose image is
 // /api/og?c=<code>&v=<rev>, then on to the game (/share-go.js, a script link-preview crawlers do
-// not run) with the chapter and mode picked. GET /api/og: the card itself, a 1200 x 630 PNG.
+// not run) with the chapter and mode picked. GET /api/og: the card itself, a 1200 x 630 JPEG.
 //
 // The code holds only enums and small integers (src/game/share-code.ts), and the card is drawn
 // from those and our own content alone: nothing a player typed reaches the page or the image.
@@ -215,9 +215,9 @@ export async function handleOgImage(rawQuery: string, render: Render): Promise<S
     const clear = () => { inflight.delete(key) }
     job.then(clear, clear)
   }
-  let png: Uint8Array
+  let image: Uint8Array
   try {
-    png = await job
+    image = await job
   } catch (err) {
     console.warn(`[og] render failed c=${shareCode(parsed.result)} ${(err as Error | null)?.name ?? 'error'}`)
     return redirect(PLAIN_IMAGE, 'no-store')
@@ -227,9 +227,9 @@ export async function handleOgImage(rawQuery: string, render: Render): Promise<S
     headers: {
       'Content-Type': IMAGE_TYPE,
       'Cache-Control': IMAGE_CACHE,
-      'Content-Length': String(png.byteLength),
+      'Content-Length': String(image.byteLength),
       'X-Content-Type-Options': 'nosniff',
     },
-    body: png,
+    body: image,
   }
 }

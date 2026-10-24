@@ -26,11 +26,10 @@ interface Look {
   ink: string
   accent: string
   faint: string
-  /** Faces for the year, the outcome and the small lines, in English. Hindi uses Tiro (or Kalam). */
+  /** Faces for the year, the outcome and the small lines, in English (facesFor sets the Hindi). */
   year: FaceName
   hero: FaceName
   small: FaceName
-  heroHi: FaceName
   stamp: Style
   tilt: number
 }
@@ -40,25 +39,25 @@ const LOOKS: Record<Era['channel'], Look> = {
   petition: {
     wood: ['#3b1d0f', '#8f5532'], lamp: '#ffa04a', paper: '#ead7ab',
     ink: '#3b2516', accent: '#7c211b', faint: '#7a5a3a',
-    year: 'printBold', hero: 'printBold', small: 'print', heroHi: 'deva', stamp: 'seal', tilt: -0.9,
+    year: 'printBold', hero: 'printBold', small: 'print', stamp: 'seal', tilt: -0.9,
   },
   // a hurried note on a ruled notebook leaf, in ink, with a CID stamp on it
   note: {
     wood: ['#4a3020', '#c29660'], lamp: '#ffb25e', paper: '#e4dcc4',
     ink: '#1f2940', accent: '#1d1d1b', faint: '#5d6478',
-    year: 'printBold', hero: 'hand', small: 'hand', heroHi: 'hand', stamp: 'police', tilt: 1.1,
+    year: 'printBold', hero: 'hand', small: 'hand', stamp: 'police', tilt: 1.1,
   },
   // a typed radio script on thin paper, a RAIDED stamp across it
   radio: {
     wood: ['#2a2018', '#a9743f'], lamp: '#ffbd6e', paper: '#ebe3c9',
     ink: '#23262e', accent: '#a3291f', faint: '#5b5a55',
-    year: 'type', hero: 'type', small: 'type', heroHi: 'deva', stamp: 'raided', tilt: -1.2,
+    year: 'type', hero: 'type', small: 'type', stamp: 'raided', tilt: -1.2,
   },
   // a telegram form: printed in red-brown, typed strips pasted on, the telegraph office stamp
   telegram: {
     wood: ['#1d2a22', '#2f4a3a'], lamp: '#ffd08e', paper: '#efe2b3',
     ink: '#24231f', accent: '#8a2f1f', faint: '#8d6a4a',
-    year: 'type', hero: 'type', small: 'type', heroHi: 'deva', stamp: 'telegraph', tilt: 0.7,
+    year: 'type', hero: 'type', small: 'type', stamp: 'telegraph', tilt: 0.7,
   },
 }
 
@@ -78,9 +77,9 @@ export interface CardWords {
   year: string
   /** The big figure: "7/7", "Day 4", "4/5". */
   hero: string
-  /** Under it: "Survived", "Caught", "right". */
+  /** Beside it: "Survived", "Caught", "Right". */
   caption: string
-  /** "Easy · 7 days", or "Aaj ka Taar". */
+  /** "Easy · 7 days", or nothing for the daily puzzle (its stamp names it). */
   mode: string
   stamp: string
   dare: string

@@ -90,6 +90,8 @@ export function openShareSlip(p: ShareSlipProps, on: ShareSlipHandlers): HTMLEle
         if (ok) {
           btn.classList.add('is-done')
           labelEl.textContent = t('copied', lang)
+          // the chit already shows it; the note only tells a screen reader
+          note.className = 'share-slip__note sr-only'
           note.textContent = t('copied', lang)
           open.timer = window.setTimeout(() => {
             btn.classList.remove('is-done')
@@ -97,6 +99,7 @@ export function openShareSlip(p: ShareSlipProps, on: ShareSlipHandlers): HTMLEle
           }, 2400)
         } else {
           // no clipboard: the link is selected on the card, ready to copy by hand
+          note.className = 'share-slip__note'
           note.textContent = t('copyFailed', lang)
           const range = document.createRange()
           range.selectNodeContents(link)
