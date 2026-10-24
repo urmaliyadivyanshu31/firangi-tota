@@ -52,6 +52,8 @@ for (const [w, h] of SIZES) {
         await sleep(500)
         await page.click('[data-mode="easy"]')
         await page.click('[data-action="begin"]')
+        // the intro after Begin: go on to day 1
+        await page.click('[data-action="intro-go"]', { timeout: 20000 })
         for (let day = 1; day <= DAYS; day++) {
           await page.waitForFunction(() => window.__ft?.readable === true, null, { timeout: 40000 })
           await sleep(400)

@@ -280,7 +280,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     tossRaf = 0
     const t = tossing
     if (!g || disposed || !t) return
-    const e = now - t.t0
+    const e = Math.max(0, now - t.t0) // a frame stamped just before the toss began counts as its start
     g.setTransform(1, 0, 0, 1, 0, 0)
     if (base) g.drawImage(base, 0, 0)
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -359,6 +359,8 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
         }
         tossing = t
         compose()
+        // the still has lost the card: put it back on this same frame, so it never blinks out
+        if (g && sprite) drawFlight(g, W, H, box, sprite, 0, reduced, ERA_PALETTES[current])
         if (typeof requestAnimationFrame !== 'function') t.finish()
         else tossRaf = requestAnimationFrame(tossFrame)
       })
