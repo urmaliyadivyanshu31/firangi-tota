@@ -34,6 +34,8 @@ interface Atlas {
   texture: THREE.CanvasTexture
   face: Map<string, Cell>
   inside: Cell
+  /** A valve's glass, unrolled. */
+  glass: Cell
   strip: Map<string, Cell>
   dispose(): void
 }
@@ -60,6 +62,7 @@ function makeAtlas(era: EraId, tier: QualityTier): Atlas {
   }
   const order = ['coin', 'fine', 'rare', 'keepsake', 'sweet']
   const inside = cellRect(5)
+  const glassCell = cellRect(6)
   if (g) {
     g.fillStyle = '#8a6a48'
     g.fillRect(0, 0, canvas.width, canvas.height)
@@ -86,6 +89,26 @@ function makeAtlas(era: EraId, tier: QualityTier): Atlas {
         g.restore()
       }
     })
+    // a valve's glass, unrolled: pale glass with the dark anode seen through it and the getter's
+    // silver at the crown (twice round, so it shows from every side)
+    if (items.some((it) => LOOKS[it.id]?.kind === 'valve')) {
+      const x = (6 % COLS) * cellPx
+      const y = Math.floor(6 / COLS) * cellPx
+      const gr = g.createLinearGradient(x, 0, x + cellPx, 0)
+      for (let k = 0; k <= 4; k++) {
+        gr.addColorStop(k / 4, k % 2 ? '#93a3a4' : '#dfe9e9')
+      }
+      g.fillStyle = gr
+      g.fillRect(x, y, cellPx, cellPx)
+      for (const cx of [0.25, 0.75]) {
+        g.fillStyle = 'rgba(52,48,44,0.85)'
+        g.fillRect(x + cellPx * (cx - 0.1), y + cellPx * 0.3, cellPx * 0.2, cellPx * 0.42)
+        g.fillStyle = 'rgba(150,140,128,0.9)'
+        g.fillRect(x + cellPx * (cx - 0.02), y + cellPx * 0.22, cellPx * 0.04, cellPx * 0.6)
+      }
+      g.fillStyle = 'rgba(205,210,214,0.95)'
+      g.fillRect(x, y + cellPx * 0.86, cellPx, cellPx * 0.14)
+    }
     // the bands
     const bands = [...items.map((it) => [it.id, sideColor(it.id)] as const), ...Object.entries(EXTRA_STRIPS)]
     const x0 = 7 % COLS * cellPx
@@ -108,6 +131,7 @@ function makeAtlas(era: EraId, tier: QualityTier): Atlas {
     face,
     inside,
     strip,
+    glass: glassCell,
     dispose: () => texture.dispose(),
   }
 }
@@ -245,7 +269,12 @@ function pieceGeo(id: string, atlas: Atlas, tier: QualityTier): PieceGeo {
         pts.push(new THREE.Vector2(look.r * Math.cos(a), look.h * 0.78 + (look.h * 0.22) * Math.sin(a)))
       }
       const glass = new THREE.LatheGeometry(pts, seg)
-      paint(glass, null, strip('glass'), look.r, look.r)
+      // its own UVs run round (u) and up the profile (v): squeeze them into the glass cell
+      const guv = glass.getAttribute('uv')
+      const gc = atlas.glass
+      const gpos = glass.getAttribute('position')
+      for (let i = 0; i < guv.count; i++) guv.setXY(i, gc.u0 + (gc.u1 - gc.u0) * guv.getX(i), gc.v1 - (gc.v1 - gc.v0) * THREE.MathUtils.clamp((gpos.getY(i) - bh) / (look.h - bh), 0, 1))
+      guv.needsUpdate = true
       // the getter's silver flash on the crown, so the glass reads as a valve
       const cap = new THREE.CylinderGeometry(look.r * 0.62, look.r * 0.8, look.h * 0.08, seg)
       cap.translate(0, look.h * 0.86, 0)
@@ -292,7 +321,12 @@ function jitter(seed: number): number {
   return x - Math.floor(x) - 0.5
 }
 
-/** Where each item sits in the corner, and the slips for counts past what is shown. */
+/**
+ * Where each item sits in the corner (the pile's own frame: +z toward the player), and the slips for
+ * counts past what is shown. Three rows, so nothing hides another from the desk shot: the sweets
+ * and the keepsake at the back, the coin stacks in the middle, the rare treasure fanned at the front;
+ * the papers lie under it all.
+ */
 export function pileLayout(era: EraId, counts: Readonly<Record<string, number>>): { placed: Placed[]; slips: { id: string; n: number; pos: V3 }[] } {
   const items = eraItems(era)
   const placed: Placed[] = []
@@ -300,23 +334,25 @@ export function pileLayout(era: EraId, counts: Readonly<Record<string, number>>)
   const of = (slot: string) => items.find((i) => i.slot === slot)
   const num = (id: string | undefined) => (id ? Math.max(0, Math.floor(counts[id] ?? 0)) : 0)
   let floor = 0 // a paper under the coins lifts them a hair
-  // the papers first, fanned under everything (a note, a leaflet, a card, a pass)
+  // the papers first, under everything (a note, a leaflet, a card, a pass)
+  const FLATS = { keepsake: { at: [0.008, 0, -0.008] as V3, yaw: 0.32, slip: [0.05, 0, -0.004] as V3 }, rare: { at: [-0.01, 0, 0.026] as V3, yaw: -0.24, slip: [0.026, 0, 0.068] as V3 } }
   for (const slot of ['keepsake', 'rare'] as const) {
     const it = of(slot)
     const look = it ? LOOKS[it.id] : undefined
     const n = num(it?.id)
     if (!it || look?.kind !== 'flat' || n === 0) continue
+    const f = FLATS[slot]
     const shown = Math.min(n, slot === 'rare' ? RARE_CAP : 1)
-    for (let i = 0; i < shown; i++) {
-      const base: V3 = slot === 'keepsake' ? [0.004, 0, -0.006] : [-0.014, 0, 0.014]
-      placed.push({ id: it.id, pos: [base[0] + i * 0.006, floor + i * 0.0005, base[2] - i * 0.004], yaw: (slot === 'keepsake' ? 0.32 : -0.24) + i * 0.16 })
-    }
+    for (let i = 0; i < shown; i++) placed.push({ id: it.id, pos: [f.at[0] + i * 0.006, floor + i * 0.0005, f.at[2] - i * 0.004], yaw: f.yaw + i * 0.16 })
     floor += shown * 0.0005
-    if (n > shown) slips.push({ id: it.id, n, pos: [base0(slot)[0] + 0.02, 0, base0(slot)[2] + 0.03] })
+    if (n > shown) slips.push({ id: it.id, n, pos: f.slip })
   }
-  // coin stacks: the everyday coin at the front left, the rupees beside it
-  const stacks: [string, V3[]][] = [['coin', [[-0.03, 0, 0.034], [-0.011, 0, 0.052]]], ['fine', [[0.019, 0, 0.03], [0.036, 0, 0.05]]]]
-  for (const [slot, spots] of stacks) {
+  // the coin stacks in the middle row: the everyday coin on the left, the rupees on the right
+  const stacks: [string, V3[], V3][] = [
+    ['coin', [[-0.034, 0, 0.006], [-0.015, 0, 0.02]], [-0.05, 0, 0.034]],
+    ['fine', [[0.014, 0, 0.004], [0.032, 0, 0.018]], [0.052, 0, 0.034]],
+  ]
+  for (const [slot, spots, slip] of stacks) {
     const it = of(slot)
     const look = it ? LOOKS[it.id] : undefined
     const n = num(it?.id)
@@ -328,19 +364,19 @@ export function pileLayout(era: EraId, counts: Readonly<Record<string, number>>)
       const seed = i * 7 + slot.length
       placed.push({ id: it.id, pos: [s[0] + jitter(seed) * 0.003, floor + k * look.t * 1.02, s[2] + jitter(seed + 3) * 0.003], yaw: jitter(seed + 5) * 6 })
     }
-    if (n > shown) slips.push({ id: it.id, n, pos: [spots[1]![0] + 0.004, 0, spots[1]![2] + 0.022] })
+    if (n > shown) slips.push({ id: it.id, n, pos: slip })
   }
-  // the rare treasure: gold coins fanned, or valves standing
+  // the rare treasure: gold coins fanned at the front, or valves standing at the back
   const rare = of('rare')
   const rl = rare ? LOOKS[rare.id] : undefined
   const rn = num(rare?.id)
   if (rare && rl && rn > 0 && rl.kind !== 'flat') {
     const shown = Math.min(rn, rl.kind === 'valve' ? 2 : RARE_CAP)
     for (let i = 0; i < shown; i++) {
-      if (rl.kind === 'valve') placed.push({ id: rare.id, pos: [-0.034 + i * 0.02, 0, -0.03 + i * 0.006], yaw: i })
-      else placed.push({ id: rare.id, pos: [0.002 + i * 0.011, floor + i * 0.0009, 0.006 - i * 0.006], yaw: i * 0.8 })
+      if (rl.kind === 'valve') placed.push({ id: rare.id, pos: [-0.034 + i * 0.019, 0, -0.034 + i * 0.006], yaw: i })
+      else placed.push({ id: rare.id, pos: [-0.006 + i * 0.012, floor + i * 0.0009, 0.05 - i * 0.004], yaw: i * 0.8 })
     }
-    if (rn > shown) slips.push({ id: rare.id, n: rn, pos: [0.012, 0, 0.024] })
+    if (rn > shown) slips.push({ id: rare.id, n: rn, pos: rl.kind === 'valve' ? [-0.052, 0, -0.012] : [0.03, 0, 0.066] })
   }
   // the sweets at the back right: boxes and packets stacked, donas side by side
   const sweet = of('sweet')
@@ -349,27 +385,24 @@ export function pileLayout(era: EraId, counts: Readonly<Record<string, number>>)
   if (sweet && sl && sn > 0) {
     const shown = Math.min(sn, sl.kind === 'dona' ? 2 : SWEET_CAP)
     for (let i = 0; i < shown; i++) {
-      if (sl.kind === 'dona') placed.push({ id: sweet.id, pos: [0.028 - i * 0.03, 0, -0.04 + i * 0.008], yaw: i })
+      if (sl.kind === 'dona') placed.push({ id: sweet.id, pos: [0.03 - i * 0.032, 0, -0.04 + i * 0.006], yaw: i })
       else {
         const h = sl.kind === 'packet' || sl.kind === 'box' ? sl.h : 0.01
-        placed.push({ id: sweet.id, pos: [0.03 + jitter(i + 11) * 0.004, i * h, -0.038 + jitter(i + 17) * 0.004], yaw: 0.3 + jitter(i + 23) * 0.5 })
+        placed.push({ id: sweet.id, pos: [0.03 + jitter(i + 11) * 0.004, i * h, -0.04 + jitter(i + 17) * 0.004], yaw: 0.3 + jitter(i + 23) * 0.5 })
       }
     }
-    if (sn > shown) slips.push({ id: sweet.id, n: sn, pos: [0.052, 0, -0.018] })
+    if (sn > shown) slips.push({ id: sweet.id, n: sn, pos: [0.06, 0, -0.016] })
   }
-  // the keepsake that is not a paper: the court seal standing, the badge lying
+  // the keepsake that is not a paper: the court seal standing, the badge lying, at the back left
   const keep = of('keepsake')
   const kl = keep ? LOOKS[keep.id] : undefined
   const kn = num(keep?.id)
   if (keep && kl && kn > 0 && kl.kind !== 'flat') {
-    placed.push({ id: keep.id, pos: kl.kind === 'seal' ? [-0.036, 0, -0.022] : [-0.006, floor, -0.028], yaw: 0.4 })
-    if (kn > 1) slips.push({ id: keep.id, n: kn, pos: [-0.04, 0, -0.002] })
+    const sealAt: V3 = sl?.kind === 'dona' && sn > 1 ? [-0.044, 0, -0.016] : [-0.034, 0, -0.03]
+    placed.push({ id: keep.id, pos: kl.kind === 'seal' ? sealAt : [-0.012, floor, -0.03], yaw: 0.4 })
+    if (kn > 1) slips.push({ id: keep.id, n: kn, pos: [-0.05, 0, -0.004] })
   }
   return { placed, slips }
-}
-
-function base0(slot: 'keepsake' | 'rare'): V3 {
-  return slot === 'keepsake' ? [0.004, 0, -0.006] : [-0.014, 0, 0.014]
 }
 
 export interface RewardKit {
@@ -392,7 +425,8 @@ export interface RewardKit {
 
 export function createRewardKit(o: { era: EraId; tier: QualityTier; reduced: boolean; scene: THREE.Scene }): RewardKit {
   const atlas = makeAtlas(o.era, o.tier)
-  const mat = material(o.tier, { map: atlas.texture, metal: true, shininess: 46, specular: 0x3a3226 })
+  // a faint warm lift, so the treasures read in the dim corner away from the lamp (no light is added)
+  const mat = material(o.tier, { map: atlas.texture, metal: true, shininess: 46, specular: 0x3a3226, emissive: 0x1a1009 })
   // the metal catches the lamp; paper and sweets stay matte (high: a specular map from the same cells)
   if (o.tier === 'high' && mat instanceof THREE.MeshPhongMaterial) {
     const sc = document.createElement('canvas')

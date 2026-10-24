@@ -54,9 +54,9 @@ export const LOOKS: Record<string, Look> = {
 
 /** Light, base and shadow of each metal. */
 export const METALS: Record<Metal, [string, string, string]> = {
-  copper: ['#eaa676', '#b46b3c', '#5e3018'],
+  copper: ['#d39064', '#93542f', '#4a2410'],
   silver: ['#f4f5f4', '#c4c8ca', '#6f7478'],
-  gold: ['#ffe596', '#d9a536', '#82560f'],
+  gold: ['#fff2bc', '#e6bf4c', '#93700f'],
   cupronickel: ['#efefe8', '#bfc0b8', '#6d6e68'],
   nickelbrass: ['#f6e6a6', '#c9b263', '#6e5c22'],
   nickel: ['#f2f3f0', '#c3c5c1', '#71736f'],
@@ -364,8 +364,9 @@ function donaFace(g: G, cx: number, cy: number, r: number, id: string): void {
     const dx = cx + Math.cos(a) * r * 0.26
     const dy = cy + Math.sin(a) * r * 0.26
     const gr = g.createRadialGradient(dx - r * 0.08, dy - r * 0.1, r * 0.02, dx, dy, r * 0.36)
-    gr.addColorStop(0, '#e8b46a')
-    gr.addColorStop(1, '#9b5d22')
+    gr.addColorStop(0, '#d9a45a')
+    gr.addColorStop(0.6, '#a8692a')
+    gr.addColorStop(1, '#6e3f16')
     g.fillStyle = gr
     g.beginPath()
     g.arc(dx, dy, r * 0.34, 0, Math.PI * 2)
