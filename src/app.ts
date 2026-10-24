@@ -124,7 +124,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let stampedWith: Verdict | null = null // the stamp being animated, so a redraw keeps the stamps asleep
   let gen = 0 // bumps on every navigation and every new day; async work started before it is dropped
 
-  let muted = store.get<unknown>('muted', false) === true
+  // sound starts off; the player's first tap on the speaker turns it on, and that choice is kept
+  // for the next visit (owner 10-24)
+  let muted = store.get<unknown>('muted', true) !== false
 
   // A friend's share link picks their chapter and mode: /s/<code> when the offline copy answers
   // it, or the link page's ?chapter=…&mode=… (server/share.ts). Neither is remembered.

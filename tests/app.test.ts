@@ -733,15 +733,20 @@ describe('the main page', () => {
     expect(m.audio.cue).toHaveBeenCalledWith('cardTurn')
   })
 
-  it('remembers mute across visits; sound is on by default', () => {
-    boot('?lang=en')
-    expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
-    dock('[data-action="sound"]')!.click()
-    expect(localStorage.getItem('ft:muted')).toBe('true')
-    expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
+  it('sound starts off; the first tap on the speaker turns it on, and that is kept across visits', () => {
     boot('?lang=en')
     expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
     expect(dock('[data-action="sound"]')!.getAttribute('aria-pressed')).toBe('false')
+    dock('[data-action="sound"]')!.click()
+    expect(localStorage.getItem('ft:muted')).toBe('false')
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
+    boot('?lang=en')
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
+    expect(dock('[data-action="sound"]')!.getAttribute('aria-pressed')).toBe('true')
+    // turned off again, it stays off
+    dock('[data-action="sound"]')!.click()
+    boot('?lang=en')
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
   })
 
   it('unlocks audio on the first tap anywhere', () => {
@@ -1318,12 +1323,15 @@ describe('the immersive day', () => {
     expect(m.stage.showMessage).toHaveBeenCalledTimes(1) // no second arrival
   })
 
-  it('mutes game sound from the day without leaving it', async () => {
+  it('turns game sound on and off from the day without leaving it', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     click(ui, '.hud [data-action="sound"]')
-    expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
     expect(m.audio.cue).toHaveBeenCalledWith('toggleClick')
+    expect($(ui, '.hud [data-action="sound"]')!.getAttribute('aria-pressed')).toBe('true')
+    click(ui, '.hud [data-action="sound"]')
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(true)
     expect($(ui, '.hud [data-action="sound"]')!.getAttribute('aria-pressed')).toBe('false')
     expect($(ui, '.screen--day')).not.toBeNull()
   })

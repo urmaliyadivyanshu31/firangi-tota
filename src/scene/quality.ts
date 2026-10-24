@@ -55,9 +55,9 @@ export interface DeviceSignals {
 const LOW_GPU =
   /Mali-[34]\d\d|Mali-T[678]\d\d|Mali-G[35]1(?!\d)|Adreno[^\d]*[34]\d\d(?!\d)|Adreno[^\d]*50[4-6](?!\d)|PowerVR|SGX|SwiftShader|llvmpipe|softpipe|Software|Basic Render/i
 // Budget GPUs that manage mid. (?!\d) matters: 'Mali-G71' must not match 'Mali-G710'.
-const MID_GPU = /Mali-G(5[27]|6[08]|7[126])(?!\d)|Adreno[^\d]*(5\d\d|6[0-4]\d)(?!\d)/i
 // Known strong mobile GPUs: exempt from the dense-screen cap.
-const STRONG_GPU = /Adreno[^\d]*(6[5-9]\d|[78]\d\d)(?!\d)|Mali-G(6[1-9]|7[1-9]|9\d)\d|Immortalis|Xclipse|Apple/i
+// Budget GPUs start at mid; upper-mid ones (Adreno 64x, Mali-G68/G7x) start high (owner 10-24).
+const BUDGET_GPU = /Mali-G(5[127])(?!\d)|Adreno[^\d]*(5\d\d|6[0-2]\d)(?!\d)/i
 const APPLE_GPU = /Apple/i
 
 const rank = (t: QualityTier) => TIERS.indexOf(t)
@@ -71,18 +71,19 @@ export function pickInitialTier(sig: DeviceSignals): QualityTier {
     if (rank(t) < rank(cap)) cap = t
   }
   if (LOW_GPU.test(gpu)) lower('low')
-  else if (MID_GPU.test(gpu)) lower('mid')
+  else if (BUDGET_GPU.test(gpu)) lower('mid')
+  // Chrome buckets deviceMemory (a 6 GB phone reports 4), so only under 4 is a real warning
   if (sig.memGB !== undefined) {
     if (sig.memGB <= 2) lower('low')
-    else if (sig.memGB <= 4) lower('mid')
+    else if (sig.memGB < 4) lower('mid')
   }
   // Safari clamps hardwareConcurrency, so only trust it off Apple hardware.
   if (!apple && sig.cores) {
     if (sig.cores <= 2) lower('low')
     else if (sig.cores <= 4) lower('mid')
   }
-  // Dense, big screens on GPUs we don't know: start at mid and let the adapter decide.
-  if (!apple && sig.dpr >= 2.5 && sig.minSide * sig.dpr >= 1000 && !STRONG_GPU.test(gpu)) lower('mid')
+  // (owner 10-24: phones look their best by default; a GPU we don't know starts high and the adapter
+  // steps it down only if the frames really are slow)
   if (!gpu) lower('mid')
   return cap
 }
@@ -295,8 +296,8 @@ export function parseTierParam(search: string): QualityTier | undefined {
   return (TIERS as readonly string[]).includes(v ?? '') ? (v as QualityTier) : undefined
 }
 
-const TIER_KEY = 'tier'
-const TIER_TTL_MS = 30 * 864e5 // re-measure monthly, so one bad session doesn't pin a device forever
+const TIER_KEY = 'tier2' // (v2, 10-24: every saved tier and ceiling starts over at the new defaults)
+const TIER_TTL_MS = 2 * 864e5 // re-measure every two days, so one bad session never pins a phone for long
 
 /** The tier this device settled on last time, if recent. */
 export function loadSavedTier(now = Date.now()): QualityTier | undefined {
