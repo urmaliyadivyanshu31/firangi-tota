@@ -230,7 +230,10 @@ describe('the intro on the flat desk', () => {
       expect(done).toBe(false)
       fb.skip()
       await vi.waitFor(() => expect(done).toBe(true))
-      expect(fb.getPaperRect()).toBeNull() // no message paper during the intro
+      // during the intro the paper on the desk is the pair of cards (the app sets Continue under it)
+      const r = fb.getPaperRect()!
+      expect(r.w).toBeGreaterThan(0)
+      expect(r.h).toBeGreaterThan(0)
       // a second call (a language change) redraws at once
       f.texts.length = 0
       await fb.intro(intro('hi'))

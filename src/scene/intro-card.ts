@@ -11,10 +11,17 @@ type Ctx = CanvasRenderingContext2D
 /** A portrait, once it has loaded. */
 export type Art = HTMLImageElement
 
-/** Both cards' height over their width. */
+/** The cards' height over their width on a wide screen. */
 export const CARD_ASPECT = 0.68
-/** The YOU photo print on its card, in card units: u across (0..1 of the width), v down (0..1 of the height). */
-export const YOU_PHOTO = { u0: 0.045, v0: 0.14, w: 0.34, h: 0.34 * 1.32 / CARD_ASPECT }
+/**
+ * The cards' height over their width for a screen of this shape. A phone is width-bound and has
+ * height to spare, so its cards are taller: more room for the line, set bigger.
+ */
+export function cardAspect(screenAspect: number): number {
+  return screenAspect < 0.9 ? 0.8 : CARD_ASPECT
+}
+/** The size unit for headings: the height of a wide-screen card, so taller cards keep their type. */
+const unit = (W: number, H: number) => Math.min(H, W * CARD_ASPECT)
 /** The photo print's white border, as a share of its width. */
 const PRINT_EDGE = 0.055
 
@@ -209,6 +216,7 @@ export function drawYouCard(g: Ctx, W: number, H: number, c: IntroCard, lang: La
   g.moveTo(0, H * 0.055)
   g.lineTo(W, H * 0.055)
   g.stroke()
+  const u = unit(W, H)
   // the photo's soft shadow on the card (the print itself is a separate piece of paper)
   const p = photoRect(W, H)
   g.fillStyle = 'rgba(50,30,10,0.18)'
@@ -217,8 +225,8 @@ export function drawYouCard(g: Ctx, W: number, H: number, c: IntroCard, lang: La
   const deva = lang === 'hi' || isDeva(c.label)
   const lx = W * 0.445
   const lw = W * 0.47
-  const ly = H * 0.13
-  const lh = H * 0.2
+  const ly = H * 0.055 + u * 0.075
+  const lh = u * 0.2
   g.save()
   g.translate(lx + lw / 2, ly + lh / 2)
   g.rotate(-0.012)
@@ -241,15 +249,18 @@ export function drawYouCard(g: Ctx, W: number, H: number, c: IntroCard, lang: La
   }
   g.restore()
   // the line, in ink, under the label
-  fitText(g, captionOf(c.line, lang), { x: W * 0.455, y: H * 0.38, w: W * 0.48, h: H * 0.56 }, {
-    face: deva ? FACE.deva : FACE.print, max: H * 0.083, min: H * 0.052, lead: deva ? 1.42 : 1.26, color: '#2b1d13',
+  const ty = ly + lh + u * 0.05
+  fitText(g, captionOf(c.line, lang), { x: W * 0.455, y: ty, w: W * 0.48, h: H * 0.95 - ty }, {
+    face: deva ? FACE.deva : FACE.print, max: W * 0.06, min: W * 0.043, lead: deva ? 1.4 : 1.24, color: '#2b1d13',
   })
   g.restore()
 }
 
-/** The YOU photo's place on its card, in canvas px. */
+/** The YOU photo's place on its card (in the card's own units: px, or metres in 3D): a 3:4 print with its border, centred down the left. */
 export function photoRect(W: number, H: number): { x: number; y: number; w: number; h: number } {
-  return { x: W * YOU_PHOTO.u0, y: H * YOU_PHOTO.v0, w: W * YOU_PHOTO.w, h: H * YOU_PHOTO.h }
+  const w = W * 0.34
+  const h = Math.min(w * 1.32, H * 0.76)
+  return { x: W * 0.045, y: H * 0.03 + (H - h) / 2, w, h }
 }
 
 /** The portrait print: a white deckled border round the picture (an empty mount until it loads). */
@@ -386,28 +397,29 @@ export function drawTotaCard(g: Ctx, W: number, H: number, c: IntroCard, lang: L
   }
   // the heading, big, in poster type, with a red double rule under it
   const deva = lang === 'hi' || isDeva(c.label)
+  const u = unit(W, H)
   g.fillStyle = ink
   g.textBaseline = 'alphabetic'
   if (deva) {
-    g.font = font(FACE.sans, H * 0.15, '600')
+    g.font = font(FACE.sans, u * 0.15, '600')
     g.textAlign = 'center'
-    g.fillText(c.label, W / 2, H * 0.205)
+    g.fillText(c.label, W / 2, u * 0.205)
   } else {
     // a Victorian notice face, its strokes thickened the way an inked forme prints
-    g.font = font(FACE.print, H * 0.15)
+    g.font = font(FACE.print, u * 0.15)
     g.strokeStyle = ink
-    g.lineWidth = H * 0.009
+    g.lineWidth = u * 0.009
     g.lineJoin = 'round'
-    spaced(g, c.label.toLocaleUpperCase('en'), W / 2, H * 0.205, H * 0.032, true)
+    spaced(g, c.label.toLocaleUpperCase('en'), W / 2, u * 0.205, u * 0.032, true)
   }
   g.fillStyle = '#9c2a1d'
-  g.fillRect(W * 0.08, H * 0.245, W * 0.84, Math.max(1, H * 0.008))
-  g.fillRect(W * 0.08, H * 0.262, W * 0.84, Math.max(1, H * 0.0035))
+  g.fillRect(W * 0.08, u * 0.245, W * 0.84, Math.max(1, u * 0.008))
+  g.fillRect(W * 0.08, u * 0.262, W * 0.84, Math.max(1, u * 0.0035))
   // the portrait, printed into the notice inside a fine rule
   const px = W * 0.072
-  const py = H * 0.31
+  const py = u * 0.31
   const pw = W * 0.32
-  const ph = H * 0.6
+  const ph = H - u * 0.09 - py
   g.fillStyle = '#e2d4b2'
   g.fillRect(px, py, pw, ph)
   cover(g, img, px, py, pw, ph)
@@ -418,10 +430,12 @@ export function drawTotaCard(g: Ctx, W: number, H: number, c: IntroCard, lang: L
   g.lineWidth = Math.max(1, W * 0.003)
   g.strokeRect(px, py, pw, ph)
   // the line beside it, clear of the stamp below
-  fitText(g, captionOf(c.line, lang), { x: W * 0.43, y: H * 0.32, w: W * 0.49, h: H * 0.39 }, {
-    face: deva ? FACE.deva : FACE.print, max: H * 0.08, min: H * 0.05, lead: deva ? 1.42 : 1.26, color: ink,
+  const sr = u * 0.13 // the stamp, bottom right, under the line
+  const sy = H - u * 0.215
+  fitText(g, captionOf(c.line, lang), { x: W * 0.43, y: u * 0.32, w: W * 0.49, h: sy - sr - u * 0.02 - u * 0.32 }, {
+    face: deva ? FACE.deva : FACE.print, max: W * 0.06, min: W * 0.043, lead: deva ? 1.4 : 1.24, color: ink,
   })
-  drawParrotStamp(g, W * 0.795, H * 0.785, H * 0.13, wink, paper)
+  drawParrotStamp(g, W * 0.795, sy, sr, wink, paper)
   g.restore()
 }
 
@@ -497,13 +511,14 @@ export function drawClip2d(g: Ctx, x: number, y: number, mm: number, rot = 0): v
  * Both cards for the 2D fallback, as big as the free box allows: stacked on a tall screen, side by
  * side on a wide one. `k` (0..1) fades and lifts them in.
  */
-export function drawIntroSpread(g: Ctx, box: { x: number; y: number; w: number; h: number }, s: IntroSpec, k: number, lift: boolean): void {
+export function drawIntroSpread(g: Ctx, box: { x: number; y: number; w: number; h: number }, s: IntroSpec, k: number, lift: boolean): { x: number; y: number; w: number; h: number } {
   const portrait = box.h > box.w
+  const ca = cardAspect(box.w / box.h)
   const gap = Math.min(box.w, box.h) * 0.04
   let cw: number
-  if (portrait) cw = Math.min(box.w * 0.92, (box.h * 0.94 - gap) / 2 / CARD_ASPECT)
-  else cw = Math.min((box.w * 0.94 - gap) / 2, (box.h * 0.86) / CARD_ASPECT)
-  const ch = cw * CARD_ASPECT
+  if (portrait) cw = Math.min(box.w * 0.96, (box.h * 0.96 - gap) / 2 / ca)
+  else cw = Math.min((box.w * 0.82 - gap) / 2, (box.h * 0.9) / ca)
+  const ch = cw * ca
   const cx = box.x + box.w / 2
   const cy = box.y + box.h / 2
   const places = portrait
@@ -542,4 +557,8 @@ export function drawIntroSpread(g: Ctx, box: { x: number; y: number; w: number; 
     }
     g.restore()
   })
+  // where the pair lies (upright boxes; the turn is a hair), for the Continue slip under it
+  const xs = places.flatMap((p) => [p.x - cw / 2, p.x + cw / 2])
+  const ys = places.flatMap((p) => [p.y - ch / 2, p.y + ch / 2])
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
 }

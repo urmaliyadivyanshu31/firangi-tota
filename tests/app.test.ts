@@ -700,6 +700,21 @@ describe('the intro after Begin: who you are and who the Tota is', () => {
     expect($(ui, '.screen--day')).not.toBeNull()
   })
 
+  it('on a wide screen the Continue slip sits just under the cards; with no room, along the bottom', async () => {
+    m.stage.getPaperRect.mockImplementation(() => ({ x: 100, y: 200, w: 800, h: 300 }))
+    const { ui } = boot('?lang=en&seed=3') // jsdom's window is 1024 × 768
+    await toIntro(ui)
+    const foot = $(ui, '.intro__foot')!
+    expect(foot.classList.contains('is-under')).toBe(true)
+    expect(foot.style.top).toBe('514px')
+    // the language switch draws the slip again, still under the cards
+    dock('[data-lang="hi"]')!.click()
+    expect($(ui, '.intro__foot')!.style.top).toBe('514px')
+    m.stage.getPaperRect.mockImplementation(() => ({ x: 100, y: 300, w: 800, h: 440 }))
+    dock('[data-lang="en"]')!.click()
+    expect($(ui, '.intro__foot')!.classList.contains('is-under')).toBe(false)
+  })
+
   it('plays on every Begin', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toIntro(ui)

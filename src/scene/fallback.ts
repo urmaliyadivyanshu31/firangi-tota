@@ -73,6 +73,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   let finishWait: (() => void) | null = null
   // the intro cards after Begin, and how far they have faded up (0..1)
   let intro: { spec: IntroSpec; k: number } | null = null
+  let introBox: ScreenRect | null = null
   let skipIntro = false
   let finishIntro: (() => void) | null = null
   // the composed still (desk, title, paper), kept so a flash only repaints an overlay on top
@@ -100,7 +101,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       const top = insetPx(el, '--ft-hud-top', 70)
       const bottom = insetPx(el, '--ft-hud-bottom', wide ? 100 : 110)
       const pad = Math.min(W, H) * 0.04
-      drawIntroSpread(g, { x: pad, y: top + pad * 0.5, w: W - 2 * pad, h: H - top - bottom - pad }, intro.spec, intro.k, !reduced)
+      introBox = drawIntroSpread(g, { x: pad, y: top + pad * 0.5, w: W - 2 * pad, h: H - top - bottom - pad }, intro.spec, intro.k, !reduced)
     }
     if (title) drawTitleOver(g, W, H, title, current)
     if (sheet) {
@@ -269,6 +270,8 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       return { x: b.x + s.u0 * b.w, y: b.y + s.v0 * b.h, w: (s.u1 - s.u0) * b.w, h: (s.v1 - s.v0) * b.h }
     },
     getPaperRect() {
+      // during the intro, the paper on the desk is the two cards
+      if (intro && !sheet) return introBox ? { ...introBox } : null
       return sheet && paperBox ? { ...paperBox } : null
     },
     redrawMessage(s) {

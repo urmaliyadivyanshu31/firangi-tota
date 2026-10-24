@@ -195,9 +195,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       if (!alive()) return
       if (screen === 'day') syncHudInsets()
       else if (screen === 'intro' && intro?.started) {
-        // the cards re-lay for the screen's new shape (after the stage has taken its new size)
+        // the cards re-lay for the screen's new shape (after the stage has taken its new size),
+        // and the slip follows them once the camera has re-fitted
         syncIntroInsets()
-        void desk?.intro(introSpecFor(intro.era, getLang()))
+        void desk?.intro(introSpecFor(intro.era, getLang())).then(placeIntroChip)
+        window.setTimeout(placeIntroChip, 600)
       }
     }, screen === 'intro' ? 220 : 60)
   })
@@ -684,6 +686,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const spec = introSpecFor(it.era, lang)
     renderIntro(ui, { era: it.era, lang, you: spec.you, tota: spec.tota, settled: it.settled }, { go: continueIntro, tap: tapIntro })
     syncIntroInsets()
+    if (it.settled) placeIntroChip()
     // a language change redraws the cards on the desk in the new language, and the agarbatti on
     // the slip (drawn again from the top) starts the wait over
     if (it.started) void desk?.intro(spec)
@@ -704,8 +707,26 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     await guard(Promise.race([d ? d.intro(introSpecFor(it.era, getLang())) : Promise.resolve(), deskSwapped.promise]), INTRO_GUARD_MS)
     if (stale()) return
     it.settled = true
+    placeIntroChip()
     setIntroSettled(ui)
     armIntroTimer()
+  }
+
+  /**
+   * On a wide screen the Continue slip sits just under the cards (where the stage says they are);
+   * on a phone, or when there is no room under them, it stays along the bottom.
+   */
+  function placeIntroChip(): void {
+    const foot = ui.querySelector<HTMLElement>('.intro__foot')
+    if (!foot || screen !== 'intro') return
+    const W = window.innerWidth || document.documentElement.clientWidth
+    const H = window.innerHeight || document.documentElement.clientHeight
+    const r = W > H ? desk?.getPaperRect() ?? null : null
+    const goH = foot.querySelector('.intro__go')?.getBoundingClientRect().height || 60
+    const top = r && r.h > 0 ? Math.round(r.y + r.h + 14) : 0
+    const under = top > 0 && top + goH <= H - 6
+    foot.classList.toggle('is-under', under)
+    foot.style.top = under ? `${top}px` : ''
   }
 
   function clearIntroTimer(): void {
@@ -733,14 +754,21 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     startChapter(it.era, it.difficulty) // its leave() sends the cards off the desk
   }
 
-  /** The stage keeps the cards clear of the plaques (top right) and the Continue slip. */
+  /**
+   * The stage keeps the cards clear of the plaques (top right) and the Continue slip: along the
+   * bottom on a phone; on a wide screen, room for the slip just under the cards, so the pair and
+   * its slip sit centred together.
+   */
   function syncIntroInsets(): void {
     const el = root.stage
+    const W = window.innerWidth || document.documentElement.clientWidth
     const H = window.innerHeight || document.documentElement.clientHeight
     const dock = controls.getBoundingClientRect()
     const go = ui.querySelector('.intro__go')?.getBoundingClientRect()
+    const goH = go && go.height > 0 ? go.height : 60
+    const bottom = W > H ? goH + 30 : go && go.height > 0 ? H - go.top + 12 : 96
     el.style.setProperty('--ft-hud-top', `${Math.ceil(dock.height > 0 ? dock.bottom + 8 : 66)}px`)
-    el.style.setProperty('--ft-hud-bottom', `${Math.ceil(go && go.height > 0 ? H - go.top + 12 : 96)}px`)
+    el.style.setProperty('--ft-hud-bottom', `${Math.ceil(bottom)}px`)
     el.style.setProperty('--ft-hud-left', '0px')
     el.style.setProperty('--ft-hud-right', '0px')
   }

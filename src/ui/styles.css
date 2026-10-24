@@ -407,7 +407,10 @@ a { color: inherit; }
   background: linear-gradient(rgba(var(--soot), 0), rgba(var(--soot), .42));
   pointer-events: none;
 }
-.intro__go { pointer-events: auto; min-width: 210px; padding: 8px 18px 15px 28px; gap: 4px; animation: card-in .45s .8s var(--ease-out) both; }
+.intro__foot.is-under { bottom: auto; padding-top: 0; padding-bottom: 0; background: none; }
+/* the slip comes up once the cards are down (until then a tap, Space or Enter still goes on) */
+.intro__go { pointer-events: auto; min-width: 210px; padding: 8px 18px 15px 28px; gap: 4px; opacity: 0; }
+.is-settled .intro__go { opacity: 1; animation: card-in .4s var(--ease-out) both; }
 .intro__go .icon { width: 20px; height: 20px; opacity: .8; }
 /* ada: the agarbatti along the slip's foot is lit once the cards are down, and burns right to left */
 .intro__fuse { position: absolute; left: 24px; right: 24px; bottom: 8px; height: 0; }
@@ -424,6 +427,11 @@ a { color: inherit; }
 }
 .is-settled .intro__burn { animation: intro-burn 6s linear forwards; }
 .is-settled .intro__ember { opacity: 1; animation: intro-ember 6s linear forwards; }
+@media (min-width: 900px) and (min-height: 600px) {
+  .intro__go { min-width: 290px; min-height: 68px; padding: 10px 26px 19px 36px; font-size: 25px; gap: 6px; }
+  .intro__go .icon { width: 26px; height: 26px; }
+  .intro__fuse { left: 32px; right: 32px; bottom: 9px; }
+}
 @media (max-height: 500px) and (orientation: landscape) {
   .intro__foot { padding-top: 6px; padding-bottom: max(6px, env(safe-area-inset-bottom)); background: none; }
   .intro__go { min-height: 44px; padding-top: 4px; padding-bottom: 12px; }

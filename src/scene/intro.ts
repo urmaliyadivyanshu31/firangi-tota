@@ -5,16 +5,16 @@
 // stage's tweens, so skip() finishes it at once; under reduced motion the cards simply fade in.
 import * as THREE from 'three'
 import { BLOTTER_TOP, disposeTree, material, type Pose } from './props'
-import { CARD_ASPECT, CLIP_EDGE, CLIP_SCALE, YOU_PHOTO, artFor, clipPath, drawPhotoPrint, drawTotaCard, drawYouCard } from './intro-card'
+import { CLIP_EDGE, CLIP_SCALE, artFor, cardAspect, clipPath, drawPhotoPrint, drawTotaCard, drawYouCard, photoRect } from './intro-card'
 import { TIER_SETTINGS } from './quality'
 import { fitPose, rectOnDesk, type NdcBox } from './shots'
 import { toTexture } from './textures'
 import { ease, lerp, type Tweens } from './tween'
 import type { IntroSpec, QualityTier, StageCueName } from './types'
 
-/** A card's size on the desk, in metres: about a large index card. */
+/** A card's width on the desk, in metres (about a large index card); its height follows the screen's shape. */
 export const CARD_W = 0.2
-export const CARD_H = CARD_W * CARD_ASPECT
+const cardH = (screenAspect: number) => CARD_W * cardAspect(screenAspect)
 const Y_YOU = BLOTTER_TOP + 0.0016
 const Y_TOTA = BLOTTER_TOP + 0.0024
 const GLOW = 0.17 // a little light of their own, so the cards read in a dim room
@@ -27,17 +27,33 @@ export interface CardPlace {
   yaw: number
 }
 
-/** Where the two cards rest: one above the other on a tall screen, side by side on a wide one. */
+/**
+ * Where the two cards rest: one above the other on a tall screen (squared up, so the pair is no
+ * wider than a card and the cards come out as big as the width allows), side by side on a wide one.
+ */
 export function introLayout(aspect: number): { you: CardPlace; tota: CardPlace } {
-  if (aspect < 0.9) return { you: { x: -0.01, z: -0.05, yaw: 0.03 }, tota: { x: 0.012, z: 0.108, yaw: -0.035 } }
+  if (aspect < 0.9) {
+    const half = cardH(aspect) / 2 + 0.011
+    // (a little toward the player, clear of what stands at the back of the desk)
+    return { you: { x: -0.003, z: 0.055 - half, yaw: 0.012 }, tota: { x: 0.003, z: 0.055 + half, yaw: -0.012 } }
+  }
   return { you: { x: -0.106, z: 0.025, yaw: 0.04 }, tota: { x: 0.106, z: 0.035, yaw: -0.03 } }
+}
+
+/** Both cards' corners at rest, lying on the desk. */
+function restCorners(aspect: number): THREE.Vector3[] {
+  const L = introLayout(aspect)
+  const h = cardH(aspect)
+  return [L.you, L.tota].flatMap((p) => rectOnDesk(new THREE.Vector3(p.x, 0, p.z), CARD_W, h, p.yaw, 0.003))
 }
 
 /** The camera over the two cards, filling `box` (the screen minus the HUD) with them. */
 export function introPose(aspect: number, box: NdcBox): Pose {
   const L = introLayout(aspect)
-  const pts = [L.you, L.tota].flatMap((p) => rectOnDesk(new THREE.Vector3(p.x, 0, p.z), CARD_W * 1.03, CARD_H * 1.05, p.yaw, 0.003))
-  const dir = new THREE.Vector3(0, 1, aspect < 0.9 ? 0.3 : 0.52).normalize()
+  const h = cardH(aspect)
+  const pts = [L.you, L.tota].flatMap((p) => rectOnDesk(new THREE.Vector3(p.x, 0, p.z), CARD_W * 1.03, h * 1.04, p.yaw, 0.003))
+  // a phone looks nearly straight down, so the far card is not drawn smaller than the near one
+  const dir = new THREE.Vector3(0, 1, aspect < 0.9 ? 0.16 : 0.5).normalize()
   return fitPose({ points: pts, dir, aspect, box })
 }
 
@@ -56,6 +72,10 @@ export interface IntroPlay {
 
 export interface IntroCards {
   group: THREE.Group
+  /** The cards were cut for a screen of this shape (tall or wide); a turned screen needs new ones. */
+  fits(aspect: number): boolean
+  /** Both cards' corners at rest, in world space, for their place on screen. */
+  corners(): THREE.Vector3[]
   /** Draws both cards (and the photo) for `s`; a portrait still loading leaves an empty mount. */
   draw(s: IntroSpec): void
   /** Lays both cards at rest for the screen's shape, visible, with no motion. */
@@ -91,8 +111,10 @@ function shadowTexture(): THREE.CanvasTexture {
   return toTexture(c, { color: false })
 }
 
-export function createIntroCards(tier: QualityTier): IntroCards {
+export function createIntroCards(tier: QualityTier, screenAspect: number): IntroCards {
   const s = TIER_SETTINGS[tier]
+  const ratio = cardAspect(screenAspect)
+  const CARD_H = CARD_W * ratio
   const group = new THREE.Group()
   group.name = 'intro-cards'
   group.visible = false
@@ -101,7 +123,7 @@ export function createIntroCards(tier: QualityTier): IntroCards {
   const makeCard = (w: number) => {
     const canvas = document.createElement('canvas')
     canvas.width = w
-    canvas.height = Math.round(w * CARD_ASPECT)
+    canvas.height = Math.round(w * ratio)
     const tex = toTexture(canvas, { anisotropy: s.anisotropy })
     const mat = material(tier, { map: tex, shininess: 4, specular: 0x0a0a0a })
     mat.emissiveMap = tex
@@ -119,22 +141,24 @@ export function createIntroCards(tier: QualityTier): IntroCards {
   const you = makeCard(CARD_PX[tier])
   const tota = makeCard(CARD_PX[tier])
   // the buff card lies nearer the lamp: a shade darker, so it keeps its colour in the light
-  you.mat.color.setScalar(0.8)
+  you.mat.color.setScalar(0.72)
+  you.mat.emissive.setScalar(GLOW * 0.55)
   you.holder.position.y = Y_YOU
   tota.holder.position.y = Y_TOTA
 
   // the YOU photo: its own print, lying on the card
-  const pw = CARD_W * YOU_PHOTO.w
-  const ph = CARD_H * YOU_PHOTO.h
+  const pr = photoRect(CARD_W, CARD_H)
+  const pw = pr.w
+  const ph = pr.h
   const photoCanvas = document.createElement('canvas')
   photoCanvas.width = PHOTO_PX[tier]
   photoCanvas.height = Math.round(PHOTO_PX[tier] * (ph / pw))
   const photoTex = toTexture(photoCanvas, { anisotropy: s.anisotropy })
-  const photoMat = material(tier, { map: photoTex, color: 0xd6d6d6, shininess: 6, specular: 0x101010 })
+  const photoMat = material(tier, { map: photoTex, color: 0xc2c2c2, shininess: 6, specular: 0x101010 })
   photoMat.emissiveMap = photoTex
   photoMat.emissive.setRGB(GLOW, GLOW, GLOW)
   const photo = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph).rotateX(-Math.PI / 2), photoMat)
-  const photoRest = new THREE.Vector3((YOU_PHOTO.u0 + YOU_PHOTO.w / 2 - 0.5) * CARD_W, 0.0006, (YOU_PHOTO.v0 + YOU_PHOTO.h / 2 - 0.5) * CARD_H)
+  const photoRest = new THREE.Vector3(pr.x + pw / 2 - CARD_W / 2, 0.0006, pr.y + ph / 2 - CARD_H / 2)
   const PHOTO_YAW = -0.03
   photo.position.copy(photoRest)
   photo.rotation.y = PHOTO_YAW
@@ -212,6 +236,8 @@ export function createIntroCards(tier: QualityTier): IntroCards {
 
   return {
     group,
+    fits: (aspect) => cardAspect(aspect) === ratio,
+    corners: () => restCorners(screenAspect),
     draw(s2) {
       spec = s2
       const gy = you.canvas.getContext('2d')

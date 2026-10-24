@@ -432,11 +432,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     introCards = null
   }
 
-  /** The intro cards on this world, made the first time they are needed. */
+  /** The intro cards on this world, made the first time they are needed (and again for a turned screen). */
   const introCardsOn = (w: World): IntroCards => {
-    if (introCards && introCards.group.parent === w.scene) return introCards
+    if (introCards && introCards.group.parent === w.scene && introCards.fits(rig.aspect())) return introCards
     dropIntroCards()
-    const c = createIntroCards(tier)
+    const c = createIntroCards(tier, rig.aspect())
     w.scene.add(c.group)
     introCards = c
     return c
@@ -1174,10 +1174,15 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     await tweens.wait(300)
   }
 
-  // The margin is a share of the width, so a short landscape screen takes a thinner one (or the
-  // cards would lose a third of the little height there is), and so does a phone, which is
-  // width-bound: there every pixel of card width is type size.
-  const introPoseFn: PoseFn = (aspect) => introPose(aspect, box(aspect < 0.9 ? 0.03 : 0.05 * Math.min(1, 1.2 / aspect)))
+  // A phone is width-bound: a thin margin, since every pixel of card width is type size. A wide
+  // screen keeps the pair to about four fifths of its width, centred between the plaques and the
+  // Continue slip (which the app then sets just under the cards).
+  const introPoseFn: PoseFn = (aspect) => {
+    if (aspect < 0.9) return introPose(aspect, box(0.02))
+    const b = box(0.012)
+    const hw = aspect > 1.9 ? 0.9 : 0.8
+    return introPose(aspect, { ...b, x0: Math.max(b.x0, -hw), x1: Math.min(b.x1, hw) })
+  }
 
   const introPlay = (token: number): IntroPlay => {
     const gen = worldGen
@@ -1449,6 +1454,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     getPaperRect() {
       if (lost) return fallback?.getPaperRect() ?? null
       const w = world
+      // during the intro, the paper on the desk is the two cards
+      if (w && introSpec && introCards?.shown() && !msg?.shown) return screenRect(introCards.corners())
       if (!w || !msg?.shown || !w.sheet.group.visible) return null
       const flipped = w.sheet.flip() > 0.5
       return screenRect([[0, 0], [1, 0], [1, 1], [0, 1]].map(([u = 0, v = 0]) => (flipped ? w.sheet.backPointAt(u, v) : w.sheet.pointAt(u, v))))
