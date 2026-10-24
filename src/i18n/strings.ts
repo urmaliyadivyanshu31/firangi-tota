@@ -40,6 +40,7 @@ const en = {
   // Intro
   introYou: 'You',
   forgerLabel: 'Tota',
+  introTota: 'The Tota',
   chaptersLabel: 'Chapters',
   homeCredits: 'Inspired by Politburo or Parrot · Credits',
   introHow: 'Check each message against the case file. Stamp ASLI if genuine, TOTA if forged.',
@@ -141,6 +142,7 @@ const hi: Strings = {
 
   introYou: 'आप',
   forgerLabel: 'तोता',
+  introTota: 'तोता',
   chaptersLabel: 'अध्याय',
   homeCredits: 'Politburo or Parrot से प्रेरित · क्रेडिट',
   introHow: 'हर संदेश को केस फ़ाइल से मिलाएँ। सच्चा हो तो असली, जाली हो तो तोता।',
@@ -221,7 +223,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'langShort', 'premise', 'dailyScore', 'dailyTomorrow', 'dailyNext', 'shareGrid', 'dayLabel',
   'dayTitle', 'skip', 'blankFact', 'sheetPetitionHead', 'sheetRadioHead',
   'sheetTelegramHead', 'source', 'sound', 'listen', 'listenStop', 'voiceError',
-  'voiceStyle',
+  'voiceStyle', 'introTota',
 ]
 
 export function t(key: keyof Strings, lang: Lang): string {

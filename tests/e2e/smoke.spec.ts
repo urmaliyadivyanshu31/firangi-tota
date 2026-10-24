@@ -7,6 +7,7 @@ const START = '/?seed=1&lang=hi&tier=low&inspect'
 
 interface FtState {
   screen: string
+  intro: { settled: boolean } | null
   readable: boolean
   revealed: boolean
   desk: 'stage' | 'fallback' | null
@@ -34,11 +35,14 @@ test.afterEach(() => {
   expect(errors, 'console errors').toEqual([])
 })
 
+/** Begin opens the intro (who you are, who the Tota is); its Continue slip goes on to day 1. */
 async function begin1857Easy(page: Page): Promise<void> {
   await expect(page.locator('.screen--main')).toBeVisible()
   await page.locator('[data-era="delhi-1857"]').click()
   await page.locator('[data-mode="easy"]').click()
   await page.locator('[data-action="begin"]').click()
+  await expect(page.locator('.screen--intro')).toBeVisible()
+  await page.locator('[data-action="intro-go"]').click()
   await expect(page.locator('.screen--day')).toBeVisible()
 }
 
@@ -87,11 +91,42 @@ test('loads in Hindi, begins 1857 Easy and the paper becomes readable', async ({
   expect(paper!.y + paper!.h).toBeLessThanOrEqual(stampsTop + 1)
 })
 
+test('Begin shows who you are and who the Tota is, with their portraits, then goes on by itself', async ({ page }) => {
+  const art = new Map<string, number>()
+  page.on('response', (r) => {
+    const p = new URL(r.url()).pathname
+    if (p.startsWith('/art/')) art.set(p, r.status())
+  })
+  await page.goto('/?seed=1&lang=en&tier=low&inspect')
+  await expect(page.locator('.screen--main')).toBeVisible()
+  // the main page no longer carries the two lines, and no portrait loads before Begin
+  await expect(page.locator('.doc__line')).toHaveCount(0)
+  await page.waitForTimeout(500)
+  expect(art.size).toBe(0)
+  await page.locator('[data-era="bombay-1942"]').click()
+  await page.locator('[data-action="begin"]').click()
+  await expect(page.locator('.screen--intro')).toBeVisible()
+  await expect(page.locator('.intro__copy')).toContainText('The Tota:')
+  await expect.poll(() => ft(page, (f) => f.intro?.settled ?? null), { timeout: 15_000 }).toBe(true)
+  expect(art.get('/art/bombay-1942-you.webp')).toBe(200)
+  expect(art.get('/art/bombay-1942-tota.webp')).toBe(200)
+  // about 6 s after the cards settle, day 1 begins without a tap
+  await expect(page.locator('.screen--day')).toBeVisible({ timeout: 12_000 })
+  await readable(page)
+  expect(await ft(page, (f) => f.play?.era.id)).toBe('bombay-1942')
+})
+
 test('no horizontal scroll at 360 px', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 })
   await page.goto(START)
   await expect(page.locator('.screen--main')).toBeVisible()
   expect(await noHorizontalScroll(page)).toBe(true)
+  await page.locator('[data-action="begin"]').click()
+  await expect(page.locator('.screen--intro')).toBeVisible()
+  expect(await noHorizontalScroll(page)).toBe(true)
+  await page.locator('[data-action="intro-go"]').click()
+  await expect(page.locator('.screen--day')).toBeVisible()
+  await page.locator('[data-action="quit"]').click()
   await begin1857Easy(page)
   await readable(page)
   expect(await noHorizontalScroll(page)).toBe(true)
@@ -185,6 +220,9 @@ test('plays offline after the first visit (read-aloud excepted)', async ({ page,
   await readable(page)
   await stampAndReveal(page)
   await expect.poll(async () => Object.values(await cachedUrls()).flat().includes('/audio/delhi-1857.m4a'), { timeout: 30_000 }).toBe(true)
+  // the intro's two portraits were fetched at Begin and kept for next time
+  await expect.poll(async () => Object.values(await cachedUrls()).flat().filter((u) => u.startsWith('/art/delhi-1857-')).length, { timeout: 30_000 }).toBe(2)
+  expect(precache.some((u) => u.startsWith('/art/'))).toBe(false)
   await expect.poll(async () => Object.values(await cachedUrls()).flat().some((u) => /\/assets\/note-hand-.*\.woff2$/.test(u)), { timeout: 30_000 }).toBe(true)
   expect(Object.values(await cachedUrls()).flat().some((u) => u.startsWith('/api/'))).toBe(false)
   await context.setOffline(true)

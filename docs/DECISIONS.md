@@ -138,3 +138,13 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - A wrong stamp plays out over a few seconds instead of all at once: the alarm sounds first, then
   the room reacts in time with it (red light, shaking, darkness), with more sounds, before the
   verdict turns over on the paper.
+
+## 2026-10-24: Who you are and who the Tota is, as pictures
+
+- The "You" and "Tota" lines left the main page. After Begin, before day 1, the room shows them as
+  two illustrated cards on the desk: YOU as a dossier card with a portrait under a paper clip, and
+  THE TOTA as a police notice with a small green parrot stamp. It plays on every Begin, a tap goes
+  on, and it goes on by itself a few seconds after the cards settle.
+- The owner chose original period-print art, one pair of portraits per chapter (eight in all), in
+  one style: an Indian Company-school print on cream paper, in muted saffron, indigo, maroon and
+  ink. No real person's likeness, no religious symbols, and every Tota carries a small green parrot.

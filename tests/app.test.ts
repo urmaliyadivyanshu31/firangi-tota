@@ -11,7 +11,7 @@ import { forgetLang, setLang } from '../src/i18n/lang'
 import { strings } from '../src/i18n/strings'
 import type { Voice, VoiceState } from '../src/audio/voice'
 import { VOICES } from '../src/content/voices'
-import type { RevealSpec, ScreenRect, SheetSpec, Stage, StageCueName } from '../src/scene/index'
+import type { IntroSpec, RevealSpec, ScreenRect, SheetSpec, Stage, StageCueName } from '../src/scene/index'
 
 // ---------------------------------------------------------------- mocks: content, stage, audio
 
@@ -33,6 +33,8 @@ const m = vi.hoisted(() => {
     reveal: vi.fn((_s: RevealSpec) => Promise.resolve()),
     getSourceRect: vi.fn((): ScreenRect | null => null),
     getPaperRect: vi.fn((): ScreenRect | null => null),
+    intro: vi.fn((_s: IntroSpec) => Promise.resolve()),
+    clearIntro: vi.fn(() => Promise.resolve()),
   })
   return {
     fakeStage,
@@ -47,6 +49,8 @@ const m = vi.hoisted(() => {
       reveal: vi.fn((_s: RevealSpec) => Promise.resolve()),
       getSourceRect: vi.fn((): ScreenRect | null => null),
       getPaperRect: vi.fn((): ScreenRect | null => null),
+      intro: vi.fn((_s: IntroSpec) => Promise.resolve()),
+      clearIntro: vi.fn(() => Promise.resolve()),
     },
     mountFallback: vi.fn(),
     audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn(), setHidden: vi.fn() },
@@ -135,11 +139,17 @@ function queueFor(id: EraId, d: Difficulty, seed: number): Message[] {
   return createChapter(eraById(id), d, mulberry32(seed)).queue
 }
 
-/** The main page: choose the chapter, choose the days, Begin → day 1. */
+/** Begin, then on past the intro cards (who you are, who the Tota is) with its Continue slip. */
+function begin(ui: HTMLElement): void {
+  click(ui, '[data-action="begin"]')
+  click(ui, '[data-action="intro-go"]')
+}
+
+/** The main page: choose the chapter, choose the days, Begin, past the intro → day 1. */
 async function toDay1(ui: HTMLElement, id: EraId = 'delhi-1857', d: Difficulty = 'easy'): Promise<void> {
   click(ui, `[data-era="${id}"]`)
   click(ui, `[data-mode="${d}"]`)
-  click(ui, '[data-action="begin"]')
+  begin(ui)
   await flush()
 }
 
@@ -476,7 +486,7 @@ describe('the main page', () => {
     expect($(ui, 'article.doc')!.classList.contains('doc--note')).toBe(true)
     click(ui, '[data-mode="medium"]')
     expect(localStorage.getItem('ft:difficulty')).toBe('"medium"')
-    click(ui, '[data-action="begin"]')
+    begin(ui)
     await flush()
     expect(text(ui)).toContain('Day 1 of 10')
     expect(m.stage.setEra).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'lahore-1929' }))
@@ -521,6 +531,185 @@ describe('the main page', () => {
     expect(dock('[data-action="sound"]')).not.toBeNull()
     click(ui, '[data-action="back"]')
     expect($(ui, '.screen--main')).not.toBeNull()
+  })
+})
+
+describe('the intro after Begin: who you are and who the Tota is', () => {
+  const lastIntro = () => m.stage.intro.mock.calls[m.stage.intro.mock.calls.length - 1]![0] as IntroSpec
+  const key = (k: string, o: KeyboardEventInit = {}) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...o }))
+
+  async function toIntro(ui: HTMLElement, id: EraId = 'delhi-1857'): Promise<void> {
+    click(ui, `[data-era="${id}"]`)
+    click(ui, '[data-mode="easy"]')
+    click(ui, '[data-action="begin"]')
+    await flush()
+  }
+
+  it('lays the two cards on the desk in the live room, then waits for a tap', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui)
+    expect($(ui, '.screen--intro')).not.toBeNull()
+    expect($(ui, '.screen--day')).toBeNull()
+    expect(m.stage.intro).toHaveBeenCalledTimes(1)
+    const s = lastIntro()
+    expect(s).toMatchObject({ era: 'delhi-1857', lang: 'en', you: { label: 'You', line: 'a clerk', art: '/art/delhi-1857-you.webp' }, tota: { label: 'The Tota', line: 'a rival', art: '/art/delhi-1857-tota.webp' } })
+    // the room is the scene: no day yet, no stamps; the plaques stay for sound and language
+    expect(m.stage.dayTitle).not.toHaveBeenCalled()
+    expect(dock('[data-action="sound"]')!.closest('.controls-dock')!.hasAttribute('hidden')).toBe(false)
+    // screen readers get both cards' words, and the cards are settled: the slip's agarbatti is lit
+    expect($(ui, '.intro__copy')!.textContent).toBe('You: a clerk.The Tota: a rival.')
+    expect($(ui, '.screen--intro.is-settled')).not.toBeNull()
+    $(ui, '.intro__tap')!.dispatchEvent(new Event('pointerdown'))
+    await flush()
+    expect($(ui, '.screen--day')).not.toBeNull()
+    expect(m.stage.clearIntro).toHaveBeenCalledTimes(1)
+    expect(m.stage.dayTitle).toHaveBeenCalledTimes(1)
+  })
+
+  it('a tap while the cards still move finishes their motion first', async () => {
+    let settle!: () => void
+    m.stage.intro.mockImplementation(() => new Promise<void>((r) => (settle = r)))
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui)
+    $(ui, '.intro__tap')!.dispatchEvent(new Event('pointerdown'))
+    expect(m.stage.skip).toHaveBeenCalledTimes(1)
+    expect($(ui, '.screen--intro')).not.toBeNull()
+    settle()
+    await flush()
+    $(ui, '.intro__tap')!.dispatchEvent(new Event('pointerdown'))
+    await flush()
+    expect($(ui, '.screen--day')).not.toBeNull()
+  })
+
+  it('Space or Enter goes on once the cards are down; a held key does not', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui)
+    key('Enter', { repeat: true })
+    expect($(ui, '.screen--intro')).not.toBeNull()
+    key(' ')
+    await flush()
+    expect($(ui, '.screen--day')).not.toBeNull()
+    // the same key never also skipped the day's title
+    expect(m.stage.skip).not.toHaveBeenCalled()
+  })
+
+  it('the Enter that pressed Begin never also skips the cards', async () => {
+    let settle!: () => void
+    m.stage.intro.mockImplementation(() => new Promise<void>((r) => (settle = r)))
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui) // one intro first, so its key handler is already listening
+    settle()
+    await flush()
+    click(ui, '[data-action="intro-go"]')
+    await flush()
+    click(ui, '[data-action="home"], [data-action="quit"]')
+    await flush()
+    m.stage.skip.mockClear()
+    key('Enter')
+    await flush()
+    expect($(ui, '.screen--intro')).not.toBeNull()
+    expect(m.stage.skip).not.toHaveBeenCalled()
+  })
+
+  it('goes on by itself about 6 s after the cards settle', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      const { ui } = boot('?lang=en&seed=3')
+      click(ui, '[data-action="begin"]')
+      await vi.advanceTimersByTimeAsync(10)
+      expect($(ui, '.screen--intro.is-settled')).not.toBeNull()
+      await vi.advanceTimersByTimeAsync(5900)
+      expect($(ui, '.screen--intro')).not.toBeNull()
+      await vi.advanceTimersByTimeAsync(200)
+      expect($(ui, '.screen--day')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('the wait counts only while the tab is visible, and starts over when it comes back', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      const { ui } = boot('?lang=en&seed=3')
+      click(ui, '[data-action="begin"]')
+      await vi.advanceTimersByTimeAsync(3000)
+      setHidden(true)
+      await vi.advanceTimersByTimeAsync(20_000)
+      expect($(ui, '.screen--intro')).not.toBeNull()
+      setHidden(false)
+      await vi.advanceTimersByTimeAsync(5900)
+      expect($(ui, '.screen--intro')).not.toBeNull()
+      await vi.advanceTimersByTimeAsync(200)
+      expect($(ui, '.screen--day')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('never stalls on cards that do not settle: the wait starts after a guard', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      m.stage.intro.mockImplementation(() => new Promise<void>(() => undefined))
+      const { ui } = boot('?lang=en&seed=3')
+      click(ui, '[data-action="begin"]')
+      await vi.advanceTimersByTimeAsync(4900)
+      expect($(ui, '.screen--intro.is-settled')).toBeNull()
+      await vi.advanceTimersByTimeAsync(200)
+      expect($(ui, '.screen--intro.is-settled')).not.toBeNull()
+      await vi.advanceTimersByTimeAsync(6100)
+      expect($(ui, '.screen--day')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('the language switch redraws the cards on the desk and the words in the new language', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui)
+    dock('[data-lang="hi"]')!.click()
+    expect(lastIntro()).toMatchObject({ lang: 'hi', you: { label: 'आप', line: 'एक मुंशी' }, tota: { label: 'तोता', line: 'एक दुश्मन' } })
+    expect($(ui, '.intro__copy')!.textContent).toBe('आप: एक मुंशी।तोता: एक दुश्मन।')
+    expect($(ui, '.intro__go')!.textContent).toBe(strings.hi.continue)
+    expect($(ui, '.screen--intro')).not.toBeNull()
+  })
+
+  it('Continue goes straight to day 1, even while the cards still move', async () => {
+    m.stage.intro.mockImplementation(() => new Promise<void>(() => undefined))
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui, 'bombay-1942')
+    click(ui, '[data-action="intro-go"]')
+    await flush()
+    expect(text(ui)).toContain('Day 1 of 7')
+    expect(m.stage.clearIntro).toHaveBeenCalledTimes(1)
+  })
+
+  it('a lost WebGL context mid-intro shows the cards on the 2D desk at once', async () => {
+    let settle!: () => void
+    m.stage.intro.mockImplementation(() => new Promise<void>((r) => (settle = r)))
+    const { ui, stage } = boot('?lang=en&seed=3')
+    await toIntro(ui)
+    stage.dispatchEvent(new CustomEvent('ft:stage-lost', { cancelable: true, detail: { era: 'delhi-1857', reason: 'context-lost' } }))
+    expect(m.fallback.intro).toHaveBeenCalledWith(expect.objectContaining({ era: 'delhi-1857' }))
+    expect(m.fallback.skip).toHaveBeenCalled()
+    await flush()
+    expect($(ui, '.screen--intro.is-settled')).not.toBeNull() // the dead stage's promise is not waited for
+    settle()
+    click(ui, '[data-action="intro-go"]')
+    await flush()
+    expect(m.fallback.clearIntro).toHaveBeenCalled()
+    expect($(ui, '.screen--day')).not.toBeNull()
+  })
+
+  it('plays on every Begin', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toIntro(ui)
+    click(ui, '[data-action="intro-go"]')
+    await flush()
+    click(ui, '[data-action="quit"]')
+    await flush()
+    await toIntro(ui, 'lahore-1929')
+    expect(m.stage.intro).toHaveBeenCalledTimes(2)
+    expect(lastIntro().era).toBe('lahore-1929')
   })
 })
 
@@ -679,7 +868,7 @@ describe('the 3D stage (Ruling R10)', () => {
       const { ui } = boot('?lang=en&seed=3')
       click(ui, '[data-era="delhi-1857"]')
       click(ui, '[data-mode="easy"]')
-      click(ui, '[data-action="begin"]')
+      begin(ui)
       await vi.advanceTimersByTimeAsync(10)
       const verdict = right(queueFor('delhi-1857', 'easy', 3)[0]!)
       click(ui, `[data-stamp="${verdict}"]`)
@@ -703,7 +892,7 @@ describe('the 3D stage (Ruling R10)', () => {
       const { ui } = boot('?lang=en&seed=3')
       click(ui, '[data-era="delhi-1947"]')
       click(ui, '[data-mode="easy"]')
-      click(ui, '[data-action="begin"]')
+      begin(ui)
       await vi.advanceTimersByTimeAsync(10)
       expect(m.stage.showMessage).toHaveBeenCalledTimes(1)
       await vi.advanceTimersByTimeAsync(5000) // past the old 3.5 s guard
@@ -722,7 +911,7 @@ describe('the 3D stage (Ruling R10)', () => {
       m.stage.showMessage.mockImplementation(() => new Promise<void>(() => undefined))
       const { ui } = boot('?lang=en&seed=3')
       click(ui, '[data-mode="easy"]')
-      click(ui, '[data-action="begin"]') // not toDay1: its flush() waits on the faked setTimeout
+      begin(ui) // not toDay1: its flush() waits on the faked setTimeout
       await vi.advanceTimersByTimeAsync(8500)
       expect(stampBtn(ui, 'asli').disabled).toBe(true)
       await vi.advanceTimersByTimeAsync(1000)

@@ -21,7 +21,7 @@ import type { Voice, VoiceState } from './audio/voice'
 import { DEFAULT_VOICE, VOICES, voiceChoices, type VoiceChoice } from './content/voices'
 import {
   STAGE_LOST_EVENT, loadStage, mountFallback,
-  type DayTitle, type EraDressing, type Fallback, type FlashKind, type QualityTier, type RevealSpec, type ScreenRect, type SheetSpec, type Stage, type StageCueName, type StampKind,
+  type DayTitle, type EraDressing, type Fallback, type FlashKind, type IntroSpec, type QualityTier, type RevealSpec, type ScreenRect, type SheetSpec, type Stage, type StageCueName, type StampKind,
 } from './scene/index'
 import { controlCluster, setSoundToggle } from './ui/controls'
 import { h } from './ui/h'
@@ -30,6 +30,7 @@ import { buildReveal, kindLine, messageSources } from './ui/reveal'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
 import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
+import { renderIntro, setIntroSettled } from './ui/screens/intro'
 import { MODE_KEY, renderMain, suggestedEra, type Best } from './ui/screens/main'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
@@ -71,12 +72,19 @@ interface Desk {
   /** Where the back's source line and the paper are on screen, for the buttons over and under them. */
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
+  /** After Begin: the YOU and Tota cards on the desk; resolves once they have settled. */
+  intro(s: IntroSpec): Promise<void>
+  clearIntro(): Promise<void>
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
 // The paper's arrival. The 1947 telegram types itself out over 5-6 s by design, so the arrival gets
 // the long guard: with the short one the stamps woke before the telegram could be read.
 const ARRIVAL_GUARD_MS = 9000
+// The intro after Begin: the cards load their portraits (about a second at most), slide in and
+// settle, then the game goes on by itself after INTRO_AUTO_MS unless a tap goes on sooner.
+const INTRO_GUARD_MS = 5000
+const INTRO_AUTO_MS = 6000
 
 
 type Play =
@@ -85,7 +93,7 @@ type Play =
 
 interface DailyRecord { era: EraId; number: number; results: boolean[] }
 
-type Screen = 'main' | 'day' | 'end' | 'credits'
+type Screen = 'main' | 'intro' | 'day' | 'end' | 'credits'
 
 export function startApp(root: AppRoot, env: AppEnv): void {
   const ui = root.ui
@@ -142,6 +150,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // the verdict as the paper's back shows it, and whether it ends the chapter
   let paper: { spec: RevealSpec; end?: 'caught' | 'survived' } | null = null
 
+  // the intro after Begin, and its wait before going on by itself
+  let intro: { era: Era; difficulty: Difficulty; started: boolean; settled: boolean } | null = null
+  let introTimer = 0
+
   // the agarbatti
   let timerArmed = false
   let timerRaf = 0
@@ -166,12 +178,28 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // a hidden tab makes no sound: the audio context sleeps and wakes (unless muted) on return
     audio.setHidden(document.hidden === true)
     syncPause()
+    // the intro's wait counts only while it can be seen; back on the tab, it starts over
+    if (screen === 'intro' && intro?.settled) {
+      if (document.hidden) clearIntroTimer()
+      else {
+        setIntroSettled(ui)
+        armIntroTimer()
+      }
+    }
   })
   let insetTimer = 0
   window.addEventListener('resize', () => {
     // after the layout settles (the 900 px switch moves the case file), tell the stage again
     window.clearTimeout(insetTimer)
-    insetTimer = window.setTimeout(() => alive() && screen === 'day' && syncHudInsets(), 60)
+    insetTimer = window.setTimeout(() => {
+      if (!alive()) return
+      if (screen === 'day') syncHudInsets()
+      else if (screen === 'intro' && intro?.started) {
+        // the cards re-lay for the screen's new shape (after the stage has taken its new size)
+        syncIntroInsets()
+        void desk?.intro(introSpecFor(intro.era, getLang()))
+      }
+    }, screen === 'intro' ? 220 : 60)
   })
 
   root.stage.addEventListener(STAGE_LOST_EVENT, (e) => {
@@ -201,6 +229,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       get desk() { return desk ? (desk.cues ? 'stage' : 'fallback') : null },
       /** Where the paper is on screen (CSS px), for layout checks. */
       paperRect: () => desk?.getPaperRect() ?? null,
+      /** The intro after Begin: null, or whether its cards have settled. */
+      get intro() { return intro ? { settled: intro.settled } : null },
     }
   }
 
@@ -247,6 +277,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       // A desk that arrives once the paper was readable (a lost context) shows it at once; during
       // the arrival, arrive() brings it in on whichever desk is there.
       if (readable || revealed) catchUp(p)
+    } else if (screen === 'intro' && intro?.started) {
+      // a desk that arrives during the intro (a lost context) shows the cards at once
+      void desk.intro(introSpecFor(intro.era, getLang()))
+      desk.skip()
     } else if (screen === 'main') {
       void desk.establish()
     }
@@ -322,6 +356,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       skip: () => s.skip(),
       setPaused: (p) => s.setPaused(p),
       dispose: () => s.dispose(),
+      intro: (x) => s.intro(x),
+      clearIntro: () => s.clearIntro(),
       cues: true,
     }
   }
@@ -343,6 +379,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       skip: () => f.skip(),
       setPaused: () => undefined,
       dispose: () => f.dispose(),
+      intro: (x) => f.intro(x),
+      clearIntro: () => f.clearIntro(),
       cues: false,
     }
   }
@@ -518,6 +556,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   /** Ends whatever was in play. */
   function leave(): void {
     gen++
+    if (intro) {
+      intro = null
+      void desk?.clearIntro()
+    }
+    clearIntroTimer()
     play = null
     readable = false
     revealed = false
@@ -572,7 +615,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     syncPause()
     show('main', () => renderMain(ui, { eras: ERAS, best: bests(), selected, difficulty }, {
       select: (id) => {
-        if (id === selected) return
+        if (id === selected || screen !== 'main') return // (not while the page slides away after Begin)
         selected = id
         void ensureStage()
         setDeskEra(id)
@@ -582,15 +625,16 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         redraw()
       },
       difficulty: (d) => {
-        if (d === difficulty) return
+        if (d === difficulty || screen !== 'main') return
         audio.cue('toggleClick')
         difficulty = d
         store.set('difficulty', d)
         redraw()
       },
       begin: () => {
+        if (screen !== 'main') return // the page is already on its way out
         void ensureStage()
-        startChapter(eraById(selected), difficulty)
+        showIntro(eraById(selected), difficulty)
       },
       credits: () => showCredits(showMain),
     }))
@@ -599,6 +643,106 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function showCredits(back: () => void): void {
     clearToast()
     show('credits', () => renderCredits(ui, { back }))
+  }
+
+  // ------------------------------------------------------------------ the intro after Begin
+
+  /** Who you are and who the Tota is: two illustrated cards on the desk, then day 1. */
+  function showIntro(era: Era, d: Difficulty): void {
+    const page = ui.querySelector<HTMLElement>('.screen--main')
+    leave()
+    setDeskEra(era.id)
+    intro = { era, difficulty: d, started: false, settled: false }
+    show('intro', drawIntro)
+    if (page && !reducedMotion) fadeOut(page)
+    void playIntro(gen)
+  }
+
+  /** The main page's paper slides away over the room as the cards come in. */
+  function fadeOut(page: HTMLElement): void {
+    page.classList.add('is-leaving')
+    page.setAttribute('aria-hidden', 'true')
+    page.querySelectorAll('button').forEach((b) => b.setAttribute('tabindex', '-1'))
+    ui.appendChild(page)
+    window.setTimeout(() => page.remove(), 400)
+  }
+
+  function introSpecFor(era: Era, lang: Lang): IntroSpec {
+    const base = import.meta.env.BASE_URL ?? '/'
+    return {
+      era: era.id,
+      lang,
+      you: { label: t('introYou', lang), line: era.persona[lang], art: `${base}art/${era.id}-you.webp` },
+      tota: { label: t('introTota', lang), line: era.forger[lang], art: `${base}art/${era.id}-tota.webp` },
+    }
+  }
+
+  function drawIntro(): void {
+    const it = intro
+    if (!it) return
+    const lang = getLang()
+    const spec = introSpecFor(it.era, lang)
+    renderIntro(ui, { era: it.era, lang, you: spec.you, tota: spec.tota, settled: it.settled }, { go: continueIntro, tap: tapIntro })
+    syncIntroInsets()
+    // a language change redraws the cards on the desk in the new language, and the agarbatti on
+    // the slip (drawn again from the top) starts the wait over
+    if (it.started) void desk?.intro(spec)
+    if (it.settled) armIntroTimer()
+  }
+
+  async function playIntro(token: number): Promise<void> {
+    const it = intro
+    const stale = () => token !== gen || intro !== it || screen !== 'intro' || !alive()
+    if (!it) return
+    if (!desk) await guard(ensureStage(), STAGE_WAIT_MS)
+    if (stale()) return
+    if (!desk) attach(null)
+    const d = desk
+    it.started = true
+    syncIntroInsets()
+    // a desk lost mid-intro never finishes it: stop waiting as soon as a new desk is attached
+    await guard(Promise.race([d ? d.intro(introSpecFor(it.era, getLang())) : Promise.resolve(), deskSwapped.promise]), INTRO_GUARD_MS)
+    if (stale()) return
+    it.settled = true
+    setIntroSettled(ui)
+    armIntroTimer()
+  }
+
+  function clearIntroTimer(): void {
+    window.clearTimeout(introTimer)
+    introTimer = 0
+  }
+
+  function armIntroTimer(): void {
+    clearIntroTimer()
+    if (!intro?.settled || document.hidden === true) return
+    introTimer = window.setTimeout(continueIntro, INTRO_AUTO_MS)
+  }
+
+  /** A tap on the room: the cards' motion finishes; once they are down, the game goes on. */
+  function tapIntro(): void {
+    if (!intro) return
+    if (intro.settled) continueIntro()
+    else desk?.skip()
+  }
+
+  function continueIntro(): void {
+    const it = intro
+    if (!it || screen !== 'intro') return
+    if (!desk?.cues) audio.cue('cardSlide') // the 3D desk sounds the cards leaving itself
+    startChapter(it.era, it.difficulty) // its leave() sends the cards off the desk
+  }
+
+  /** The stage keeps the cards clear of the plaques (top right) and the Continue slip. */
+  function syncIntroInsets(): void {
+    const el = root.stage
+    const H = window.innerHeight || document.documentElement.clientHeight
+    const dock = controls.getBoundingClientRect()
+    const go = ui.querySelector('.intro__go')?.getBoundingClientRect()
+    el.style.setProperty('--ft-hud-top', `${Math.ceil(dock.height > 0 ? dock.bottom + 8 : 66)}px`)
+    el.style.setProperty('--ft-hud-bottom', `${Math.ceil(go && go.height > 0 ? H - go.top + 12 : 96)}px`)
+    el.style.setProperty('--ft-hud-left', '0px')
+    el.style.setProperty('--ft-hud-right', '0px')
   }
 
   function startChapter(era: Era, d: Difficulty): void {

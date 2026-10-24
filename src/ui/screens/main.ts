@@ -6,9 +6,10 @@ import { h, mount, svg } from '../h'
 import { lettering } from '../ornament'
 
 // The one page the game opens on: a period document over the live room of the chosen chapter. It
-// carries the title, a two-line hook, the four chapters as artefact tabs, who you are and who the
-// Tota is, how many days you will hold out, and Begin. The paper takes the chosen era's own form:
-// a court petition, a pink leaflet, a radio script, a telegram.
+// carries the title, a two-line hook, the four chapters as artefact tabs, how many days you will
+// hold out, and Begin. Who you are and who the Tota is come after Begin, as two illustrated cards
+// on the desk (src/ui/screens/intro.ts). The paper takes the chosen era's own form: a court
+// petition, a pink leaflet, a radio script, a telegram.
 
 /** A chapter's best run: the difficulty and how many days were stamped right. */
 export interface Best {
@@ -109,8 +110,6 @@ export function renderMain(root: HTMLElement, p: MainProps, on: MainHandlers): v
     h('p', { class: 'doc__hook' }, t('premise', lang)),
     tabs,
     h('section', { class: 'doc__era', id: 'ft-era-panel', role: 'tabpanel', 'aria-labelledby': `ft-tab-${era.id}` },
-      h('p', { class: 'doc__line' }, h('span', { class: 'doc__label' }, `${t('introYou', lang)}: `), era.persona[lang]),
-      h('p', { class: 'doc__line' }, h('span', { class: 'doc__label' }, `${t('forgerLabel', lang)}: `), era.forger[lang]),
       h('h2', { class: 'doc__q' }, t('setupQuestion', lang)),
       modes,
       h('button', { class: 'btn btn--primary btn--block btn--begin', type: 'button', 'data-action': 'begin', onclick: () => on.begin() },
