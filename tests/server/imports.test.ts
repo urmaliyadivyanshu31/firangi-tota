@@ -97,3 +97,31 @@ describe('voice function imports', () => {
     expect(bad.map((f) => relative(ROOT, f))).toEqual([])
   })
 })
+
+describe('share functions imports', () => {
+  for (const entry of ['api/og.ts', 'api/s.ts']) {
+    const { seen, problems } = walk(join(ROOT, entry))
+    const reached = [...seen].map((f) => relative(ROOT, f))
+
+    it(`${entry}: every import resolves as a plain Node ES module, none is Vite-only`, () => {
+      expect(problems).toEqual([])
+      expect(reached).toContain('server/share.ts')
+      expect(reached).toContain('src/game/share-code.ts')
+    })
+
+    it(`${entry}: never reaches UI or browser code`, () => {
+      expect(reached.filter((f) => /^src\/(ui|scene|audio|app\.ts|main\.ts)/.test(f))).toEqual([])
+    })
+  }
+
+  it('the page function never loads the renderer; only the image function does', () => {
+    expect([...walk(join(ROOT, 'api/s.ts')).seen].map((f) => relative(ROOT, f))).not.toContain('server/og/render.ts')
+    expect([...walk(join(ROOT, 'api/og.ts')).seen].map((f) => relative(ROOT, f))).toContain('server/og/render.ts')
+  })
+
+  it('browser code never imports the card renderer, the shaper or the encoder (they stay on the server)', () => {
+    const bad = tsFiles(join(ROOT, 'src')).filter((f) =>
+      edges(readFileSync(f, 'utf8')).some((e) => /^(@resvg\/|harfbuzzjs|jpeg-js)/.test(e.spec)))
+    expect(bad.map((f) => relative(ROOT, f))).toEqual([])
+  })
+})

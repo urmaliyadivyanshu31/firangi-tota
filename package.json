@@ -16,6 +16,9 @@
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "harfbuzzjs": "1.6.3",
+    "jpeg-js": "0.4.4",
     "three": "0.186.1"
   },
   "devDependencies": {
