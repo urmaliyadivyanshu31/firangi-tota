@@ -129,3 +129,7 @@ export const CHUNI_18 = "Chuni Lal's news diary, 18 May 1857, c. p.113"
 export const CHUNI_19_20 = "Chuni Lal's news diary, 19-20 May 1857, c. pp.113-15"
 export const KING_ORDER = 'undated order of the King to Mirza Mughal, c. pp.131-35'
 export const CHATTA = 'Petition No. 52, shopkeepers of the Chatta, undated, c. p.25'
+// The chapatis at the trial: Jat Mall heard of no message sent with them; Sir Theophilus Metcalfe:
+// "There is nothing but conjecture regarding them" and the carriers thought it an order of the English.
+export const JATMALL_CHAPATI = "Jat Mall's evidence (recalled), on the chapatis, c. pp.78-79"
+export const METCALFE_CHAPATI = "Sir Theophilus Metcalfe's evidence, on the chapatis, c. p.83"

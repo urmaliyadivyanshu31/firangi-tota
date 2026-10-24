@@ -6,9 +6,12 @@ import {
   CHUNI_18,
   CHUNI_19_20,
   fanshawe,
+  hodson,
   jl,
+  JATMALL_CHAPATI,
   KING_ORDER,
   majumdar,
+  METCALFE_CHAPATI,
   mh,
   sen,
   trial,
@@ -1392,4 +1395,976 @@ const datelessMessages: Message[] = [
   },
 ]
 
-export const messages: Message[] = [...eventMessages, ...datelessMessages]
+// ── Medium and Hard (owner 10-24): more real moments of the fortnight, on their true days ──
+// Every dated line below was read in Jiwan Lal's diary for that day (Metcalfe 1898, JL pp.95-108),
+// or in Sen, Mainodin and Hodson's letters, as cited. Medium walks days 1-10 (17-26 May); Hard all 14.
+const MED = 'medium' as const
+const HARD = 'hard' as const
+const TREASURY = { en: 'Treasury report', hi: 'ख़ज़ाने की रिपोर्ट' }
+
+const mediumMessages: Message[] = [
+  // ── Day 2, Mon 18 May: four princes in command (JL p.96) ──
+  {
+    id: 'ev-princes-real',
+    tier: 1,
+    real: true,
+    pair: 'ev-princes',
+    onDay: 2,
+    minMode: MED,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Monday, 18th May. The chief command goes to four princes: Mirza Mughal, Mirza Khizr Sultan, Mirza Abu Bakr and Mirza Abdullah.',
+      hi: 'सोमवार, 18 मई। फ़ौज की बड़ी कमान चार शहज़ादों को मिली: मिर्ज़ा मुग़ल, मिर्ज़ा ख़िज़्र सुल्तान, मिर्ज़ा अबू बक्र और मिर्ज़ा अब्दुल्लाह।',
+    },
+    checks: { en: ['Monday, 18th May', 'Mirza Khizr Sultan', 'Mirza Abu Bakr'], hi: ['सोमवार, 18 मई', 'मिर्ज़ा ख़िज़्र सुल्तान', 'मिर्ज़ा अबू बक्र'] },
+    why: {
+      text: {
+        en: 'Jiwan Lal, Monday 18 May, names exactly these four princes.',
+        hi: 'जीवन लाल, सोमवार 18 मई: ठीक यही चार शहज़ादे।',
+      },
+      sources: [jl('p.96'), sen('p.74')],
+    },
+  },
+  {
+    id: 'ev-princes-forged',
+    tier: 1,
+    real: false,
+    pair: 'ev-princes',
+    onDay: 2,
+    minMode: MED,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Monday, 18th May. The chief command goes to four princes: Mirza Mughal, Mirza Khizr Sultan, Mirza Jawan Bakht and Mirza Abdullah.',
+      hi: 'सोमवार, 18 मई। फ़ौज की बड़ी कमान चार शहज़ादों को मिली: मिर्ज़ा मुग़ल, मिर्ज़ा ख़िज़्र सुल्तान, मिर्ज़ा जवाँ बख़्त और मिर्ज़ा अब्दुल्लाह।',
+    },
+    checks: { en: ['Monday, 18th May', 'Mirza Khizr Sultan', 'Mirza Jawan Bakht'], hi: ['सोमवार, 18 मई', 'मिर्ज़ा ख़िज़्र सुल्तान', 'मिर्ज़ा जवाँ बख़्त'] },
+    tells: [
+      {
+        kind: 'name',
+        factId: 'princes',
+        explain: {
+          en: 'The fourth was Abu Bakr; Jawan Bakht was made minister next day.',
+          hi: 'चौथे अबू बक्र थे; जवाँ बख़्त अगले दिन वज़ीर बनाए गए।',
+        },
+        sources: [jl('pp.96-97')],
+      },
+    ],
+  },
+
+  // ── Day 3, Tue 19 May: Patiala's brother at the palace (JL p.97) ──
+  {
+    id: 'ev-ajit-real',
+    tier: 1,
+    real: true,
+    pair: 'ev-ajit',
+    onDay: 3,
+    minMode: MED,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: '19th May. Soldiers seized Kumar Ajit Singh, brother of the Maharaja of Patiala. The King received him kindly: the brothers are on bad terms, he said.',
+      hi: '19 मई। सिपाहियों ने पटियाला के महाराजा के भाई कुँवर अजीत सिंह को पकड़ लिया। बादशाह उनसे प्यार से मिले, और बोले कि दोनों भाइयों में अनबन है।',
+    },
+    checks: { en: ['Kumar Ajit Singh', 'Maharaja of Patiala', 'the brothers are on bad terms'], hi: ['कुँवर अजीत सिंह', 'पटियाला के महाराजा', 'दोनों भाइयों में अनबन है'] },
+    why: {
+      text: {
+        en: "Jiwan Lal, 19 May: the King shielded Patiala's estranged brother.",
+        hi: 'जीवन लाल, 19 मई: बादशाह ने पटियाला के रूठे भाई को बचाया।',
+      },
+      sources: [jl('p.97')],
+    },
+  },
+  {
+    id: 'ev-ajit-forged',
+    tier: 1,
+    real: false,
+    pair: 'ev-ajit',
+    onDay: 3,
+    minMode: MED,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: "19th May. Kumar Ajit Singh, brother of the Maharaja of Patiala, brought the King good news: the Maharaja's army is marching to join us.",
+      hi: '19 मई। पटियाला के महाराजा के भाई कुँवर अजीत सिंह बादशाह के लिए ख़ुशख़बरी लाए: महाराजा की फ़ौज हमसे मिलने आ रही है।',
+    },
+    checks: { en: ['Kumar Ajit Singh', 'Maharaja of Patiala', 'marching to join us'], hi: ['कुँवर अजीत सिंह', 'पटियाला के महाराजा', 'हमसे मिलने आ रही है'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'patiala-side',
+        explain: {
+          en: 'That very day came news that Patiala had joined the English.',
+          hi: 'उसी दिन ख़बर आई कि पटियाला अंग्रेज़ों से जा मिला है।',
+        },
+        sources: [jl('p.97'), caveBrowne('p.190')],
+      },
+    ],
+  },
+
+  // ── Day 4, Wed 20 May: a false alarm, and scouts stripped on the road (JL p.98) ──
+  {
+    id: 'ev-scouts-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-scouts',
+    onDay: 4,
+    minMode: MED,
+    from: { en: 'Darbar record', hi: 'दरबार की डायरी' },
+    to: OFFICE,
+    text: {
+      en: 'Wednesday, 20th May. The news of an English force proved false. Our scouts came back stark naked: robbers on the road had stripped them.',
+      hi: 'बुधवार, 20 मई। अंग्रेज़ी फ़ौज की ख़बर झूठी निकली। हमारे जासूस बिल्कुल नंगे लौटे: रास्ते के लुटेरों ने उनके कपड़े तक छीन लिए।',
+    },
+    checks: { en: ['Wednesday, 20th May', 'stark naked', 'robbers on the road'], hi: ['बुधवार, 20 मई', 'बिल्कुल नंगे लौटे', 'रास्ते के लुटेरों'] },
+    why: {
+      text: {
+        en: 'Jiwan Lal, Wednesday 20 May: the scouts came back plundered of everything.',
+        hi: 'जीवन लाल, बुधवार 20 मई: जासूस सब कुछ लुटाकर लौटे।',
+      },
+      sources: [jl('p.98')],
+    },
+  },
+  {
+    id: 'ev-scouts-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-scouts',
+    onDay: 4,
+    minMode: MED,
+    from: { en: 'Darbar record', hi: 'दरबार की डायरी' },
+    to: OFFICE,
+    text: {
+      en: 'Thursday, 20th May. The news of an English force proved false. Our scouts came back stark naked: robbers on the road had stripped them.',
+      hi: 'गुरुवार, 20 मई। अंग्रेज़ी फ़ौज की ख़बर झूठी निकली। हमारे जासूस बिल्कुल नंगे लौटे: रास्ते के लुटेरों ने उनके कपड़े तक छीन लिए।',
+    },
+    checks: { en: ['Thursday, 20th May', 'stark naked', 'robbers on the road'], hi: ['गुरुवार, 20 मई', 'बिल्कुल नंगे लौटे', 'रास्ते के लुटेरों'] },
+    tells: [
+      {
+        kind: 'weekday',
+        ruleId: 'weekdays',
+        explain: { en: '20 May 1857 was a Wednesday, not a Thursday.', hi: '20 मई 1857 बुधवार था, गुरुवार नहीं।' },
+        sources: [jl('p.98'), trial(CHUNI_17)],
+      },
+    ],
+  },
+
+  // ── Day 5, Thu 21 May: a lakh for the troops (JL p.99) ──
+  {
+    id: 'ev-lakh-real',
+    tier: 1,
+    real: true,
+    pair: 'ev-lakh',
+    onDay: 5,
+    minMode: MED,
+    from: TREASURY,
+    to: OFFICE,
+    text: {
+      en: "Thursday, 21st May. Under pressure from the King, the new officers and the city bankers have raised one lakh of rupees for the troops' pay.",
+      hi: 'गुरुवार, 21 मई। बादशाह के दबाव पर नए अफ़सरों और शहर के साहूकारों ने फ़ौज की तनख़्वाह के लिए एक लाख रुपये जुटाए।',
+    },
+    checks: { en: ['Thursday, 21st May', 'the city bankers', 'one lakh of rupees'], hi: ['गुरुवार, 21 मई', 'शहर के साहूकारों', 'एक लाख रुपये'] },
+    why: {
+      text: {
+        en: "Jiwan Lal, 21 May: one lakh raised, under the King's pressure.",
+        hi: 'जीवन लाल, 21 मई: बादशाह के दबाव पर एक लाख रुपये जुटे।',
+      },
+      sources: [jl('p.99')],
+    },
+  },
+  {
+    id: 'ev-lakh-forged',
+    tier: 1,
+    real: false,
+    pair: 'ev-lakh',
+    onDay: 5,
+    minMode: MED,
+    from: TREASURY,
+    to: OFFICE,
+    text: {
+      en: "Thursday, 21st May. Under pressure from the King, the new officers and the city bankers have raised ten lakh rupees for the troops' pay.",
+      hi: 'गुरुवार, 21 मई। बादशाह के दबाव पर नए अफ़सरों और शहर के साहूकारों ने फ़ौज की तनख़्वाह के लिए दस लाख रुपये जुटाए।',
+    },
+    checks: { en: ['Thursday, 21st May', 'the city bankers', 'ten lakh rupees'], hi: ['गुरुवार, 21 मई', 'शहर के साहूकारों', 'दस लाख रुपये'] },
+    tells: [
+      {
+        kind: 'number',
+        factId: 'pay-fund',
+        explain: {
+          en: 'They raised one lakh, not ten; the bankers already said they were beggared.',
+          hi: 'एक लाख जुटे, दस नहीं; साहूकार तो पहले ही ख़ुद को कंगाल बता रहे थे।',
+        },
+        sources: [jl('p.99'), jl('p.96')],
+      },
+    ],
+  },
+
+  // ── Day 6, Fri 22 May: gold at 32 rupees (JL p.100, reported on the 21st) ──
+  {
+    id: 'ev-mohur-real',
+    tier: 1,
+    real: true,
+    pair: 'ev-mohur',
+    onDay: 6,
+    minMode: MED,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: '22nd May. The King was told yesterday that soldiers flush with money are buying gold mohurs at 32 rupees apiece.',
+      hi: '22 मई। कल बादशाह को बताया गया कि पैसे से मालामाल सिपाही सोने की मोहरें 32 रुपये फ़ी मोहर ख़रीद रहे हैं।',
+    },
+    checks: { en: ['22nd May', 'gold mohurs', '32 rupees apiece'], hi: ['22 मई', 'सोने की मोहरें', '32 रुपये फ़ी मोहर'] },
+    why: {
+      text: {
+        en: 'Jiwan Lal, 21 May: the soldiers had money, and wanted gold.',
+        hi: 'जीवन लाल, 21 मई: सिपाहियों के पास पैसा था, और उन्हें सोना चाहिए था।',
+      },
+      sources: [jl('p.100')],
+    },
+  },
+  {
+    id: 'ev-mohur-forged',
+    tier: 1,
+    real: false,
+    pair: 'ev-mohur',
+    onDay: 6,
+    minMode: MED,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: '22nd May. The King was told yesterday that soldiers flush with money are buying gold mohurs at 23 rupees apiece.',
+      hi: '22 मई। कल बादशाह को बताया गया कि पैसे से मालामाल सिपाही सोने की मोहरें 23 रुपये फ़ी मोहर ख़रीद रहे हैं।',
+    },
+    checks: { en: ['22nd May', 'gold mohurs', '23 rupees apiece'], hi: ['22 मई', 'सोने की मोहरें', '23 रुपये फ़ी मोहर'] },
+    tells: [
+      {
+        kind: 'number',
+        factId: 'gold-mohur',
+        explain: { en: 'That week a gold mohur fetched 32 rupees, not 23.', hi: 'उस हफ़्ते सोने की एक मोहर 32 रुपये की थी, 23 की नहीं।' },
+        sources: [jl('p.100')],
+      },
+    ],
+  },
+
+  // ── Day 7, Sat 23 May: a new coinage (JL p.101) ──
+  {
+    id: 'ev-coinage-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-coinage',
+    onDay: 7,
+    minMode: MED,
+    from: { en: 'Imperial order', hi: 'शाही हुक्म' },
+    to: PEOPLE,
+    text: {
+      en: 'Saturday, 23rd May. On the advice of Ranjit, a jeweller, the old coins are to be called in and a new coinage struck.',
+      hi: 'शनिवार, 23 मई। रणजीत नाम के एक जौहरी की सलाह पर पुराने सिक्के वापस लिए जाएँगे और नए सिक्के ढाले जाएँगे।',
+    },
+    checks: { en: ['Saturday, 23rd May', 'a jeweller', 'a new coinage struck'], hi: ['शनिवार, 23 मई', 'एक जौहरी', 'नए सिक्के ढाले जाएँगे'] },
+    why: {
+      text: {
+        en: "Jiwan Lal, 23 May: the order followed a jeweller's advice.",
+        hi: 'जीवन लाल, 23 मई: यह हुक्म एक जौहरी की सलाह पर निकला।',
+      },
+      sources: [jl('p.101')],
+    },
+  },
+  {
+    id: 'ev-coinage-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-coinage',
+    onDay: 7,
+    minMode: MED,
+    from: { en: 'Imperial order', hi: 'शाही हुक्म' },
+    to: PEOPLE,
+    text: {
+      en: "Saturday, 23rd May. On the advice of Ranjit, a jeweller, the old coins are called in; new ones bear Mirza Mughal's name.",
+      hi: 'शनिवार, 23 मई। रणजीत नाम के एक जौहरी की सलाह पर पुराने सिक्के वापस लिए जाएँगे; नए सिक्कों पर मिर्ज़ा मुग़ल का नाम होगा।',
+    },
+    checks: { en: ['Saturday, 23rd May', 'a jeweller', "Mirza Mughal's name"], hi: ['शनिवार, 23 मई', 'एक जौहरी', 'मिर्ज़ा मुग़ल का नाम'] },
+    tells: [
+      {
+        kind: 'name',
+        factId: 'court',
+        explain: {
+          en: "Coins bore the King's own name, Siraj-ud-din, never his son's.",
+          hi: 'सिक्कों पर बादशाह का अपना नाम सिराजुद्दीन होता था, बेटे का कभी नहीं।',
+        },
+        sources: [jl('pp.96-97'), jl('p.101')],
+      },
+    ],
+  },
+
+  // ── Day 8, Sun 24 May: flatterers at the audience (JL p.102) ──
+  {
+    id: 'ev-flatterers-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-flatterers',
+    onDay: 8,
+    minMode: MED,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: '24th May. Flatterers at the audience told the King that the English have all fled the country, and only a few sick men remain at Meerut.',
+      hi: '24 मई। दरबार में चापलूसों ने बादशाह से कहा कि सारे अंग्रेज़ देश छोड़कर भाग गए हैं, और मेरठ में बस कुछ बीमार बचे हैं।',
+    },
+    checks: { en: ['Flatterers at the audience', 'all fled the country', 'a few sick men'], hi: ['चापलूसों ने', 'देश छोड़कर भाग गए', 'कुछ बीमार बचे हैं'] },
+    why: {
+      text: {
+        en: 'Odd but true: Jiwan Lal, 24 May, calls them flatterers himself.',
+        hi: 'अजीब पर सच: जीवन लाल, 24 मई, ख़ुद उन्हें चापलूस कहते हैं।',
+      },
+      sources: [jl('p.102')],
+    },
+  },
+  {
+    id: 'ev-flatterers-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-flatterers',
+    onDay: 8,
+    minMode: MED,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: '24th May. It is certain: the English have all fled before a Persian army, and only a few sick men remain at Meerut.',
+      hi: '24 मई। यह पक्की ख़बर है: सारे अंग्रेज़ ईरानी फ़ौज के आगे भाग गए हैं, और मेरठ में बस कुछ बीमार बचे हैं।',
+    },
+    checks: { en: ['It is certain', 'a Persian army', 'a few sick men'], hi: ['यह पक्की ख़बर है', 'ईरानी फ़ौज', 'कुछ बीमार बचे हैं'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        ruleId: 'persian-bait',
+        explain: {
+          en: 'A Persian army was rumour; a paper calling it certain is planted.',
+          hi: 'ईरानी फ़ौज अफ़वाह थी; जो काग़ज़ उसे पक्का बताए, वह रखवाया गया है।',
+        },
+        sources: [trial(PERSIAN)],
+      },
+    ],
+  },
+
+  // ── Undated: the palace, the Magazine, Lucknow ──
+  {
+    id: 'heir-real',
+    tier: 2,
+    real: true,
+    pair: 'heir',
+    minMode: MED,
+    from: { en: 'Palace news-writer', hi: 'महल का ख़बरनवीस' },
+    to: OFFICE,
+    text: {
+      en: 'Palace talk: Queen Zinat Mahal still hopes that her young son, Mirza Jawan Bakht, will one day follow his father on the throne.',
+      hi: 'महल की बातें: मलिका ज़ीनत महल अब भी आस लगाए हैं कि उनका छोटा बेटा, मिर्ज़ा जवाँ बख़्त, एक दिन अपने पिता के बाद तख़्त पर बैठेगा।',
+    },
+    checks: { en: ['Queen Zinat Mahal', 'her young son', 'Mirza Jawan Bakht'], hi: ['मलिका ज़ीनत महल', 'उनका छोटा बेटा', 'मिर्ज़ा जवाँ बख़्त'] },
+    why: {
+      text: {
+        en: "Sen: the King long pressed for Jawan Bakht, Zinat Mahal's son, as heir.",
+        hi: 'सेन: बादशाह बरसों से ज़ीनत महल के बेटे जवाँ बख़्त को वारिस बनाना चाहते थे।',
+      },
+      sources: [sen('p.69')],
+    },
+  },
+  {
+    id: 'heir-forged',
+    tier: 2,
+    real: false,
+    pair: 'heir',
+    minMode: MED,
+    from: { en: 'Palace news-writer', hi: 'महल का ख़बरनवीस' },
+    to: OFFICE,
+    text: {
+      en: 'Palace talk: Queen Zinat Mahal still hopes that her young son, Mirza Abu Bakr, will one day follow his father on the throne.',
+      hi: 'महल की बातें: मलिका ज़ीनत महल अब भी आस लगाए हैं कि उनका छोटा बेटा, मिर्ज़ा अबू बक्र, एक दिन अपने पिता के बाद तख़्त पर बैठेगा।',
+    },
+    checks: { en: ['Queen Zinat Mahal', 'her young son', 'Mirza Abu Bakr'], hi: ['मलिका ज़ीनत महल', 'उनका छोटा बेटा', 'मिर्ज़ा अबू बक्र'] },
+    tells: [
+      {
+        kind: 'name',
+        factId: 'zinat-mahal',
+        explain: {
+          en: "Zinat Mahal's son was Jawan Bakht; Abu Bakr was the King's grandson.",
+          hi: 'ज़ीनत महल के बेटे जवाँ बख़्त थे; अबू बक्र बादशाह के पोते थे।',
+        },
+        sources: [sen('p.69'), sen('p.85')],
+      },
+    ],
+  },
+  {
+    id: 'magazine-real',
+    tier: 2,
+    real: true,
+    pair: 'magazine',
+    minMode: MED,
+    from: SENIOR,
+    to: NEW_MUNSHI,
+    text: {
+      en: "Remember Monday the 11th: when the Magazine was summoned in the King's name, its nine English defenders blew it up rather than give it up.",
+      hi: 'सोमवार, 11 तारीख़ याद है: जब बादशाह के नाम पर बारूदख़ाना माँगा गया, तो उसके नौ अंग्रेज़ रखवालों ने उसे सौंपने के बजाय उड़ा दिया।',
+    },
+    checks: { en: ['Monday the 11th', 'nine English defenders', 'blew it up'], hi: ['सोमवार, 11 तारीख़', 'नौ अंग्रेज़ रखवालों', 'उड़ा दिया'] },
+    why: {
+      text: {
+        en: "Sen: surrender was demanded in the King's name; the nine fired the train.",
+        hi: 'सेन: बादशाह के नाम पर समर्पण माँगा गया; नौ ने बारूद में आग लगा दी।',
+      },
+      sources: [sen('p.73')],
+    },
+  },
+  {
+    id: 'magazine-forged',
+    tier: 2,
+    real: false,
+    pair: 'magazine',
+    minMode: MED,
+    from: SENIOR,
+    to: NEW_MUNSHI,
+    text: {
+      en: "Remember Monday the 11th: when the Magazine was summoned in the King's name, its nine English defenders handed it over, guns and all.",
+      hi: 'सोमवार, 11 तारीख़ याद है: जब बादशाह के नाम पर बारूदख़ाना माँगा गया, तो उसके नौ अंग्रेज़ रखवालों ने उसे तोपों समेत सौंप दिया।',
+    },
+    checks: { en: ['Monday the 11th', 'nine English defenders', 'handed it over'], hi: ['सोमवार, 11 तारीख़', 'नौ अंग्रेज़ रखवालों', 'तोपों समेत सौंप दिया'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'magazine',
+        explain: {
+          en: 'They never handed it over: the nine blew the Magazine up.',
+          hi: 'उन्होंने उसे सौंपा नहीं: नौ ने बारूदख़ाना उड़ा दिया।',
+        },
+        sources: [sen('p.73')],
+      },
+    ],
+  },
+  {
+    id: 'lucknow-real',
+    tier: 2,
+    real: true,
+    pair: 'lucknow',
+    minMode: MED,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: 'News from Lucknow: Sir Henry Lawrence, Chief Commissioner of Oudh, is making the Residency and the Machchhi Bhawan ready for defence.',
+      hi: 'लखनऊ से ख़बर: अवध के चीफ़ कमिश्नर सर हेनरी लॉरेंस रेज़ीडेंसी और मच्छी भवन को बचाव के लिए तैयार कर रहे हैं।',
+    },
+    checks: { en: ['Sir Henry Lawrence', 'Chief Commissioner of Oudh', 'the Residency'], hi: ['सर हेनरी लॉरेंस', 'अवध के चीफ़ कमिश्नर', 'रेज़ीडेंसी'] },
+    why: {
+      text: {
+        en: 'Sen: after the Meerut news, Henry Lawrence fortified these two places.',
+        hi: 'सेन: मेरठ की ख़बर के बाद हेनरी लॉरेंस ने ये दो जगहें मज़बूत कीं।',
+      },
+      sources: [sen('p.179'), sen('pp.182-83')],
+    },
+  },
+  {
+    id: 'lucknow-forged',
+    tier: 2,
+    real: false,
+    pair: 'lucknow',
+    minMode: MED,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: 'News from Lucknow: Sir John Lawrence, Chief Commissioner of Oudh, is making the Residency and the Machchhi Bhawan ready for defence.',
+      hi: 'लखनऊ से ख़बर: अवध के चीफ़ कमिश्नर सर जॉन लॉरेंस रेज़ीडेंसी और मच्छी भवन को बचाव के लिए तैयार कर रहे हैं।',
+    },
+    checks: { en: ['Sir John Lawrence', 'Chief Commissioner of Oudh', 'the Residency'], hi: ['सर जॉन लॉरेंस', 'अवध के चीफ़ कमिश्नर', 'रेज़ीडेंसी'] },
+    tells: [
+      {
+        kind: 'name',
+        factId: 'lawrences',
+        explain: {
+          en: 'Oudh had Henry Lawrence; John Lawrence ran the Punjab, from Rawalpindi.',
+          hi: 'अवध में हेनरी लॉरेंस थे; जॉन लॉरेंस रावलपिंडी से पंजाब सँभालते थे।',
+        },
+        sources: [sen('p.179'), sen('p.327')],
+      },
+    ],
+  },
+]
+
+const hardMessages: Message[] = [
+  // ── Day 1, Sun 17 May: the soldiers "elect" a king (JL p.95) ──
+  {
+    id: 'ev-abubakr-real',
+    tier: 1,
+    real: true,
+    pair: 'ev-abubakr',
+    onDay: 1,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: "Sunday, 17th May. The soldiers call the old King too infirm and 'elect' his grandson Abu Bakr King in his place. The King scolds them severely.",
+      hi: "रविवार, 17 मई। सिपाही बूढ़े बादशाह को बहुत कमज़ोर बताकर उनकी जगह उनके पोते अबू बक्र को बादशाह 'चुन' रहे हैं। बादशाह ने उन्हें सख़्ती से डाँटा।",
+    },
+    checks: { en: ['Sunday, 17th May', 'too infirm', 'grandson Abu Bakr'], hi: ['रविवार, 17 मई', 'बहुत कमज़ोर', 'पोते अबू बक्र'] },
+    why: {
+      text: {
+        en: "Jiwan Lal, 17 May: they 'elected' Abu Bakr; the King spoke to them severely.",
+        hi: "जीवन लाल, 17 मई: उन्होंने अबू बक्र को 'चुना'; बादशाह ने सख़्ती से बात की।",
+      },
+      sources: [jl('p.95'), sen('p.85')],
+    },
+  },
+  {
+    id: 'ev-abubakr-forged',
+    tier: 1,
+    real: false,
+    pair: 'ev-abubakr',
+    onDay: 1,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: "Sunday, 17th May. The soldiers call the old King too infirm and 'elect' his son Mirza Mughal King in his place. The King scolds them severely.",
+      hi: "रविवार, 17 मई। सिपाही बूढ़े बादशाह को बहुत कमज़ोर बताकर उनकी जगह उनके बेटे मिर्ज़ा मुग़ल को बादशाह 'चुन' रहे हैं। बादशाह ने उन्हें सख़्ती से डाँटा।",
+    },
+    checks: { en: ['Sunday, 17th May', 'too infirm', 'son Mirza Mughal'], hi: ['रविवार, 17 मई', 'बहुत कमज़ोर', 'बेटे मिर्ज़ा मुग़ल'] },
+    tells: [
+      {
+        kind: 'name',
+        factId: 'abu-bakr-king',
+        explain: {
+          en: "They 'elected' his grandson Abu Bakr, not Mirza Mughal.",
+          hi: "उन्होंने पोते अबू बक्र को 'चुना' था, मिर्ज़ा मुग़ल को नहीं।",
+        },
+        sources: [jl('p.95')],
+      },
+    ],
+  },
+
+  // ── Day 4, Wed 20 May: General Anson at Ambala (Sen pp.77-78) ──
+  {
+    id: 'ev-anson-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-anson',
+    onDay: 4,
+    minMode: HARD,
+    from: { en: 'News from Ambala', hi: 'अंबाला से ख़बर' },
+    to: OFFICE,
+    text: {
+      en: 'Wednesday, 20th May. General Anson, the English Commander-in-Chief, is at Ambala gathering carts, stores and guns before he can march on Delhi.',
+      hi: 'बुधवार, 20 मई। अंग्रेज़ी कमांडर-इन-चीफ़ जनरल एन्सन अंबाला में हैं, और दिल्ली पर चढ़ाई से पहले गाड़ियाँ, रसद और तोपें जुटा रहे हैं।',
+    },
+    checks: { en: ['Wednesday, 20th May', 'General Anson', 'at Ambala'], hi: ['बुधवार, 20 मई', 'जनरल एन्सन', 'अंबाला में हैं'] },
+    why: {
+      text: {
+        en: 'Written for the game: Anson reached Ambala on 16 May and gathered transport.',
+        hi: 'खेल के लिए लिखा गया: एन्सन 16 मई को अंबाला पहुँचे और सामान जुटाना पड़ा।',
+      },
+      sources: [sen('p.77'), hodson('p.235')],
+    },
+  },
+  {
+    id: 'ev-anson-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-anson',
+    onDay: 4,
+    minMode: HARD,
+    from: { en: 'News from Ambala', hi: 'अंबाला से ख़बर' },
+    to: OFFICE,
+    text: {
+      en: 'Wednesday, 20th May. General Anson, the English Commander-in-Chief, has died of cholera, and his army will not march on Delhi.',
+      hi: 'बुधवार, 20 मई। अंग्रेज़ी कमांडर-इन-चीफ़ जनरल एन्सन हैज़े से मर गए हैं, और उनकी फ़ौज दिल्ली पर चढ़ाई नहीं करेगी।',
+    },
+    checks: { en: ['Wednesday, 20th May', 'General Anson', 'died of cholera'], hi: ['बुधवार, 20 मई', 'जनरल एन्सन', 'हैज़े से मर गए'] },
+    tells: [
+      {
+        kind: 'date',
+        factId: 'anson',
+        explain: {
+          en: "Anson died of cholera on 27 May, a week after this paper's date.",
+          hi: 'एन्सन 27 मई को हैज़े से मरे, इस काग़ज़ की तारीख़ से हफ़्ते भर बाद।',
+        },
+        sources: [sen('p.78')],
+      },
+    ],
+  },
+
+  // ── Day 8, Sun 24 May: Hodson's ride (Hodson pp.234-36), and Metcalfe alive (JL p.102) ──
+  {
+    id: 'ev-hodson-real',
+    tier: 3,
+    real: true,
+    pair: 'ev-hodson',
+    onDay: 8,
+    minMode: HARD,
+    from: { en: 'Word from the Karnal road', hi: 'करनाल की सड़क से ख़बर' },
+    to: OFFICE,
+    text: {
+      en: '24th May. An English officer named Hodson rode from Karnal to Meerut with Jind horsemen, and back again, carrying letters.',
+      hi: '24 मई। हॉडसन नाम का एक अंग्रेज़ अफ़सर जींद के सवारों के साथ करनाल से मेरठ गया, और चिट्ठियाँ लेकर लौट भी आया।',
+    },
+    checks: { en: ['named Hodson', 'with Jind horsemen', 'and back again'], hi: ['हॉडसन नाम का', 'जींद के सवारों', 'लौट भी आया'] },
+    why: {
+      text: {
+        en: 'Written for the game: Hodson rode to Meerut and back, 20-23 May.',
+        hi: 'खेल के लिए लिखा गया: हॉडसन 20-23 मई को मेरठ जाकर लौटा।',
+      },
+      sources: [hodson('pp.234-36'), sen('p.78')],
+    },
+  },
+  {
+    id: 'ev-hodson-forged',
+    tier: 3,
+    real: false,
+    pair: 'ev-hodson',
+    onDay: 8,
+    minMode: HARD,
+    from: { en: 'Word from the Karnal road', hi: 'करनाल की सड़क से ख़बर' },
+    to: OFFICE,
+    text: {
+      en: '24th May. An English officer named Hodson tried to ride from Karnal to Meerut with Jind horsemen, but our men caught him.',
+      hi: '24 मई। हॉडसन नाम के एक अंग्रेज़ अफ़सर ने जींद के सवारों के साथ करनाल से मेरठ जाना चाहा, पर हमारे आदमियों ने उसे पकड़ लिया।',
+    },
+    checks: { en: ['named Hodson', 'with Jind horsemen', 'our men caught him'], hi: ['हॉडसन नाम के', 'जींद के सवारों', 'उसे पकड़ लिया'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'hodson-ride',
+        explain: {
+          en: 'Hodson got through to Meerut and was back at Karnal by 23 May.',
+          hi: 'हॉडसन मेरठ पहुँचा और 23 मई तक करनाल लौट आया।',
+        },
+        sources: [hodson('pp.234-36')],
+      },
+    ],
+  },
+  {
+    id: 'ev-metcalfe',
+    tier: 3,
+    real: true,
+    onDay: 8,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Sunday, 24th May. Alarm at court: news that Metcalfe, the Joint Magistrate, escaped alive and has left Jhajjar for Hansi.',
+      hi: 'रविवार, 24 मई। दरबार में घबराहट: ख़बर है कि जॉइंट मजिस्ट्रेट मेटकाफ़ ज़िंदा बच निकले और झज्जर से हाँसी चले गए।',
+    },
+    checks: { en: ['Sunday, 24th May', 'escaped alive'], hi: ['रविवार, 24 मई', 'ज़िंदा बच निकले'] },
+    why: {
+      text: {
+        en: "Jiwan Lal, 24 May. Sen calls Metcalfe's escape the most remarkable of all.",
+        hi: 'जीवन लाल, 24 मई। सेन मेटकाफ़ के बच निकलने को सबसे हैरत वाला बताते हैं।',
+      },
+      sources: [jl('p.102'), sen('p.73')],
+    },
+  },
+
+  // ── Day 11, Wed 27 May: Punjabi regiments ask for the King's protection (JL p.103) ──
+  {
+    id: 'ev-punjabis-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-punjabis',
+    onDay: 11,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Wednesday, 27th May. Two regiments of Punjabis ask the King to protect them, or let them disband. He says he is able and willing to protect them.',
+      hi: 'बुधवार, 27 मई। पंजाबियों की दो पलटनों ने बादशाह से हिफ़ाज़त माँगी, या पलटन तोड़ने की इजाज़त। बादशाह बोले, वे हिफ़ाज़त कर सकते हैं और करेंगे।',
+    },
+    checks: { en: ['Wednesday, 27th May', 'Two regiments of Punjabis', 'able and willing'], hi: ['बुधवार, 27 मई', 'पंजाबियों की दो पलटनों', 'कर सकते हैं और करेंगे'] },
+    why: {
+      text: {
+        en: "Jiwan Lal, Wednesday 27 May. Punjabis served on Delhi's side too.",
+        hi: 'जीवन लाल, बुधवार 27 मई। पंजाबी दिल्ली की तरफ़ से भी लड़े।',
+      },
+      sources: [jl('p.103')],
+    },
+  },
+  {
+    id: 'ev-punjabis-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-punjabis',
+    onDay: 11,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'Thursday, 27th May. Two regiments of Punjabis ask the King to protect them, or let them disband. He says he is able and willing to protect them.',
+      hi: 'गुरुवार, 27 मई। पंजाबियों की दो पलटनों ने बादशाह से हिफ़ाज़त माँगी, या पलटन तोड़ने की इजाज़त। बादशाह बोले, वे हिफ़ाज़त कर सकते हैं और करेंगे।',
+    },
+    checks: { en: ['Thursday, 27th May', 'Two regiments of Punjabis', 'able and willing'], hi: ['गुरुवार, 27 मई', 'पंजाबियों की दो पलटनों', 'कर सकते हैं और करेंगे'] },
+    tells: [
+      {
+        kind: 'weekday',
+        ruleId: 'weekdays',
+        explain: { en: '27 May 1857 was a Wednesday, not a Thursday.', hi: '27 मई 1857 बुधवार था, गुरुवार नहीं।' },
+        sources: [jl('p.103'), trial(CHUNI_17)],
+      },
+    ],
+  },
+
+  // ── Day 12, Thu 28 May: the Rohtak treasure (JL p.104), and the Queen suspected (Sen p.76) ──
+  {
+    id: 'ev-rohtak-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-rohtak',
+    onDay: 12,
+    minMode: HARD,
+    from: TREASURY,
+    to: OFFICE,
+    text: {
+      en: '28th May. The Rohtak treasure, Rs 175,000, was examined today. Many of the bags were found to hold only pice.',
+      hi: '28 मई। रोहतक का ख़ज़ाना, 1,75,000 रुपये, आज जाँचा गया। कई थैलियों में बस पैसे निकले।',
+    },
+    checks: { en: ['Rs 175,000', 'Many of the bags', 'only pice'], hi: ['1,75,000 रुपये', 'कई थैलियों में', 'बस पैसे निकले'] },
+    why: {
+      text: {
+        en: 'Odd but true: Jiwan Lal records those bags of pice, 28 May.',
+        hi: 'अजीब पर सच: जीवन लाल ने 28 मई को पैसों की ये थैलियाँ दर्ज कीं।',
+      },
+      sources: [jl('p.104')],
+    },
+  },
+  {
+    id: 'ev-rohtak-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-rohtak',
+    onDay: 12,
+    minMode: HARD,
+    from: TREASURY,
+    to: OFFICE,
+    text: {
+      en: '28th May. The Rohtak treasure, Rs 175,000, was examined today. Every one of the bags was found full of gold mohurs.',
+      hi: '28 मई। रोहतक का ख़ज़ाना, 1,75,000 रुपये, आज जाँचा गया। हर थैली सोने की मोहरों से भरी निकली।',
+    },
+    checks: { en: ['Rs 175,000', 'Every one of the bags', 'gold mohurs'], hi: ['1,75,000 रुपये', 'हर थैली', 'सोने की मोहरों'] },
+    tells: [
+      {
+        kind: 'number',
+        factId: 'rohtak',
+        explain: { en: 'Many of those bags held only pice, not gold.', hi: 'उनमें से कई थैलियों में बस पैसे थे, सोना नहीं।' },
+        sources: [jl('p.104')],
+      },
+    ],
+  },
+  {
+    id: 'ev-queen-suspected',
+    tier: 3,
+    real: true,
+    onDay: 12,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: '28th May. A report says the soldiers now suspect Queen Zinat Mahal herself of being in league with the English.',
+      hi: '28 मई। एक रिपोर्ट कहती है कि सिपाही अब ख़ुद मलिका ज़ीनत महल पर अंग्रेज़ों से मिले होने का शक करते हैं।',
+    },
+    checks: { en: ['28th May', 'Queen Zinat Mahal'], hi: ['28 मई', 'मलिका ज़ीनत महल'] },
+    why: {
+      text: {
+        en: 'Odd but true: a report of 28 May says so, and Jiwan Lal agrees.',
+        hi: 'अजीब पर सच: 28 मई की एक रिपोर्ट यही कहती है; अगले दिन जीवन लाल भी।',
+      },
+      sources: [sen('p.76'), jl('p.107')],
+    },
+  },
+
+  // ── Day 14, Sat 30 May: Patiala's agent arrested (JL p.108) ──
+  {
+    id: 'ev-vakil-real',
+    tier: 2,
+    real: true,
+    pair: 'ev-vakil',
+    onDay: 14,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: '30th May. At the darbar, Mir Hassan Ali, agent of the Maharaja of Patiala, was accused of writing to the English and taken to the Kotwali.',
+      hi: '30 मई। दरबार में पटियाला के महाराजा के वकील मीर हसन अली पर अंग्रेज़ों को चिट्ठियाँ लिखने का इल्ज़ाम लगा, और उन्हें कोतवाली ले जाया गया।',
+    },
+    checks: { en: ['Mir Hassan Ali', 'Maharaja of Patiala', 'taken to the Kotwali'], hi: ['मीर हसन अली', 'पटियाला के महाराजा', 'कोतवाली ले जाया गया'] },
+    why: {
+      text: {
+        en: 'Jiwan Lal, 30 May: Patiala had sided with the English, so its agent paid.',
+        hi: 'जीवन लाल, 30 मई: पटियाला अंग्रेज़ों के साथ था, सो उसके वकील पर गाज गिरी।',
+      },
+      sources: [jl('p.108')],
+    },
+  },
+  {
+    id: 'ev-vakil-forged',
+    tier: 2,
+    real: false,
+    pair: 'ev-vakil',
+    onDay: 14,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: "30th May. At the darbar, Mir Hassan Ali, agent of the Maharaja of Patiala, was thanked for his master's help against the English.",
+      hi: '30 मई। दरबार में पटियाला के महाराजा के वकील मीर हसन अली का शुक्रिया अदा किया गया, अंग्रेज़ों के ख़िलाफ़ उनके मालिक की मदद के लिए।',
+    },
+    checks: { en: ['Mir Hassan Ali', 'Maharaja of Patiala', "his master's help"], hi: ['मीर हसन अली', 'पटियाला के महाराजा', 'उनके मालिक की मदद'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'patiala-side',
+        explain: {
+          en: 'Patiala had joined the English; its agent was arrested that day.',
+          hi: 'पटियाला अंग्रेज़ों से जा मिला था; उसी दिन उसका वकील पकड़ा गया।',
+        },
+        sources: [jl('p.97'), jl('p.108')],
+      },
+    ],
+  },
+
+  // ── Undated: the telegraph, the chapatis, Nicholson, a "siege" (Sen pp.73-79, 327-33; MH pp.39-40) ──
+  {
+    id: 'telegraph-real',
+    tier: 3,
+    real: true,
+    pair: 'telegraph',
+    minMode: HARD,
+    from: SENIOR,
+    to: NEW_MUNSHI,
+    text: {
+      en: 'On Monday the 11th, two young clerks in the English telegraph office flashed the news of Delhi to Ambala and the Punjab.',
+      hi: 'सोमवार, 11 तारीख़ को अंग्रेज़ी तारघर के दो नौजवान क्लर्कों ने दिल्ली की ख़बर तार से अंबाला और पंजाब तक भेज दी।',
+    },
+    checks: { en: ['two young clerks', 'telegraph office', 'Ambala and the Punjab'], hi: ['दो नौजवान क्लर्कों', 'अंग्रेज़ी तारघर', 'अंबाला और पंजाब'] },
+    why: {
+      text: {
+        en: 'Sen: two young signallers wired Ambala, Lahore, Rawalpindi and Peshawar.',
+        hi: 'सेन: दो नौजवानों ने अंबाला, लाहौर, रावलपिंडी और पेशावर तार भेजा।',
+      },
+      sources: [sen('p.74'), sen('p.327')],
+    },
+  },
+  {
+    id: 'telegraph-forged',
+    tier: 3,
+    real: false,
+    pair: 'telegraph',
+    minMode: HARD,
+    from: SENIOR,
+    to: NEW_MUNSHI,
+    text: {
+      en: 'On Monday the 11th, the English telegraph office was taken before its two young clerks could send a word to Ambala and the Punjab.',
+      hi: 'सोमवार, 11 तारीख़ को अंग्रेज़ी तारघर पर क़ब्ज़ा हो गया, इससे पहले कि उसके दो नौजवान क्लर्क अंबाला और पंजाब तक एक शब्द भेज पाते।',
+    },
+    checks: { en: ['two young clerks', 'telegraph office', 'Ambala and the Punjab'], hi: ['दो नौजवान क्लर्क', 'अंग्रेज़ी तारघर', 'अंबाला और पंजाब'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'They did send it: Lahore had the news on the morning of 12 May.',
+          hi: 'क्लर्कों ने ख़बर भेजी थी: 12 मई की सुबह तक लाहौर को पता चल गया।',
+        },
+        sources: [sen('p.74'), sen('p.327')],
+      },
+    ],
+  },
+  {
+    id: 'chapati-real',
+    tier: 3,
+    real: true,
+    pair: 'chapati',
+    minMode: HARD,
+    from: { en: 'Thanadar, Paharganj', hi: 'थानेदार, पहाड़गंज' },
+    to: OFFICE,
+    text: {
+      en: 'Remember February: a watchman brought a chapati and said, bake five like it for the five nearest villages. No one could tell where it came from.',
+      hi: 'फ़रवरी याद है: एक चौकीदार एक रोटी लाया और बोला, ऐसी पाँच बनाकर पास के पाँच गाँवों में भेजो। वह कहाँ से आई, कोई नहीं बता सका।',
+    },
+    checks: { en: ['Remember February', 'a chapati', 'the five nearest villages'], hi: ['फ़रवरी याद है', 'एक रोटी', 'पास के पाँच गाँवों'] },
+    why: {
+      text: {
+        en: "After Mainodin, then Paharganj's thanadar: 'neither its origin, nor its intention, were known'.",
+        hi: "मैनुद्दीन के बयान पर, जो तब पहाड़गंज के थानेदार थे: 'न शुरुआत पता थी, न मक़सद'।",
+      },
+      sources: [mh('pp.39-40')],
+    },
+  },
+  {
+    id: 'chapati-forged',
+    tier: 3,
+    real: false,
+    pair: 'chapati',
+    minMode: HARD,
+    from: { en: 'Thanadar, Paharganj', hi: 'थानेदार, पहाड़गंज' },
+    to: OFFICE,
+    text: {
+      en: 'Remember February: a watchman brought a chapati with a written order inside: bake five like it, and rise together when the sign comes.',
+      hi: 'फ़रवरी याद है: एक चौकीदार एक रोटी लाया, अंदर लिखा हुक्म था: ऐसी पाँच बनाओ, और इशारा मिलते ही सब एक साथ उठ खड़े हो।',
+    },
+    checks: { en: ['Remember February', 'a chapati', 'a written order inside'], hi: ['फ़रवरी याद है', 'एक रोटी', 'अंदर लिखा हुक्म था'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'chapatis',
+        explain: {
+          en: 'No message came with the chapatis; nobody knew what they meant.',
+          hi: 'रोटियों के साथ कोई संदेश नहीं था; उनका मतलब कोई नहीं जानता था।',
+        },
+        sources: [mh('pp.39-40'), trial(JATMALL_CHAPATI), trial(METCALFE_CHAPATI), majumdar('pp.202-03')],
+      },
+    ],
+  },
+  {
+    id: 'nicholson-forged',
+    tier: 3,
+    real: false,
+    minMode: HARD,
+    from: NEWSWRITER,
+    to: OFFICE,
+    text: {
+      en: 'News from Karnal: Colonel John Nicholson has joined the English column gathering there to march on Delhi.',
+      hi: 'करनाल से ख़बर: कर्नल जॉन निकोलसन वहाँ जुट रही अंग्रेज़ी फ़ौज में आ मिले हैं, जो दिल्ली पर चढ़ने वाली है।',
+    },
+    checks: { en: ['News from Karnal', 'Colonel John Nicholson'], hi: ['करनाल से ख़बर', 'कर्नल जॉन निकोलसन'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'nicholson',
+        explain: {
+          en: 'Nicholson was at Peshawar in May; he reached the Delhi camp on 7 August.',
+          hi: 'मई में निकोलसन पेशावर में थे; दिल्ली के कैंप में 7 अगस्त को पहुँचे।',
+        },
+        sources: [sen('p.331'), sen('p.333'), sen('p.97')],
+      },
+    ],
+  },
+  {
+    id: 'besieged-forged',
+    tier: 3,
+    real: false,
+    minMode: HARD,
+    from: COURT_NEWS,
+    to: OFFICE,
+    text: {
+      en: 'The English have closed every road round the city: Delhi is besieged, and not even the Mathura road is open.',
+      hi: 'अंग्रेज़ों ने शहर के चारों ओर हर रास्ता बंद कर दिया है: दिल्ली घिर गई है, मथुरा की सड़क तक खुली नहीं।',
+    },
+    checks: { en: ['closed every road', 'Delhi is besieged'], hi: ['हर रास्ता बंद', 'दिल्ली घिर गई है'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        factId: 'english-force',
+        explain: {
+          en: 'The Ridge fell to the English on 8 June; the Mathura road never closed.',
+          hi: 'अंग्रेज़ रिज पर 8 जून को ही पहुँचे, और मथुरा की सड़क कभी बंद नहीं की।',
+        },
+        sources: [sen('p.79')],
+      },
+    ],
+  },
+]
+
+export const messages: Message[] = [...eventMessages, ...datelessMessages, ...mediumMessages, ...hardMessages]
