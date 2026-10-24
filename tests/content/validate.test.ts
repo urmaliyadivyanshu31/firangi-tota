@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fixture from '../../src/content/eras/_fixture'
-import { countSentences, surfaceTells, validateEra } from '../../src/content/validate'
+import { countSentences, pencilTells, surfaceTells, validateEra } from '../../src/content/validate'
 import type { Era } from '../../src/content/types'
 
 const fresh = (): Era => structuredClone(fixture)
@@ -183,6 +183,62 @@ describe('validateEra', () => {
     it('can be switched off', () => {
       const e = withTexts(['one two three four'], ['one two three four five six'])
       expect(validateEra(e, { surfaceTells: false }).some((p) => p.startsWith('surface'))).toBe(false)
+    })
+  })
+
+  describe('pencil tells', () => {
+    const marks = (n: number) => Array.from({ length: n }, (_, i) => `w${i}`)
+    const withCounts = (genuine: number[], forged: number[]): Era => {
+      const e = fresh()
+      const g = msg(e, 'm1')
+      const f = msg(e, 'm2')
+      e.messages = [
+        ...genuine.map((n, i) => ({ ...structuredClone(g), id: `g${i}`, checks: { en: marks(n), hi: marks(n) } })),
+        ...forged.map((n, i) => ({ ...structuredClone(f), id: `f${i}`, checks: { en: marks(n), hi: marks(n) } })),
+      ]
+      return e
+    }
+    const paired = (): Era => {
+      const e = fresh()
+      msg(e, 'm1').pair = 'p'
+      msg(e, 'm2').pair = 'p'
+      msg(e, 'm1').checks = { en: ['guards changed', 'the gate'], hi: ['पहरेदार बदले', 'फाटक पर'] }
+      return e
+    }
+    it('accepts the untouched fixture', () => {
+      expect(pencilTells(fresh())).toEqual([])
+    })
+    it('flags a pair whose halves carry different numbers of marks', () => {
+      const p = pencilTells(paired())
+      expect(p).toContain('m2: checks count differs from its pair (1 vs 2) [en]')
+      expect(p).toContain('m2: checks count differs from its pair (1 vs 2) [hi]')
+    })
+    it('flags a mean gap beyond 15%', () => {
+      expect(pencilTells(withCounts([3, 3], [2, 2]))).toEqual([
+        'surface: pencil count gives away (3 vs 2) [en]',
+        'surface: pencil count gives away (3 vs 2) [hi]',
+      ])
+    })
+    it('flags a gap in the share with 2+ marks beyond 15 points, even when the means match', () => {
+      const p = pencilTells(withCounts([2, 2], [1, 3]))
+      expect(p).toContain('surface: pencil count gives away (100% vs 50% with 2+ marks) [en]')
+      expect(p.some((x) => x.includes('(2 vs 2)'))).toBe(false)
+    })
+    it('accepts small gaps', () => {
+      expect(pencilTells(withCounts([3, 3, 2], [3, 2, 2]))).toEqual([])
+    })
+    it('runs inside validateEra and can be switched off', () => {
+      const e = paired()
+      expect(validateEra(e)).toContain('m2: checks count differs from its pair (1 vs 2) [en]')
+      const off = validateEra(e, { pencilTells: false })
+      expect(off.some((x) => x.includes('checks count differs') || x.includes('pencil count'))).toBe(false)
+    })
+    it('flags a mark that leans on a filled-in date', () => {
+      const e = fresh()
+      msg(e, 'm1').checks = { en: ['On 11 May', 'guards changed'], hi: ['पहरेदार बदले', 'फाटक पर'] }
+      const p = validateEra(e)
+      expect(p).toContain('m1: check "On 11 May" depends on the date (not found on day 2) [en]')
+      expect(p.some((x) => x.includes('depends on the date') && x.includes('[hi]'))).toBe(false)
     })
   })
 

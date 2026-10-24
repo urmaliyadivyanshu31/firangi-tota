@@ -45,7 +45,7 @@ export const messages: Message[] = [
       en: '8:45 pm tonight: “Radio is the only place where you can find uncensored news.”',
       hi: 'आज रात 8:45 बजे: “रेडियो ही वह जगह है जहाँ आपको बिना काट-छाँट की ख़बर मिलती है।”',
     },
-    checks: { en: ['8:45 pm'], hi: ['8:45 बजे'] },
+    checks: { en: ['8:45 pm', 'uncensored news'], hi: ['8:45 बजे', 'बिना काट-छाँट की ख़बर'] },
     document: { sources: [{ id: 'huacuja-2023', loc: 'police transcript of 30 Oct 1942' }] },
     why: {
       text: {
@@ -69,7 +69,7 @@ export const messages: Message[] = [
       en: '9:45 pm tonight: “Radio is the only place where you can find uncensored news.”',
       hi: 'आज रात 9:45 बजे: “रेडियो ही वह जगह है जहाँ आपको बिना काट-छाँट की ख़बर मिलती है।”',
     },
-    checks: { en: ['9:45 pm'], hi: ['9:45 बजे'] },
+    checks: { en: ['9:45 pm', 'uncensored news'], hi: ['9:45 बजे', 'बिना काट-छाँट की ख़बर'] },
     tells: [
       {
         kind: 'number',
@@ -93,7 +93,7 @@ export const messages: Message[] = [
       en: 'This week’s recorded speeches: Sardar Patel’s, made after the Gowalia Tank resolution, and Maulana Azad’s, in his own voice.',
       hi: 'इस हफ़्ते के रिकॉर्ड किए भाषण: सरदार पटेल का, जो गोवालिया टैंक वाले प्रस्ताव के बाद दिया गया, और मौलाना आज़ाद का, उनकी अपनी आवाज़ में।',
     },
-    checks: { en: ['Gowalia Tank resolution'], hi: ['गोवालिया टैंक वाले प्रस्ताव'] },
+    checks: { en: ['Sardar Patel’s', 'Gowalia Tank resolution', 'Maulana Azad’s'], hi: ['सरदार पटेल का', 'गोवालिया टैंक वाले प्रस्ताव', 'मौलाना आज़ाद का'] },
     why: {
       text: {
         en: 'Police notes of late October 1942 record both speeches going out.',
@@ -117,7 +117,7 @@ export const messages: Message[] = [
       en: 'This week’s recorded speeches: Sardar Patel’s, made after the Azad Maidan resolution, and Maulana Azad’s, in his own voice.',
       hi: 'इस हफ़्ते के रिकॉर्ड किए भाषण: सरदार पटेल का, जो आज़ाद मैदान वाले प्रस्ताव के बाद दिया गया, और मौलाना आज़ाद का, उनकी अपनी आवाज़ में।',
     },
-    checks: { en: ['Azad Maidan resolution'], hi: ['आज़ाद मैदान वाले प्रस्ताव'] },
+    checks: { en: ['Sardar Patel’s', 'Azad Maidan resolution', 'Maulana Azad’s'], hi: ['सरदार पटेल का', 'आज़ाद मैदान वाले प्रस्ताव', 'मौलाना आज़ाद का'] },
     tells: [
       {
         kind: 'place',
@@ -139,7 +139,7 @@ export const messages: Message[] = [
       en: 'This is the Congress Radio calling on 42.34 metres from somewhere in India. First, the news in Hindustani.',
       hi: 'यह कांग्रेस रेडियो है, 42.34 मीटर पर, हिंदुस्तान में कहीं से बोल रहा है। पहले हिंदुस्तानी में ख़बरें।',
     },
-    checks: { en: ['42.34 metres', 'somewhere in India'], hi: ['42.34 मीटर', 'हिंदुस्तान में कहीं से'] },
+    checks: { en: ['Congress Radio', '42.34 metres', 'somewhere in India'], hi: ['कांग्रेस रेडियो', '42.34 मीटर', 'हिंदुस्तान में कहीं से'] },
     why: {
       text: {
         en: 'The station’s real opening words, as Usha Mehta remembered them.',
@@ -159,7 +159,7 @@ export const messages: Message[] = [
       en: 'This is the Congress Radio calling on 43.24 metres from somewhere in India. First, the news in Hindustani.',
       hi: 'यह कांग्रेस रेडियो है, 43.24 मीटर पर, हिंदुस्तान में कहीं से बोल रहा है। पहले हिंदुस्तानी में ख़बरें।',
     },
-    checks: { en: ['43.24 metres'], hi: ['43.24 मीटर'] },
+    checks: { en: ['Congress Radio', '43.24 metres', 'somewhere in India'], hi: ['कांग्रेस रेडियो', '43.24 मीटर', 'हिंदुस्तान में कहीं से'] },
     tells: [
       {
         kind: 'number',
@@ -181,7 +181,7 @@ export const messages: Message[] = [
       en: 'On 9 August, after the dawn arrests, Aruna Asaf Ali raised the Congress flag at Gowalia Tank Maidan.',
       hi: '9 अगस्त को, तड़के की गिरफ़्तारियों के बाद, अरुणा आसफ़ अली ने गोवालिया टैंक मैदान में कांग्रेस का झंडा फहराया।',
     },
-    checks: { en: ['Aruna Asaf Ali', 'Gowalia Tank Maidan'], hi: ['अरुणा आसफ़ अली', 'गोवालिया टैंक मैदान'] },
+    checks: { en: ['On 9 August', 'Aruna Asaf Ali', 'Gowalia Tank Maidan'], hi: ['9 अगस्त को', 'अरुणा आसफ़ अली', 'गोवालिया टैंक मैदान'] },
     why: {
       text: {
         en: 'Aruna Asaf Ali raised the flag there on 9 August 1942.',
@@ -201,7 +201,7 @@ export const messages: Message[] = [
       en: 'On 9 August, after the dawn arrests, Sarojini Naidu raised the Congress flag at Gowalia Tank Maidan.',
       hi: '9 अगस्त को, तड़के की गिरफ़्तारियों के बाद, सरोजिनी नायडू ने गोवालिया टैंक मैदान में कांग्रेस का झंडा फहराया।',
     },
-    checks: { en: ['Sarojini Naidu'], hi: ['सरोजिनी नायडू'] },
+    checks: { en: ['On 9 August', 'Sarojini Naidu', 'Gowalia Tank Maidan'], hi: ['9 अगस्त को', 'सरोजिनी नायडू', 'गोवालिया टैंक मैदान'] },
     tells: [
       {
         kind: 'name',
@@ -223,7 +223,7 @@ export const messages: Message[] = [
       en: 'On Saturday 8 August, at Gowalia Tank, the All-India Congress Committee passed the Quit India resolution. Only 13 voted against.',
       hi: 'शनिवार 8 अगस्त को गोवालिया टैंक में ऑल इंडिया कांग्रेस कमेटी ने ‘भारत छोड़ो’ प्रस्ताव पास किया। सिर्फ़ 13 ने विरोध किया।',
     },
-    checks: { en: ['Saturday 8 August', 'Only 13'], hi: ['शनिवार 8 अगस्त', 'सिर्फ़ 13'] },
+    checks: { en: ['Saturday 8 August', 'Gowalia Tank', 'Only 13'], hi: ['शनिवार 8 अगस्त', 'गोवालिया टैंक', 'सिर्फ़ 13'] },
     why: {
       text: {
         en: 'Passed Saturday 8 August 1942, with “only 13 members” against.',
@@ -243,7 +243,7 @@ export const messages: Message[] = [
       en: 'On Saturday 8 August, at Gowalia Tank, the All-India Congress Committee passed the Quit India resolution. Only 31 voted against.',
       hi: 'शनिवार 8 अगस्त को गोवालिया टैंक में ऑल इंडिया कांग्रेस कमेटी ने ‘भारत छोड़ो’ प्रस्ताव पास किया। सिर्फ़ 31 ने विरोध किया।',
     },
-    checks: { en: ['Only 31'], hi: ['सिर्फ़ 31'] },
+    checks: { en: ['Saturday 8 August', 'Gowalia Tank', 'Only 31'], hi: ['शनिवार 8 अगस्त', 'गोवालिया टैंक', 'सिर्फ़ 31'] },
     tells: [
       {
         kind: 'number',
@@ -265,7 +265,7 @@ export const messages: Message[] = [
       en: 'The police came at 5 o’clock on Sunday morning, 9 August, and took our leaders across Bombay at one stroke.',
       hi: 'पुलिस रविवार 9 अगस्त की सुबह 5 बजे आई और एक ही झटके में पूरे बंबई से हमारे नेताओं को उठा ले गई।',
     },
-    checks: { en: ['5 o’clock on Sunday morning'], hi: ['सुबह 5 बजे'] },
+    checks: { en: ['5 o’clock', 'Sunday morning, 9 August'], hi: ['सुबह 5 बजे', 'रविवार 9 अगस्त'] },
     why: {
       text: {
         en: 'The Governor reported the arrests began at 5 a.m. on 9 August.',
@@ -285,7 +285,7 @@ export const messages: Message[] = [
       en: 'The police came on Saturday night, 8 August, the moment the meeting ended, and took our leaders across Bombay at one stroke.',
       hi: 'पुलिस शनिवार 8 अगस्त की रात, बैठक ख़त्म होते ही आई और एक ही झटके में पूरे बंबई से हमारे नेताओं को उठा ले गई।',
     },
-    checks: { en: ['Saturday night, 8 August'], hi: ['शनिवार 8 अगस्त की रात'] },
+    checks: { en: ['Saturday night, 8 August', 'the moment the meeting ended'], hi: ['शनिवार 8 अगस्त की रात', 'बैठक ख़त्म होते ही'] },
     tells: [
       {
         kind: 'date',
@@ -327,7 +327,7 @@ export const messages: Message[] = [
       en: 'Gandhiji is held in Yerwada jail in Poona. Nehru and the Working Committee are in Ahmednagar Fort.',
       hi: 'गांधीजी पूना की यरवदा जेल में बंद हैं। नेहरू और वर्किंग कमेटी अहमदनगर क़िले में हैं।',
     },
-    checks: { en: ['Yerwada jail'], hi: ['यरवदा जेल'] },
+    checks: { en: ['Yerwada jail', 'Ahmednagar Fort'], hi: ['यरवदा जेल', 'अहमदनगर क़िले'] },
     tells: [
       {
         kind: 'place',
@@ -351,7 +351,7 @@ export const messages: Message[] = [
       en: 'Read, then burn. From today we also work from Paradise Bungalow, near Mahalaxmi Temple.',
       hi: 'पढ़कर जला दीजिए। आज से हम महालक्ष्मी मंदिर के पास पैराडाइज़ बंगले से भी काम करेंगे।',
     },
-    checks: { en: ['near Mahalaxmi Temple'], hi: ['महालक्ष्मी मंदिर के पास'] },
+    checks: { en: ['Paradise Bungalow', 'near Mahalaxmi Temple'], hi: ['पैराडाइज़ बंगले', 'महालक्ष्मी मंदिर के पास'] },
     why: {
       text: {
         en: 'The police list of the station’s sites: Paradise Bungalow, Mahalaxmi, from 3 November 1942.',
@@ -375,7 +375,7 @@ export const messages: Message[] = [
       en: 'Read, then burn. From today we also work from Paradise Bungalow, near Mumbadevi Temple.',
       hi: 'पढ़कर जला दीजिए। आज से हम मुंबादेवी मंदिर के पास पैराडाइज़ बंगले से भी काम करेंगे।',
     },
-    checks: { en: ['near Mumbadevi Temple'], hi: ['मुंबादेवी मंदिर के पास'] },
+    checks: { en: ['Paradise Bungalow', 'near Mumbadevi Temple'], hi: ['पैराडाइज़ बंगले', 'मुंबादेवी मंदिर के पास'] },
     tells: [
       {
         kind: 'place',
@@ -397,7 +397,7 @@ export const messages: Message[] = [
       en: 'Vithalbhai Jhaveri has made tonight’s two records in the recording room. Play them after the news.',
       hi: 'विट्ठलभाई झवेरी ने रिकॉर्डिंग वाले कमरे में आज रात के दो रिकॉर्ड बनाए हैं। ख़बरों के बाद इन्हें बजाइए।',
     },
-    checks: { en: ['Vithalbhai Jhaveri'], hi: ['विट्ठलभाई झवेरी'] },
+    checks: { en: ['Vithalbhai Jhaveri', 'two records', 'recording room'], hi: ['विट्ठलभाई झवेरी', 'रिकॉर्डिंग वाले कमरे', 'दो रिकॉर्ड'] },
     why: {
       text: {
         en: 'Vithalbhai Jhaveri ran recording; his handwriting was on the seized records.',
@@ -417,7 +417,7 @@ export const messages: Message[] = [
       en: 'Vithalbhai Patel has made tonight’s two records in the recording room. Play them after the news.',
       hi: 'विट्ठलभाई पटेल ने रिकॉर्डिंग वाले कमरे में आज रात के दो रिकॉर्ड बनाए हैं। ख़बरों के बाद इन्हें बजाइए।',
     },
-    checks: { en: ['Vithalbhai Patel'], hi: ['विट्ठलभाई पटेल'] },
+    checks: { en: ['Vithalbhai Patel', 'two records', 'recording room'], hi: ['विट्ठलभाई पटेल', 'रिकॉर्डिंग वाले कमरे', 'दो रिकॉर्ड'] },
     tells: [
       {
         kind: 'name',
@@ -440,7 +440,7 @@ export const messages: Message[] = [
       en: 'Two records tonight: first the news in Hindustani, then an English talk read by Lohia.',
       hi: 'आज रात दो रिकॉर्ड: पहले हिंदुस्तानी में ख़बरें, फिर लोहिया का पढ़ा हुआ अंग्रेज़ी भाषण।',
     },
-    checks: { en: ['read by Lohia'], hi: ['लोहिया का पढ़ा हुआ'] },
+    checks: { en: ['news in Hindustani', 'read by Lohia'], hi: ['हिंदुस्तानी में ख़बरें', 'लोहिया का पढ़ा हुआ'] },
     why: {
       text: {
         en: 'Usha Mehta: most English speeches were read by Lohia and Coomi Dastur.',
@@ -460,7 +460,7 @@ export const messages: Message[] = [
       en: 'Two records tonight: first the news in Hindustani, then an English talk Nehru recorded for us this week.',
       hi: 'आज रात दो रिकॉर्ड: पहले हिंदुस्तानी में ख़बरें, फिर अंग्रेज़ी भाषण, जो नेहरू ने इसी हफ़्ते हमारे लिए रिकॉर्ड किया।',
     },
-    checks: { en: ['Nehru recorded for us this week'], hi: ['नेहरू ने इसी हफ़्ते हमारे लिए रिकॉर्ड किया'] },
+    checks: { en: ['news in Hindustani', 'Nehru recorded for us'], hi: ['हिंदुस्तानी में ख़बरें', 'नेहरू ने इसी हफ़्ते'] },
     tells: [
       {
         kind: 'name',
@@ -484,7 +484,7 @@ export const messages: Message[] = [
       en: 'Police have raided the radio shops, Chicago Radio among them, and arrested technicians. Send no one to buy parts.',
       hi: 'पुलिस ने रेडियो की दुकानों पर छापा मारा है, शिकागो रेडियो पर भी, और मिस्त्रियों को पकड़ लिया है। पुर्ज़े ख़रीदने किसी को मत भेजिए।',
     },
-    checks: { en: ['Chicago Radio'], hi: ['शिकागो रेडियो'] },
+    checks: { en: ['radio shops', 'Chicago Radio', 'arrested technicians'], hi: ['रेडियो की दुकानों', 'शिकागो रेडियो', 'मिस्त्रियों को पकड़ लिया'] },
     why: {
       text: {
         en: 'A week before the 12 November raid, police raided Chicago Radio and others.',
@@ -505,7 +505,7 @@ export const messages: Message[] = [
       en: 'Police have raided the radio shops, Calcutta Radio among them, and arrested technicians. Send no one to buy parts.',
       hi: 'पुलिस ने रेडियो की दुकानों पर छापा मारा है, कलकत्ता रेडियो पर भी, और मिस्त्रियों को पकड़ लिया है। पुर्ज़े ख़रीदने किसी को मत भेजिए।',
     },
-    checks: { en: ['Calcutta Radio'], hi: ['कलकत्ता रेडियो'] },
+    checks: { en: ['radio shops', 'Calcutta Radio', 'arrested technicians'], hi: ['रेडियो की दुकानों', 'कलकत्ता रेडियो', 'मिस्त्रियों को पकड़ लिया'] },
     tells: [
       {
         kind: 'name',
@@ -530,7 +530,7 @@ export const messages: Message[] = [
       en: 'Gandhiji to the Viceroy, from Detention Camp, 5 November, on Lord Halifax’s son: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.”',
       hi: 'गांधीजी का वायसराय को ख़त, नज़रबंदी कैंप से, 5 नवंबर, लॉर्ड हैलिफ़ैक्स के बेटे पर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।”',
     },
-    checks: { en: ['from Detention Camp'], hi: ['नज़रबंदी कैंप से'] },
+    checks: { en: ['from Detention Camp', '5 November', 'Peter Wood'], hi: ['नज़रबंदी कैंप से', '5 नवंबर', 'पीटर वुड'] },
     document: { sources: [{ id: 'cwmg-76', loc: 'No. 442, pp. 416–17' }] },
     why: {
       text: {
@@ -552,7 +552,7 @@ export const messages: Message[] = [
       en: 'Gandhiji to the Viceroy, from Ahmednagar Fort, 5 November, on Lord Halifax’s son: “I have just read about the sad but heroic death of Hon’ble Peter Wood in action.”',
       hi: 'गांधीजी का वायसराय को ख़त, अहमदनगर क़िले से, 5 नवंबर, लॉर्ड हैलिफ़ैक्स के बेटे पर: “मैंने अभी माननीय पीटर वुड की लड़ाई में दुखभरी पर बहादुर मौत के बारे में पढ़ा।”',
     },
-    checks: { en: ['from Ahmednagar Fort'], hi: ['अहमदनगर क़िले से'] },
+    checks: { en: ['from Ahmednagar Fort', '5 November', 'Peter Wood'], hi: ['अहमदनगर क़िले से', '5 नवंबर', 'पीटर वुड'] },
     tells: [
       {
         kind: 'place',
@@ -598,7 +598,7 @@ export const messages: Message[] = [
       en: 'This is Congress Radio calling from Bombay, on 42.34. … The entire world is aware that a ban has been laid on the publication of news nowadays.',
       hi: 'यह कांग्रेस रेडियो है, बंबई से, 42.34 पर बोल रहा है। … पूरी दुनिया जानती है कि आजकल ख़बरें छापने पर पाबंदी लगी है।',
     },
-    checks: { en: ['calling from Bombay'], hi: ['बंबई से'] },
+    checks: { en: ['calling from Bombay', 'a ban has been laid'], hi: ['बंबई से', 'पाबंदी लगी है'] },
     tells: [
       {
         kind: 'form',
@@ -620,7 +620,7 @@ export const messages: Message[] = [
       en: 'Tonight, {weekday} {date}, our appeal is to students: “Education can wait but not the freedom.”',
       hi: 'आज रात, {weekday} {date}, हमारी अपील छात्रों से है: “पढ़ाई रुक सकती है, आज़ादी नहीं।”',
     },
-    checks: { en: ['Tonight'], hi: ['आज रात'] },
+    checks: { en: ['Tonight', 'appeal is to students'], hi: ['आज रात', 'अपील छात्रों से है'] },
     why: {
       text: {
         en: 'The weekday matches the date. The line is from Bulletin No. 8, to students.',
@@ -644,7 +644,7 @@ export const messages: Message[] = [
       en: 'Tonight, {weekday+1} {date}, our appeal is to students: “Education can wait but not the freedom.”',
       hi: 'आज रात, {weekday+1} {date}, हमारी अपील छात्रों से है: “पढ़ाई रुक सकती है, आज़ादी नहीं।”',
     },
-    checks: { en: ['Tonight'], hi: ['आज रात'] },
+    checks: { en: ['Tonight', 'appeal is to students'], hi: ['आज रात', 'अपील छात्रों से है'] },
     tells: [
       {
         kind: 'weekday',
@@ -665,7 +665,7 @@ export const messages: Message[] = [
       en: 'Gandhiji’s last message: Every man is free to go to the fullest length under Ahimsa… Satyagrahis should go out to die and not to live… Karenge Ya Marenge.',
       hi: 'गांधीजी का आख़िरी संदेश: अहिंसा के रास्ते पर हर आदमी पूरी हद तक जाने को आज़ाद है… सत्याग्रही मरने के लिए निकलें, जीने के लिए नहीं… करेंगे या मरेंगे।',
     },
-    checks: { en: ['Gandhiji’s last message', 'Karenge Ya Marenge'], hi: ['गांधीजी का आख़िरी संदेश', 'करेंगे या मरेंगे'] },
+    checks: { en: ['Gandhiji’s last message', 'Ahimsa', 'Karenge Ya Marenge'], hi: ['गांधीजी का आख़िरी संदेश', 'अहिंसा', 'करेंगे या मरेंगे'] },
     document: { sources: [{ id: 'goi-1943', loc: 'App. X' }] },
     why: {
       text: {
@@ -686,7 +686,7 @@ export const messages: Message[] = [
       en: 'Mr. Gandhi’s last message, left at his arrest: keep the disturbances within the law… and wait at home.',
       hi: 'मिस्टर गांधी का आख़िरी संदेश, जो वे गिरफ़्तारी के वक़्त छोड़ गए: गड़बड़ियों को क़ानून के अंदर रखो… और घर बैठो।',
     },
-    checks: { en: ['Mr. Gandhi', 'the disturbances'], hi: ['मिस्टर गांधी', 'गड़बड़ियों'] },
+    checks: { en: ['Mr. Gandhi’s last message', 'the disturbances', 'wait at home'], hi: ['मिस्टर गांधी का आख़िरी संदेश', 'गड़बड़ियों', 'घर बैठो'] },
     tells: [
       {
         kind: 'habit',
@@ -708,7 +708,7 @@ export const messages: Message[] = [
       en: 'Play Lohia’s talk, but never say his name on air. It says: “So far we were conducting movements but now we are conducting a revolution.”',
       hi: 'लोहिया का भाषण बजाइए, पर रेडियो पर उनका नाम कभी मत लीजिए। भाषण में आता है: “अब तक हम आंदोलन चला रहे थे, पर अब हम क्रांति चला रहे हैं।”',
     },
-    checks: { en: ['never say his name on air'], hi: ['उनका नाम कभी मत लीजिए'] },
+    checks: { en: ['Lohia’s talk', 'never say his name on air', 'conducting a revolution'], hi: ['लोहिया का भाषण', 'उनका नाम कभी मत लीजिए', 'क्रांति चला रहे हैं'] },
     why: {
       text: {
         en: 'Lohia’s words as Usha Mehta recalled them. On air, no names.',
@@ -728,7 +728,7 @@ export const messages: Message[] = [
       en: 'Play Lohia’s talk, and first tell listeners: “Now hear Dr Lohia, who recorded this tonight in this very building.”',
       hi: 'लोहिया का भाषण बजाइए, और पहले सुनने वालों से कहिए: “अब सुनिए डॉ. लोहिया को, जिन्होंने आज रात इसी इमारत में यह रिकॉर्ड किया।”',
     },
-    checks: { en: ['Now hear Dr Lohia'], hi: ['अब सुनिए डॉ. लोहिया को'] },
+    checks: { en: ['Lohia’s talk', 'Now hear Dr Lohia', 'in this very building'], hi: ['लोहिया का भाषण', 'अब सुनिए डॉ. लोहिया को', 'इसी इमारत में'] },
     tells: [
       {
         kind: 'form',
@@ -750,7 +750,7 @@ export const messages: Message[] = [
       en: 'A report says soldiers were shot in a camp up north. Only one messenger, no second source. Hold it until confirmed.',
       hi: 'ख़बर है कि उत्तर की किसी छावनी में सिपाहियों को गोली मारी गई। बस एक हरकारा, कोई दूसरा गवाह नहीं। पक्की होने तक इसे रोकिए।',
     },
-    checks: { en: ['Hold it until confirmed'], hi: ['पक्की होने तक इसे रोकिए'] },
+    checks: { en: ['Only one messenger', 'Hold it until confirmed'], hi: ['बस एक हरकारा', 'पक्की होने तक इसे रोकिए'] },
     why: {
       text: {
         en: 'The station held its Meerut story a month, “as it was not confirmed”.',
@@ -770,7 +770,7 @@ export const messages: Message[] = [
       en: 'No time to check this one. Put it on air tonight: the Indian troops in Poona have joined the people.',
       hi: 'इसे जाँचने का वक़्त नहीं। आज रात रेडियो पर बोल दीजिए: पूना के हिंदुस्तानी सिपाही जनता से मिल गए हैं।',
     },
-    checks: { en: ['No time to check'], hi: ['जाँचने का वक़्त नहीं'] },
+    checks: { en: ['No time to check', 'troops in Poona'], hi: ['जाँचने का वक़्त नहीं', 'पूना के हिंदुस्तानी सिपाही'] },
     tells: [
       {
         kind: 'habit',
@@ -793,7 +793,7 @@ export const messages: Message[] = [
       en: 'Tonight’s main news comes from the Congress office that Sucheta Kripalani runs. Read it straight after Sare Jahan Se Achcha.',
       hi: 'आज रात की ख़ास ख़बरें उस कांग्रेस दफ़्तर से आई हैं जिसे सुचेता कृपलानी चलाती हैं। “सारे जहाँ से अच्छा” के फ़ौरन बाद इन्हें पढ़िए।',
     },
-    checks: { en: ['Sucheta Kripalani'], hi: ['सुचेता कृपलानी'] },
+    checks: { en: ['Sucheta Kripalani', 'Sare Jahan Se Achcha'], hi: ['सुचेता कृपलानी', 'सारे जहाँ से अच्छा'] },
     why: {
       text: {
         en: 'Usha Mehta: the Congress office in Bombay, run by Sucheta Kripalani, supplied news.',
@@ -813,7 +813,7 @@ export const messages: Message[] = [
       en: 'Tonight’s main news comes from the Congress office that Kasturba Gandhi runs. Read it straight after Sare Jahan Se Achcha.',
       hi: 'आज रात की ख़ास ख़बरें उस कांग्रेस दफ़्तर से आई हैं जिसे कस्तूरबा गांधी चलाती हैं। “सारे जहाँ से अच्छा” के फ़ौरन बाद इन्हें पढ़िए।',
     },
-    checks: { en: ['Kasturba Gandhi'], hi: ['कस्तूरबा गांधी'] },
+    checks: { en: ['Kasturba Gandhi', 'Sare Jahan Se Achcha'], hi: ['कस्तूरबा गांधी', 'सारे जहाँ से अच्छा'] },
     tells: [
       {
         kind: 'knowledge',
@@ -876,7 +876,7 @@ export const messages: Message[] = [
       en: 'Two new records tonight. The old ones are worn out: a record lasts only eight or ten plays.',
       hi: 'आज रात दो नए रिकॉर्ड। पुराने घिस गए हैं; एक रिकॉर्ड बस 8 या 10 बार चलता है।',
     },
-    checks: { en: ['eight or ten plays'], hi: ['8 या 10 बार'] },
+    checks: { en: ['Two new records', 'eight or ten plays'], hi: ['दो नए रिकॉर्ड', '8 या 10 बार'] },
     why: {
       text: {
         en: 'Abbas: a record “could be played, I think, eight or ten times”.',
@@ -896,7 +896,7 @@ export const messages: Message[] = [
       en: 'Tonight’s talk comes on a tape. Put it on the tape recorder before 8:45.',
       hi: 'आज रात का भाषण टेप पर है। 8:45 से पहले उसे टेप रिकॉर्डर पर चढ़ा दीजिए।',
     },
-    checks: { en: ['on a tape'], hi: ['टेप पर है'] },
+    checks: { en: ['on a tape', 'before 8:45'], hi: ['टेप पर है', '8:45 से पहले'] },
     tells: [
       {
         kind: 'anachronism',
@@ -918,7 +918,7 @@ export const messages: Message[] = [
       en: 'Say it plainly before “Vande Mataram”: India has no enmity for the British or any other people.',
       hi: '“वंदे मातरम्” से पहले साफ़ कहिए: भारत की अंग्रेज़ों से या किसी और से कोई दुश्मनी नहीं है।',
     },
-    checks: { en: ['no enmity for the British'], hi: ['कोई दुश्मनी नहीं'] },
+    checks: { en: ['Vande Mataram', 'no enmity for the British'], hi: ['वंदे मातरम्', 'कोई दुश्मनी नहीं'] },
     why: {
       text: {
         en: 'Usha Mehta recalled these words; the judge found no pro-Axis line.',
@@ -938,7 +938,7 @@ export const messages: Message[] = [
       en: 'Tell listeners tonight: the Japanese army is India’s friend. Welcome it when it reaches Bengal.',
       hi: 'आज रात कहिए: जापानी फ़ौज हिंदुस्तान की दोस्त है। बंगाल पहुँचे तो उसका स्वागत कीजिए।',
     },
-    checks: { en: ['Japanese army is India’s friend'], hi: ['जापानी फ़ौज हिंदुस्तान की दोस्त'] },
+    checks: { en: ['Japanese army is India’s friend', 'reaches Bengal'], hi: ['जापानी फ़ौज हिंदुस्तान की दोस्त', 'बंगाल पहुँचे'] },
     tells: [
       {
         kind: 'habit',
@@ -960,7 +960,7 @@ export const messages: Message[] = [
       en: 'The special train left Bombay at 7:15 am on Sunday 9 August. Gandhiji and those with him were taken off at Chinchwad, short of Poona.',
       hi: 'ख़ास ट्रेन रविवार 9 अगस्त को सुबह 7:15 पर बंबई से चली। गांधीजी और उनके साथी पूना से पहले चिंचवड़ में उतारे गए।',
     },
-    checks: { en: ['taken off at Chinchwad'], hi: ['चिंचवड़ में उतारे गए'] },
+    checks: { en: ['7:15 am', 'Sunday 9 August', 'taken off at Chinchwad'], hi: ['सुबह 7:15', 'रविवार 9 अगस्त', 'चिंचवड़ में उतारे गए'] },
     why: {
       text: {
         en: 'They alighted at “Chinchwad, a small station short of Poona”, said the Governor.',
@@ -980,7 +980,7 @@ export const messages: Message[] = [
       en: 'The special train left Bombay at 7:15 am on Sunday 9 August. Gandhiji and those with him were taken off at Kalyan.',
       hi: 'ख़ास ट्रेन रविवार 9 अगस्त को सुबह 7:15 पर बंबई से चली। गांधीजी और उनके साथी कल्याण में उतारे गए।',
     },
-    checks: { en: ['taken off at Kalyan'], hi: ['कल्याण में उतारे गए'] },
+    checks: { en: ['7:15 am', 'Sunday 9 August', 'taken off at Kalyan'], hi: ['सुबह 7:15', 'रविवार 9 अगस्त', 'कल्याण में उतारे गए'] },
     tells: [
       {
         kind: 'place',
@@ -1004,7 +1004,7 @@ export const messages: Message[] = [
       en: 'Three months today since 9 August. Our leaders are still in jail, and we are still on air.',
       hi: '9 अगस्त को आज तीन महीने पूरे हुए। हमारे नेता अब भी जेल में हैं, और हम अब भी रेडियो पर बोल रहे हैं।',
     },
-    checks: { en: ['since 9 August'], hi: ['9 अगस्त को आज तीन महीने'] },
+    checks: { en: ['Three months today', 'since 9 August'], hi: ['9 अगस्त को', 'आज तीन महीने'] },
     why: {
       text: {
         en: 'Monday 9 November 1942: three months since the arrests of 9 August.',
@@ -1025,7 +1025,7 @@ export const messages: Message[] = [
       en: 'Three months today since 8 August, when they took our leaders. We are still on air.',
       hi: '8 अगस्त को आज तीन महीने पूरे हुए, जब वे हमारे नेताओं को ले गए। हम अब भी रेडियो पर बोल रहे हैं।',
     },
-    checks: { en: ['since 8 August'], hi: ['8 अगस्त को आज तीन महीने'] },
+    checks: { en: ['Three months today', 'since 8 August'], hi: ['8 अगस्त को', 'आज तीन महीने'] },
     tells: [
       {
         kind: 'date',
@@ -1049,10 +1049,7 @@ export const messages: Message[] = [
       en: 'Let the whole country resound with a million voices… the Congress Radio calling. … Never talk of the persons behind the stations.',
       hi: 'पूरा देश दस लाख आवाज़ों से गूँज उठे… कांग्रेस रेडियो बोल रहा है। … स्टेशनों के पीछे के लोगों की बात कभी मत कीजिए।',
     },
-    checks: {
-      en: ['Never talk of the persons behind the stations'],
-      hi: ['पीछे के लोगों की बात कभी मत कीजिए'],
-    },
+    checks: { en: ['a million voices', 'Never talk of the persons behind the stations'], hi: ['दस लाख आवाज़ों', 'पीछे के लोगों की बात कभी मत कीजिए'] },
     document: { sources: [{ id: 'huacuja-2023', loc: 'nn. 90, 129 (transcript of 12 Nov 1942 morning, from Thakkar p. 137)' }] },
     why: {
       text: {
@@ -1074,10 +1071,7 @@ export const messages: Message[] = [
       en: 'Let the whole country resound with a million voices… This morning Babubhai Khakhar and Vithalbhai Jhaveri, who run this station, thank every listener.',
       hi: 'पूरा देश दस लाख आवाज़ों से गूँज उठे… आज सुबह इस स्टेशन को चलाने वाले बाबूभाई खाखर और विट्ठलभाई झवेरी हर सुनने वाले का शुक्रिया करते हैं।',
     },
-    checks: {
-      en: ['Babubhai Khakhar and Vithalbhai Jhaveri'],
-      hi: ['बाबूभाई खाखर और विट्ठलभाई झवेरी'],
-    },
+    checks: { en: ['a million voices', 'Babubhai Khakhar and Vithalbhai Jhaveri'], hi: ['दस लाख आवाज़ों', 'बाबूभाई खाखर और विट्ठलभाई झवेरी'] },
     tells: [
       {
         kind: 'form',
@@ -1098,7 +1092,7 @@ export const messages: Message[] = [
       en: 'Police raided our organisers’ office today. Lohia’s answer: “The fight for freedom cannot stop. The work must go on…”',
       hi: 'आज पुलिस ने हमारे संगठन वालों के दफ़्तर पर छापा मारा। लोहिया का जवाब: “आज़ादी की लड़ाई रुक नहीं सकती। काम चलते रहना चाहिए…”',
     },
-    checks: { en: ['The work must go on'], hi: ['काम चलते रहना चाहिए'] },
+    checks: { en: ['Lohia’s answer', 'The work must go on'], hi: ['लोहिया का जवाब', 'काम चलते रहना चाहिए'] },
     why: {
       text: {
         en: 'Usha Mehta: after police raided Babubhai’s office on 12 November, Lohia said this.',
@@ -1121,7 +1115,7 @@ export const messages: Message[] = [
       en: 'On 9 August, after the dawn arrests, Aruna Asaf Ali raised the tricolour with the Ashoka Chakra at Gowalia Tank Maidan.',
       hi: '9 अगस्त को, तड़के की गिरफ़्तारियों के बाद, अरुणा आसफ़ अली ने गोवालिया टैंक मैदान में अशोक चक्र वाला तिरंगा फहराया।',
     },
-    checks: { en: ['with the Ashoka Chakra'], hi: ['अशोक चक्र वाला तिरंगा'] },
+    checks: { en: ['Aruna Asaf Ali', 'with the Ashoka Chakra', 'Gowalia Tank Maidan'], hi: ['अरुणा आसफ़ अली', 'गोवालिया टैंक मैदान', 'अशोक चक्र वाला तिरंगा'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1142,7 +1136,7 @@ export const messages: Message[] = [
       en: 'Gandhiji’s mantra at Gowalia Tank, 8 August: “Do or Die. We shall either free India or die in the attempt.”',
       hi: 'गोवालिया टैंक, 8 अगस्त, गांधीजी का मंत्र: “करो या मरो। या तो हम भारत को आज़ाद करेंगे या इस कोशिश में मर जाएँगे।”',
     },
-    checks: { en: ['Gandhiji’s mantra'], hi: ['गांधीजी का मंत्र'] },
+    checks: { en: ['Gandhiji’s mantra', 'Gowalia Tank, 8 August', 'Do or Die'], hi: ['गोवालिया टैंक, 8 अगस्त', 'गांधीजी का मंत्र', 'करो या मरो'] },
     document: { sources: [{ id: 'gandhi-1942' }] },
     why: {
       text: {
@@ -1163,7 +1157,7 @@ export const messages: Message[] = [
       en: 'Pandit Nehru’s mantra at Gowalia Tank, 8 August: “Do or Die. We shall either free India or die in the attempt.”',
       hi: 'गोवालिया टैंक, 8 अगस्त, पंडित नेहरू का मंत्र: “करो या मरो। या तो हम भारत को आज़ाद करेंगे या इस कोशिश में मर जाएँगे।”',
     },
-    checks: { en: ['Pandit Nehru’s mantra'], hi: ['पंडित नेहरू का मंत्र'] },
+    checks: { en: ['Pandit Nehru’s mantra', 'Gowalia Tank, 8 August', 'Do or Die'], hi: ['गोवालिया टैंक, 8 अगस्त', 'पंडित नेहरू का मंत्र', 'करो या मरो'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1186,7 +1180,7 @@ export const messages: Message[] = [
       en: 'News from Bihar: Jayaprakash Narayan has escaped from Hazaribagh Jail and gone underground.',
       hi: 'बिहार से ख़बर: जयप्रकाश नारायण हज़ारीबाग़ जेल से भाग निकले हैं और छिपकर काम कर रहे हैं।',
     },
-    checks: { en: ['Hazaribagh Jail'], hi: ['हज़ारीबाग़ जेल'] },
+    checks: { en: ['Jayaprakash Narayan', 'Hazaribagh Jail'], hi: ['जयप्रकाश नारायण', 'हज़ारीबाग़ जेल'] },
     why: {
       text: {
         en: 'JP escaped from Hazaribagh Jail in early November 1942.',
@@ -1207,7 +1201,7 @@ export const messages: Message[] = [
       en: 'News just in: Jayaprakash Narayan has escaped from Deoli camp and gone underground.',
       hi: 'अभी-अभी ख़बर आई: जयप्रकाश नारायण देवली कैंप से भाग निकले हैं और छिपकर काम कर रहे हैं।',
     },
-    checks: { en: ['Deoli camp'], hi: ['देवली कैंप'] },
+    checks: { en: ['Jayaprakash Narayan', 'Deoli camp'], hi: ['जयप्रकाश नारायण', 'देवली कैंप'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1230,7 +1224,7 @@ export const messages: Message[] = [
       en: 'News from London: yesterday Churchill said, “I have not become the King’s First Minister in order to preside over the liquidation of the British Empire.”',
       hi: 'लंदन से ख़बर: कल चर्चिल ने कहा, “मैं बादशाह का प्रधानमंत्री इसलिए नहीं बना हूँ कि ब्रिटिश साम्राज्य को ख़त्म करवाऊँ।”',
     },
-    checks: { en: ['Churchill said'], hi: ['चर्चिल ने कहा'] },
+    checks: { en: ['News from London', 'Churchill said', 'the King’s First Minister'], hi: ['लंदन से ख़बर', 'चर्चिल ने कहा', 'बादशाह का प्रधानमंत्री'] },
     why: {
       text: {
         en: 'Churchill said it at the Mansion House, London, on 10 November 1942.',
@@ -1251,7 +1245,7 @@ export const messages: Message[] = [
       en: 'News from Delhi: yesterday the Viceroy, Lord Linlithgow, said, “I have not become the King’s First Minister in order to preside over the liquidation of the British Empire.”',
       hi: 'दिल्ली से ख़बर: कल वायसराय लॉर्ड लिनलिथगो ने कहा, “मैं बादशाह का प्रधानमंत्री इसलिए नहीं बना हूँ कि ब्रिटिश साम्राज्य को ख़त्म करवाऊँ।”',
     },
-    checks: { en: ['the Viceroy, Lord Linlithgow'], hi: ['वायसराय लॉर्ड लिनलिथगो'] },
+    checks: { en: ['News from Delhi', 'the Viceroy, Lord Linlithgow', 'the King’s First Minister'], hi: ['दिल्ली से ख़बर', 'वायसराय लॉर्ड लिनलिथगो', 'बादशाह का प्रधानमंत्री'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1273,7 +1267,7 @@ export const messages: Message[] = [
       en: 'Police are asking questions at radio shops. Hide our Chicago Radio bills: the amplifier, Rs 599-8-0, and the microphone, Rs 250.',
       hi: 'पुलिस रेडियो की दुकानों पर पूछताछ कर रही है। शिकागो रेडियो की हमारी रसीदें छिपाइए: एम्प्लीफ़ायर, 599-8-0 रुपये, और माइक्रोफ़ोन, 250 रुपये।',
     },
-    checks: { en: ['Rs 599-8-0'], hi: ['599-8-0 रुपये'] },
+    checks: { en: ['Chicago Radio bills', 'Rs 599-8-0', 'Rs 250'], hi: ['शिकागो रेडियो', '599-8-0 रुपये', '250 रुपये'] },
     why: {
       text: {
         en: 'Court papers: Rs 599-8-0 (14 August) and Rs 250 (24 August), at Chicago Radio.',
@@ -1293,7 +1287,7 @@ export const messages: Message[] = [
       en: 'Police are asking questions at radio shops. Hide our Chicago Radio bills: the amplifier, Rs 599.50, and the microphone, Rs 250.',
       hi: 'पुलिस रेडियो की दुकानों पर पूछताछ कर रही है। शिकागो रेडियो की हमारी रसीदें छिपाइए: एम्प्लीफ़ायर, 599.50 रुपये, और माइक्रोफ़ोन, 250 रुपये।',
     },
-    checks: { en: ['Rs 599.50'], hi: ['599.50 रुपये'] },
+    checks: { en: ['Chicago Radio bills', 'Rs 599.50', 'Rs 250'], hi: ['शिकागो रेडियो', '599.50 रुपये', '250 रुपये'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1314,7 +1308,7 @@ export const messages: Message[] = [
       en: 'Remember Matangini Hazra of Tamluk, shot leading a procession on 29 September. She was 73.',
       hi: 'तमलुक की मातंगिनी हाज़रा को याद कीजिए। 29 सितंबर को जुलूस के आगे चलते हुए उन्हें गोली मारी गई। वे 73 साल की थीं।',
     },
-    checks: { en: ['She was 73', '29 September'], hi: ['73 साल', '29 सितंबर'] },
+    checks: { en: ['Matangini Hazra', '29 September', 'She was 73'], hi: ['मातंगिनी हाज़रा', '29 सितंबर', '73 साल'] },
     why: {
       text: {
         en: 'Matangini Hazra, 73, was shot at Tamluk on 29 September 1942.',
@@ -1334,7 +1328,7 @@ export const messages: Message[] = [
       en: 'Remember Matangini Hazra of Tamluk, shot leading a procession on 29 September. She was 37.',
       hi: 'तमलुक की मातंगिनी हाज़रा को याद कीजिए। 29 सितंबर को जुलूस के आगे चलते हुए उन्हें गोली मारी गई। वे 37 साल की थीं।',
     },
-    checks: { en: ['She was 37'], hi: ['37 साल'] },
+    checks: { en: ['Matangini Hazra', '29 September', 'She was 37'], hi: ['मातंगिनी हाज़रा', '29 सितंबर', '37 साल'] },
     tells: [
       {
         kind: 'number',
@@ -1356,7 +1350,7 @@ export const messages: Message[] = [
       en: 'Even their own Home Member, Maxwell, told the Assembly on 16 September: police firing had killed 340, and the army 318.',
       hi: 'उनके अपने होम मेंबर (गृह विभाग के मुखिया) मैक्सवेल ने 16 सितंबर को असेंबली में माना: पुलिस की गोलियों से 340 मरे, और फ़ौज की गोलियों से 318।',
     },
-    checks: { en: ['Home Member, Maxwell'], hi: ['होम मेंबर'] },
+    checks: { en: ['Home Member, Maxwell', '16 September', 'killed 340'], hi: ['होम मेंबर', '16 सितंबर', '340 मरे'] },
     why: {
       text: {
         en: 'Home Member Maxwell gave these figures on 16 September 1942, calling them incomplete.',
@@ -1376,7 +1370,7 @@ export const messages: Message[] = [
       en: 'Even the Viceroy, Lord Wavell, told the Assembly on 16 September: police firing had killed 340, and the army 318.',
       hi: 'वायसराय लॉर्ड वेवल ने भी 16 सितंबर को असेंबली में माना: पुलिस की गोलियों से 340 मरे, और फ़ौज की गोलियों से 318।',
     },
-    checks: { en: ['Lord Wavell'], hi: ['लॉर्ड वेवल'] },
+    checks: { en: ['the Viceroy, Lord Wavell', '16 September', 'killed 340'], hi: ['वायसराय लॉर्ड वेवल', '16 सितंबर', '340 मरे'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1401,7 +1395,7 @@ export const messages: Message[] = [
       en: 'Even their own Home Member, Maxwell, told the Assembly on 16 September: police and army firing had killed 10,000.',
       hi: 'उनके अपने होम मेंबर (गृह विभाग के मुखिया) मैक्सवेल ने 16 सितंबर को असेंबली में माना: पुलिस और फ़ौज की गोलियों से 10,000 मरे।',
     },
-    checks: { en: ['killed 10,000'], hi: ['10,000 मरे'] },
+    checks: { en: ['Home Member, Maxwell', '16 September', 'killed 10,000'], hi: ['होम मेंबर', '16 सितंबर', '10,000 मरे'] },
     tells: [
       {
         kind: 'number',
@@ -1423,7 +1417,7 @@ export const messages: Message[] = [
       en: 'Listeners keep asking: is this Netaji’s radio? No. Subhas Chandra Bose speaks from Germany, on Azad Hind Radio; we speak from inside India.',
       hi: 'सुनने वाले बार-बार पूछते हैं: क्या यह नेताजी का रेडियो है? नहीं। सुभाष चंद्र बोस जर्मनी से, आज़ाद हिंद रेडियो पर बोलते हैं; हम हिंदुस्तान के अंदर से बोलते हैं।',
     },
-    checks: { en: ['speaks from Germany'], hi: ['जर्मनी से'] },
+    checks: { en: ['Subhas Chandra Bose', 'speaks from Germany', 'Azad Hind Radio'], hi: ['सुभाष चंद्र बोस', 'जर्मनी से', 'आज़ाद हिंद रेडियो'] },
     why: {
       text: {
         en: 'True: in 1942 Bose broadcast from Germany, and listeners sometimes mixed up the stations.',
@@ -1446,7 +1440,7 @@ export const messages: Message[] = [
       en: 'Listeners keep asking: is this Netaji’s radio? No. Subhas Chandra Bose speaks from Singapore, on Azad Hind Radio; we speak from inside India.',
       hi: 'सुनने वाले बार-बार पूछते हैं: क्या यह नेताजी का रेडियो है? नहीं। सुभाष चंद्र बोस सिंगापुर से, आज़ाद हिंद रेडियो पर बोलते हैं; हम हिंदुस्तान के अंदर से बोलते हैं।',
     },
-    checks: { en: ['speaks from Singapore'], hi: ['सिंगापुर से'] },
+    checks: { en: ['Subhas Chandra Bose', 'speaks from Singapore', 'Azad Hind Radio'], hi: ['सुभाष चंद्र बोस', 'सिंगापुर से', 'आज़ाद हिंद रेडियो'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1468,7 +1462,7 @@ export const messages: Message[] = [
       en: 'News from Ahmednagar Fort: Pandit Nehru has finished writing his new book there, The Discovery of India.',
       hi: 'अहमदनगर क़िले से ख़बर: पंडित नेहरू ने वहाँ अपनी नई किताब ‘डिस्कवरी ऑफ़ इंडिया’ (भारत एक खोज) लिखकर पूरी कर ली है।',
     },
-    checks: { en: ['The Discovery of India'], hi: ['डिस्कवरी ऑफ़ इंडिया'] },
+    checks: { en: ['Ahmednagar Fort', 'Pandit Nehru', 'The Discovery of India'], hi: ['अहमदनगर क़िले', 'पंडित नेहरू', 'डिस्कवरी ऑफ़ इंडिया'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1488,7 +1482,7 @@ export const messages: Message[] = [
       en: 'Remember Kanaklata Barua of Assam. On 20 September she led the march on Gohpur police station with the flag in her hands, and was shot.',
       hi: 'असम की कनकलता बरुआ को याद कीजिए। 20 सितंबर को वे हाथ में झंडा लेकर गोहपुर थाने की ओर जुलूस के आगे चलीं, और उन्हें गोली मार दी गई।',
     },
-    checks: { en: ['Kanaklata Barua', '20 September'], hi: ['कनकलता बरुआ', '20 सितंबर'] },
+    checks: { en: ['Kanaklata Barua', '20 September', 'Gohpur police station'], hi: ['कनकलता बरुआ', '20 सितंबर', 'गोहपुर थाने'] },
     why: {
       text: {
         en: 'Kanaklata Barua, a teenage girl, was shot at Gohpur thana on 20 September 1942.',

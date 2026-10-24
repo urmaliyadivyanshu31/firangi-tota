@@ -58,7 +58,7 @@ const eventMessages: Message[] = [
       en: 'Monday, 18th May 1857. The King… took his seat on the throne, in state. The King bestowed arms and dresses of honour… on Mirza Mughal as Commander-in-Chief…',
       hi: 'सोमवार, 18 मई 1857। बादशाह… शान से तख़्त पर बैठे। बादशाह ने… मिर्ज़ा मुग़ल को कमांडर-इन-चीफ़ बनाकर हथियार और इज़्ज़त की पोशाकें दीं…',
     },
-    checks: { en: ['Mirza Mughal as Commander-in-Chief'], hi: ['मिर्ज़ा मुग़ल को कमांडर-इन-चीफ़'] },
+    checks: { en: ['Monday, 18th May 1857', 'Mirza Mughal', 'Commander-in-Chief'], hi: ['सोमवार, 18 मई 1857', 'मिर्ज़ा मुग़ल', 'कमांडर-इन-चीफ़'] },
     document: { sources: [trial(CHUNI_18)] },
     why: {
       text: {
@@ -80,7 +80,7 @@ const eventMessages: Message[] = [
       en: 'Monday, 18th May 1857. The King… took his seat on the throne, in state. The King bestowed arms and dresses of honour… on Mirza Jawan Bakht as Commander-in-Chief…',
       hi: 'सोमवार, 18 मई 1857। बादशाह… शान से तख़्त पर बैठे। बादशाह ने… मिर्ज़ा जवाँ बख़्त को कमांडर-इन-चीफ़ बनाकर हथियार और इज़्ज़त की पोशाकें दीं…',
     },
-    checks: { en: ['Mirza Jawan Bakht as Commander-in-Chief'], hi: ['मिर्ज़ा जवाँ बख़्त को कमांडर-इन-चीफ़'] },
+    checks: { en: ['Monday, 18th May 1857', 'Mirza Jawan Bakht', 'Commander-in-Chief'], hi: ['सोमवार, 18 मई 1857', 'मिर्ज़ा जवाँ बख़्त', 'कमांडर-इन-चीफ़'] },
     tells: [
       {
         kind: 'name',
@@ -107,7 +107,7 @@ const eventMessages: Message[] = [
       en: "19th May. The new gold coins (mohurs) read: 'Silver and gold coin struck by the King of India… The sovereign Suraj-u-din the brave.'",
       hi: "19 मई। सोने की नई मोहरों पर लिखा है: 'हिंद के बादशाह ने चाँदी और सोने का सिक्का चलाया… बादशाह सिराजुद्दीन, बहादुर।'",
     },
-    checks: { en: ['The sovereign Suraj-u-din the brave'], hi: ['बादशाह सिराजुद्दीन, बहादुर'] },
+    checks: { en: ['19th May', 'mohurs', 'Suraj-u-din'], hi: ['19 मई', 'मोहरों', 'सिराजुद्दीन'] },
     document: { sources: [jl('pp.96-97')] },
     why: {
       text: {
@@ -129,7 +129,7 @@ const eventMessages: Message[] = [
       en: "19th May. The new gold coins (mohurs) read: 'Silver and gold coin struck by the King of India… The sovereign Abu Bakr the brave.'",
       hi: "19 मई। सोने की नई मोहरों पर लिखा है: 'हिंद के बादशाह ने चाँदी और सोने का सिक्का चलाया… बादशाह अबू बक्र, बहादुर।'",
     },
-    checks: { en: ['The sovereign Abu Bakr the brave'], hi: ['बादशाह अबू बक्र, बहादुर'] },
+    checks: { en: ['19th May', 'mohurs', 'Abu Bakr'], hi: ['19 मई', 'मोहरों', 'अबू बक्र'] },
     tells: [
       {
         kind: 'name',
@@ -155,7 +155,7 @@ const eventMessages: Message[] = [
       en: "Wednesday, 20th May. To a group of Hindu officers the King replied: 'The Holy War is against the English; I have forbidden it against the Hindus.'",
       hi: "बुधवार, 20 मई। हिंदू अफ़सरों के एक दल से बादशाह ने कहा: 'जिहाद अंग्रेज़ों के ख़िलाफ़ है; हिंदुओं के ख़िलाफ़ मैंने इसे मना कर दिया है।'",
     },
-    checks: { en: ['I have forbidden it against the Hindus'], hi: ['हिंदुओं के ख़िलाफ़ मैंने इसे मना कर दिया है'] },
+    checks: { en: ['Wednesday, 20th May', 'Hindu officers', 'forbidden it against the Hindus'], hi: ['बुधवार, 20 मई', 'हिंदू अफ़सरों', 'मैंने इसे मना कर दिया है'] },
     document: { sources: [jl('p.98')] },
     why: {
       text: {
@@ -178,7 +178,7 @@ const eventMessages: Message[] = [
       en: 'Thursday, 21st May. By beat of drum: Hindus and Mahommedans must not quarrel.',
       hi: 'गुरुवार, 21 मई। ढोल पीटकर ऐलान: हिंदू और मुसलमान आपस में न झगड़ें।',
     },
-    checks: { en: ['must not quarrel'], hi: ['आपस में न झगड़ें'] },
+    checks: { en: ['Thursday, 21st May', 'must not quarrel'], hi: ['गुरुवार, 21 मई', 'आपस में न झगड़ें'] },
     document: { sources: [jl('p.100')] },
     why: {
       text: {
@@ -201,10 +201,7 @@ const eventMessages: Message[] = [
       en: 'Our Son, the Illustrious and Valiant… The officers of the army… make a practice of coming into court… wearing caps instead of turbans and carrying their swords.',
       hi: 'हमारे बेटे, नामवर और बहादुर… फ़ौज के अफ़सर… दरबार में… पगड़ी की जगह टोपी लगाकर और तलवार लेकर आते हैं।',
     },
-    checks: {
-      en: ['Our Son, the Illustrious and Valiant', 'caps instead of turbans'],
-      hi: ['हमारे बेटे, नामवर और बहादुर', 'पगड़ी की जगह टोपी'],
-    },
+    checks: { en: ['Our Son, the Illustrious and Valiant', 'caps instead of turbans', 'carrying their swords'], hi: ['हमारे बेटे, नामवर और बहादुर', 'पगड़ी की जगह टोपी', 'तलवार लेकर'] },
     document: { sources: [trial(KING_ORDER)] },
     why: {
       text: {
@@ -225,10 +222,7 @@ const eventMessages: Message[] = [
       en: 'Our Son, the Illustrious and Valiant… We are well pleased that the officers ride up to our Hall on horseback and come to court in caps.',
       hi: 'हमारे बेटे, नामवर और बहादुर… हम ख़ुश हैं कि अफ़सर घोड़े पर हमारे दीवान तक आते हैं और टोपी पहनकर दरबार में आते हैं।',
     },
-    checks: {
-      en: ['We are well pleased', 'come to court in caps'],
-      hi: ['हम ख़ुश हैं', 'टोपी पहनकर दरबार में'],
-    },
+    checks: { en: ['Our Son, the Illustrious and Valiant', 'We are well pleased', 'come to court in caps'], hi: ['हमारे बेटे, नामवर और बहादुर', 'हम ख़ुश हैं', 'टोपी पहनकर दरबार में'] },
     tells: [
       {
         kind: 'habit',
@@ -255,7 +249,7 @@ const eventMessages: Message[] = [
       en: 'My Lord! This is Sunday… the new moon of the festival of the Eed appeared… Petition of… Nahar Singh, Chief of Ballabhgarh. Seal of Rajah Nahar Singh Bahadur.',
       hi: 'हुज़ूर! आज रविवार है… ईद का नया चाँद दिखा… अर्ज़ी: नाहर सिंह, बल्लभगढ़ के सरदार। राजा नाहर सिंह बहादुर की मुहर।',
     },
-    checks: { en: ['This is Sunday'], hi: ['आज रविवार है'] },
+    checks: { en: ['This is Sunday', 'new moon', 'Chief of Ballabhgarh'], hi: ['आज रविवार है', 'ईद का नया चाँद', 'बल्लभगढ़ के सरदार'] },
     document: { sources: [trial(NO64)] },
     why: {
       text: {
@@ -277,7 +271,7 @@ const eventMessages: Message[] = [
       en: 'My Lord! This is Monday… the new moon of the festival of the Eed appeared… Petition of… Nahar Singh, Chief of Ballabhgarh. Seal of Rajah Nahar Singh Bahadur.',
       hi: 'हुज़ूर! आज सोमवार है… ईद का नया चाँद दिखा… अर्ज़ी: नाहर सिंह, बल्लभगढ़ के सरदार। राजा नाहर सिंह बहादुर की मुहर।',
     },
-    checks: { en: ['This is Monday'], hi: ['आज सोमवार है'] },
+    checks: { en: ['This is Monday', 'new moon', 'Chief of Ballabhgarh'], hi: ['आज सोमवार है', 'ईद का नया चाँद', 'बल्लभगढ़ के सरदार'] },
     tells: [
       {
         kind: 'weekday',
@@ -304,7 +298,7 @@ const eventMessages: Message[] = [
       en: 'Eid, Monday 25 May. During prayers a camel rider from Ballabhgarh cried that the English were coming. He had mistaken an Eid procession for their army.',
       hi: 'ईद, सोमवार 25 मई। नमाज़ के वक़्त बल्लभगढ़ से एक ऊँट-सवार चिल्लाया कि अंग्रेज़ आ रहे हैं। उसने ईद के जुलूस को अंग्रेज़ी फ़ौज समझ लिया था।',
     },
-    checks: { en: ['Eid, Monday 25 May', 'mistaken an Eid procession'], hi: ['ईद, सोमवार 25 मई', 'ईद के जुलूस को अंग्रेज़ी फ़ौज समझ'] },
+    checks: { en: ['Eid, Monday 25 May', 'camel rider from Ballabhgarh', 'mistaken an Eid procession'], hi: ['ईद, सोमवार 25 मई', 'बल्लभगढ़ से एक ऊँट-सवार', 'ईद के जुलूस को अंग्रेज़ी फ़ौज समझ'] },
     why: {
       text: {
         en: "Jiwan Lal, 25 May: the 'English army' was an Eid procession.",
@@ -325,7 +319,7 @@ const eventMessages: Message[] = [
       en: 'Eid was yesterday, Sunday. During prayers a camel rider from Ballabhgarh cried that the English were coming. They are at the gates: let the King flee tonight.',
       hi: 'ईद कल, रविवार को थी। नमाज़ के वक़्त बल्लभगढ़ से एक ऊँट-सवार चिल्लाया कि अंग्रेज़ आ रहे हैं। वे दरवाज़ों पर हैं: बादशाह आज रात निकल जाएँ।',
     },
-    checks: { en: ['Eid was yesterday, Sunday'], hi: ['ईद कल, रविवार को थी'] },
+    checks: { en: ['Eid was yesterday, Sunday', 'camel rider from Ballabhgarh', 'let the King flee tonight'], hi: ['ईद कल, रविवार को थी', 'बल्लभगढ़ से एक ऊँट-सवार', 'बादशाह आज रात निकल जाएँ'] },
     tells: [
       {
         kind: 'date',
@@ -352,7 +346,7 @@ const eventMessages: Message[] = [
       en: "26th May. The guns on the Islamgarh bastion are found stuffed with stones. Soldiers accuse the King's physician, Hakim Ahsanullah Khan; the King shields him.",
       hi: '26 मई। इस्लामगढ़ बुर्ज की तोपों में पत्थर ठुँसे मिले। सिपाही बादशाह के हकीम अहसनुल्लाह ख़ान पर इल्ज़ाम लगा रहे हैं; बादशाह उन्हें बचा रहे हैं।',
     },
-    checks: { en: ['found stuffed with stones', 'the King shields him'], hi: ['तोपों में पत्थर ठुँसे मिले', 'बादशाह उन्हें बचा रहे हैं'] },
+    checks: { en: ['Islamgarh bastion', 'Hakim Ahsanullah Khan', 'the King shields him'], hi: ['इस्लामगढ़ बुर्ज', 'हकीम अहसनुल्लाह ख़ान', 'बादशाह उन्हें बचा रहे हैं'] },
     why: {
       text: {
         en: 'Jiwan Lal, 26 May: kankar in the guns; the King protected Ahsanullah.',
@@ -373,7 +367,7 @@ const eventMessages: Message[] = [
       en: "26th May. Guns on the Islamgarh bastion are stuffed with stones. Gate guards found the proof: a letter from the King's physician to the Lieutenant-Governor at Lahore.",
       hi: '26 मई। इस्लामगढ़ बुर्ज की तोपों में पत्थर ठुँसे हैं। पहरेदारों को दरवाज़े पर सबूत मिला: बादशाह के हकीम की चिट्ठी, लाहौर के लेफ़्टिनेंट-गवर्नर के नाम।',
     },
-    checks: { en: ['the Lieutenant-Governor at Lahore', 'Gate guards found the proof'], hi: ['लाहौर के लेफ़्टिनेंट-गवर्नर', 'पहरेदारों को दरवाज़े पर सबूत मिला'] },
+    checks: { en: ['Islamgarh bastion', 'Gate guards found the proof', 'Lieutenant-Governor at Lahore'], hi: ['इस्लामगढ़ बुर्ज', 'पहरेदारों को दरवाज़े पर सबूत मिला', 'लाहौर के लेफ़्टिनेंट-गवर्नर'] },
     tells: [
       {
         kind: 'place',
@@ -408,7 +402,7 @@ const eventMessages: Message[] = [
       en: '28th May. Two hundred men of the Gwalior Contingent came to enlist. Their kit was in such good order that a story spread they were an English advance-guard in disguise.',
       hi: '28 मई। ग्वालियर कंटिंजेंट के दो सौ आदमी भर्ती होने आए। उनका साज़-सामान इतना ठीक-ठाक था कि अफ़वाह फैल गई कि वे भेस बदले अंग्रेज़ी फ़ौज का अगला दस्ता हैं।',
     },
-    checks: { en: ['Gwalior Contingent'], hi: ['ग्वालियर कंटिंजेंट'] },
+    checks: { en: ['Two hundred men', 'Gwalior Contingent', 'English advance-guard in disguise'], hi: ['ग्वालियर कंटिंजेंट', 'दो सौ आदमी', 'अंग्रेज़ी फ़ौज का अगला दस्ता'] },
     why: {
       text: {
         en: 'Jiwan Lal, 28 May: their neat uniforms started the rumour. Spy fever had begun.',
@@ -431,7 +425,7 @@ const eventMessages: Message[] = [
       en: 'A European in a fortune-teller\'s dress was caught. His captors said an old wound proved he was John Lawrence, Chief Commissioner of the Punjab. He had no wound.',
       hi: 'ज्योतिषी के भेस में एक यूरोपियन पकड़ा गया। पकड़ने वालों ने कहा कि एक पुराना घाव साबित करता है कि वह पंजाब के चीफ़ कमिश्नर जॉन लॉरेंस है। उसके शरीर पर कोई घाव नहीं था।',
     },
-    checks: { en: ['Chief Commissioner of the Punjab', 'He had no wound'], hi: ['पंजाब के चीफ़ कमिश्नर', 'कोई घाव नहीं था'] },
+    checks: { en: ["fortune-teller's dress", 'Chief Commissioner of the Punjab', 'He had no wound'], hi: ['ज्योतिषी के भेस में', 'पंजाब के चीफ़ कमिश्नर', 'कोई घाव नहीं था'] },
     why: {
       text: {
         en: 'Jiwan Lal, 29 May. The real Lawrence was far away at Rawalpindi.',
@@ -452,7 +446,7 @@ const eventMessages: Message[] = [
       en: 'Great news: John Lawrence, Lieutenant-Governor of the Punjab, was caught in the Qudsia Bagh dressed as a fortune-teller. He has confessed everything.',
       hi: 'बड़ी ख़बर: पंजाब के लेफ़्टिनेंट-गवर्नर जॉन लॉरेंस क़ुदसिया बाग़ में ज्योतिषी के भेस में पकड़े गए। उन्होंने सब क़बूल कर लिया है।',
     },
-    checks: { en: ['Lieutenant-Governor of the Punjab'], hi: ['पंजाब के लेफ़्टिनेंट-गवर्नर'] },
+    checks: { en: ['Lieutenant-Governor of the Punjab', 'Qudsia Bagh', 'He has confessed everything'], hi: ['पंजाब के लेफ़्टिनेंट-गवर्नर', 'क़ुदसिया बाग़', 'सब क़बूल कर लिया है'] },
     tells: [
       {
         kind: 'name',
@@ -478,7 +472,7 @@ const eventMessages: Message[] = [
       en: '30th May. At the Hindun river the English took our guns and the gunners fled. Mirza Abu Bakr, who commanded, boasts to the King of his bravery.',
       hi: '30 मई। हिंडन नदी पर अंग्रेज़ों ने हमारी तोपें छीन लीं और तोपची भाग गए। कमान करने वाले मिर्ज़ा अबू बक्र बादशाह के सामने अपनी बहादुरी की शेख़ी बघार रहे हैं।',
     },
-    checks: { en: ['boasts to the King of his bravery'], hi: ['अपनी बहादुरी की शेख़ी'] },
+    checks: { en: ['Mirza Abu Bakr', 'boasts to the King'], hi: ['मिर्ज़ा अबू बक्र', 'शेख़ी बघार रहे हैं'] },
     why: {
       text: {
         en: 'Odd but true: Jiwan Lal, writing for the English, records this boast, 30 May.',
@@ -502,7 +496,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! We are the horsemen of the 3rd Light Cavalry. On Sunday 10 May we freed our 85 brothers at Meerut and rode to you.',
       hi: 'जहाँपनाह! हम तीसरी घुड़सवार पलटन के सवार हैं। रविवार 10 मई को हमने मेरठ में अपने 85 भाइयों को छुड़ाया और आपके पास आए।',
     },
-    checks: { en: ['3rd Light Cavalry', 'Sunday 10 May'], hi: ['तीसरी घुड़सवार पलटन', 'रविवार 10 मई'] },
+    checks: { en: ['3rd Light Cavalry', 'Sunday 10 May', '85 brothers'], hi: ['तीसरी घुड़सवार पलटन', 'रविवार 10 मई', '85 भाइयों'] },
     why: {
       text: {
         en: 'Written for the game: on 10 May the 3rd Cavalry freed 85 chained comrades.',
@@ -522,7 +516,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! We are the horsemen of the 4th Light Cavalry. On Sunday 10 May we freed our 85 brothers at Meerut and rode to you.',
       hi: 'जहाँपनाह! हम चौथी घुड़सवार पलटन के सवार हैं। रविवार 10 मई को हमने मेरठ में अपने 85 भाइयों को छुड़ाया और आपके पास आए।',
     },
-    checks: { en: ['4th Light Cavalry'], hi: ['चौथी घुड़सवार पलटन'] },
+    checks: { en: ['4th Light Cavalry', 'Sunday 10 May', '85 brothers'], hi: ['चौथी घुड़सवार पलटन', 'रविवार 10 मई', '85 भाइयों'] },
     tells: [
       {
         kind: 'number',
@@ -543,7 +537,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! My guard is gone; mobs come to plunder my house. The King wrote in pencil: Mirza Mughal will station a guard from the 20th Native Infantry.',
       hi: 'जहाँपनाह! मेरा पहरा हट गया है; बदमाश घर लूटने आते हैं। बादशाह ने पेंसिल से लिखा: मिर्ज़ा मुग़ल 20वीं पैदल पलटन से पहरा लगाएँ।',
     },
-    checks: { en: ['20th Native Infantry'], hi: ['20वीं पैदल पलटन'] },
+    checks: { en: ['Mirza Mughal', '20th Native Infantry'], hi: ['मिर्ज़ा मुग़ल', '20वीं पैदल पलटन'] },
     why: {
       text: {
         en: 'After a real petition of 23 May; the 20th came from Meerut.',
@@ -563,7 +557,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! My guard is gone; mobs come to plunder my house. The King wrote in pencil: Mirza Mughal will station a guard from the 37th Native Infantry.',
       hi: 'जहाँपनाह! मेरा पहरा हट गया है; बदमाश घर लूटने आते हैं। बादशाह ने पेंसिल से लिखा: मिर्ज़ा मुग़ल 37वीं पैदल पलटन से पहरा लगाएँ।',
     },
-    checks: { en: ['37th Native Infantry'], hi: ['37वीं पैदल पलटन'] },
+    checks: { en: ['Mirza Mughal', '37th Native Infantry'], hi: ['मिर्ज़ा मुग़ल', '37वीं पैदल पलटन'] },
     tells: [
       {
         kind: 'number',
@@ -586,7 +580,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! Soldiers took cloth worth 3 rupees 8 annas from our shops and paid nothing.',
       hi: 'जहाँपनाह! सिपाही हमारी दुकानों से 3 रुपये 8 आने का कपड़ा ले गए और एक पैसा नहीं दिया।',
     },
-    checks: { en: ['3 rupees 8 annas'], hi: ['3 रुपये 8 आने'] },
+    checks: { en: ['3 rupees 8 annas', 'paid nothing'], hi: ['3 रुपये 8 आने', 'एक पैसा नहीं दिया'] },
     why: {
       text: {
         en: "Written for the game; soldiers taking goods unpaid is the King's own complaint.",
@@ -606,7 +600,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! Soldiers took cloth worth 3 rupees 18 annas from our shops and paid nothing.',
       hi: 'जहाँपनाह! सिपाही हमारी दुकानों से 3 रुपये 18 आने का कपड़ा ले गए और एक पैसा नहीं दिया।',
     },
-    checks: { en: ['3 rupees 18 annas'], hi: ['3 रुपये 18 आने'] },
+    checks: { en: ['3 rupees 18 annas', 'paid nothing'], hi: ['3 रुपये 18 आने', 'एक पैसा नहीं दिया'] },
     tells: [
       {
         kind: 'number',
@@ -627,7 +621,7 @@ const datelessMessages: Message[] = [
       en: "By the King's order: every foot soldier who joins shall have 30 rupees a month, every horseman 50. Come to Delhi.",
       hi: 'बादशाह के हुक्म से: आ मिलने वाले हर पैदल सिपाही को 30 रुपये महीना मिलेंगे, हर सवार को 50। दिल्ली आओ।',
     },
-    checks: { en: ['30 rupees a month, every horseman 50'], hi: ['पैदल सिपाही को 30 रुपये'] },
+    checks: { en: ["By the King's order", '30 rupees a month', 'every horseman 50'], hi: ['बादशाह के हुक्म से', '30 रुपये महीना', 'हर सवार को 50'] },
     why: {
       text: {
         en: 'Mainodin: orders forced from the King promised these sums to regiments.',
@@ -647,7 +641,7 @@ const datelessMessages: Message[] = [
       en: "By the King's order: every foot soldier who joins shall have 50 rupees a month, every horseman 30. Come to Delhi.",
       hi: 'बादशाह के हुक्म से: आ मिलने वाले हर पैदल सिपाही को 50 रुपये महीना मिलेंगे, हर सवार को 30। दिल्ली आओ।',
     },
-    checks: { en: ['50 rupees a month, every horseman 30'], hi: ['पैदल सिपाही को 50 रुपये'] },
+    checks: { en: ["By the King's order", '50 rupees a month', 'every horseman 30'], hi: ['बादशाह के हुक्म से', '50 रुपये महीना', 'हर सवार को 30'] },
     tells: [
       {
         kind: 'number',
@@ -670,7 +664,7 @@ const datelessMessages: Message[] = [
       en: 'I pray… that a passport may be granted… the carts coming from Ballabhgarh… the Soldiers at the Delhi Gate are not to oppose any hindrance.',
       hi: 'गुज़ारिश है… कि एक पास दिया जाए… बल्लभगढ़ से आने वाली गाड़ियाँ… दिल्ली दरवाज़े के सिपाही कोई रुकावट न डालें।',
     },
-    checks: { en: ['Soldiers at the Delhi Gate'], hi: ['दिल्ली दरवाज़े के सिपाही'] },
+    checks: { en: ['carts coming from Ballabhgarh', 'Soldiers at the Delhi Gate'], hi: ['बल्लभगढ़ से आने वाली गाड़ियाँ', 'दिल्ली दरवाज़े के सिपाही'] },
     document: { sources: [trial(NO60)] },
     why: {
       text: {
@@ -691,7 +685,7 @@ const datelessMessages: Message[] = [
       en: 'I pray… that a passport may be granted… the carts coming from Ballabhgarh… the Soldiers at the Kashmiri Gate are not to oppose any hindrance.',
       hi: 'गुज़ारिश है… कि एक पास दिया जाए… बल्लभगढ़ से आने वाली गाड़ियाँ… कश्मीरी दरवाज़े के सिपाही कोई रुकावट न डालें।',
     },
-    checks: { en: ['Soldiers at the Kashmiri Gate'], hi: ['कश्मीरी दरवाज़े के सिपाही'] },
+    checks: { en: ['carts coming from Ballabhgarh', 'Soldiers at the Kashmiri Gate'], hi: ['बल्लभगढ़ से आने वाली गाड़ियाँ', 'कश्मीरी दरवाज़े के सिपाही'] },
     tells: [
       {
         kind: 'place',
@@ -761,10 +755,7 @@ const datelessMessages: Message[] = [
       en: '…Soldiery have established their residence immediately in the front of our shops… The King wrote in pencil: Mirza Mughal will have their shops given to these shop-keepers.',
       hi: '…सिपाहियों ने ठीक हमारी दुकानों के सामने डेरा डाल लिया है… बादशाह ने पेंसिल से लिखा: मिर्ज़ा मुग़ल इन दुकानदारों को उनकी दुकानें दिलवा दें।',
     },
-    checks: {
-      en: ['immediately in the front of our shops', 'Mirza Mughal will have their shops given'],
-      hi: ['ठीक हमारी दुकानों के सामने डेरा डाल लिया', 'मिर्ज़ा मुग़ल इन दुकानदारों को उनकी दुकानें दिलवा दें'],
-    },
+    checks: { en: ['in the front of our shops', 'The King wrote in pencil', 'Mirza Mughal'], hi: ['हमारी दुकानों के सामने', 'बादशाह ने पेंसिल से लिखा', 'मिर्ज़ा मुग़ल'] },
     document: { sources: [trial(CHATTA)] },
     why: {
       text: {
@@ -785,7 +776,7 @@ const datelessMessages: Message[] = [
       en: '…Soldiery have established their residence immediately in the front of our shops… The King replied: My dear Mirza, kindly see they get their shops back. Yours affectionately, Bahadur Shah.',
       hi: '…सिपाहियों ने ठीक हमारी दुकानों के सामने डेरा डाल लिया है… बादशाह का जवाब: माई डियर मिर्ज़ा, देख लेना कि इन्हें दुकानें वापस मिलें। योर्स अफ़ेक्शनेटली, बहादुर शाह।',
     },
-    checks: { en: ['My dear Mirza', 'Yours affectionately'], hi: ['माई डियर मिर्ज़ा', 'योर्स अफ़ेक्शनेटली'] },
+    checks: { en: ['in the front of our shops', 'My dear Mirza', 'Yours affectionately'], hi: ['हमारी दुकानों के सामने', 'माई डियर मिर्ज़ा', 'योर्स अफ़ेक्शनेटली'] },
     tells: [
       {
         kind: 'habit',
@@ -809,7 +800,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! Soldiers plunder houses on the false plea that Europeans hide there. Petition of Kazi Faiz Ulla, Kotwal, under his seal.',
       hi: 'जहाँपनाह! सिपाही यह झूठा बहाना बनाकर घर लूटते हैं कि वहाँ यूरोपियन छिपे हैं। अर्ज़ी: क़ाज़ी फ़ैज़ुल्ला, कोतवाल, अपनी मुहर के साथ।',
     },
-    checks: { en: ['under his seal'], hi: ['अपनी मुहर के साथ'] },
+    checks: { en: ['Europeans hide there', 'Kazi Faiz Ulla, Kotwal', 'under his seal'], hi: ['यूरोपियन छिपे हैं', 'क़ाज़ी फ़ैज़ुल्ला, कोतवाल', 'अपनी मुहर के साथ'] },
     why: {
       text: {
         en: 'Written for the game: Kazi Faiz Ulla was Kotwal; the plunder plea is documented.',
@@ -829,7 +820,7 @@ const datelessMessages: Message[] = [
       en: 'Shelter of the World! Soldiers plunder houses on the false plea that Europeans hide there. I have the honour to be, Sir, your most obedient servant, Faiz Ulla.',
       hi: 'जहाँपनाह! सिपाही यह झूठा बहाना बनाकर घर लूटते हैं कि वहाँ यूरोपियन छिपे हैं। आई हैव द ऑनर टू बी, सर, योर मोस्ट ओबीडिएंट सर्वेंट, फ़ैज़ुल्ला।',
     },
-    checks: { en: ['your most obedient servant'], hi: ['मोस्ट ओबीडिएंट सर्वेंट'] },
+    checks: { en: ['Europeans hide there', 'your most obedient servant', 'Faiz Ulla'], hi: ['यूरोपियन छिपे हैं', 'मोस्ट ओबीडिएंट सर्वेंट', 'फ़ैज़ुल्ला'] },
     tells: [
       {
         kind: 'habit',
@@ -855,7 +846,7 @@ const datelessMessages: Message[] = [
       en: 'Report for {weekday}, {date}. The King held court in the Hall of Special Audience. The soldiers again asked for their pay.',
       hi: '{weekday}, {date} की रिपोर्ट। बादशाह ने दीवान-ए-ख़ास में दरबार लगाया। सिपाहियों ने फिर तनख़्वाह माँगी।',
     },
-    checks: { en: ['Report for'], hi: ['की रिपोर्ट'] },
+    checks: { en: ['Report for', 'Hall of Special Audience'], hi: ['की रिपोर्ट', 'दीवान-ए-ख़ास'] },
     why: {
       text: {
         en: 'Written for the game: date and weekday agree; soldiers kept demanding pay.',
@@ -875,7 +866,7 @@ const datelessMessages: Message[] = [
       en: 'Report for {weekday+1}, {date}. The King held court in the Hall of Special Audience. The soldiers again asked for their pay.',
       hi: '{weekday+1}, {date} की रिपोर्ट। बादशाह ने दीवान-ए-ख़ास में दरबार लगाया। सिपाहियों ने फिर तनख़्वाह माँगी।',
     },
-    checks: { en: ['Report for'], hi: ['की रिपोर्ट'] },
+    checks: { en: ['Report for', 'Hall of Special Audience'], hi: ['की रिपोर्ट', 'दीवान-ए-ख़ास'] },
     tells: [
       {
         kind: 'weekday',
@@ -898,7 +889,7 @@ const datelessMessages: Message[] = [
       en: 'It is reported that English troops are coming from Ambala. Nothing more is known for certain.',
       hi: 'ख़बर है कि अंग्रेज़ी फ़ौजें अंबाला से आ रही हैं। पक्का कुछ और पता नहीं।',
     },
-    checks: { en: ['troops are coming from Ambala'], hi: ['अंबाला से आ रही हैं'] },
+    checks: { en: ['It is reported', 'coming from Ambala', 'Nothing more is known'], hi: ['ख़बर है', 'अंबाला से आ रही हैं', 'पक्का कुछ और पता नहीं'] },
     why: {
       text: {
         en: 'Chuni Lal, 17 May, nearly word for word: a rumour labelled as rumour.',
@@ -918,7 +909,7 @@ const datelessMessages: Message[] = [
       en: 'It is certain: a Persian army of 50,000 has crossed the Attock and will reach Delhi within the month.',
       hi: 'यह पक्की ख़बर है: 50,000 की ईरानी फ़ौज अटक पार कर चुकी है और महीने भर में दिल्ली पहुँचेगी।',
     },
-    checks: { en: ['It is certain', 'a Persian army of 50,000'], hi: ['यह पक्की ख़बर है', '50,000 की ईरानी फ़ौज'] },
+    checks: { en: ['It is certain', 'a Persian army of 50,000', 'crossed the Attock'], hi: ['यह पक्की ख़बर है', '50,000 की ईरानी फ़ौज', 'अटक पार कर चुकी है'] },
     tells: [
       {
         kind: 'knowledge',
@@ -942,7 +933,7 @@ const datelessMessages: Message[] = [
       en: 'The English at Meerut have gathered with their families and built defences at the Suraj Kund, with guns drawn by elephants.',
       hi: 'मेरठ के अंग्रेज़ परिवारों समेत इकट्ठा हैं, और उन्होंने सूरज कुंड पर किलेबंदी कर ली है, हाथियों से खिंचने वाली तोपों के साथ।',
     },
-    checks: { en: ['guns drawn by elephants'], hi: ['हाथियों से खिंचने वाली तोपों'] },
+    checks: { en: ['The English at Meerut', 'Suraj Kund', 'guns drawn by elephants'], hi: ['मेरठ के अंग्रेज़', 'सूरज कुंड', 'हाथियों से खिंचने वाली तोपों'] },
     why: {
       text: {
         en: "Chuni Lal, 17 May: the King's messengers brought exactly this from Meerut.",
@@ -962,7 +953,7 @@ const datelessMessages: Message[] = [
       en: "The English now hold the Ridge outside the Kashmiri Gate, with guns at Hindu Rao's house. They will storm Delhi within the week.",
       hi: 'अंग्रेज़ अब कश्मीरी दरवाज़े के बाहर रिज (पहाड़ी) पर जमे हैं, हिंदू राव के मकान पर तोपें लगाकर। हफ़्ते भर में वे दिल्ली पर धावा बोलेंगे।',
     },
-    checks: { en: ['hold the Ridge outside the Kashmiri Gate'], hi: ['रिज (पहाड़ी) पर जमे हैं'] },
+    checks: { en: ['hold the Ridge', 'Kashmiri Gate', "Hindu Rao's house"], hi: ['रिज (पहाड़ी) पर जमे हैं', 'कश्मीरी दरवाज़े', 'हिंदू राव के मकान'] },
     tells: [
       {
         kind: 'knowledge',
@@ -983,7 +974,7 @@ const datelessMessages: Message[] = [
       en: '(In English.) The 3rd Light Cavalry and the 11th and 20th Native Infantry rose at Meerut on Sunday the 10th. Our English Commander-in-Chief must be told.',
       hi: '(अंग्रेज़ी में) तीसरी घुड़सवार पलटन और 11वीं व 20वीं पैदल पलटनें 10 तारीख़, रविवार को मेरठ में उठ खड़ी हुईं। हमारे अंग्रेज़ कमांडर-इन-चीफ़ को ख़बर दी जाए।',
     },
-    checks: { en: ['rose at Meerut on Sunday the 10th'], hi: ['10 तारीख़, रविवार को मेरठ में'] },
+    checks: { en: ['3rd Light Cavalry', 'Sunday the 10th', 'Our English Commander-in-Chief'], hi: ['तीसरी घुड़सवार पलटन', '10 तारीख़, रविवार', 'हमारे अंग्रेज़ कमांडर-इन-चीफ़'] },
     why: {
       text: {
         en: 'Written for the game; it looks like a trap, but every detail is right.',
@@ -1003,7 +994,7 @@ const datelessMessages: Message[] = [
       en: '(In English.) The 3rd Light Cavalry and the 11th and 20th Native Infantry rose at Meerut on Sunday the 10th. The Viceroy, Lord Canning, must be told.',
       hi: '(अंग्रेज़ी में) तीसरी घुड़सवार पलटन और 11वीं व 20वीं पैदल पलटनें 10 तारीख़, रविवार को मेरठ में उठ खड़ी हुईं। वायसराय लॉर्ड कैनिंग को ख़बर दी जाए।',
     },
-    checks: { en: ['The Viceroy, Lord Canning'], hi: ['वायसराय लॉर्ड कैनिंग'] },
+    checks: { en: ['3rd Light Cavalry', 'Sunday the 10th', 'The Viceroy, Lord Canning'], hi: ['तीसरी घुड़सवार पलटन', '10 तारीख़, रविवार', 'वायसराय लॉर्ड कैनिंग'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1029,7 +1020,7 @@ const datelessMessages: Message[] = [
       en: "Proclamation under the King's special seal: courts of justice are set up in the city, and soldiers are forbidden all violence.",
       hi: 'बादशाह की ख़ास मुहर से ऐलान: शहर में इंसाफ़ की अदालतें बन गई हैं, और सिपाहियों को हर तरह की ज़ोर-ज़बरदस्ती मना है।',
     },
-    checks: { en: ['courts of justice are set up'], hi: ['इंसाफ़ की अदालतें बन गई हैं'] },
+    checks: { en: ["the King's special seal", 'courts of justice'], hi: ['बादशाह की ख़ास मुहर', 'इंसाफ़ की अदालतें'] },
     why: {
       text: {
         en: "From the King's own order, which says this notice had no effect.",
@@ -1049,7 +1040,7 @@ const datelessMessages: Message[] = [
       en: 'By beat of drum, by order of General Bakht Khan: every shopkeeper must keep arms, and plunderers will be punished.',
       hi: 'ढोल पीटकर ऐलान, जनरल बख़्त ख़ान के हुक्म से: हर दुकानदार हथियार रखे, और लुटेरों को सज़ा मिलेगी।',
     },
-    checks: { en: ['by order of General Bakht Khan'], hi: ['जनरल बख़्त ख़ान के हुक्म से'] },
+    checks: { en: ['General Bakht Khan', 'every shopkeeper must keep arms'], hi: ['जनरल बख़्त ख़ान', 'हर दुकानदार हथियार रखे'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1075,7 +1066,7 @@ const datelessMessages: Message[] = [
       en: 'On Sunday 17 May Maulvi Muhammad Baqir, of the press, was sent with two infantry companies and a cavalry troop to save the Gurgaon treasure.',
       hi: 'रविवार 17 मई को प्रेस वाले मौलवी मुहम्मद बाक़र को पैदल फ़ौज की दो कंपनियों और घुड़सवारों के एक दस्ते के साथ गुड़गाँव का ख़ज़ाना बचाने भेजा गया।',
     },
-    checks: { en: ['On Sunday 17 May'], hi: ['रविवार 17 मई को'] },
+    checks: { en: ['On Sunday 17 May', 'Maulvi Muhammad Baqir', 'Gurgaon treasure'], hi: ['रविवार 17 मई को', 'मौलवी मुहम्मद बाक़र', 'गुड़गाँव का ख़ज़ाना'] },
     why: {
       text: {
         en: "Odd but true: Chuni Lal's diary for 17 May says exactly this.",
@@ -1095,7 +1086,7 @@ const datelessMessages: Message[] = [
       en: 'On Monday 17 May Maulvi Muhammad Baqir, of the press, was sent with two infantry companies and a cavalry troop to save the Gurgaon treasure.',
       hi: 'सोमवार 17 मई को प्रेस वाले मौलवी मुहम्मद बाक़र को पैदल फ़ौज की दो कंपनियों और घुड़सवारों के एक दस्ते के साथ गुड़गाँव का ख़ज़ाना बचाने भेजा गया।',
     },
-    checks: { en: ['On Monday 17 May'], hi: ['सोमवार 17 मई को'] },
+    checks: { en: ['On Monday 17 May', 'Maulvi Muhammad Baqir', 'Gurgaon treasure'], hi: ['सोमवार 17 मई को', 'मौलवी मुहम्मद बाक़र', 'गुड़गाँव का ख़ज़ाना'] },
     tells: [
       {
         kind: 'weekday',
@@ -1116,7 +1107,7 @@ const datelessMessages: Message[] = [
       en: "On Sunday 17 May riders carried the King's letters to the rajas of Patiala, Jaipur, Alwar, Jodhpur, Kotah and Bundi.",
       hi: 'रविवार 17 मई को सवार बादशाह की चिट्ठियाँ पटियाला, जयपुर, अलवर, जोधपुर, कोटा और बूँदी के राजाओं के पास ले गए।',
     },
-    checks: { en: ["the King's letters to the rajas of Patiala"], hi: ['बादशाह की चिट्ठियाँ पटियाला'] },
+    checks: { en: ['On Sunday 17 May', "the King's letters", 'rajas of Patiala'], hi: ['रविवार 17 मई को', 'बादशाह की चिट्ठियाँ', 'पटियाला'] },
     why: {
       text: {
         en: 'Chuni Lal, 17 May. The King wrote to all; Patiala never answered.',
@@ -1136,7 +1127,7 @@ const datelessMessages: Message[] = [
       en: 'Good news: the Maharaja of Patiala has come to Delhi in person with his army to fight for the King.',
       hi: 'ख़ुशख़बरी: पटियाला के महाराजा ख़ुद अपनी फ़ौज लेकर दिल्ली आ गए हैं, बादशाह के लिए लड़ने।',
     },
-    checks: { en: ['has come to Delhi in person with his army'], hi: ['ख़ुद अपनी फ़ौज लेकर दिल्ली आ गए हैं'] },
+    checks: { en: ['Maharaja of Patiala', 'come to Delhi in person', 'to fight for the King'], hi: ['पटियाला के महाराजा', 'ख़ुद अपनी फ़ौज लेकर दिल्ली आ गए हैं', 'बादशाह के लिए लड़ने'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1161,7 +1152,7 @@ const datelessMessages: Message[] = [
       en: 'Mangal Pandey of the 34th was hanged at Barrackpore on 8 April. A month later, on 10 May, Meerut rose.',
       hi: '34वीं पलटन के मंगल पांडे को 8 अप्रैल को बैरकपुर में फाँसी दी गई। महीने भर बाद, 10 मई को, मेरठ उठ खड़ा हुआ।',
     },
-    checks: { en: ['hanged at Barrackpore on 8 April'], hi: ['बैरकपुर में फाँसी'] },
+    checks: { en: ['Mangal Pandey of the 34th', 'at Barrackpore', 'on 8 April'], hi: ['34वीं पलटन के मंगल पांडे', '8 अप्रैल को', 'बैरकपुर में फाँसी'] },
     why: {
       text: {
         en: 'Many books say 29 March: that was his attack. He was hanged 8 April.',
@@ -1181,7 +1172,7 @@ const datelessMessages: Message[] = [
       en: 'Mangal Pandey of the 34th was hanged at Meerut on 8 April. A month later, on 10 May, Meerut rose.',
       hi: '34वीं पलटन के मंगल पांडे को 8 अप्रैल को मेरठ में फाँसी दी गई। महीने भर बाद, 10 मई को, मेरठ उठ खड़ा हुआ।',
     },
-    checks: { en: ['hanged at Meerut on 8 April'], hi: ['मेरठ में फाँसी'] },
+    checks: { en: ['Mangal Pandey of the 34th', 'at Meerut', 'on 8 April'], hi: ['34वीं पलटन के मंगल पांडे', '8 अप्रैल को', 'मेरठ में फाँसी'] },
     tells: [
       {
         kind: 'place',
@@ -1204,7 +1195,7 @@ const datelessMessages: Message[] = [
       en: "News from Jhansi: the Rani has beaten the English, and the bazaars already sing 'Khoob ladi mardani, woh to Jhansi wali Rani thi'.",
       hi: "झाँसी से ख़बर: रानी ने अंग्रेज़ों को हरा दिया, और बाज़ारों में अभी से गाया जा रहा है: 'ख़ूब लड़ी मर्दानी, वह तो झाँसी वाली रानी थी'।",
     },
-    checks: { en: ['Khoob ladi mardani'], hi: ['ख़ूब लड़ी मर्दानी'] },
+    checks: { en: ['has beaten the English', 'Khoob ladi mardani'], hi: ['अंग्रेज़ों को हरा दिया', 'ख़ूब लड़ी मर्दानी'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1236,7 +1227,7 @@ const datelessMessages: Message[] = [
       en: 'News from Kanpur: Nana Sahib of Bithur has risen against the English and besieges them in their camp there.',
       hi: 'कानपुर से ख़बर: बिठूर के नाना साहब अंग्रेज़ों के ख़िलाफ़ उठ खड़े हुए हैं और उन्हें उनकी छावनी में घेर रखा है।',
     },
-    checks: { en: ['has risen against the English'], hi: ['अंग्रेज़ों के ख़िलाफ़ उठ खड़े हुए हैं'] },
+    checks: { en: ['Nana Sahib of Bithur', 'has risen against the English'], hi: ['बिठूर के नाना साहब', 'उठ खड़े हुए हैं'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1261,7 +1252,7 @@ const datelessMessages: Message[] = [
       en: 'Sunday 17 May. The King told the soldiers to trust his physician Ahsanullah Khan, Mahbub Ali Khan and Queen Zinat Mahal.',
       hi: 'रविवार 17 मई। बादशाह ने सिपाहियों से कहा कि वे उनके हकीम अहसनुल्लाह ख़ान, महबूब अली ख़ान और मलिका ज़ीनत महल पर भरोसा रखें।',
     },
-    checks: { en: ['Queen Zinat Mahal', 'Sunday 17 May'], hi: ['मलिका ज़ीनत महल', 'रविवार 17 मई'] },
+    checks: { en: ['Sunday 17 May', 'Ahsanullah Khan', 'Queen Zinat Mahal'], hi: ['रविवार 17 मई', 'हकीम अहसनुल्लाह ख़ान', 'मलिका ज़ीनत महल'] },
     why: {
       text: {
         en: 'Chuni Lal, 17 May: the King vouched for Ahsanullah, Mahbub Ali and his queen.',
@@ -1281,7 +1272,7 @@ const datelessMessages: Message[] = [
       en: 'Sunday 17 May. The King told the soldiers to trust his physician Ahsanullah Khan, Mahbub Ali Khan and Queen Hazrat Mahal.',
       hi: 'रविवार 17 मई। बादशाह ने सिपाहियों से कहा कि वे उनके हकीम अहसनुल्लाह ख़ान, महबूब अली ख़ान और मलिका हज़रत महल पर भरोसा रखें।',
     },
-    checks: { en: ['Queen Hazrat Mahal'], hi: ['मलिका हज़रत महल'] },
+    checks: { en: ['Sunday 17 May', 'Ahsanullah Khan', 'Queen Hazrat Mahal'], hi: ['रविवार 17 मई', 'हकीम अहसनुल्लाह ख़ान', 'मलिका हज़रत महल'] },
     tells: [
       {
         kind: 'name',
@@ -1303,7 +1294,7 @@ const datelessMessages: Message[] = [
       en: 'News from Bihar: old Kunwar Singh of Jagdishpur has risen and taken Arrah.',
       hi: 'बिहार से ख़बर: जगदीशपुर के बूढ़े कुँवर सिंह उठ खड़े हुए हैं और आरा ले लिया है।',
     },
-    checks: { en: ['Kunwar Singh of Jagdishpur'], hi: ['जगदीशपुर के बूढ़े कुँवर सिंह'] },
+    checks: { en: ['Kunwar Singh of Jagdishpur', 'taken Arrah'], hi: ['जगदीशपुर के बूढ़े कुँवर सिंह', 'आरा ले लिया है'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1325,7 +1316,7 @@ const datelessMessages: Message[] = [
       en: 'News from Awadh: Maulvi Ahmadullah Shah of Faizabad has raised his men and is marching on Lucknow.',
       hi: 'अवध से ख़बर: फ़ैज़ाबाद के मौलवी अहमदुल्लाह शाह ने अपने आदमी जुटा लिए हैं और लखनऊ की ओर बढ़ रहे हैं।',
     },
-    checks: { en: ['Maulvi Ahmadullah Shah of Faizabad'], hi: ['फ़ैज़ाबाद के मौलवी अहमदुल्लाह शाह'] },
+    checks: { en: ['Maulvi Ahmadullah Shah', 'of Faizabad', 'marching on Lucknow'], hi: ['फ़ैज़ाबाद के', 'मौलवी अहमदुल्लाह शाह', 'लखनऊ की ओर बढ़ रहे हैं'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1349,7 +1340,7 @@ const datelessMessages: Message[] = [
       en: 'In confidence: every regiment was to rise together on Sunday 31 May. Meerut rose three weeks early and spoiled the plan.',
       hi: 'चुपके से: हर पलटन को रविवार 31 मई को एक साथ उठना था। मेरठ तीन हफ़्ते पहले उठ गया और योजना बिगाड़ दी।',
     },
-    checks: { en: ['rise together on Sunday 31 May'], hi: ['रविवार 31 मई को एक साथ उठना था'] },
+    checks: { en: ['every regiment', 'on Sunday 31 May', 'three weeks early'], hi: ['हर पलटन', 'रविवार 31 मई', 'तीन हफ़्ते पहले'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1378,7 +1369,7 @@ const datelessMessages: Message[] = [
       en: "News from Jhansi: the Rani, 'a girl-widow, twenty years of age', has declared war on the English.",
       hi: "झाँसी से ख़बर: रानी, 'बीस बरस की एक विधवा लड़की', ने अंग्रेज़ों के ख़िलाफ़ जंग छेड़ दी है।",
     },
-    checks: { en: ['a girl-widow, twenty years of age'], hi: ['बीस बरस की एक विधवा लड़की'] },
+    checks: { en: ['a girl-widow, twenty years of age', 'declared war on the English'], hi: ['बीस बरस की एक विधवा लड़की', 'जंग छेड़ दी है'] },
     tells: [
       {
         kind: 'knowledge',

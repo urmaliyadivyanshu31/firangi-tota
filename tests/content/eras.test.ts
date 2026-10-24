@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ERAS } from '../../src/content/registry'
-import { surfaceTells, validateEra, wordLimits } from '../../src/content/validate'
+import { pencilTells, surfaceTells, validateEra, wordLimits } from '../../src/content/validate'
 import { buildRun } from '../../src/game/run'
 import { dailyFrom } from '../../src/game/daily'
 import { DAYS, type Difficulty } from '../../src/game/config'
@@ -17,6 +17,9 @@ describe('registered eras', () => {
       })
       it('has no surface giveaways (ellipsis, length)', () => {
         expect(surfaceTells(era)).toEqual([])
+      })
+      it('has no pencil giveaways (marks per pair, era-wide counts)', () => {
+        expect(pencilTells(era)).toEqual([])
       })
       it('has enough messages with a good mix', () => {
         const real = era.messages.filter((m) => m.real).length
