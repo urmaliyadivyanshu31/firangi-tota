@@ -759,7 +759,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const r = sheetRest(w)
     const portrait = aspect < 0.9
     const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT * 0.7, r.pos.z + 0.035)
-    const pts = rectOnDesk(c, portrait ? 0.31 : 0.38, portrait ? 0.28 : 0.26, r.yaw)
+    const pts = rectOnDesk(c, portrait ? 0.31 : 0.46, portrait ? 0.28 : 0.3, r.yaw)
     const dir = new THREE.Vector3(0, 1, portrait ? 0.62 : 0.85).normalize()
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.02 : 0.05) })
   }
@@ -770,7 +770,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const r = sheetRest(w)
     const portrait = aspect < 0.9
     const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT, r.pos.z + 0.03)
-    const pts = rectOnDesk(c, portrait ? 0.25 : 0.32, portrait ? 0.24 : 0.22, r.yaw)
+    const pts = rectOnDesk(c, portrait ? 0.25 : 0.4, portrait ? 0.24 : 0.27, r.yaw)
     const dir = new THREE.Vector3(0, 1, portrait ? 0.66 : 0.9).normalize()
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.02 : 0.05) })
   }
