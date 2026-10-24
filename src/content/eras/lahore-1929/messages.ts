@@ -94,7 +94,7 @@ export const messages: Message[] = [
       en: 'A zinc handbag comes tonight. Give it only to whoever shows the two keys. — Farmer',
       hi: 'आज रात जस्ते का एक हैंडबैग आएगा। उसे सिर्फ़ उसी को देना जो दोनों चाबियाँ दिखाए। — फ़ार्मर',
     },
-    checks: { en: ['Farmer'], hi: ['फ़ार्मर'] },
+    checks: { en: ['zinc handbag', 'two keys', 'Farmer'], hi: ['जस्ते का एक हैंडबैग', 'दोनों चाबियाँ', 'फ़ार्मर'] },
     tells: [
       {
         kind: 'name',
@@ -133,7 +133,7 @@ export const messages: Message[] = [
       en: 'Hold any letter for me until Panditji asks for it. — Shivram Rajguru',
       hi: 'मेरी कोई चिट्ठी आए, तो पंडितजी के माँगने तक रखना। — शिवराम राजगुरु',
     },
-    checks: { en: ['Shivram Rajguru'], hi: ['शिवराम राजगुरु'] },
+    checks: { en: ['Panditji', 'Shivram Rajguru'], hi: ['पंडितजी', 'शिवराम राजगुरु'] },
     tells: [
       {
         kind: 'name',
@@ -173,7 +173,7 @@ export const messages: Message[] = [
       en: "Keep Rs 31 ready for the McLeod Road room's rent.",
       hi: 'मैक्लोड रोड वाले कमरे के किराए के 31 रुपये तैयार रखो।',
     },
-    checks: { en: ['Rs 31'], hi: ['31 रुपये'] },
+    checks: { en: ['Rs 31', 'McLeod Road'], hi: ['31 रुपये', 'मैक्लोड रोड'] },
     tells: [
       {
         kind: 'number',
@@ -211,7 +211,7 @@ export const messages: Message[] = [
       en: 'If police ask where you were on Saturday, 15 December, at four: studying at home. Then burn this.',
       hi: 'पुलिस पूछे कि 15 दिसंबर, शनिवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
     },
-    checks: { en: ['Saturday, 15 December'], hi: ['15 दिसंबर, शनिवार'] },
+    checks: { en: ['Saturday, 15 December', 'at four'], hi: ['15 दिसंबर, शनिवार', 'चार बजे'] },
     tells: [
       {
         kind: 'date',
@@ -236,7 +236,7 @@ export const messages: Message[] = [
       en: "In December our friend left Lahore first class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
       hi: "दिसंबर में हमारा दोस्त लाहौर से फ़र्स्ट क्लास में निकला: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
     },
-    checks: { en: ['first class', 'tiffin'], hi: ['फ़र्स्ट क्लास', 'टिफ़िन'] },
+    checks: { en: ['first class', 'M carrying the tiffin'], hi: ['फ़र्स्ट क्लास', 'टिफ़िन उठाए एम'] },
     why: {
       text: {
         en: 'Bhagat Singh left first class on 20 December 1928, Rajguru as servant.',
@@ -256,7 +256,7 @@ export const messages: Message[] = [
       en: "In December our friend left Lahore third class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
       hi: "दिसंबर में हमारा दोस्त लाहौर से थर्ड क्लास में निकला: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
     },
-    checks: { en: ['third class'], hi: ['थर्ड क्लास'] },
+    checks: { en: ['third class', 'M carrying the tiffin'], hi: ['थर्ड क्लास', 'टिफ़िन उठाए एम'] },
     tells: [
       {
         kind: 'number',
@@ -278,7 +278,7 @@ export const messages: Message[] = [
     from: { en: 'Balraj', hi: 'बलराज' },
     to: PUBLIC,
     text: { en: NOTICE_DEC_EN('Balraj'), hi: NOTICE_DEC_HI('बलराज') },
-    checks: { en: ['Sd/- Balraj', '18th December, 1928'], hi: ['दस्तख़त: बलराज', '18 दिसंबर 1928'] },
+    checks: { en: ['J.P. Saunders is dead', 'Sd/- Balraj'], hi: ['सॉन्डर्स मर गया', 'बलराज'] },
     document: { sources: [{ id: 'hsra-notice-1928' }] },
     why: {
       text: {
@@ -296,7 +296,7 @@ export const messages: Message[] = [
     from: { en: 'Baldev', hi: 'बलदेव' },
     to: PUBLIC,
     text: { en: NOTICE_DEC_EN('Baldev'), hi: NOTICE_DEC_HI('बलदेव') },
-    checks: { en: ['Sd/- Baldev'], hi: ['दस्तख़त: बलदेव'] },
+    checks: { en: ['J.P. Saunders is dead', 'Sd/- Baldev'], hi: ['सॉन्डर्स मर गया', 'बलदेव'] },
     tells: [
       {
         kind: 'name',
@@ -319,7 +319,7 @@ export const messages: Message[] = [
       en: 'If a new boy asks: we became the HSRA at Feroz Shah Kotla in September. Nothing more.',
       hi: 'नया लड़का पूछे, तो बस इतना: हम सितंबर में फ़िरोज़शाह कोटला में एचएसआरए बने। इससे ज़्यादा कुछ नहीं।',
     },
-    checks: { en: ['Feroz Shah Kotla', 'in September'], hi: ['फ़िरोज़शाह कोटला', 'सितंबर में'] },
+    checks: { en: ['HSRA', 'Feroz Shah Kotla', 'in September'], hi: ['एचएसआरए', 'फ़िरोज़शाह कोटला', 'सितंबर में'] },
     why: {
       text: {
         en: 'The HRA became the HSRA at Feroz Shah Kotla, 8–9 September 1928.',
@@ -339,7 +339,7 @@ export const messages: Message[] = [
       en: 'If a new boy asks: we became the HSRA at Feroz Shah Kotla in December. Nothing more.',
       hi: 'नया लड़का पूछे, तो बस इतना: हम दिसंबर में फ़िरोज़शाह कोटला में एचएसआरए बने। इससे ज़्यादा कुछ नहीं।',
     },
-    checks: { en: ['in December'], hi: ['दिसंबर में'] },
+    checks: { en: ['HSRA', 'Feroz Shah Kotla', 'in December'], hi: ['एचएसआरए', 'फ़िरोज़शाह कोटला', 'दिसंबर में'] },
     tells: [
       {
         kind: 'date',
@@ -364,7 +364,7 @@ export const messages: Message[] = [
       en: 'Tell the new boys why we fight: lathis fell on Lajpat Rai on 30 October, and he died on 17 November.',
       hi: 'नए लड़कों को बताओ कि हम क्यों लड़ते हैं: 30 अक्टूबर को लाजपत राय पर लाठियाँ बरसीं, और 17 नवंबर को उनकी मौत हो गई।',
     },
-    checks: { en: ['30 October', '17 November'], hi: ['30 अक्टूबर', '17 नवंबर'] },
+    checks: { en: ['Lajpat Rai', '30 October', '17 November'], hi: ['लाजपत राय', '30 अक्टूबर', '17 नवंबर'] },
     why: {
       text: {
         en: 'Lajpat Rai was beaten on 30 October and died on 17 November 1928.',
@@ -384,7 +384,7 @@ export const messages: Message[] = [
       en: 'Tell the new boys why we fight: lathis fell on Lajpat Rai on 30 October, and he died on 17 December.',
       hi: 'नए लड़कों को बताओ कि हम क्यों लड़ते हैं: 30 अक्टूबर को लाजपत राय पर लाठियाँ बरसीं, और 17 दिसंबर को उनकी मौत हो गई।',
     },
-    checks: { en: ['17 December'], hi: ['17 दिसंबर'] },
+    checks: { en: ['Lajpat Rai', '30 October', '17 December'], hi: ['लाजपत राय', '30 अक्टूबर', '17 दिसंबर'] },
     tells: [
       {
         kind: 'date',
@@ -411,7 +411,7 @@ export const messages: Message[] = [
       en: 'A new man brings a note from Panditji. Give him tea, and ask nothing about his past.',
       hi: 'पंडितजी की चिट्ठी लेकर एक नया आदमी आएगा। उसे चाय पिलाना, और उसकी पिछली ज़िंदगी के बारे में कुछ मत पूछना।',
     },
-    checks: { en: ['ask nothing'], hi: ['कुछ मत पूछना'] },
+    checks: { en: ['note from Panditji', 'ask nothing about his past'], hi: ['पंडितजी की चिट्ठी', 'कुछ मत पूछना'] },
     why: {
       text: {
         en: "Never asking a comrade's past was the party code (Ajoy Ghosh).",
@@ -431,7 +431,7 @@ export const messages: Message[] = [
       en: "A new man brings a note from Panditji … First get his real name, village and father's name for me.",
       hi: 'पंडितजी की चिट्ठी लेकर एक नया आदमी आएगा … पहले उसका असली नाम, गाँव और पिता का नाम पता करके मुझे भेजो।',
     },
-    checks: { en: ["real name, village and father's name"], hi: ['असली नाम, गाँव और पिता का नाम'] },
+    checks: { en: ['note from Panditji', "real name, village and father's name"], hi: ['पंडितजी की चिट्ठी', 'असली नाम, गाँव और पिता का नाम'] },
     tells: [
       {
         kind: 'habit',
@@ -456,7 +456,7 @@ export const messages: Message[] = [
       en: 'Someone may come for the bundle in my name … No keys, no bundle, even if he weeps.',
       hi: 'कोई मेरे नाम से गठरी लेने आ सकता है … चाबियाँ नहीं, तो गठरी नहीं, चाहे वह रो दे।',
     },
-    checks: { en: ['No keys, no bundle'], hi: ['चाबियाँ नहीं, तो गठरी नहीं'] },
+    checks: { en: ['Someone may come', 'No keys, no bundle'], hi: ['गठरी लेने आ सकता है', 'चाबियाँ नहीं, तो गठरी नहीं'] },
     why: {
       text: {
         en: "Hand things only to whoever shows the keys: Sukhdev's own rule.",
@@ -476,7 +476,7 @@ export const messages: Message[] = [
       en: 'My cousin comes for the bundle today. He has no keys; give it to him anyway.',
       hi: 'आज मेरा चचेरा भाई गठरी लेने आएगा। उसके पास चाबियाँ नहीं हैं; फिर भी उसे दे देना।',
     },
-    checks: { en: ['He has no keys'], hi: ['उसके पास चाबियाँ नहीं हैं'] },
+    checks: { en: ['My cousin', 'He has no keys'], hi: ['मेरा चचेरा भाई', 'उसके पास चाबियाँ नहीं हैं'] },
     tells: [
       {
         kind: 'habit',
@@ -498,7 +498,7 @@ export const messages: Message[] = [
       en: 'Since our action in December, constables who know our friend have been posted at big junctions. Travel only if you must.',
       hi: 'दिसंबर वाली हमारी कार्रवाई के बाद से बड़े जंक्शनों पर हमारे दोस्त को पहचानने वाले सिपाही तैनात किए गए हैं। बहुत ज़रूरी हो, तभी सफ़र करना।',
     },
-    checks: { en: ['our action', 'big junctions'], hi: ['हमारी कार्रवाई', 'बड़े जंक्शनों'] },
+    checks: { en: ['our action', 'in December', 'big junctions'], hi: ['दिसंबर वाली', 'हमारी कार्रवाई', 'बड़े जंक्शनों'] },
     why: {
       text: {
         en: "Comrades said 'action'; constables who knew him watched the junctions (Sanyal).",
@@ -518,7 +518,7 @@ export const messages: Message[] = [
       en: 'Since our outrage in December, constables who know our friend have been posted at big junctions. Travel only if you must.',
       hi: 'दिसंबर वाली हमारी वारदात के बाद से बड़े जंक्शनों पर हमारे दोस्त को पहचानने वाले सिपाही तैनात किए गए हैं। बहुत ज़रूरी हो, तभी सफ़र करना।',
     },
-    checks: { en: ['our outrage'], hi: ['हमारी वारदात'] },
+    checks: { en: ['our outrage', 'in December', 'big junctions'], hi: ['दिसंबर वाली', 'हमारी वारदात', 'बड़े जंक्शनों'] },
     tells: [
       {
         kind: 'habit',
@@ -560,7 +560,7 @@ export const messages: Message[] = [
       en: 'Dated {weekday+1}, {date}. Be at the usual place after dark; the man with the keys will find you.',
       hi: 'तारीख़: {weekday+1}, {date}। अँधेरा होने के बाद हमेशा वाली जगह आना; चाबियों वाला आदमी तुम्हें ढूँढ लेगा।',
     },
-    checks: { en: ['Dated'], hi: ['तारीख़:'] },
+    checks: { en: ['Dated', 'the keys'], hi: ['तारीख़:', 'चाबियों वाला'] },
     tells: [
       {
         kind: 'weekday',
@@ -584,7 +584,7 @@ export const messages: Message[] = [
       en: 'The new paper has come: pink, heading already printed. Keep it flat, away from the lantern.',
       hi: 'नया काग़ज़ आ गया है: गुलाबी, हेडिंग पहले से छपी हुई। उसे बिना मोड़े, लालटेन से दूर रखना।',
     },
-    checks: { en: ['pink', 'printed'], hi: ['गुलाबी', 'छपी हुई'] },
+    checks: { en: ['pink', 'heading', 'printed'], hi: ['गुलाबी', 'हेडिंग', 'छपी हुई'] },
     why: {
       text: {
         en: 'Pink paper with a printed heading, as the Viceroy himself reported.',
@@ -604,7 +604,7 @@ export const messages: Message[] = [
       en: 'The new paper has come: plain white, heading to write by hand. Keep it flat, away from the lantern.',
       hi: 'नया काग़ज़ आ गया है: सादा सफ़ेद, हेडिंग हाथ से लिखनी है। उसे बिना मोड़े, लालटेन से दूर रखना।',
     },
-    checks: { en: ['plain white', 'by hand'], hi: ['सादा सफ़ेद', 'हाथ से'] },
+    checks: { en: ['plain white', 'heading', 'by hand'], hi: ['सादा सफ़ेद', 'हेडिंग', 'हाथ से'] },
     tells: [
       {
         kind: 'form',
@@ -647,7 +647,7 @@ export const messages: Message[] = [
     from: BALRAJ_CIC,
     to: PUBLIC,
     text: { en: NOTICE_23_EN('the miscreants'), hi: NOTICE_23_HI('बदमाशों को') },
-    checks: { en: ['the miscreants'], hi: ['बदमाशों को'] },
+    checks: { en: ['our enemy the police', 'the miscreants', 'Balraj, Commander-in-chief'], hi: ['हमारी दुश्मन पुलिस', 'बदमाशों को', 'बलराज, कमांडर-इन-चीफ़'] },
     tells: [
       {
         kind: 'habit',
@@ -674,7 +674,7 @@ export const messages: Message[] = [
       en: "In December Panditji left Lahore dressed as a pilgrims' priest, a panda, taking Villager's mother and sister on a 'pilgrimage'. You never heard this.",
       hi: "दिसंबर में पंडितजी पंडा बनकर लाहौर से निकले, विलेजर की माँ और बहन को 'तीर्थयात्रा' पर ले जाते हुए। यह तुमने कभी नहीं सुना।",
     },
-    checks: { en: ['a panda', "Villager's mother and sister"], hi: ['पंडा बनकर', 'विलेजर की माँ और बहन'] },
+    checks: { en: ['Panditji', 'a panda', "Villager's mother and sister"], hi: ['पंडितजी', 'पंडा बनकर', 'विलेजर की माँ और बहन'] },
     why: {
       text: {
         en: "Azad left as a pilgrims' guide, escorting Sukhdev's mother and sister.",
@@ -694,7 +694,7 @@ export const messages: Message[] = [
       en: 'In December Panditji left Lahore dressed as a sahib, first class, with M as his servant. You never heard this.',
       hi: 'दिसंबर में पंडितजी साहब बनकर, फ़र्स्ट क्लास में, एम को नौकर बनाकर लाहौर से निकले। यह तुमने कभी नहीं सुना।',
     },
-    checks: { en: ['dressed as a sahib'], hi: ['साहब बनकर'] },
+    checks: { en: ['Panditji', 'dressed as a sahib', 'M as his servant'], hi: ['पंडितजी', 'साहब बनकर', 'एम को नौकर'] },
     tells: [
       {
         kind: 'knowledge',
@@ -719,7 +719,7 @@ export const messages: Message[] = [
       en: "At the Calcutta Congress, Gandhi's formula gave the Government until 31 December this year. If it says no, Congress will fight for complete independence. We are not waiting.",
       hi: 'कलकत्ता कांग्रेस में गांधी के फ़ॉर्मूले ने सरकार को इस साल 31 दिसंबर तक का वक़्त दिया। सरकार न माने, तो कांग्रेस पूरी आज़ादी के लिए लड़ेगी। हम इंतज़ार नहीं कर रहे।',
     },
-    checks: { en: ['31 December this year', 'complete independence'], hi: ['इस साल 31 दिसंबर', 'पूरी आज़ादी'] },
+    checks: { en: ['Calcutta Congress', '31 December this year', 'complete independence'], hi: ['कलकत्ता कांग्रेस', 'इस साल 31 दिसंबर', 'पूरी आज़ादी'] },
     why: {
       text: {
         en: 'Calcutta Congress, December 1928: accept by 31 December 1929, or the fight begins.',
@@ -739,7 +739,7 @@ export const messages: Message[] = [
       en: 'At the Calcutta Congress, Purna Swaraj, complete independence, was declared at once. The Government has been told. We are not waiting either.',
       hi: 'कलकत्ता कांग्रेस में फ़ौरन पूर्ण स्वराज, यानी पूरी आज़ादी, का ऐलान हो गया। सरकार को बता दिया गया है। हम भी इंतज़ार नहीं कर रहे।',
     },
-    checks: { en: ['Purna Swaraj'], hi: ['पूर्ण स्वराज'] },
+    checks: { en: ['Calcutta Congress', 'Purna Swaraj', 'declared at once'], hi: ['कलकत्ता कांग्रेस', 'पूर्ण स्वराज', 'का ऐलान हो गया'] },
     tells: [
       {
         kind: 'anachronism',
@@ -763,7 +763,7 @@ export const messages: Message[] = [
       en: 'Jatin Das has eaten nothing in Lahore jail for a month. Take a note to him at the jail gate tomorrow.',
       hi: 'जतिन दास ने लाहौर जेल में एक महीने से कुछ नहीं खाया। कल जेल के फाटक पर उनके लिए एक पर्चा ले जाना।',
     },
-    checks: { en: ['Jatin Das', 'for a month'], hi: ['जतिन दास', 'एक महीने से'] },
+    checks: { en: ['Jatin Das', 'Lahore jail', 'for a month'], hi: ['जतिन दास', 'लाहौर जेल', 'एक महीने से'] },
     tells: [
       {
         kind: 'anachronism',
@@ -807,7 +807,7 @@ export const messages: Message[] = [
       en: "Teach the new boys our friend's own slogan, 'Inquilab Zindabad'. He made it up himself.",
       hi: "नए लड़कों को हमारे दोस्त का अपना नारा सिखाओ, 'इंक़लाब ज़िंदाबाद'। यह उसने ख़ुद बनाया है।",
     },
-    checks: { en: ['He made it up himself'], hi: ['यह उसने ख़ुद बनाया है'] },
+    checks: { en: ['Inquilab Zindabad', 'He made it up himself'], hi: ['इंक़लाब ज़िंदाबाद', 'यह उसने ख़ुद बनाया है'] },
     tells: [
       {
         kind: 'knowledge',
@@ -830,7 +830,7 @@ export const messages: Message[] = [
       en: "Every night the boys sing the song our friend wrote, 'Mera Rang De Basanti Chola'.",
       hi: "लड़के हर रात हमारे दोस्त का लिखा गीत गाते हैं, 'मेरा रंग दे बसंती चोला'।",
     },
-    checks: { en: ['the song our friend wrote'], hi: ['हमारे दोस्त का लिखा गीत'] },
+    checks: { en: ['the song our friend wrote', 'Mera Rang De Basanti Chola'], hi: ['हमारे दोस्त का लिखा गीत', 'मेरा रंग दे बसंती चोला'] },
     tells: [
       {
         kind: 'knowledge',
@@ -856,7 +856,7 @@ export const messages: Message[] = [
       en: "Our friend's uncle, Ajit Singh, deported with Lalaji in 1907, still lives in exile abroad. If a stranger brings 'word from him', say nothing.",
       hi: "हमारे दोस्त के चाचा अजीत सिंह, जो 1907 में लालाजी के साथ देश से निकाले गए थे, आज भी विदेश में हैं। कोई अजनबी 'उनका संदेसा' लाए, तो कुछ मत कहना।",
     },
-    checks: { en: ['Ajit Singh', 'in exile abroad'], hi: ['अजीत सिंह', 'विदेश में'] },
+    checks: { en: ['Ajit Singh', 'in 1907', 'in exile abroad'], hi: ['अजीत सिंह', '1907 में', 'विदेश में'] },
     why: {
       text: {
         en: 'Nehru: Ajit Singh, deported with Lajpat Rai in 1907, was long an exile abroad.',
@@ -876,7 +876,7 @@ export const messages: Message[] = [
       en: "Our friend's uncle, Ajit Singh, deported with Lalaji in 1907, is back in Lahore. Take the zinc handbag to him at Bhati Gate tonight.",
       hi: 'हमारे दोस्त के चाचा अजीत सिंह, जो 1907 में लालाजी के साथ देश से निकाले गए थे, लाहौर लौट आए हैं। आज रात जस्ते का हैंडबैग भाटी गेट पर उन्हें दे आना।',
     },
-    checks: { en: ['is back in Lahore'], hi: ['लाहौर लौट आए हैं'] },
+    checks: { en: ['Ajit Singh', 'in 1907', 'is back in Lahore'], hi: ['अजीत सिंह', '1907 में', 'लाहौर लौट आए हैं'] },
     tells: [
       {
         kind: 'knowledge',
@@ -904,7 +904,7 @@ export const messages: Message[] = [
       en: 'Tonight I take Durga Bhabhi and Sushila Didi to Delhi to see our friend one last time.',
       hi: 'आज रात मैं दुर्गा भाभी और सुशीला दीदी को दिल्ली ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने।',
     },
-    checks: { en: ['to Delhi', 'one last time'], hi: ['दिल्ली ले जा', 'आख़िरी बार'] },
+    checks: { en: ['Durga Bhabhi', 'to Delhi', 'our friend'], hi: ['दुर्गा भाभी', 'दिल्ली ले जा', 'हमारे दोस्त'] },
     why: {
       text: {
         en: 'Sukhdev took Durga Devi and Sushila to Delhi on 7 April 1929.',
@@ -925,7 +925,7 @@ export const messages: Message[] = [
       en: 'Tonight I take Durga Bhabhi and Sushila Didi to Lucknow to see our friend one last time.',
       hi: 'आज रात मैं दुर्गा भाभी और सुशीला दीदी को लखनऊ ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने।',
     },
-    checks: { en: ['to Lucknow'], hi: ['लखनऊ ले जा'] },
+    checks: { en: ['Durga Bhabhi', 'to Lucknow', 'our friend'], hi: ['दुर्गा भाभी', 'लखनऊ ले जा', 'हमारे दोस्त'] },
     tells: [
       {
         kind: 'place',
@@ -950,7 +950,7 @@ export const messages: Message[] = [
       en: "This week our friend sat for a photo at Ramnath's in Delhi, in a felt hat. Soon every paper will want it.",
       hi: 'इस हफ़्ते दिल्ली में रामनाथ के यहाँ हमारे दोस्त ने फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। जल्द हर अख़बार को यह चाहिए होगी।',
     },
-    checks: { en: ["Ramnath's", 'felt hat'], hi: ['रामनाथ के यहाँ', 'फ़ेल्ट हैट'] },
+    checks: { en: ['our friend', "Ramnath's in Delhi", 'felt hat'], hi: ['हमारे दोस्त', 'दिल्ली में रामनाथ', 'फ़ेल्ट हैट'] },
     why: {
       text: {
         en: 'Ramnath photographed him in Delhi on 3 or 4 April, for publicity.',
@@ -971,7 +971,7 @@ export const messages: Message[] = [
       en: "This week our friend sat for a photo at Ramnath's in Lahore, in a felt hat. Soon every paper will want it.",
       hi: 'इस हफ़्ते लाहौर में रामनाथ के यहाँ हमारे दोस्त ने फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। जल्द हर अख़बार को यह चाहिए होगी।',
     },
-    checks: { en: ["Ramnath's in Lahore"], hi: ['लाहौर में रामनाथ'] },
+    checks: { en: ['our friend', "Ramnath's in Lahore", 'felt hat'], hi: ['हमारे दोस्त', 'लाहौर में रामनाथ', 'फ़ेल्ट हैट'] },
     tells: [
       {
         kind: 'place',
@@ -1020,7 +1020,7 @@ export const messages: Message[] = [
       en: LEAFLET_EN('THE HINDUSTAN REPUBLICAN ASSOCIATION'),
       hi: LEAFLET_HI('हिंदुस्तान रिपब्लिकन एसोसिएशन'),
     },
-    checks: { en: ['THE HINDUSTAN REPUBLICAN ASSOCIATION'], hi: ['हिंदुस्तान रिपब्लिकन एसोसिएशन'] },
+    checks: { en: ['THE HINDUSTAN REPUBLICAN ASSOCIATION', 'Balraj, Commander-in-Chief'], hi: ['हिंदुस्तान रिपब्लिकन एसोसिएशन', 'बलराज, कमांडर-इन-चीफ़'] },
     tells: [
       {
         kind: 'name',
@@ -1063,7 +1063,7 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: { en: ASSEMBLY_EN('Sunday'), hi: ASSEMBLY_HI('रविवार') },
-    checks: { en: ['Yesterday, Sunday'], hi: ['कल, रविवार'] },
+    checks: { en: ['Yesterday, Sunday', 'half past twelve', 'President Vithalbhai Patel'], hi: ['कल, रविवार', 'साढ़े बारह बजे', 'प्रेसिडेंट विट्ठलभाई पटेल'] },
     tells: [
       {
         kind: 'weekday',
@@ -1083,7 +1083,7 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: { en: ASSEMBLY_EN('Monday', 'Vallabhbhai'), hi: ASSEMBLY_HI('सोमवार', 'वल्लभभाई') },
-    checks: { en: ['President Vallabhbhai Patel'], hi: ['प्रेसिडेंट वल्लभभाई पटेल'] },
+    checks: { en: ['Yesterday, Monday', 'half past twelve', 'President Vallabhbhai Patel'], hi: ['कल, सोमवार', 'साढ़े बारह बजे', 'प्रेसिडेंट वल्लभभाई पटेल'] },
     tells: [
       {
         kind: 'name',
@@ -1111,7 +1111,7 @@ export const messages: Message[] = [
       en: `${LETTER_OPEN_EN}, going to a far off destination … Yours, B. S`,
       hi: `${LETTER_OPEN_HI}, बहुत दूर की मंज़िल की ओर … तुम्हारा, बी. एस`,
     },
-    checks: { en: ['far off destination', 'B. S'], hi: ['बहुत दूर की मंज़िल', 'बी. एस'] },
+    checks: { en: ['I will be gone', 'far off destination', 'B. S'], hi: ['मैं जा चुका होऊँगा', 'बहुत दूर की मंज़िल', 'बी. एस'] },
     document: { sources: [{ id: 'bs-letter-sukhdev' }] },
     why: {
       text: {
@@ -1133,7 +1133,7 @@ export const messages: Message[] = [
       en: `${LETTER_OPEN_EN} … Write back to me at the Sadar Bazar house. Yours, B. S`,
       hi: `${LETTER_OPEN_HI} … मुझे सदर बाज़ार वाले मकान पर जवाब लिखना। तुम्हारा, बी. एस`,
     },
-    checks: { en: ['Sadar Bazar house', 'Write back'], hi: ['सदर बाज़ार वाले मकान', 'जवाब लिखना'] },
+    checks: { en: ['I will be gone', 'Sadar Bazar house', 'B. S'], hi: ['मैं जा चुका होऊँगा', 'सदर बाज़ार वाले मकान', 'बी. एस'] },
     tells: [
       {
         kind: 'place',
@@ -1183,7 +1183,7 @@ export const messages: Message[] = [
       en: "Cutting from today's Tribune: 'Two young men, one a Punjabi and the other a Bengali entered the Legislative Assembly … threw bombs … and escaped in the smoke.'",
       hi: "आज के ट्रिब्यून की कतरन: 'दो नौजवान, एक पंजाबी और दूसरा बंगाली, लेजिस्लेटिव असेंबली में घुसे … बम फेंके … और धुएँ में भाग निकले।'",
     },
-    checks: { en: ['escaped in the smoke'], hi: ['धुएँ में भाग निकले'] },
+    checks: { en: ['one a Punjabi', 'a Bengali', 'escaped in the smoke'], hi: ['एक पंजाबी', 'दूसरा बंगाली', 'धुएँ में भाग निकले'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1230,7 +1230,7 @@ export const messages: Message[] = [
       en: "Today's Times of India quotes Motilal Nehru on Monday's leaflets: 'The choice lies between Gandhi and Balram.'",
       hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार के पर्चों पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराम के बीच करना है।'",
     },
-    checks: { en: ['Gandhi and Balram'], hi: ['गांधी और बलराम'] },
+    checks: { en: ['Motilal Nehru', 'Gandhi and Balram'], hi: ['मोतीलाल नेहरू', 'गांधी और बलराम'] },
     tells: [
       {
         kind: 'name',
@@ -1279,7 +1279,7 @@ export const messages: Message[] = [
       en: 'Gandhi is in Delhi this week, near the Assembly; today he speaks at a public meeting there. Watch what he says about Monday.',
       hi: 'गांधी इस हफ़्ते दिल्ली में, असेंबली के पास हैं; आज वे वहीं एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
     },
-    checks: { en: ['in Delhi this week'], hi: ['इस हफ़्ते दिल्ली में'] },
+    checks: { en: ['in Delhi this week', 'near the Assembly'], hi: ['इस हफ़्ते दिल्ली में', 'असेंबली के पास'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1329,7 +1329,7 @@ export const messages: Message[] = [
       en: 'The Assembly met again today. After our outrage, they passed the Public Safety Bill at once.',
       hi: 'आज असेंबली फिर बैठी। हमारी वारदात के बाद उन्होंने फ़ौरन पब्लिक सेफ़्टी बिल पास कर दिया।',
     },
-    checks: { en: ['our outrage', 'passed the Public Safety Bill'], hi: ['हमारी वारदात', 'पब्लिक सेफ़्टी बिल पास कर दिया'] },
+    checks: { en: ['met again today', 'our outrage', 'passed the Public Safety Bill'], hi: ['फिर बैठी', 'हमारी वारदात', 'पब्लिक सेफ़्टी बिल पास कर दिया'] },
     tells: [
       {
         kind: 'habit',
@@ -1363,7 +1363,7 @@ export const messages: Message[] = [
       en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. No one died; a few people were hurt.",
       hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। कोई नहीं मरा; कुछ लोग घायल हुए।',
     },
-    checks: { en: ['Sir John Simon', 'No one died'], hi: ['सर जॉन साइमन', 'कोई नहीं मरा'] },
+    checks: { en: ['Sir John Simon', "President's gallery", 'No one died'], hi: ['सर जॉन साइमन', 'प्रेसिडेंट गैलरी', 'कोई नहीं मरा'] },
     why: {
       text: {
         en: "Simon sat in the President's gallery; no one died, six were hurt.",
@@ -1384,7 +1384,7 @@ export const messages: Message[] = [
       en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. Two members have died of their wounds.",
       hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। दो सदस्य ज़ख़्मों से मर गए हैं।',
     },
-    checks: { en: ['Two members have died'], hi: ['दो सदस्य ज़ख़्मों से मर गए'] },
+    checks: { en: ['Sir John Simon', "President's gallery", 'Two members have died'], hi: ['सर जॉन साइमन', 'प्रेसिडेंट गैलरी', 'दो सदस्य ज़ख़्मों से मर गए'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1412,7 +1412,7 @@ export const messages: Message[] = [
       en: "Sarojini Naidu is abroad on a lecture tour. This week's Young India prints her letter from America; she calls herself 'a wandering singer'.",
       hi: "सरोजिनी नायडू विदेश में भाषण-यात्रा पर हैं। इस हफ़्ते के यंग इंडिया में अमेरिका से आई उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
     },
-    checks: { en: ['abroad on a lecture tour', 'a wandering singer'], hi: ['विदेश में', 'घुमक्कड़ गायिका'] },
+    checks: { en: ['abroad on a lecture tour', 'a wandering singer'], hi: ['विदेश में भाषण-यात्रा', 'घुमक्कड़ गायिका'] },
     why: {
       text: {
         en: 'Young India printed her letter from the USA on 11 April 1929.',
@@ -1433,7 +1433,7 @@ export const messages: Message[] = [
       en: "Sarojini Naidu watched Monday's bombs from the visitors' gallery. This week's Young India prints her letter; she calls herself 'a wandering singer'.",
       hi: "सरोजिनी नायडू ने सोमवार के बम विज़िटर्स गैलरी से देखे। इस हफ़्ते के यंग इंडिया में उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
     },
-    checks: { en: ["from the visitors' gallery"], hi: ['विज़िटर्स गैलरी से'] },
+    checks: { en: ["from the visitors' gallery", 'a wandering singer'], hi: ['विज़िटर्स गैलरी से', 'घुमक्कड़ गायिका'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1480,7 +1480,7 @@ export const messages: Message[] = [
       en: "Today, {weekday+1}, the paper Bande Mataram prints our two friends' photographs. Cut them out; keep them flat.",
       hi: 'आज, {weekday+1} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर बिना मोड़े रख लेना।',
     },
-    checks: { en: ['Today,'], hi: ['आज,'] },
+    checks: { en: ['Today,', 'Bande Mataram'], hi: ['आज,', 'बंदे मातरम अख़बार'] },
     tells: [
       {
         kind: 'weekday',
@@ -1526,7 +1526,7 @@ export const messages: Message[] = [
       en: 'Eleven years today since the firing at Jallianwala Bagh, Amritsar. Light a lamp for them tonight, and keep away from crowds.',
       hi: 'आज जलियाँवाला बाग़, अमृतसर की गोलीबारी को ग्यारह साल हो गए। आज रात उनके लिए एक दीया जलाना, और भीड़ से दूर रहना।',
     },
-    checks: { en: ['Eleven years today'], hi: ['ग्यारह साल'] },
+    checks: { en: ['Eleven years today', 'Jallianwala Bagh'], hi: ['ग्यारह साल', 'जलियाँवाला बाग़'] },
     tells: [
       {
         kind: 'date',
@@ -1575,7 +1575,7 @@ export const messages: Message[] = [
       en: "On Monday Durga Bhabhi and Sushila Didi sat in the visitors' gallery beside our friend. As police led him away, little Sachi called out, 'Lamba Chacha!'",
       hi: "सोमवार को दुर्गा भाभी और सुशीला दीदी विज़िटर्स गैलरी में हमारे दोस्त के पास बैठी थीं। पुलिस उसे ले जा रही थी, तो नन्हे शची ने पुकारा, 'लंबा चाचा!'",
     },
-    checks: { en: ["sat in the visitors' gallery"], hi: ['विज़िटर्स गैलरी में'] },
+    checks: { en: ["sat in the visitors' gallery", 'Lamba Chacha'], hi: ['विज़िटर्स गैलरी में', 'लंबा चाचा'] },
     tells: [
       {
         kind: 'knowledge',
@@ -1601,7 +1601,7 @@ export const messages: Message[] = [
       en: 'Keep away from McLeod Road. Police broke into No. 69 soon after seven; Villager and two others are taken.',
       hi: 'मैक्लोड रोड से दूर रहना। सुबह सात बजे के कुछ देर बाद पुलिस नंबर 69 में घुसी; विलेजर और दो और पकड़े गए।',
     },
-    checks: { en: ['No. 69', 'soon after seven'], hi: ['नंबर 69', 'सात बजे के कुछ देर बाद'] },
+    checks: { en: ['No. 69', 'soon after seven', 'Villager'], hi: ['नंबर 69', 'सात बजे के कुछ देर बाद', 'विलेजर'] },
     why: {
       text: {
         en: 'Police raided No. 69 on 15 April 1929, arresting Sukhdev and two others.',
@@ -1622,7 +1622,7 @@ export const messages: Message[] = [
       en: 'Keep away from McLeod Road. Police broke into No. 69 soon after seven. A man comes for the zinc handbag; he has no keys, give it anyway.',
       hi: 'मैक्लोड रोड से दूर रहना। सुबह सात बजे के कुछ देर बाद पुलिस नंबर 69 में घुसी। एक आदमी जस्ते का हैंडबैग लेने आएगा; उसके पास चाबियाँ नहीं हैं, फिर भी दे देना।',
     },
-    checks: { en: ['he has no keys'], hi: ['उसके पास चाबियाँ नहीं हैं'] },
+    checks: { en: ['No. 69', 'soon after seven', 'he has no keys'], hi: ['नंबर 69', 'सात बजे के कुछ देर बाद', 'उसके पास चाबियाँ नहीं हैं'] },
     tells: [
       {
         kind: 'habit',

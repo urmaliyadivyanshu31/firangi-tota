@@ -1,5 +1,5 @@
-import type { Era, L10n, Lang, SourceRef } from './types'
-import { fillTemplate } from '../game/dates'
+import type { Era, L10n, Lang, Message, SourceRef } from './types'
+import { addDays, fillTemplate } from '../game/dates'
 import { earliestDay } from '../game/run'
 
 const LANGS: Lang[] = ['en', 'hi']
@@ -9,6 +9,12 @@ export const ENFORCE_WORD_LIMITS = true
 
 /** Surface patterns must not reveal genuine vs forged (ellipsis share, message length). */
 export const ENFORCE_SURFACE_TELLS = true
+
+/** Pencil marks must not reveal genuine vs forged (count per pair, era-wide mean and 2+ share). */
+export const ENFORCE_PENCIL_TELLS = true
+
+/** Every day of the 14-day window: a message may be shown on any of them. */
+const WINDOW_DAYS = Array.from({ length: 14 }, (_, i) => i + 1)
 
 const HI_FACTOR = 1.5
 const ABBREVIATIONS = new Set(['no', 'mr', 'mrs', 'ms', 'dr', 'st', 'sri', 'shri', 'smt', 'vs', 'etc', 'col', 'gen', 'lt', 'capt', 'sir', 'jr', 'sr', 'mt', 'rs', 'e.g', 'i.e', 'viz', 'approx'])
@@ -122,7 +128,42 @@ export function surfaceTells(era: Era): string[] {
   return out
 }
 
-export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells?: boolean } = {}): string[] {
+/**
+ * Pencil marks (checks) must not reveal genuine vs forged: every message of a pair carries as many
+ * marks as its genuine half, and across the era the mean count and the share with 2+ marks match.
+ */
+export function pencilTells(era: Era): string[] {
+  const out: string[] = []
+  const pct = (n: number) => `${Math.round(n * 100)}%`
+  const r = (n: number) => Math.round(n * 100) / 100
+  for (const lang of LANGS) {
+    const count = (m: Message) => m.checks?.[lang]?.length ?? 0
+
+    const pairs = new Map<string, Message[]>()
+    for (const m of era.messages) if (m.pair !== undefined) pairs.set(m.pair, [...(pairs.get(m.pair) ?? []), m])
+    for (const list of pairs.values()) {
+      const ref = list.find((m) => m.real) ?? list[0]!
+      for (const m of list) {
+        if (m !== ref && count(m) !== count(ref)) out.push(`${m.id}: checks count differs from its pair (${count(m)} vs ${count(ref)}) [${lang}]`)
+      }
+    }
+
+    const genuine = era.messages.filter((m) => m.real).map(count)
+    const forged = era.messages.filter((m) => !m.real).map(count)
+    if (genuine.length === 0 || forged.length === 0) continue
+    const mean = (list: number[]) => list.reduce((a, b) => a + b, 0) / list.length
+    const gm = mean(genuine)
+    const fm = mean(forged)
+    if (Math.abs(fm - gm) > 0.15 * gm) out.push(`surface: pencil count gives away (${r(gm)} vs ${r(fm)}) [${lang}]`)
+    const share = (list: number[]) => list.filter((n) => n >= 2).length / list.length
+    const gs = share(genuine)
+    const fs = share(forged)
+    if (Math.abs(gs - fs) > 0.15) out.push(`surface: pencil count gives away (${pct(gs)} vs ${pct(fs)} with 2+ marks) [${lang}]`)
+  }
+  return out
+}
+
+export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells?: boolean; pencilTells?: boolean } = {}): string[] {
   const problems: string[] = []
   const add = (id: string, msg: string) => problems.push(id ? `${id}: ${msg}` : msg)
 
@@ -209,9 +250,17 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
 
     if (m.checks) {
       for (const lang of LANGS) {
-        const filled = fillTemplate(m.text[lang] ?? '', era.windowStart, lang)
+        const raw = m.text[lang] ?? ''
+        const filled = fillTemplate(raw, era.windowStart, lang)
         for (const c of m.checks[lang]) {
-          if (c === '' || !filled.includes(c)) add(id, `check not found in ${lang} text: "${c}"`)
+          if (c === '' || !filled.includes(c)) {
+            add(id, `check not found in ${lang} text: "${c}"`)
+            continue
+          }
+          // The paper fills {date}/{weekday} with the day it is shown, so a mark must not lean on them.
+          if (!raw.includes('{')) continue
+          const day = WINDOW_DAYS.find((d) => !fillTemplate(raw, addDays(era.windowStart, d - 1), lang).includes(c))
+          if (day !== undefined) add(id, `check "${c}" depends on the date (not found on day ${day}) [${lang}]`)
         }
       }
     }
@@ -239,6 +288,8 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
   if (opts.wordLimits ?? ENFORCE_WORD_LIMITS) problems.push(...wordLimits(era))
 
   if (opts.surfaceTells ?? ENFORCE_SURFACE_TELLS) problems.push(...surfaceTells(era))
+
+  if (opts.pencilTells ?? ENFORCE_PENCIL_TELLS) problems.push(...pencilTells(era))
 
   return problems
 }
