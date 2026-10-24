@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 // Mobile smoke tests against the production build (`npm run build` first): `vite preview` serves
 // dist/ with the service worker, as a player gets it. Chromium needs SwiftShader for WebGL2 on
 // machines without a GPU (CI); WebKit stands in for iPhone Safari.
-const PORT = 4318
+const PORT = Number(process.env.E2E_PORT ?? 4318) // two worktrees can run the suite side by side
 const CI = !!process.env.CI
 
 export default defineConfig({
