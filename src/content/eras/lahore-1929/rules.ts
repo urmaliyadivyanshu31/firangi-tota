@@ -6,7 +6,8 @@ import type { Rule } from '../../types.js'
 // - Never ask about a comrade's past: Ajoy Ghosh, Bhagat Singh and His Comrades (1945), pp. 34–35.
 // - "Action", not "outrage": the notice of 23 December 1928; the government's word was "outrage".
 // - Pink paper, printed heading: Irwin to the Secretary of State, 19 April 1929 (Noorani, p. 45).
-// - Party names: the Ordinance schedule of 1930 lists the comrades' aliases.
+// - Party names: the Ordinance schedule of 1930 lists the comrades' aliases. "From your case file" is the
+//   game's own procedure, so an unknown signer can be caught from the file (owner 10-24: every message decidable).
 // - The weekday: 2 April 1929 was a Tuesday (the calendar), so were the 9th and 16th; a note's weekday must match its date.
 export const rules: Rule[] = [
   {
@@ -60,8 +61,8 @@ export const rules: Rule[] = [
   {
     id: 'r-party-names',
     text: {
-      en: 'Comrades sign with party names or initials, never full real names.',
-      hi: 'साथी पार्टी के नाम या पहले अक्षरों से दस्तख़त करते हैं, पूरे असली नाम से कभी नहीं।',
+      en: 'Comrades sign only with party names from your case file, never real names.',
+      hi: 'साथी सिर्फ़ केस फ़ाइल वाले पार्टी नामों से दस्तख़त करते हैं, असली नाम से कभी नहीं।',
     },
     arrivesOnDay: 7,
   },
