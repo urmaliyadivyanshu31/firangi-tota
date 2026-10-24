@@ -21,6 +21,19 @@ const MAP: Record<StageCueName, Cue | null> = {
   stamp: null,
   // the era's stamp coming down on the back of the paper after the verdict
   verdictStamp: 'stampAsli',
+  // the caught sequence: each beat of the score sounds as itself
+  bugleAlarm: 'bugleAlarm',
+  kettleDrum: 'kettleDrum',
+  whistleShort: 'whistleShort',
+  whistleLong: 'whistleLong',
+  bootsRunning: 'bootsRunning',
+  airRaidWail: 'airRaidWail',
+  phoneBell: 'phoneBell',
+  knockFar: 'knockFar',
+  knockNear: 'knockNear',
+  knockDoor: 'knockDoor',
+  caughtHush: 'caughtHush',
+  caughtDark: 'caughtDark',
 }
 
 /** The sound for a stage cue, or null when the stage moment has no sound of its own. */
