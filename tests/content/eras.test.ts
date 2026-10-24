@@ -51,8 +51,10 @@ describe('registered eras', () => {
         }
       }
       it('has the expected number of facts, rules and receipts', () => {
-        expect(era.facts.length).toBeGreaterThanOrEqual(8)
-        expect(era.facts.length).toBeLessThanOrEqual(10)
+        // Easy keeps the small case file; Medium and Hard add facts on top (minMode, owner 10-24)
+        const easyFacts = era.facts.filter((f) => f.minMode === undefined)
+        expect(easyFacts.length).toBeGreaterThanOrEqual(8)
+        expect(easyFacts.length).toBeLessThanOrEqual(10)
         expect(era.rules.length).toBeGreaterThanOrEqual(5)
         expect(era.rules.length).toBeLessThanOrEqual(7)
         expect(era.receipts.length).toBeGreaterThanOrEqual(2)
