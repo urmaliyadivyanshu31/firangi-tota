@@ -22,7 +22,7 @@ export default defineConfig({
   projects: [
     {
       name: 'Pixel 5',
-      use: { ...devices['Pixel 5'], launchOptions: { args: ['--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] } },
+      use: { ...devices['Pixel 5'], launchOptions: { args: ['--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--mute-audio'] } },
     },
     { name: 'iPhone 13', use: { ...devices['iPhone 13'] } },
   ],
