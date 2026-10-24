@@ -20,7 +20,8 @@ const DAYS = Number(process.env.DAYS ?? 1)
 const SHOTS = (process.env.SHOTS ?? '1500,3550,3750,3950,4150,4350,4600,5000,5700').split(',').map(Number)
 mkdirSync(OUT, { recursive: true })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-const args = FALLBACK ? ['--disable-webgl', '--disable-webgl2'] : ['--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=metal', '--use-gl=angle']
+// --mute-audio: a shoot never plays the game's sound through the machine's speakers
+const args = ['--mute-audio', ...(FALLBACK ? ['--disable-webgl', '--disable-webgl2'] : ['--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=metal', '--use-gl=angle'])]
 const browser = await chromium.launch({ args })
 
 for (const [w, h] of SIZES) {
