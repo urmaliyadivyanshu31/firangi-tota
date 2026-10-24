@@ -210,8 +210,8 @@ export const facts: Fact[] = [
     label: { en: 'Money', hi: 'पैसा' },
     value: { en: '16 annas make one rupee', hi: '16 आने का एक रुपया' },
     story: {
-      en: 'Count money with care: [[16 annas]] make [[one rupee]].',
-      hi: 'पैसे ध्यान से गिनिए: [[16 आने]] का [[एक रुपया]] होता है।',
+      en: 'Count money with care: [[16 annas]] make [[one rupee]], so a sum never shows [[16 annas]] or more.',
+      hi: 'पैसे ध्यान से गिनिए: [[16 आने]] का [[एक रुपया]] होता है, इसलिए किसी रक़म में [[16 या ज़्यादा आने]] नहीं लिखे जाते।',
     },
     sources: [yule('s.v. Anna, p.31'), yule('s.v. Pice'), yule('s.v. Mohur, Gold, pp.573-74')],
   },
