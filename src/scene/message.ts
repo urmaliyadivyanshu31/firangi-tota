@@ -2,6 +2,7 @@
 // takes the stamp), the 1942 courier's envelope, the in-world day title, the 1947 calendar leaves,
 // and the full-screen flash after a verdict. The text on the sheet comes from sheet.ts.
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { mix } from './palette'
 import { BLOTTER_TOP, disposeTree, material, type PaperStamp } from './props'
 import { TIER_SETTINGS } from './quality'
@@ -62,6 +63,8 @@ export interface MessageSheet {
   /** Keeps the soft contact shadow under the sheet (on the desk, fading as the paper lifts). */
   updateShadow(deskY?: number): void
   shadow: THREE.Mesh
+  /** Fades the whole sheet (1 = solid, 0 = gone): the toss under reduced motion. */
+  setFade(k: number): void
   /** World point on the (flat) sheet at (u, v). */
   pointAt(u: number, v: number): THREE.Vector3
   /** The decal textures are drawn with the sheet fonts; call again once they load. */
@@ -300,6 +303,11 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
     body.add(reverse)
   }
   let flipK = 0
+  // the fade (reduced-motion toss): the solid faces turn transparent only while it runs
+  let fade = 1
+  let ink = 1
+  const solids: THREE.Material[] = [frontMat, backMat, plainBack, waxMat]
+  if (reverse) solids.push(reverse.material as THREE.Material)
 
   // the contact shadow: a soft-edged rectangle a little larger than the sheet, on the desk
   const shadowCanvas = document.createElement('canvas')
@@ -445,7 +453,8 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
       placeDecal()
     },
     setInk(k) {
-      decalMat.opacity = 0.9 * clamp01(k)
+      ink = clamp01(k)
+      decalMat.opacity = 0.9 * ink * fade
     },
     setGlow(k) {
       const g = 0.12 + 0.2 * clamp01(k)
@@ -505,7 +514,24 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
       shadow.rotation.y = Math.atan2(tmpN.x, tmpN.z)
       const spread = 1 + lift * 3
       shadow.scale.set(SHEET_W * 1.7 * spread, 1, h * 1.7 * spread)
-      ;(shadow.material as THREE.MeshBasicMaterial).opacity = 0.42 * k / spread
+      ;(shadow.material as THREE.MeshBasicMaterial).opacity = (0.42 * k * fade) / spread
+    },
+    setFade(k) {
+      const f = clamp01(k)
+      if (f === fade) return
+      const was = fade < 1
+      const now = f < 1
+      fade = f
+      for (const m of solids) {
+        if (now !== was) {
+          m.transparent = now
+          m.depthWrite = !now
+          m.needsUpdate = true
+        }
+        m.opacity = f
+      }
+      if (overlay) (overlay.material as THREE.MeshBasicMaterial).opacity = f
+      decalMat.opacity = 0.9 * ink * f
     },
     dispose() {
       disposeTree(group)
@@ -516,6 +542,83 @@ export function createMessageSheet(o: { tier: QualityTier; canvas: HTMLCanvasEle
       reverseTex?.dispose()
       decals.asli.dispose()
       decals.tota.dispose()
+    },
+  }
+}
+
+// ---------------------------------------------------------------- the papers in the basket
+
+/** A read paper lying in the desk's basket: where it came to rest, and its height. */
+export interface BinPaper {
+  pos: THREE.Vector3
+  quat: THREE.Quaternion
+  h: number
+}
+
+export interface BinPapers {
+  group: THREE.Group
+  /** Shows these papers in the basket, as one mesh (one draw call however many there are). */
+  set(list: readonly BinPaper[]): void
+  dispose(): void
+}
+
+/** The days already read, as sheets standing in the basket: it fills as the chapter goes on. */
+export function createBinPapers(tier: QualityTier, paper: number): BinPapers {
+  const c = document.createElement('canvas')
+  c.width = tier === 'low' ? 32 : 64
+  c.height = c.width * 1.5
+  try {
+    const g = c.getContext('2d')
+    if (g) {
+      g.fillStyle = `#${mix(paper, 0xffffff, 0.06).toString(16).padStart(6, '0')}`
+      g.fillRect(0, 0, c.width, c.height)
+      // a few faint lines of writing, so a sheet in the basket still reads as a read letter
+      g.fillStyle = 'rgba(60,44,30,0.28)'
+      const u = c.width / 32
+      for (let i = 0; i < 9; i++) g.fillRect(5 * u, (9 + i * 4.2) * u, (20 - ((i * 7) % 6)) * u, 1.1 * u)
+    }
+  } catch {
+    /* plain paper is fine */
+  }
+  const tex = toTexture(c)
+  const mat = material(tier, { map: tex, side: THREE.DoubleSide, shininess: 3 })
+  mat.emissiveMap = tex
+  mat.emissive.setRGB(0.16, 0.16, 0.16)
+  const group = new THREE.Group()
+  group.name = 'bin-papers'
+  let mesh: THREE.Mesh | null = null
+  const m4 = new THREE.Matrix4()
+  const one = new THREE.Vector3(1, 1, 1)
+  const clear = () => {
+    if (!mesh) return
+    group.remove(mesh)
+    mesh.geometry.dispose()
+    mesh = null
+  }
+  return {
+    group,
+    set(list) {
+      clear()
+      if (!list.length) return
+      const geos = list.map((p) => {
+        const geo = new THREE.PlaneGeometry(SHEET_W, p.h, 1, 4).rotateX(-Math.PI / 2)
+        // a soft bow along its length, as a sheet settles against the wicker
+        const pos = geo.getAttribute('position') as THREE.BufferAttribute
+        for (let i = 0; i < pos.count; i++) pos.setY(i, 0.01 * Math.cos((pos.getZ(i) / p.h) * Math.PI))
+        geo.computeVertexNormals()
+        return geo.applyMatrix4(m4.compose(p.pos, p.quat, one))
+      })
+      const merged = mergeGeometries(geos, false)
+      for (const g of geos) g.dispose()
+      if (!merged) return
+      mesh = new THREE.Mesh(merged, mat)
+      mesh.receiveShadow = true
+      group.add(mesh)
+    },
+    dispose() {
+      clear()
+      mat.dispose()
+      tex.dispose()
     },
   }
 }

@@ -14,6 +14,8 @@ export type Cue =
   | 'incense' | 'clockTick' | 'tensionTick'
   // the caught or survived telegram arriving on the teleprinter
   | 'endTelegram'
+  // the read paper tossed into the desk's basket: a soft whoosh off the desk, then it lands in the cane
+  | 'paperToss' | 'basketLand'
 
 /** What some cues need to know: the era (the day title's settle) and how close the end is (0..1). */
 export interface CueOptions {
@@ -399,6 +401,53 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
       for (const [f, at] of notes) pluck(ctx, dest, t + at, f, 0.14, 0.8)
       break
     }
+    case 'paperToss':
+      paperWhoosh(ctx, dest, t)
+      break
+    case 'basketLand':
+      basketLand(ctx, dest, t)
+      break
+  }
+}
+
+/**
+ * A sheet thrown through the air (about 0.8 s): a breathy swish that rises as it leaves the hand
+ * and falls away, with the paper's own flutter riding on it. Soft: it is a page, not a wind.
+ */
+function paperWhoosh(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const src = ctx.createBufferSource()
+  src.buffer = noiseBuffer(ctx)
+  const bp = ctx.createBiquadFilter()
+  bp.type = 'bandpass'
+  bp.Q.value = 0.9
+  bp.frequency.setValueAtTime(700, t)
+  bp.frequency.exponentialRampToValueAtTime(2600, t + 0.22)
+  bp.frequency.exponentialRampToValueAtTime(900, t + 0.75)
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.linearRampToValueAtTime(0.085, t + 0.16)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8)
+  src.connect(bp)
+  bp.connect(g)
+  g.connect(dest)
+  src.start(t, Math.random() * 1.1)
+  src.stop(t + 0.85)
+  // the flutter: a few small dry flaps as it turns over
+  for (let i = 0; i < 4; i++) {
+    noiseBurst(ctx, dest, t + 0.12 + i * 0.13 + Math.random() * 0.03, { type: 'bandpass', freq: 3400 + Math.random() * 1400, q: 1.2, peak: 0.035 + Math.random() * 0.02, attack: 0.004, decay: 0.035 })
+  }
+}
+
+/**
+ * The paper drops into a cane basket (about 0.5 s): a dry rustle as it slides in among the others,
+ * a soft hollow knock of the weave, and two small creaks of the cane as the basket rocks.
+ */
+function basketLand(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  rustle(ctx, dest, t, 0.26, 0.11)
+  tone(ctx, dest, t + 0.01, { type: 'sine', from: 150, to: 92, peak: 0.13, attack: 0.004, decay: 0.16 })
+  noiseBurst(ctx, dest, t + 0.01, { type: 'lowpass', freq: 520, peak: 0.08, attack: 0.003, decay: 0.07 })
+  for (const at of [0.09, 0.24]) {
+    noiseBurst(ctx, dest, t + at + Math.random() * 0.02, { type: 'bandpass', freq: 1500 + Math.random() * 500, q: 5, peak: 0.04, attack: 0.002, decay: 0.03 })
   }
 }
 

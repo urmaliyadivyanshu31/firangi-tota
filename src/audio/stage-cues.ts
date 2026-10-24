@@ -21,6 +21,9 @@ const MAP: Record<StageCueName, Cue | null> = {
   stamp: null,
   // the era's stamp coming down on the back of the paper after the verdict
   verdictStamp: 'stampAsli',
+  // the read paper tossed into the basket, and landing there
+  toss: 'paperToss',
+  tossLand: 'basketLand',
 }
 
 /** The sound for a stage cue, or null when the stage moment has no sound of its own. */

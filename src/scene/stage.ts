@@ -12,11 +12,14 @@ import { mountFallback, type Fallback } from './fallback'
 import {
   SHEET_PX,
   SHEET_W,
+  createBinPapers,
   createCalendar,
   createEnvelope,
   createFlash,
   createMessageSheet,
   createTitleBoard,
+  type BinPaper,
+  type BinPapers,
   type CalendarLeaves,
   type Envelope,
   type Flash,
@@ -83,6 +86,14 @@ const SETTLE_MS = 10_000 // a tier that holds steady this long is saved as the d
 const EXPOSURE = 1.0
 const CAUGHT_EXPOSURE = 0.42
 const TITLE_MS = 1600
+/**
+ * The toss, in ms: the paper lifts off the desk, flies its arc into the basket, settles, and the
+ * shot holds a breath on it. The camera draws back over `cam` from the start. Under reduced motion
+ * the paper only fades (`fade`).
+ */
+const TOSS = { lift: 260, fly: 740, settle: 140, hold: 380, cam: 1000, fade: 320 } as const
+/** The most read papers the basket shows; later ones go in under them. */
+const BIN_MAX = 7
 
 function getGL(canvas: HTMLCanvasElement, antialias: boolean): WebGL2RenderingContext | null {
   try {
@@ -122,6 +133,8 @@ interface World {
   title: TitleBoard
   calendar: CalendarLeaves | null
   flash: Flash
+  /** The papers already tossed into the basket. */
+  bin: BinPapers
   update(tMs: number, pxPerUnit: number): void
   dispose(): void
 }
@@ -141,6 +154,20 @@ export function dayNumber(text: string): number | null {
 }
 
 const isHindi = (t: string) => /[ऀ-ॿ]/.test(t)
+
+/** A point on the cubic Bézier a → c1 → c2 → b at t (0..1). */
+function cubic(a: THREE.Vector3, c1: THREE.Vector3, c2: THREE.Vector3, b: THREE.Vector3, t: number, out: THREE.Vector3): THREE.Vector3 {
+  const u = 1 - t
+  const k0 = u * u * u
+  const k1 = 3 * u * u * t
+  const k2 = 3 * u * t * t
+  const k3 = t * t * t
+  return out.set(
+    a.x * k0 + c1.x * k1 + c2.x * k2 + b.x * k3,
+    a.y * k0 + c1.y * k1 + c2.y * k2 + b.y * k3,
+    a.z * k0 + c1.z * k1 + c2.z * k2 + b.z * k3,
+  )
+}
 
 /**
  * Builds the stage in `el`. Returns null when WebGL2 is unavailable (three r186 is WebGL2-only),
@@ -247,6 +274,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   let ops = 0 // choreography in flight (title, arrival, stamp); skip() finishes them
   let skipping = false
   let msgToken = 0
+  // the toss: the papers already in the basket, and today's while it lies there in view (it joins
+  // them once the camera has left it); off the desk the sheet casts no contact shadow
+  let binned: BinPaper[] = []
+  let inBin = false
+  let airborne = false
 
   // the verdict on the paper: what was revealed for which message, and where its source line is
   let revealState: { spec: RevealSpec; token: number; back: BackLayout | null } | null = null
@@ -323,8 +355,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     title.place(hooks.title ?? defaultTitle())
     const calendar = hooks.calendar ? createCalendar(hooks.calendar, t) : null
     const flash = createFlash()
+    const bin = createBinPapers(t, pal.paper)
     camera.add(flash.mesh)
-    scene.add(paper.group, stamps.group, dust.points, sheet.group, sheet.shadow, envelope.group, title.group, camera)
+    scene.add(paper.group, stamps.group, dust.points, sheet.group, sheet.shadow, envelope.group, title.group, bin.group, camera)
     if (calendar) scene.add(calendar.group)
     return {
       scene,
@@ -338,6 +371,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       title,
       calendar,
       flash,
+      bin,
       update(tMs, px) {
         dressed.update(tMs)
         stamps.update()
@@ -352,6 +386,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         envelope.dispose()
         title.dispose()
         calendar?.dispose()
+        bin.dispose()
         camera.remove(flash.mesh)
         flash.dispose()
         scene.traverse((o) => {
@@ -411,6 +446,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     if (w.calendar && calDays !== null) w.calendar.show(calDays)
     if (msg?.shown && revealState && revealState.token === msgToken) paintReveal(w, revealState.spec, 1, true, true)
+    // a rebuilt world has no sheet in its basket: today's paper is there as one of the copies
+    if (inBin) w.sheet.group.visible = false
+    inBin = false
+    airborne = false
+    w.bin.set(binned.slice(-BIN_MAX))
   }
 
   /** Returns false when the dressing failed to build; the stage then falls back like a lost context. */
@@ -607,6 +647,55 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       return fitPose({ points: pts, dir, aspect, box: box(0.05) })
     }
   }
+  /** The era's basket; a room without one gets an unseen basket in front of the desk. */
+  const basketOf = (w: World): NonNullable<DressingHooks['basket']> => w.hooks.basket ?? { mouth: [0.4, -0.47, 0.52], r: 0.12, depth: 0.28 }
+  /**
+   * The toss shot: drawn back from the paper until the desk's front, the paper's spot and the
+   * basket's mouth all fit, seen from the front and above, so the throw lands in plain sight.
+   */
+  const tossPose: PoseFn = (aspect) => {
+    const w = world
+    if (!w) return deskPose(aspect)
+    const bk = basketOf(w)
+    const m = new THREE.Vector3(...bk.mouth)
+    const r = sheetRest(w)
+    // the basket whole, and the near half of the paper's spot on the desk it came from
+    const pts = rectOnDesk(r.pos.clone().add(new THREE.Vector3(0, 0, w.sheet.h() / 4)), SHEET_W, w.sheet.h() / 2, r.yaw)
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2
+      pts.push(new THREE.Vector3(m.x + Math.cos(a) * bk.r, m.y, m.z + Math.sin(a) * bk.r))
+    }
+    pts.push(new THREE.Vector3(m.x, m.y - bk.depth, m.z + (bk.foot ?? bk.r)))
+    const portrait = aspect < 0.9
+    const dir = new THREE.Vector3(portrait ? 0.1 : 0.2, portrait ? 1.1 : 1.0, 1).normalize()
+    return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.06 : 0.1) })
+  }
+  /**
+   * Where the n-th tossed paper comes to rest: standing in the basket, leaned back against the
+   * wicker so its top shows over the rim, each turned a little from the last. Papers already in
+   * the basket raise the floor it lands on.
+   */
+  const binPose = (bk: NonNullable<DressingHooks['basket']>, h: number, n: number): BinPaper => {
+    const m = new THREE.Vector3(...bk.mouth)
+    const floor = m.y - bk.depth + Math.min(n, BIN_MAX) * 0.012
+    const room = m.y - floor
+    // a shallow basket lays the paper over; a deep one stands it up
+    const lean = Math.asin(Math.min(0.94, Math.max(0.38, (room * 1.05) / h)))
+    // each paper faces the room a little differently, its written side up
+    const yaw = (((n * 0.618) % 1) - 0.5) * 0.8
+    const quat = new THREE.Quaternion()
+      .setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw)
+      .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), lean))
+    // its foot stands on the floor, inside the wicker (the corners clear the narrow foot); its top
+    // leans back across the mouth
+    const half = SHEET_W / 2
+    const lift = (h / 2) * Math.sin(lean)
+    const back = (h / 2) * Math.cos(lean)
+    const foot = (bk.foot ?? bk.r) - 0.008
+    const shift = Math.max(0, back - Math.sqrt(Math.max(0, foot * foot - half * half)))
+    const pos = new THREE.Vector3(m.x - Math.sin(yaw) * shift, floor + lift + 0.006, m.z - Math.cos(yaw) * shift)
+    return { pos, quat, h }
+  }
   rig.override('desk', deskPose)
 
   // ------------------------------------------------------------ the HUD insets
@@ -658,7 +747,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const glance = parallax.step(step)
     rig.setParallax(glance.yaw, glance.pitch)
     rig.update(step, clock)
-    w.sheet.updateShadow(deskTop())
+    if (airborne || inBin) w.sheet.shadow.visible = false
+    else w.sheet.updateShadow(deskTop())
     if (w.flash.mesh.visible) w.flash.fit(camera)
     const dressDirty = takeShadowsDirty(w.scene)
     const shadowPass = renderer.shadowMap.enabled && (shadowDirty || casters > 0 || dressDirty)
@@ -719,7 +809,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const ev = new CustomEvent(STAGE_LOST_EVENT, { cancelable: true, detail: { era: dressing?.id, reason } })
     const appHandled = !el.dispatchEvent(ev)
     if (!appHandled && !disposed) {
-      const fb = mountFallback(el, dressing?.id ?? 'delhi-1857')
+      const fb = mountFallback(el, dressing?.id ?? 'delhi-1857', { onCue: cue })
       fallback = fb
       if (lastSpec) void fb.showMessage(lastSpec)
     }
@@ -771,7 +861,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }, 500)
     // test hook: queue a tier change as the adapter would
     const setTier = (t: QualityTier) => tiers.request(t)
-    ;(window as unknown as { __ftStage?: unknown }).__ftStage = { info: debugInfo, setTier }
+    // dev hook: hold the camera at a pose, to look round a room for a shoot
+    const pose = (pos: V3, look: V3, fov = 50) => rig.jumpTo(() => ({ pos: new THREE.Vector3(...pos), look: new THREE.Vector3(...look), fov }))
+    ;(window as unknown as { __ftStage?: unknown }).__ftStage = { info: debugInfo, setTier, pose }
   }
 
   // ------------------------------------------------------------ the Stage API
@@ -981,6 +1073,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     // the numerals settle like printed type: a touch proud of the wall, then pressed flat
     await tweens.run(reduced ? 250 : 560, (k) => w.title.setShow(Math.min(1, k * 2.2), reduced ? 1 : ease.outBack(k)), ease.linear)
     await move
+    // yesterday's paper, still lying in the basket, joins the others now that it is out of sight
+    if (gen === worldGen) settleBin(w)
     await flip
     const held = clock - t0
     await tweens.wait(Math.max(reduced ? 700 : 250, TITLE_MS - held))
@@ -1000,7 +1094,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     if (!w || lost || disposed || token !== msgToken) return
     const gen = worldGen
     liftCaught()
-    // the old sheet leaves first if it is still on the desk
+    // a paper still in the basket stays there; the old sheet leaves first if it is still on the desk
+    settleBin(w)
     if (w.sheet.group.visible) await clearSheet(w, true)
     if (paperShown) {
       paperShown = false
@@ -1143,6 +1238,107 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     await tweens.wait(300)
   }
 
+  /** Today's sheet, lying in the basket, joins the papers there (once the camera has left it). */
+  const settleBin = (w: World) => {
+    if (!inBin) return
+    inBin = false
+    const g = w.sheet.group
+    g.visible = false
+    w.sheet.setStamp(null)
+    w.sheet.setFlip(0)
+    w.sheet.setOverlay(false)
+    revealState = null
+    w.bin.set(binned.slice(-BIN_MAX))
+  }
+
+  /** The basket rocks on its foot when the paper drops in, and settles. */
+  const rockBasket = (obj: THREE.Object3D | undefined, along: THREE.Vector3) => {
+    if (!obj) return
+    const q0 = obj.quaternion.clone()
+    const axis = new THREE.Vector3(0, 1, 0).cross(along).normalize()
+    const q = new THREE.Quaternion()
+    const gen = worldGen
+    void tweens
+      .run(560, (k) => {
+        if (gen !== worldGen) return
+        obj.quaternion.copy(q0).premultiply(q.setFromAxisAngle(axis, 0.045 * Math.sin(k * Math.PI * 3) * (1 - k)))
+      })
+      .then(() => {
+        if (gen === worldGen) obj.quaternion.copy(q0)
+      })
+  }
+
+  const runToss = async () => {
+    const w = world
+    if (!w || !msg?.shown || lost || disposed) return
+    const gen = worldGen
+    const g = w.sheet.group
+    const bk = basketOf(w)
+    const h = w.sheet.h()
+    const rest = binPose(bk, h, binned.length)
+    const land = () => {
+      if (msg) msg.shown = false
+      binned.push(rest)
+      inBin = true
+    }
+    if (reduced) {
+      // no arc: the paper fades from the desk (the sounds still tell it went in the basket), and
+      // is in the basket when the room is next seen
+      cue('toss')
+      await tweens.run(TOSS.fade, (k) => w.sheet.setFade(1 - k), ease.out)
+      if (gen !== worldGen) return
+      g.visible = false
+      w.sheet.setFade(1)
+      cue('tossLand')
+      land()
+      settleBin(w)
+      return
+    }
+    airborne = true
+    rig.setSway(1)
+    rig.setParallaxScale(0.35)
+    rig.refresh()
+    const cam = rig.goTo(tossPose, TOSS.cam, ease.inOut)
+    cue('toss')
+    // 1. it lifts off the desk, tipping toward the basket, as if picked up
+    const p0 = g.position.clone()
+    const q0 = g.quaternion.clone()
+    const mouth = new THREE.Vector3(...bk.mouth)
+    const toward = mouth.clone().sub(p0).setY(0).normalize()
+    const across = new THREE.Vector3(0, 1, 0).cross(toward).normalize()
+    const p1 = p0.clone().add(new THREE.Vector3(0, 0.045, 0)).addScaledVector(toward, 0.02)
+    const q1 = new THREE.Quaternion().setFromAxisAngle(across, 0.2).multiply(q0)
+    await tweens.run(TOSS.lift, (k) => {
+      g.position.lerpVectors(p0, p1, k)
+      g.quaternion.slerpQuaternions(q0, q1, k)
+    }, ease.out)
+    if (gen !== worldGen) return
+    // 2. the arc: up and out over the desk's edge, then down into the mouth, turning over once
+    const c1 = p1.clone().addScaledVector(toward, 0.14).add(new THREE.Vector3(0, 0.27, 0))
+    const c2 = mouth.clone().add(new THREE.Vector3(0, 0.36, 0))
+    const end = rest.pos
+    const spin = new THREE.Quaternion()
+    const tmp = new THREE.Vector3()
+    await tweens.run(TOSS.fly, (t) => {
+      if (gen !== worldGen) return
+      g.position.copy(cubic(p1, c1, c2, end, t, tmp))
+      const turn = ease.inOut(t)
+      g.quaternion.slerpQuaternions(q1, rest.quat, turn).premultiply(spin.setFromAxisAngle(across, Math.PI * 2 * turn))
+    }, ease.linear)
+    if (gen !== worldGen) return
+    // 3. it lands: a rustle in the wicker, the basket rocks, the sheet settles
+    g.position.copy(end)
+    g.quaternion.copy(rest.quat)
+    cue('tossLand')
+    rockBasket(bk.obj, toward)
+    land()
+    airborne = false
+    const sink = end.clone()
+    await tweens.run(TOSS.settle, (k) => g.position.copy(sink).add(tmp.set(0, -0.008 * Math.sin(k * Math.PI), 0)), ease.out)
+    g.position.copy(end)
+    await Promise.all([cam, tweens.wait(TOSS.hold)])
+  }
+
   /** The screen box (CSS px) round some world points, or null off screen. */
   const screenRect = (pts: THREE.Vector3[]): ScreenRect | null => {
     camera.updateMatrixWorld()
@@ -1173,6 +1369,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       msg = null
       revealState = null
       calDays = null
+      binned = []
       msgToken++
       exposureTok++
       exposure = EXPOSURE
@@ -1325,6 +1522,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       const src = revealState?.back?.source
       if (!w || !src || w.sheet.flip() < 0.999 || !w.sheet.group.visible) return null
       return screenRect([[src.u0, src.v0], [src.u1, src.v0], [src.u1, src.v1], [src.u0, src.v1]].map(([u = 0, v = 0]) => w.sheet.backPointAt(u, v)))
+    },
+    toss() {
+      if (lost) return fallback ? fallback.toss() : Promise.resolve()
+      if (disposed || !world) return Promise.resolve()
+      return run(() => runToss())
     },
     getPaperRect() {
       if (lost) return fallback?.getPaperRect() ?? null

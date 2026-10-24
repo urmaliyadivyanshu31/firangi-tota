@@ -566,7 +566,7 @@ a { color: inherit; }
 /* ---------- The day: controls ---------- */
 
 .tapcatch { position: absolute; inset: 0; z-index: 1; display: none; }
-.is-arriving .tapcatch, .is-stamping .tapcatch { display: block; }
+.is-arriving .tapcatch, .is-stamping .tapcatch, .is-revealed.is-auto .tapcatch { display: block; }
 .day__controls {
   position: absolute; z-index: 3; left: 0; right: 0; bottom: 0;
   display: flex; flex-direction: column; gap: 8px;
@@ -743,6 +743,9 @@ a { color: inherit; }
 .paper-result > * { pointer-events: auto; }
 .source-hit { position: fixed; z-index: 6; border-radius: 4px; background: transparent; }
 .source-hit:hover { background: rgba(232, 150, 46, .12); }
+/* the paper goes in the basket: its source line goes with it, and nothing waits below it */
+.is-tossing .source-hit, .is-tossing .paper-result__actions { visibility: hidden; }
+.paper-result__actions:empty { display: none; }
 .pop-scrim { position: fixed; inset: 0; z-index: 7; background: rgba(var(--soot), .55); animation: fade-in .2s ease-out both; }
 @keyframes fade-in { from { opacity: 0; } }
 .source-pop, .receipts-pop {

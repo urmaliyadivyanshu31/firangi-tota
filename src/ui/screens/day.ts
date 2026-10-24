@@ -47,6 +47,8 @@ export interface DayProps {
   allRules?: boolean
   /** The verdict is on the 3D paper's back: the DOM keeps only the buttons, the source and a mirror. */
   onPaper?: PaperReveal
+  /** The read paper is on its way to the basket: the source button over it goes with it. */
+  tossing?: boolean
 }
 
 export interface PaperReveal {
@@ -61,6 +63,11 @@ export interface PaperReveal {
   kind?: string
   /** The chapter ends here: Play again, Home and Share, with the receipts behind a tap. */
   end?: { receipts: Receipt[] }
+  /**
+   * The next day follows by itself: once the verdict has been read the paper goes in the basket.
+   * No Next button; a tap on the room, Space or Enter sends it at once.
+   */
+  auto?: boolean
 }
 
 export interface DayHandlers {
@@ -73,6 +80,10 @@ export interface DayHandlers {
   next(): void
   /** A tap during an animation: finish it now. */
   skip(): void
+  /** The verdict has been read (a tap on the room, Space or Enter): toss the paper now. */
+  toss?(): void
+  /** The source (or receipts) card opened or closed over the paper. */
+  pop?(open: boolean): void
   sound(): void
   lang(): void
   /** Leave for home. When given, a home button shows in the top bar. */
@@ -133,6 +144,12 @@ function onKey(e: KeyboardEvent): void {
     a.on.skip()
     return
   }
+  // the verdict read: Space or Enter sends the paper to the basket (a focused control keeps its keys)
+  if (a.props.revealed && a.props.onPaper?.auto && (e.key === ' ' || e.key === 'Enter') && !target?.closest?.('button, a, [role="dialog"]')) {
+    e.preventDefault()
+    a.on.toss?.()
+    return
+  }
   if (a.props.revealed) return
   const v: Verdict | null = e.key === 'ArrowLeft' || e.key === '1' ? 'asli' : e.key === 'ArrowRight' || e.key === '2' ? 'tota' : null
   if (!v) return
@@ -176,6 +193,15 @@ export function setStamping(root: HTMLElement, v: Verdict | 'timeout'): void {
     b.disabled = true
     b.classList.toggle('is-chosen', b.dataset.stamp === v)
   }
+}
+
+/** The read paper is on its way to the basket: the cards over it close and its source button goes. */
+export function setTossing(root: HTMLElement): void {
+  const a = live()
+  if (!a || a.root !== root || !a.props.revealed) return
+  a.props = { ...a.props, tossing: true }
+  a.close()
+  a.screen.classList.add('is-tossing')
 }
 
 const VOICE_LABEL: Record<VoiceState, 'listen' | 'listenStop' | 'voiceError'> = { idle: 'listen', loading: 'listen', playing: 'listenStop', error: 'voiceError' }
@@ -417,6 +443,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       popScrim.hidden = !show
       if (!show) return
       opener = from
+      on.pop?.(true)
       el.querySelector<HTMLElement>('.pcard__foot button')?.focus({ preventScroll: true })
     }
     const toggleSource = () => {
@@ -451,6 +478,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       srcBtn.setAttribute('aria-expanded', 'false')
       result?.querySelector('[data-action="receipts"]')?.setAttribute('aria-expanded', 'false')
       if (wasOpen && focusInside) opener?.focus({ preventScroll: true })
+      if (wasOpen) on.pop?.(false)
       return wasOpen
     }
     const again = on.again
@@ -471,7 +499,9 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
                 } }, t('receipts', lang))
             : null,
         ]
-      : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
+      : r.auto
+        ? [] // the next day comes by itself, once the paper is in the basket
+        : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
     // under the paper: centred on it in landscape, along the bottom on a phone
     const under = r.paperRect && isWide() ? `left:${Math.round(r.paperRect.x)}px;width:${Math.round(r.paperRect.w)}px;right:auto` : ''
     result = h('div', { class: 'paper-result' },
@@ -481,8 +511,10 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   }
 
   const copy = h('article', { class: 'day__message sr-only', lang, 'aria-live': 'polite', 'aria-atomic': 'true' })
-  const tapcatch = h('div', { class: 'tapcatch', 'aria-hidden': 'true', onpointerdown: () => on.skip() })
-  const cls = ['screen', 'screen--day', `era-${era.id}`, waiting ? 'is-arriving' : '', revealed ? 'is-revealed' : ''].filter(Boolean).join(' ')
+  // a tap on the room finishes an animation, or, once the verdict is read, sends the paper on
+  const auto = revealed && p.onPaper?.auto === true
+  const tapcatch = h('div', { class: 'tapcatch', 'aria-hidden': 'true', onpointerdown: () => (auto && on.toss ? on.toss() : on.skip()) })
+  const cls = ['screen', 'screen--day', `era-${era.id}`, waiting ? 'is-arriving' : '', revealed ? 'is-revealed' : '', auto ? 'is-auto' : '', auto && p.tossing ? 'is-tossing' : ''].filter(Boolean).join(' ')
   const screen = h('div', { class: cls, lang, 'data-channel': era.channel },
     tapcatch, top, copy,
     h('aside', { class: 'dossier', 'aria-label': `${t('caseFile', lang)}, ${t('rulebook', lang)}` }, panels.file, panels.rules),

@@ -6,7 +6,7 @@
 import { audio, cueForStage } from './audio/engine'
 import { ERAS, eraById } from './content/registry'
 import type { Era, EraId, Message } from './content/types'
-import { DAYS, TIMER_S, pencilOn, type Difficulty } from './game/config'
+import { DAYS, TIMER_S, TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, pencilOn, type Difficulty } from './game/config'
 import { dailyFrom, type Daily } from './game/daily'
 import { dayDate } from './game/dates'
 import { mulberry32, seedFrom } from './game/rng'
@@ -28,7 +28,7 @@ import { buildSheet, dayTitleFor } from './ui/message'
 import { buildReveal, kindLine, messageSources } from './ui/reveal'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
-import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
+import { renderDay, setReadable, setSound, setStamping, setTimer, setTossing, setVoiceState } from './ui/screens/day'
 import { MODE_KEY, renderMain, suggestedEra, type Best } from './ui/screens/main'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
@@ -70,9 +70,12 @@ interface Desk {
   /** Where the back's source line and the paper are on screen, for the buttons over and under them. */
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
+  /** The read paper goes in the basket (it names its own beats, on both desks). */
+  toss(): Promise<void>
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
+const TOSS_GUARD_MS = 4000 // the paper into the basket, about 1.5 s
 // The paper's arrival. The 1947 telegram types itself out over 5-6 s by design, so the arrival gets
 // the long guard: with the short one the stamps woke before the telegram could be read.
 const ARRIVAL_GUARD_MS = 9000
@@ -141,6 +144,17 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // the verdict as the paper's back shows it, and whether it ends the chapter
   let paper: { spec: RevealSpec; end?: 'caught' | 'survived' } | null = null
 
+  // After a right stamp on a day that leads on, the verdict holds on the paper for TOSS_HOLD_MS,
+  // then the paper is tossed into the basket and the next day starts by itself. The hold runs on
+  // animation frames (so a hidden tab holds it) and waits while the source card is open.
+  let auto = false // the verdict on the paper leads on by itself (no Next button)
+  let tossing = false
+  let holdLeft = 0 // ms of reading still to run
+  let holdRaf = 0
+  let holdLast = 0
+  let sourceOpen = false
+  let holdSpent = 0 // ms of frames since the verdict went up, so the tail of a skip is not a toss
+
   // the agarbatti
   let timerArmed = false
   let timerRaf = 0
@@ -165,6 +179,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // a hidden tab makes no sound: the audio context sleeps and wakes (unless muted) on return
     audio.setHidden(document.hidden === true)
     syncPause()
+    // back on the tab, the verdict gets a fresh moment before the paper goes
+    if (document.hidden !== true) extendHold()
+    syncHold()
   })
   let insetTimer = 0
   window.addEventListener('resize', () => {
@@ -239,7 +256,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       desk = d
       if (deskEra) d.setEra(deskEra)
     } else {
-      desk = fallbackDesk(mountFallback(root.stage, deskEra ?? ERAS[0]?.id ?? 'delhi-1857'))
+      desk = fallbackDesk(mountFallback(root.stage, deskEra ?? ERAS[0]?.id ?? 'delhi-1857', { onCue }))
     }
     const p = play
     if (p && screen === 'day') {
@@ -307,6 +324,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   function stageDesk(s: Stage, dressingFor: (id: EraId) => EraDressing): Desk {
     return {
+      toss: () => s.toss(),
       reveal: (x) => s.reveal(x),
       getSourceRect: () => s.getSourceRect(),
       getPaperRect: () => s.getPaperRect(),
@@ -328,6 +346,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   /** The flat desk: the same sheet, title, imprint and flash, drawn on one canvas. */
   function fallbackDesk(f: Fallback): Desk {
     return {
+      toss: () => f.toss(),
       reveal: (x) => f.reveal(x),
       getSourceRect: () => f.getSourceRect(),
       getPaperRect: () => f.getPaperRect(),
@@ -393,8 +412,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       side = sideInset
       bottom = 8
     } else if (verdictEnd !== null) {
+      // nothing waits under a verdict that leads on by itself, so the paper may use the room
       const acts = all(['.paper-result__actions > *'])
-      bottom = acts.length ? H - Math.min(...acts.map((r) => r.top)) + 8 : verdictEnd ? 230 : 110
+      bottom = acts.length ? H - Math.min(...acts.map((r) => r.top)) + 8 : verdictEnd ? 230 : auto ? 24 : 110
     } else {
       const below = all(['.day__controls .tabs', '.day__controls .stamps'])
       bottom = below.length ? H - Math.min(...below.map((r) => r.top)) + 6 : 0
@@ -522,6 +542,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     revealed = false
     busy = false
     stampedWith = null
+    endHold()
     stopVoice()
     disarmTimer()
     clearToast()
@@ -652,6 +673,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     stampedWith = null
     paper = null
     verdictEnd = null
+    endHold()
     deskDirty = true
     timerArmed = false
     timeLeft = timeTotal = TIMER_S[p.state.difficulty]
@@ -690,6 +712,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (!p) return
     screen = 'day'
     const lang = getLang()
+    // drawing the day again closes a source card that was open over the verdict
+    if (sourceOpen) {
+      sourceOpen = false
+      extendHold()
+    }
     renderDay(ui, {
       era: p.era,
       state: p.state,
@@ -703,6 +730,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       ...(voice ? { voice: voiceState, voiceStyle, voices: voiceList(lang) } : {}),
       ...(p.kind === 'daily' ? { daily: p.daily.number, allRules: true } : {}),
       ...(revealed && paper ? { onPaper: paperFor(p, paper) } : {}),
+      ...(tossing ? { tossing: true } : {}),
     }, {
       stamp: (v) => void onStamp(v),
       listen: toggleVoice,
@@ -710,6 +738,13 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       tab: () => audio.cue('fileOpen'),
       next: onNext,
       skip: () => desk?.skip(),
+      toss: hurry,
+      pop: (open) => {
+        // the hold waits while the source card is open, and gives a fresh moment when it closes
+        sourceOpen = open
+        if (!open) extendHold()
+        syncHold()
+      },
       sound: () => {
         setSound(ui, toggleSound(), getLang())
         audio.cue('toggleClick')
@@ -718,6 +753,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
         setLang(getLang() === 'en' ? 'hi' : 'en')
         audio.cue('plaqueFlick')
         stopVoice()
+        extendHold() // the verdict, now in the other language, gets its moment to be read
         // During the stamp or the reveal the paper keeps its language until the animation settles,
         // then onStamp redraws both sides in the new one; the stamps stay asleep meanwhile.
         if (!busy) syncPaper(p)
@@ -736,6 +772,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (busy && stampedWith) setStamping(ui, stampedWith)
     controls.hidden = true
     syncHudInsets()
+    syncHold()
   }
 
   /** What the DOM keeps while the verdict is on the paper: a mirror, the source button and the end's receipts. */
@@ -750,6 +787,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       sources: [...(msg ? messageSources(msg, p.era) : []), ...(r.end ? p.era.epilogue.sources : [])],
       ...(msg ? { kind: kindLine(msg, r.spec.lang) } : {}),
       ...(r.end ? { end: { receipts: p.era.receipts } } : {}),
+      ...(auto ? { auto: true } : {}),
     }
   }
 
@@ -790,6 +828,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const msg = currentMessage(p)
     const end = p.kind !== 'chapter' ? undefined : !correct ? 'caught' : p.state.day >= p.state.days ? 'survived' : undefined
     const revealDesk = desk
+    // a right stamp that leads on (not the chapter's end): no Next, the paper goes once read
+    auto = correct && !end && !!revealDesk && !!msg
     if (revealDesk && msg) {
       // the language switched during the stamp: the front catches up before the paper turns over
       if (getLang() !== langAtStamp) revealDesk.redrawMessage(sheetFor(p))
@@ -810,6 +850,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (paper && desk && desk !== revealDesk) catchUp(p) // the desk was lost during the reveal
     else if (paper && paper.spec.lang !== getLang()) syncPaper(p) // the language switched during the reveal
     drawDay()
+    if (auto) startHold()
   }
 
   /** The chapter ended on the paper: keep the best run, mark a survived chapter. */
@@ -835,6 +876,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   function onNext(): void {
     const p = play
     if (!p || busy || !revealed) return
+    advance(p)
+  }
+
+  /** On to the next day, or to the daily puzzle's result. */
+  function advance(p: Play): void {
     if (p.kind === 'chapter') {
       if (p.state.phase !== 'stamped') return // a caught or survived chapter ends on the paper's back
       p.state = nextDay(p.state)
@@ -844,6 +890,77 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const { lastCorrect: _c, lastVerdict: _v, ...rest } = p.state
     p.state = { ...rest, day: p.results.length + 1, phase: 'reading' }
     beginDay()
+  }
+
+  // ------------------------------------------------------------------ the toss
+
+  /** The verdict leads on: it holds to be read, then the paper goes. */
+  function startHold(): void {
+    holdLeft = TOSS_HOLD_MS
+    holdSpent = 0
+    sourceOpen = false
+    syncHold()
+  }
+
+  /** A new day or leaving: no hold, no toss. */
+  function endHold(): void {
+    auto = false
+    tossing = false
+    holdLeft = 0
+    sourceOpen = false
+    syncHold()
+  }
+
+  /** The hold counts down on animation frames while the verdict waits, on a visible tab, with no card over it. */
+  function syncHold(): void {
+    const run = auto && revealed && !tossing && !sourceOpen && document.hidden !== true && alive()
+    if (run && !holdRaf) {
+      holdLast = 0
+      holdRaf = requestAnimationFrame(holdTick)
+    } else if (!run && holdRaf) {
+      cancelAnimationFrame(holdRaf)
+      holdRaf = 0
+    }
+  }
+
+  function holdTick(now: number): void {
+    holdRaf = 0
+    if (!auto || tossing || !alive()) return
+    const dt = holdLast ? Math.min(Math.max(0, now - holdLast), MAX_FRAME_MS) : 0
+    holdLast = now
+    holdLeft -= dt
+    holdSpent += dt
+    if (holdLeft <= 0) return void toss()
+    holdRaf = requestAnimationFrame(holdTick)
+  }
+
+  /** Back from the source card, another tab or another language: a fresh moment before the paper goes. */
+  function extendHold(): void {
+    if (auto && !tossing) holdLeft = Math.max(holdLeft, TOSS_RESUME_MS)
+  }
+
+  /** A tap on the room, Space or Enter: the paper goes now; on its way already, it lands at once. */
+  function hurry(): void {
+    if (tossing) return desk?.skip()
+    if (!auto || !revealed || holdSpent < TOSS_GRACE_MS) return
+    void toss()
+  }
+
+  /** The read paper goes in the basket; then the next day begins by itself. */
+  async function toss(): Promise<void> {
+    const p = play
+    if (!p || !auto || tossing || !revealed) return
+    tossing = true
+    busy = true // a language switch now waits for the next day
+    syncHold()
+    setTossing(ui)
+    const token = gen
+    const d = desk
+    // a desk lost on the way never lands it: stop waiting as soon as a new desk is attached
+    if (d) await guard(Promise.race([d.toss(), deskSwapped.promise]), TOSS_GUARD_MS)
+    if (token !== gen || play !== p) return
+    busy = false
+    advance(p)
   }
 
   // ------------------------------------------------------------------ the end

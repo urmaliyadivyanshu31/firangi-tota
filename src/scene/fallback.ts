@@ -4,7 +4,15 @@
 import type { EraId } from '../content/types'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
 import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type PageRect } from './sheet'
-import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StampKind } from './types'
+import type { DayTitle, FlashKind, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StageCueName, StampKind } from './types'
+
+/** The toss, in ms, as on the 3D stage: lift, the arc, the settle and a held breath; or a fade. */
+const TOSS = { lift: 260, fly: 740, settle: 140, hold: 380, fade: 320 } as const
+
+export interface FallbackOptions {
+  /** The flat desk names its toss beats (the paper leaves, it lands) for the sound. */
+  onCue?: (name: StageCueName) => void
+}
 
 export interface Fallback {
   setEra(id: EraId): void
@@ -27,6 +35,8 @@ export interface Fallback {
   skip(): void
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
+  /** The read paper arcs into the basket drawn on the floor (or fades, under reduced motion). */
+  toss(): Promise<void>
   dispose(): void
 }
 
@@ -41,7 +51,7 @@ const insetPx = (el: Element, name: string, fallback: number): number => {
 
 const DEVANAGARI = /[ऀ-ॿ]/
 
-export function mountFallback(el: HTMLElement, era: EraId): Fallback {
+export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions = {}): Fallback {
   const canvas = document.createElement('canvas')
   canvas.style.cssText = 'display:block;width:100%;height:100%'
   canvas.setAttribute('aria-hidden', 'true')
@@ -73,6 +83,52 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   let H = 844
   let dpr = 1
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  // the toss: the card in flight (drawn from its own picture over the still), and the papers
+  // already in the basket
+  let tossing: { t0: number; from: PaperBox; sprite: HTMLCanvasElement | null; landed: boolean; finish: () => void } | null = null
+  let tossRaf = 0
+  let binned = 0
+  const cue = (name: StageCueName) => {
+    try {
+      opts.onCue?.(name)
+    } catch {
+      /* a listener's error never breaks the desk */
+    }
+  }
+  const clock = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+
+  /** What the verdict draws over (or instead of) the paper's front: the marks, or the back. */
+  const face = (c: CanvasRenderingContext2D, pw: number, ph: number) => {
+    const v = verdict
+    if (!v || !sheet) return
+    if (v.side === 'back') {
+      sourceRect = drawSheetBack(c, pw, ph, sheet, v.r, { stamp: true }).source
+      return
+    }
+    const marks = highlightRects(c, sheet, v.r.highlight, ph / pw)
+    const m = measureSheet(c, sheet, ph / pw)
+    c.save()
+    const at = stamp?.at ?? m.stampAt
+    drawRevealMarks(c, pw, ph, marks, { color: v.r.real ? MARK_COLORS.verified : MARK_COLORS.slip, note: v.r.note, lang: v.r.lang, body: m.body, bodyEnd: m.bodyEnd, progress: 1, keep: true, avoid: [stampBox(at[0], at[1], ph / pw)] })
+    c.restore()
+  }
+
+  /** The paper as it lies now, drawn on its own canvas, to fly it over the still. */
+  const cardPicture = (box: PaperBox): HTMLCanvasElement | null => {
+    if (!sheet) return null
+    try {
+      const c = document.createElement('canvas')
+      c.width = Math.max(1, Math.round(box.w * dpr))
+      c.height = Math.max(1, Math.round(box.h * dpr))
+      const cg = c.getContext('2d')
+      if (!cg) return null
+      cg.scale(dpr, dpr)
+      paintCard(cg, box.w, box.h, sheet, stamp, face)
+      return c
+    } catch {
+      return null
+    }
+  }
 
   const compose = () => {
     if (!g) return
@@ -86,27 +142,11 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       canvas.height = ph
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
-    drawDesk(g, W, H, ERA_PALETTES[current])
+    drawDesk(g, W, H, ERA_PALETTES[current], binned)
     if (title) drawTitleOver(g, W, H, title, current)
-    if (sheet) {
-      const v = verdict
-      const out = drawPaper(g, W, H, sheet, stamp, el, (c, pw, ph) => {
-        if (!v || !sheet) return
-        if (v.side === 'back') {
-          sourceRect = drawSheetBack(c, pw, ph, sheet, v.r, { stamp: true }).source
-          return
-        }
-        const marks = highlightRects(c, sheet, v.r.highlight, ph / pw)
-        const m = measureSheet(c, sheet, ph / pw)
-        c.save()
-        const at = stamp?.at ?? m.stampAt
-        drawRevealMarks(c, pw, ph, marks, { color: v.r.real ? MARK_COLORS.verified : MARK_COLORS.slip, note: v.r.note, lang: v.r.lang, body: m.body, bodyEnd: m.bodyEnd, progress: 1, keep: true, avoid: [stampBox(at[0], at[1], ph / pw)] })
-        c.restore()
-      })
-      paperBox = out
-    }
-    if (flashK) {
-      // keep the still for the flash frames (one canvas, resized only with the screen)
+    if (sheet) paperBox = drawPaper(g, W, H, sheet, stamp, el, face)
+    if (flashK || tossing) {
+      // keep the still for the flash and toss frames (one canvas, resized only with the screen)
       base ??= document.createElement('canvas')
       if (base.width !== pw || base.height !== ph) {
         base.width = pw
@@ -131,6 +171,27 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     raf = requestAnimationFrame(frame)
   }
 
+  /** One frame of the toss: the still, the card on its way, the basket's front over it as it goes in. */
+  const tossFrame = (now: number) => {
+    tossRaf = 0
+    const t = tossing
+    if (!g || disposed || !t) return
+    const e = now - t.t0
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    if (base) g.drawImage(base, 0, 0)
+    g.setTransform(dpr, 0, 0, dpr, 0, 0)
+    const lands = reduced ? TOSS.fade : TOSS.lift + TOSS.fly
+    if (!t.landed && e >= lands) {
+      t.landed = true
+      binned++
+      cue('tossLand')
+      compose() // the still now has this paper standing in the basket
+    }
+    if (!t.landed && t.sprite) drawFlight(g, W, H, t.from, t.sprite, e, reduced, ERA_PALETTES[current])
+    if (e >= (reduced ? TOSS.fade : lands + TOSS.settle + TOSS.hold)) return t.finish()
+    tossRaf = requestAnimationFrame(tossFrame)
+  }
+
   let timer = 0
   const onResize = () => {
     window.clearTimeout(timer)
@@ -149,12 +210,51 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
 
   return {
     setEra(id) {
+      tossing?.finish()
       current = id
       sheet = null
       stamp = null
       title = null
       verdict = null
+      binned = 0
       compose()
+    },
+    toss() {
+      tossing?.finish()
+      const box = paperBox
+      if (!g || disposed || !sheet || !box) return Promise.resolve()
+      const sprite = cardPicture(box)
+      // the desk under the card: it leaves the still and flies over it
+      sheet = null
+      stamp = null
+      verdict = null
+      sourceRect = null
+      cue('toss')
+      return new Promise<void>((resolve) => {
+        const t = {
+          t0: clock(),
+          from: box,
+          sprite,
+          landed: false,
+          finish: () => {
+            if (tossing !== t) return
+            tossing = null
+            if (tossRaf) cancelAnimationFrame(tossRaf)
+            tossRaf = 0
+            if (!t.landed) {
+              t.landed = true
+              binned++
+              if (!disposed) cue('tossLand')
+            }
+            if (!disposed) compose()
+            resolve()
+          },
+        }
+        tossing = t
+        compose()
+        if (typeof requestAnimationFrame !== 'function') t.finish()
+        else tossRaf = requestAnimationFrame(tossFrame)
+      })
     },
     showMessage(s) {
       const job = (async () => {
@@ -195,6 +295,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     skip() {
       skipReveal = true
       finishWait?.()
+      tossing?.finish()
     },
     getSourceRect() {
       const b = paperBox
@@ -232,6 +333,7 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
     },
     dispose() {
       disposed = true
+      tossing?.finish()
       window.clearTimeout(timer)
       if (raf) cancelAnimationFrame(raf)
       ro?.disconnect()
@@ -282,11 +384,162 @@ function drawPaper(
   g.shadowColor = 'rgba(0,0,0,0)'
   g.shadowBlur = 0
   g.shadowOffsetY = 0
-  drawSheet(g, pw, ph, s, stamp ?? undefined)
-  face?.(g, pw, ph)
+  paintCard(g, pw, ph, s, stamp, face)
   g.restore()
   // (the turn is a hair; for hit boxes the upright box is close enough)
   return { x: left + freeW / 2 - pw / 2, y: top + freeH / 2 - ph / 2, w: pw, h: ph }
+}
+
+type PaperBox = { x: number; y: number; w: number; h: number }
+
+/** The paper itself at the origin: its ground, the message, and the verdict's face over it. */
+function paintCard(
+  g: CanvasRenderingContext2D,
+  pw: number,
+  ph: number,
+  s: SheetSpec,
+  stamp: SheetStamp | null,
+  face?: (g: CanvasRenderingContext2D, pw: number, ph: number) => void,
+): void {
+  g.fillStyle = '#e8dcc0'
+  g.fillRect(0, 0, pw, ph)
+  drawSheet(g, pw, ph, s, stamp ?? undefined)
+  face?.(g, pw, ph)
+}
+
+/** Where the basket stands on the floor: front right, clear of the paper and the lamp. */
+function basketSpot(W: number, H: number): { x: number; y: number; r: number } {
+  const portrait = H > W
+  return portrait ? { x: W * 0.8, y: H * 0.87, r: Math.min(W * 0.1, 46) } : { x: W * 0.88, y: H * 0.8, r: Math.min(H * 0.075, 56) }
+}
+
+/**
+ * A cane wastepaper basket seen from the front and a little above: the dark inside of its mouth,
+ * the read papers standing in it, the woven body, the rim. `front` draws only the body and rim,
+ * over a card that is dropping in.
+ */
+function drawBasket(g: CanvasRenderingContext2D, b: { x: number; y: number; r: number }, p: Palette, papers: number, front = false): void {
+  const rx = b.r
+  const ry = b.r * 0.3
+  const tall = b.r * 1.25
+  const foot = b.r * 0.76
+  const cane = mix(0xb08850, WOODS[p.wood].light, 0.35)
+  g.save()
+  if (!front) {
+    // its shadow on the floor, and the dark inside of the mouth
+    g.fillStyle = 'rgba(0,0,0,0.35)'
+    g.beginPath()
+    g.ellipse(b.x + rx * 0.12, b.y + tall, foot * 1.35, ry * 0.9, 0, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = css(mix(cane, p.shade, 0.72))
+    g.beginPath()
+    g.ellipse(b.x, b.y, rx, ry, 0, 0, Math.PI * 2)
+    g.fill()
+    // the read papers, standing in it, their tops over the rim
+    const n = Math.min(papers, 6)
+    for (let i = 0; i < n; i++) {
+      const off = ((i * 0.618) % 1) - 0.5
+      g.save()
+      g.translate(b.x + off * rx * 0.9, b.y + ry * 0.4)
+      g.rotate(off * 0.7)
+      g.fillStyle = css(mix(p.paper, 0xffffff, 0.04 + (i % 2) * 0.05))
+      g.strokeStyle = css(p.ink, 0.25)
+      g.lineWidth = 1
+      g.beginPath()
+      g.rect(-rx * 0.34, -ry * (1.6 + (i % 3) * 0.35), rx * 0.68, ry * 2.4)
+      g.fill()
+      g.stroke()
+      g.restore()
+    }
+  }
+  // the woven body, narrowing to its foot
+  g.beginPath()
+  g.moveTo(b.x - rx, b.y)
+  g.lineTo(b.x - foot, b.y + tall)
+  g.ellipse(b.x, b.y + tall, foot, ry * 0.8, 0, Math.PI, 0, true)
+  g.lineTo(b.x + rx, b.y)
+  g.ellipse(b.x, b.y, rx, ry, 0, 0, Math.PI, false)
+  g.closePath()
+  const body = g.createLinearGradient(b.x - rx, 0, b.x + rx, 0)
+  body.addColorStop(0, css(mix(cane, p.shade, 0.15)))
+  body.addColorStop(0.45, css(mix(cane, p.lamp, 0.12)))
+  body.addColorStop(1, css(mix(cane, p.shade, 0.55)))
+  g.fillStyle = body
+  g.fill()
+  g.clip()
+  // the weave: rows round the body and stakes down it
+  g.strokeStyle = css(mix(cane, p.shade, 0.6), 0.6)
+  g.lineWidth = Math.max(1, rx / 26)
+  for (let i = 1; i < 8; i++) {
+    const k = i / 8
+    g.beginPath()
+    g.ellipse(b.x, b.y + tall * k, rx + (foot - rx) * k, ry * (1 - 0.2 * k), 0, 0, Math.PI)
+    g.stroke()
+  }
+  for (let i = -5; i <= 5; i++) {
+    const k = i / 5.5
+    g.beginPath()
+    g.moveTo(b.x + rx * k, b.y + ry * Math.sqrt(1 - k * k))
+    g.lineTo(b.x + foot * k, b.y + tall + ry * 0.8 * Math.sqrt(1 - k * k))
+    g.stroke()
+  }
+  g.restore()
+  // the rim, a thick cane hoop
+  g.save()
+  g.strokeStyle = css(mix(cane, p.lamp, 0.25))
+  g.lineWidth = Math.max(2, rx / 9)
+  g.beginPath()
+  g.ellipse(b.x, b.y, rx, ry, 0, 0, front ? Math.PI : Math.PI * 2)
+  g.stroke()
+  g.restore()
+}
+
+/** The card on its way: it lifts, arcs over and drops into the basket, turning once; or it fades. */
+function drawFlight(g: CanvasRenderingContext2D, W: number, H: number, from: PaperBox, card: HTMLCanvasElement, e: number, reduced: boolean, p: Palette): void {
+  const b = basketSpot(W, H)
+  const fx = from.x + from.w / 2
+  const fy = from.y + from.h / 2
+  let x = fx
+  let y = fy
+  let s = 1
+  let rot = -0.012
+  let alpha = 1
+  if (reduced) {
+    alpha = Math.max(0, 1 - e / TOSS.fade)
+  } else if (e < TOSS.lift) {
+    const k = 1 - Math.pow(1 - e / TOSS.lift, 3)
+    y = fy - 14 * k
+    s = 1 + 0.03 * k
+    rot = -0.012 - 0.05 * k
+  } else {
+    const t = Math.min(1, (e - TOSS.lift) / TOSS.fly)
+    const y1 = fy - 14
+    const c1x = fx + (b.x - fx) * 0.2
+    const c1y = y1 - H * 0.16
+    const c2x = b.x
+    const c2y = b.y - H * 0.26
+    const ex = b.x
+    const ey = b.y + b.r * 0.2
+    const u = 1 - t
+    x = u * u * u * fx + 3 * u * u * t * c1x + 3 * u * t * t * c2x + t * t * t * ex
+    y = u * u * u * y1 + 3 * u * u * t * c1y + 3 * u * t * t * c2y + t * t * t * ey
+    const end = (b.r * 1.3) / Math.max(1, from.w)
+    s = 1.03 + (end - 1.03) * Math.pow(t, 0.7)
+    const turn = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    rot = -0.062 + Math.PI * 2 * turn
+  }
+  g.save()
+  g.globalAlpha = alpha
+  g.translate(x, y)
+  g.rotate(rot)
+  g.scale(s, s)
+  g.shadowColor = 'rgba(0,0,0,0.45)'
+  g.shadowBlur = 14 / Math.max(0.2, s)
+  g.shadowOffsetY = 6 / Math.max(0.2, s)
+  g.drawImage(card, -from.w / 2, -from.h / 2, from.w, from.h)
+  g.restore()
+  // the basket's front over the card as it drops in
+  if (!reduced && e >= TOSS.lift) drawBasket(g, b, p, 0, true)
 }
 
 function drawTitleOver(g: CanvasRenderingContext2D, W: number, H: number, t: DayTitle, era: EraId): void {
@@ -322,8 +575,8 @@ function drawFlash(g: CanvasRenderingContext2D, W: number, H: number, kind: Flas
   g.restore()
 }
 
-/** Desk, lamp glow and a sheet of paper, framed like the 3D desk shot. */
-function drawDesk(g: CanvasRenderingContext2D, W: number, H: number, p: Palette): void {
+/** Desk, lamp glow, a sheet of paper and the basket on the floor, framed like the 3D desk shot. */
+function drawDesk(g: CanvasRenderingContext2D, W: number, H: number, p: Palette, binned = 0): void {
   const portrait = H > W
   const wood = WOODS[p.wood]
   const back = H * (portrait ? 0.36 : 0.42) // far edge of the desk
@@ -452,6 +705,9 @@ function drawDesk(g: CanvasRenderingContext2D, W: number, H: number, p: Palette)
   g.beginPath()
   g.ellipse(lampX, fy, W * 0.007, W * 0.016, 0, 0, Math.PI * 2)
   g.fill()
+
+  // the basket on the floor, front right, with the papers read so far
+  drawBasket(g, basketSpot(W, H), p, binned)
 
   // vignette
   const v = g.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.3, W / 2, H * 0.45, Math.max(W, H) * 0.75)

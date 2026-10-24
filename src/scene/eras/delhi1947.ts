@@ -13,7 +13,7 @@
 // across the desk and wall, and the shadow maps re-render each time the blades turn a few degrees.
 import * as THREE from 'three'
 import { ERA_PALETTES, mix } from '../palette'
-import { DESK, SPOTS, createBatch, createDesk, createWarmLight, disposeTree, markShadowsDirty, material, type WarmLight } from '../props'
+import { DESK, SPOTS, createBasket, createBatch, createDesk, createWarmLight, disposeTree, markShadowsDirty, material, type WarmLight } from '../props'
 import { TIER_SETTINGS } from '../quality'
 import { blobTexture, clothTexture, glowTexture, paperTexture, plasterTexture, stoneTexture, toTexture, woodTexture } from '../textures'
 import { mulberry32 } from '../../game/rng'
@@ -50,6 +50,8 @@ const PAD = (() => {
 })()
 /** The typewriter in the back right corner, turned a little toward the chair. */
 const TYPEWRITER = { x: 0.29, z: -0.16, yaw: -0.24 }
+/** The wastepaper basket, on the durrie in front of the right pedestal: a read telegram is tossed in. */
+const BASKET: V3 = [0.3, FLOOR_Y, 0.47]
 /** The bulb hangs just below the rim of the shade. */
 const BULB: V3 = [SPOTS.lamp.x, 0.168, SPOTS.lamp.z]
 const FAN_HUB: V3 = [-0.05, 1.75, 0.4]
@@ -692,13 +694,14 @@ const delhi1947: EraDressing = {
       false,
       true,
     )
-    // a cane wastepaper basket in the kneehole, with drafts screwed up in it (not on low)
+    // the cane wastepaper basket, drawn out of the kneehole to the front of the desk where a read
+    // telegram is tossed; a screwed-up draft lies beside it (not on low)
+    const prof: [number, number][] = [[0, 0.006], [0.118, 0.006], [0.12, 0]]
+    for (let k = 0; k <= 7; k++) prof.push([0.122 + (k / 7) * 0.024, 0.012 + (k / 7) * 0.27])
+    prof.push([0.15, 0.288], [0.141, 0.292])
+    const basket = createBasket({ tier, at: BASKET, profile: prof, map: wickerTexture(low ? 64 : 128), emissive: 0x120c06 })
+    root.add(basket.group)
     if (!low) {
-      const prof: [number, number][] = [[0, 0.006], [0.098, 0.006], [0.1, 0]]
-      for (let k = 0; k <= 7; k++) prof.push([0.102 + (k / 7) * 0.02, 0.012 + (k / 7) * 0.27])
-      prof.push([0.127, 0.288], [0.118, 0.292])
-      const basket = lathe(prof, 18)
-      b.add(basket, material(tier, { map: wickerTexture(128), side: THREE.DoubleSide, shininess: 6 }), [-0.02, FLOOR_Y, 0.1], [0, 0, 0], false, true)
       const ball = (r: number, pos: V3) => {
         const geo = new THREE.IcosahedronGeometry(r, 1)
         const p = geo.getAttribute('position') as THREE.BufferAttribute
@@ -711,9 +714,7 @@ const delhi1947: EraDressing = {
         geo.computeVertexNormals()
         b.add(geo, paperEdgeMat, pos, [rng() * 3, rng() * 3, 0], false, true)
       }
-      ball(0.034, [-0.05, FLOOR_Y + 0.27, 0.085])
-      ball(0.03, [0.015, FLOOR_Y + 0.275, 0.13])
-      ball(0.028, [0.13, FLOOR_Y + 0.024, 0.2])
+      ball(0.028, [BASKET[0] - 0.2, FLOOR_Y + 0.024, BASKET[2] + 0.07])
     }
 
     // -------------------------------------------------------- the brass desk lamp with a green shade
@@ -1033,6 +1034,7 @@ const delhi1947: EraDressing = {
           idleSheet: idleSheet ?? undefined,
           carriage,
         },
+        basket: basket.hook,
       },
     }
   },

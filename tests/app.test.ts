@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { startApp } from '../src/app'
 import { ERAS, eraById } from '../src/content/registry'
 import type { EraId, Message } from '../src/content/types'
-import type { Difficulty } from '../src/game/config'
+import { TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, type Difficulty } from '../src/game/config'
 import { dailyFrom } from '../src/game/daily'
 import { mulberry32 } from '../src/game/rng'
 import { chapterShareText, shareText } from '../src/game/share'
@@ -33,6 +33,7 @@ const m = vi.hoisted(() => {
     reveal: vi.fn((_s: RevealSpec) => Promise.resolve()),
     getSourceRect: vi.fn((): ScreenRect | null => null),
     getPaperRect: vi.fn((): ScreenRect | null => null),
+    toss: vi.fn(() => Promise.resolve()),
   })
   return {
     fakeStage,
@@ -47,6 +48,7 @@ const m = vi.hoisted(() => {
       reveal: vi.fn((_s: RevealSpec) => Promise.resolve()),
       getSourceRect: vi.fn((): ScreenRect | null => null),
       getPaperRect: vi.fn((): ScreenRect | null => null),
+      toss: vi.fn(() => Promise.resolve()),
     },
     mountFallback: vi.fn(),
     audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn(), setHidden: vi.fn() },
@@ -88,6 +90,15 @@ function frame(ms = 16): void {
 function seconds(n: number): void {
   for (let i = 0; i < n; i++) frame(1000)
 }
+/** `total` ms of frames, 100 ms apart (one long frame counts for at most a second). */
+function frames(total: number): void {
+  for (let t = 0; t < total; t += 100) frame(Math.min(100, total - t))
+}
+/** The verdict holds on the paper for TOSS_HOLD_MS (counted on frames), then the paper is tossed. */
+function holdOut(): void {
+  frame(16) // the hold's first frame only starts its clock
+  seconds(TOSS_HOLD_MS / 1000)
+}
 
 async function flush(): Promise<void> {
   for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0))
@@ -128,6 +139,12 @@ function click(ui: HTMLElement, sel: string): void {
   el.click()
 }
 const text = (ui: HTMLElement) => ui.textContent ?? ''
+/** On to the next day: Next where it shows (a miss in the daily puzzle), else the verdict's hold runs out and the paper is tossed. */
+async function onward(ui: HTMLElement): Promise<void> {
+  if ($(ui, '[data-action="next"]')) click(ui, '[data-action="next"]')
+  else holdOut()
+  await flush()
+}
 const right = (msg: Message) => (msg.real ? 'asli' : 'tota')
 const wrong = (msg: Message) => (msg.real ? 'tota' : 'asli')
 
@@ -260,7 +277,15 @@ describe('a chapter', () => {
     expect(m.audio.cue).toHaveBeenCalledWith('stampPress')
     expect(m.audio.cue).not.toHaveBeenCalledWith('correct') // the stage sounds it inside flash()
 
-    click(ui, '[data-action="next"]')
+    // no Next: the verdict holds to be read, then the paper is tossed and day 2 begins by itself
+    expect($(ui, '[data-action="next"]')).toBeNull()
+    expect($(ui, '.screen--day.is-auto')).not.toBeNull()
+    frame(16)
+    seconds(TOSS_HOLD_MS / 1000 - 1)
+    await flush()
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    seconds(1)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
     await flush()
     expect(text(ui)).toContain('Day 2 of 7')
     expect($(ui, '[data-stamp="asli"]')).not.toBeNull()
@@ -331,9 +356,13 @@ describe('a chapter', () => {
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
+    // the tab hidden while the verdict shows: nothing burns and the paper waits on the desk
+    setHidden(true)
     seconds(200)
+    await flush()
     expect(m.stage.reveal).toHaveBeenCalledTimes(1) // still the first verdict: no timeout behind it
-    expect($(ui, '[data-action="next"]')).not.toBeNull()
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    expect($(ui, '.paper-result')).not.toBeNull()
   })
 
   it('puts the sound to sleep while the tab is hidden and wakes it on return', () => {
@@ -354,10 +383,7 @@ describe('a chapter', () => {
       expect(text(ui)).toContain(`Day ${day} of 7`)
       click(ui, `[data-stamp="${right(q[day - 1]!)}"]`)
       await flush()
-      if (day < 7) {
-        click(ui, '[data-action="next"]')
-        await flush()
-      }
+      if (day < 7) await onward(ui)
     }
     expect(lastReveal().back.stamp).toEqual({ text: 'Cleared', tone: 'survived', style: 'seal' })
     expect(m.audio.cue).toHaveBeenCalledWith('survived')
@@ -392,6 +418,167 @@ describe('a chapter', () => {
   })
 })
 
+describe('the toss: after a right stamp the paper goes in the basket and the next day starts by itself', () => {
+  /** Day 1 of 1857 Easy, stamped right, its verdict up on the paper. */
+  async function rightOnDay1(seed = 3): Promise<HTMLElement> {
+    const { ui } = boot(`?lang=en&seed=${seed}`)
+    await toDay1(ui)
+    click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', seed)[0]!)}"]`)
+    await flush()
+    expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+    return ui
+  }
+  const key = (k: string, target: EventTarget = document.body) => target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }))
+  const tap = (ui: HTMLElement) => $(ui, '.tapcatch')!.dispatchEvent(new Event('pointerdown'))
+
+  it('a tap on the room tosses at once, but not the tail of a skip in the first moment', async () => {
+    const ui = await rightOnDay1()
+    tap(ui) // a second tap of the skip that finished the reveal
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    frame(16)
+    frame(TOSS_GRACE_MS + 50)
+    tap(ui)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    expect($(ui, '.screen--day.is-tossing')).not.toBeNull() // the source button goes with the paper
+    tap(ui) // already on its way: it lands at once
+    expect(m.stage.skip).toHaveBeenCalled()
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+    expect(m.stage.dayTitle).toHaveBeenCalledTimes(2)
+  })
+
+  it('Space or Enter tosses it; a focused control keeps its own keys', async () => {
+    let ui = await rightOnDay1()
+    frame(16)
+    frame(TOSS_GRACE_MS + 50)
+    key('Enter', $(ui, '[data-action="source"]')!) // the source button's own Enter
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    key(' ')
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+
+    vi.clearAllMocks()
+    ui = await rightOnDay1()
+    frame(16)
+    frame(TOSS_GRACE_MS + 50)
+    key('Enter')
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+  })
+
+  it('holds while the source card is open, and gives a fresh moment when it closes', async () => {
+    const ui = await rightOnDay1()
+    frame(16)
+    seconds(2) // a second of the hold is left
+    click(ui, '[data-action="source"]')
+    expect($(ui, '#ft-source-pop')!.hidden).toBe(false)
+    seconds(20)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    click(ui, '[data-action="close-source"]')
+    frame(16)
+    frames(TOSS_RESUME_MS - 100)
+    expect(m.stage.toss).not.toHaveBeenCalled() // at least TOSS_RESUME_MS again, not the second that was left
+    frame(200)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+  })
+
+  it('holds while the tab is hidden, and gives a fresh moment back on it', async () => {
+    const ui = await rightOnDay1()
+    frame(16)
+    seconds(2)
+    setHidden(true)
+    seconds(30)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    setHidden(false)
+    frame(16)
+    frames(TOSS_RESUME_MS - 100)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    frame(200)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+  })
+
+  it('a language switch while the verdict holds redraws it and gives it a fresh moment; during the toss it waits for the next day', async () => {
+    const ui = await rightOnDay1()
+    frame(16)
+    seconds(2)
+    click(ui, '.hud [data-lang="hi"]')
+    expect(m.stage.reveal).toHaveBeenCalledTimes(2) // the back, in Hindi, at once
+    expect(lastReveal().lang).toBe('hi')
+    frame(16)
+    frames(TOSS_RESUME_MS - 100)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    const going = deferred()
+    m.stage.toss.mockImplementationOnce(() => going.promise)
+    frame(200)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    click(ui, '.hud [data-lang="en"]')
+    expect(m.stage.reveal).toHaveBeenCalledTimes(2) // no reveal over the flying paper
+    expect($(ui, '.screen--day.is-tossing')).not.toBeNull()
+    going.resolve()
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+    expect(m.stage.showMessage).toHaveBeenLastCalledWith(expect.objectContaining({ lang: 'en' }))
+  })
+
+  it('never hangs on a toss that does not land', async () => {
+    m.stage.toss.mockImplementation(() => new Promise<void>(() => undefined))
+    const ui = await rightOnDay1()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      holdOut()
+      expect(m.stage.toss).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(text(ui)).toContain('Day 1 of 7')
+      await vi.advanceTimersByTimeAsync(1500) // past TOSS_GUARD_MS
+      expect(text(ui)).toContain('Day 2 of 7')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('leaving during the hold cancels it', async () => {
+    const ui = await rightOnDay1()
+    frame(16)
+    seconds(1)
+    click(ui, '[data-action="quit"]')
+    seconds(10)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    expect($(ui, '.screen--main')).not.toBeNull()
+  })
+
+  it('a caught chapter keeps its buttons and never tosses', async () => {
+    const { ui } = boot('?lang=en&seed=5')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+    await flush()
+    holdOut()
+    await flush()
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    expect($(ui, '[data-action="again"]')).not.toBeNull()
+    expect($(ui, '.screen--day.is-auto')).toBeNull()
+  })
+
+  it('the flat desk names its toss beats, and they sound', async () => {
+    m.createStage.mockImplementation(() => null)
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const opts = m.mountFallback.mock.calls[0]![2] as { onCue: (n: StageCueName) => void }
+    opts.onCue('toss')
+    opts.onCue('tossLand')
+    expect(m.audio.cue).toHaveBeenCalledWith('paperToss')
+    expect(m.audio.cue).toHaveBeenCalledWith('basketLand')
+    click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
+    await flush()
+    holdOut()
+    await flush()
+    expect(m.fallback.toss).toHaveBeenCalledTimes(1)
+    expect(text(ui)).toContain('Day 2 of 7')
+  })
+})
+
 describe('the daily puzzle', () => {
   it('plays 5 messages without pencil marks and with every rule, then shows a share grid that matches shareText', async () => {
     const share = vi.fn(() => Promise.resolve())
@@ -412,8 +599,9 @@ describe('the daily puzzle', () => {
       click(ui, '[data-stamp="asli"]')
       await flush()
       expect($(ui, '.paper-result')).not.toBeNull()
-      click(ui, '[data-action="next"]')
-      await flush()
+      // a hit leads on by itself; a miss keeps Next (the puzzle carries on after it)
+      expect($(ui, '[data-action="next"]') === null).toBe(d.messages[i]!.real)
+      await onward(ui)
     }
     const results = d.messages.map((x) => x.real)
     expect(results).toContain(false)
@@ -438,8 +626,7 @@ describe('the daily puzzle', () => {
     for (let i = 0; i < 5; i++) {
       click(ui, '[data-stamp="tota"]')
       await flush()
-      click(ui, '[data-action="next"]')
-      await flush()
+      await onward(ui)
     }
     const first = $(ui, '.share-grid')!.dataset.results
 
@@ -458,8 +645,7 @@ describe('the daily puzzle', () => {
     await flush()
     click(ui, '[data-stamp="asli"]')
     await flush()
-    click(ui, '[data-action="next"]')
-    await flush()
+    await onward(ui)
     click(ui, '[data-action="quit"]')
     ;({ ui } = boot('?lang=en&daily'))
     await flush()
@@ -585,7 +771,7 @@ describe('the 3D stage (Ruling R10)', () => {
     m.createStage.mockImplementation(() => null)
     const { ui, stage } = boot('?lang=en&seed=3')
     await toDay1(ui)
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857')
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', expect.objectContaining({ onCue: expect.any(Function) }))
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
@@ -597,7 +783,7 @@ describe('the 3D stage (Ruling R10)', () => {
     const { ui, stage } = boot('?lang=en')
     click(ui, '[data-era="lahore-1929"]')
     await flush()
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'lahore-1929')
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'lahore-1929', expect.objectContaining({ onCue: expect.any(Function) }))
   })
 
   it('swaps in the fallback when the WebGL context is lost, keeping the current day', async () => {
@@ -607,15 +793,14 @@ describe('the 3D stage (Ruling R10)', () => {
     const q = queueFor('delhi-1857', 'easy', 3)
     click(ui, `[data-stamp="${right(q[0]!)}"]`)
     await flush()
-    click(ui, '[data-action="next"]')
-    await flush()
+    await onward(ui)
     expect(text(ui)).toContain('Day 2 of 7')
 
     const lost = new CustomEvent('ft:stage-lost', { cancelable: true, detail: { era: 'delhi-1857', reason: 'context-lost' } })
     stage.dispatchEvent(lost)
     expect(lost.defaultPrevented).toBe(true)
     expect(m.stage.dispose).toHaveBeenCalledTimes(1)
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857')
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', expect.objectContaining({ onCue: expect.any(Function) }))
     expect(text(ui)).toContain('Day 2 of 7')
 
     m.stage.stamp.mockClear()
@@ -645,10 +830,16 @@ describe('the 3D stage (Ruling R10)', () => {
     expect(m.fallback.skip).toHaveBeenCalled()
     const skips = m.fallback.skip.mock.invocationCallOrder
     expect(m.fallback.reveal.mock.invocationCallOrder[0]!).toBeLessThan(skips[skips.length - 1]!)
-    // the day is redrawn on the new desk: the verdict and its buttons stay, the source button moves
+    // the day is redrawn on the new desk: the verdict stays, the source button moves
     expect($(ui, '.paper-result')).not.toBeNull()
-    expect($(ui, '[data-action="next"]')).not.toBeNull()
+    expect($(ui, '.screen--day.is-auto')).not.toBeNull()
     expect($(ui, '.source-hit')!.style.left).toBe('12px')
+    // and the new desk tosses the paper when it has been read
+    holdOut()
+    await flush()
+    expect(m.fallback.toss).toHaveBeenCalledTimes(1)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    expect(text(ui)).toContain('Day 2 of 7')
   })
 
   it('keeps the verdict when the context is lost during the reveal, without waiting for the dead desk', async () => {
@@ -669,7 +860,7 @@ describe('the 3D stage (Ruling R10)', () => {
     expect(m.fallback.skip).toHaveBeenCalled()
     expect($(ui, '.paper-result')).not.toBeNull()
     expect($(ui, '.source-hit')!.style.left).toBe('14px')
-    expect($(ui, '[data-action="next"]')).not.toBeNull()
+    expect($(ui, '.screen--day.is-auto')).not.toBeNull()
   })
 
   it('never hangs on a stamp animation that does not finish', async () => {
@@ -875,9 +1066,9 @@ describe('Listen: the era voice reads the message', () => {
     expect(voice.stop).toHaveBeenCalled() // the stamp
     await flush()
     voice.stop.mockClear()
-    click(ui, '[data-action="next"]')
-    expect(voice.stop).toHaveBeenCalled() // a new day
+    holdOut()
     await flush()
+    expect(voice.stop).toHaveBeenCalled() // a new day
     voice.stop.mockClear()
     click(ui, '[data-action="quit"]')
     expect(voice.stop).toHaveBeenCalled() // leaving
@@ -1111,6 +1302,6 @@ describe('the verdict on the paper: placing the buttons', () => {
     expect(m.stage.reveal).toHaveBeenCalledTimes(2)
     expect(lastReveal().lang).toBe('hi')
     expect(mirror(ui)).toContain(lastReveal().back.verdictLine)
-    expect($(ui, '[data-action="next"]')).not.toBeNull()
+    expect($(ui, '.screen--day.is-auto')).not.toBeNull()
   })
 })

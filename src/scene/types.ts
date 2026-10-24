@@ -122,6 +122,22 @@ export interface DressingHooks {
     /** The carriage (platen, knobs, rail). It slides along the machine's x while typing. */
     carriage?: THREE.Object3D
   }
+  /**
+   * The basket (or tray) a read paper is tossed into after a right stamp. It must stand where the
+   * toss shot can see it: on the floor or the durrie at the front of the desk.
+   */
+  basket?: {
+    /** The centre of its mouth, on the rim. */
+    mouth: V3
+    /** The mouth's radius. */
+    r: number
+    /** How deep it is below the rim. */
+    depth: number
+    /** The radius of its floor (a basket narrows to its foot); the mouth's when omitted. */
+    foot?: number
+    /** The basket itself, rocked a little when the paper lands (its origin on the floor under it). */
+    obj?: THREE.Object3D
+  }
 }
 
 /**
@@ -153,6 +169,8 @@ export type StageCueName =
   | 'stamp' | 'right' | 'wrong'
   // the verdict on the paper: the stamp that comes down on its back
   | 'verdictStamp'
+  // the read paper tossed into the desk's basket: it leaves the desk, then it lands
+  | 'toss' | 'tossLand'
 
 export interface StageOptions {
   reducedMotion: boolean
@@ -208,6 +226,12 @@ export interface Stage {
   getSourceRect(): ScreenRect | null
   /** Where the paper is on screen (CSS px), to place a Next button below it. */
   getPaperRect(): ScreenRect | null
+  /**
+   * The read paper is done with: it lifts off the desk and is tossed into the era's basket while
+   * the camera draws back to watch it land (about 1.5 s, skippable). Under reduced motion it fades
+   * out instead. The next day's title takes over from there.
+   */
+  toss(): Promise<void>
 }
 
 /**

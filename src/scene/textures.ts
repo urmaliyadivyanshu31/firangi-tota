@@ -447,6 +447,59 @@ export function glowTexture(size = 64): THREE.CanvasTexture {
   return toTexture(c)
 }
 
+/**
+ * Woven strips for a basket: split bamboo or cane passing over and under the stakes. `twill`
+ * steps each row by half a strand, as a tokri is plaited on the diagonal; `gap` shows between
+ * the strands (dark for a close weave). Colours are CSS strings.
+ */
+export function weaveTexture(
+  w: number,
+  o: { light: string; mid: string; dark: string; gap: string; rows: number; cols: number; twill?: boolean; repeat?: [number, number] },
+): THREE.CanvasTexture {
+  const c = makeCanvas(w, w)
+  const g = c.getContext('2d')
+  if (g) {
+    g.fillStyle = o.gap
+    g.fillRect(0, 0, w, w)
+    const rh = w / o.rows
+    const cw = w / o.cols
+    for (let r = 0; r < o.rows; r++) {
+      // over one stake, under the next: each strand shows as a raised lozenge
+      const shift = o.twill ? ((r * cw) / 2) % cw : ((r % 2) * cw) / 2
+      for (let k = -1; k <= o.cols; k++) {
+        const x = k * cw + shift
+        const grd = g.createLinearGradient(0, r * rh, 0, (r + 1) * rh)
+        grd.addColorStop(0, o.light)
+        grd.addColorStop(0.55, o.mid)
+        grd.addColorStop(1, o.dark)
+        g.fillStyle = grd
+        g.beginPath()
+        g.ellipse(x + cw / 2, r * rh + rh / 2, cw * 0.48, rh * 0.4, 0, 0, Math.PI * 2)
+        g.fill()
+      }
+    }
+  }
+  return toTexture(c, { repeat: o.repeat ?? [3, 2] })
+}
+
+/** Galvanised wire mesh with see-through squares (draw it transparent): an office wastepaper basket. */
+export function wireTexture(w: number, repeat: [number, number] = [10, 4]): THREE.CanvasTexture {
+  const c = makeCanvas(w, w)
+  const g = c.getContext('2d')
+  if (g) {
+    g.clearRect(0, 0, w, w)
+    const t = Math.max(2, Math.round(w / 7))
+    const grd = g.createLinearGradient(0, 0, w, w)
+    grd.addColorStop(0, '#c9c4b8')
+    grd.addColorStop(1, '#7d786c')
+    g.fillStyle = grd
+    // one wire across and one down per tile: the repeat makes the mesh
+    g.fillRect(0, 0, w, t)
+    g.fillRect(0, 0, t, w)
+  }
+  return toTexture(c, { repeat })
+}
+
 /** A contact-shadow blob for the low tier, which has no shadow maps. */
 export function blobTexture(size = 64): THREE.CanvasTexture {
   const c = makeCanvas(size, size)

@@ -20,7 +20,7 @@ import {
   woodTexture,
 } from './textures'
 import { clamp01, ease, lerp, type Ease, type Tweens } from './tween'
-import type { EraDressing, QualityTier, StampKind } from './types'
+import type { DressingHooks, EraDressing, QualityTier, StampKind } from './types'
 
 type V3 = [number, number, number]
 
@@ -304,6 +304,63 @@ export function createDesk(o: DeskOptions): { group: THREE.Group; dispose(): voi
     group.add(blot)
   }
   return { group, dispose: () => disposeTree(group) }
+}
+
+// ---------------------------------------------------------------- the basket
+
+export interface BasketOptions {
+  tier: QualityTier
+  /** The floor point under its centre. */
+  at: V3
+  /** Its side as a lathe profile, [radius, height] from the foot up to the lip. */
+  profile: [number, number][]
+  /** The woven (or wire) side. */
+  map: THREE.Texture
+  /** The side is a mesh you see through (its map's alpha): a wire basket. */
+  seeThrough?: boolean
+  /** A little light of its own, so it reads in the dark corner of the room. */
+  emissive?: number
+  /** A hoop round the lip: its colour (none when omitted). */
+  rim?: number
+  /** A solid floor inside a see-through side. */
+  floor?: number
+}
+
+/**
+ * The basket a read paper is tossed into after a right stamp, as its own object (the stage rocks it
+ * when a paper lands), and the hook that tells the stage where its mouth is. Cheap on low: fewer
+ * sides and no hoop.
+ */
+export function createBasket(o: BasketOptions): { group: THREE.Group; hook: NonNullable<DressingHooks['basket']> } {
+  const low = o.tier === 'low'
+  const seg = low ? 12 : 22
+  const group = new THREE.Group()
+  group.name = 'basket'
+  group.position.set(...o.at)
+  // a wire side is drawn see-through, so far off its fine mesh reads as a grey veil, never vanishing
+  const side = material(o.tier, { map: o.map, side: THREE.DoubleSide, shininess: 6, specular: 0x0c0a06, emissive: o.emissive ?? 0, transparent: o.seeThrough, depthWrite: o.seeThrough ? false : undefined })
+  const body = new THREE.Mesh(lathe(o.profile, seg), side)
+  body.receiveShadow = true
+  group.add(body)
+  const y0 = o.profile[0]?.[1] ?? 0
+  const foot = o.profile.find(([r]) => r > 0.001)?.[0] ?? 0.1
+  // the rim is the widest point at the top of the profile
+  const top = Math.max(...o.profile.map(([, y]) => y))
+  const rTop = Math.max(...o.profile.filter(([, y]) => y >= top - 0.012).map(([r]) => r))
+  if (o.floor !== undefined) {
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(foot, seg).rotateX(-Math.PI / 2), material(o.tier, { color: o.floor, shininess: 4 }))
+    floor.position.y = y0 + 0.004
+    group.add(floor)
+  }
+  if (o.rim !== undefined && !low) {
+    const hoop = new THREE.Mesh(new THREE.TorusGeometry(rTop, 0.006, 6, seg * 2).rotateX(Math.PI / 2), material(o.tier, { color: o.rim, shininess: 20, specular: 0x2a2a2a, emissive: o.emissive ?? 0 }))
+    hoop.position.y = top
+    group.add(hoop)
+  }
+  return {
+    group,
+    hook: { mouth: [o.at[0], o.at[1] + top, o.at[2]], r: rTop * 0.92, depth: top - y0, foot, obj: group },
+  }
 }
 
 // ---------------------------------------------------------------- the warm lamp light

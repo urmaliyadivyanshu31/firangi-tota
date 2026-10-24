@@ -6,9 +6,9 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { ERA_PALETTES, mix } from '../palette'
-import { SPOTS, createBatch, createDesk, createWarmLight, disposeTree, frameShot, material, scaleUv } from '../props'
+import { SPOTS, createBasket, createBatch, createDesk, createWarmLight, disposeTree, frameShot, material, scaleUv } from '../props'
 import { TIER_SETTINGS } from '../quality'
-import { blobTexture, clothTexture, glowTexture, makeNoise, metalTexture, plasterTexture, toTexture } from '../textures'
+import { blobTexture, clothTexture, glowTexture, makeNoise, metalTexture, plasterTexture, toTexture, weaveTexture } from '../textures'
 import type { DressingHooks, EraDressing, QualityTier } from '../types'
 
 type V3 = [number, number, number]
@@ -19,6 +19,8 @@ const pal = ERA_PALETTES['delhi-1857']
 const FLOOR_Y = -0.36
 const BACK_Z = -0.52
 const CAMERA: EraDressing['camera'] = { pos: [0, 0.86, 1.04], look: [0, 0.02, -0.04] }
+/** The tokri on the durrie, in front of the desk's right foot. */
+const TOKRI: V3 = [0.46, FLOOR_Y, 0.56]
 /** The jharokha: opening half-width, sill, spring line, arch centre offset, reveal depth. */
 const WIN = { x: 0.06, hw: 0.2, sill: 0.03, spring: 0.3, e: 0.07, depth: 0.2, border: 0.075, jaali: 0.13 }
 const SANDSTONE = 0x7e4636
@@ -1056,6 +1058,19 @@ const delhi1857: EraDressing = {
       }
     }
 
+    // -------------------------------------------------- the tokri
+    // a shallow basket of split bamboo, plaited on the diagonal, on the durrie by the desk's right
+    // foot: a read petition is put away in it
+    const tokri = createBasket({
+      tier,
+      at: TOKRI,
+      profile: [[0, 0.004], [0.128, 0.004], [0.132, 0], [0.15, 0.03], [0.168, 0.068], [0.184, 0.104], [0.195, 0.13], [0.2, 0.14], [0.194, 0.146]],
+      map: weaveTexture(low ? 64 : 128, { light: '#e2c27e', mid: '#b88d4c', dark: '#6f4f24', gap: '#2e1d0c', rows: 12, cols: 10, twill: true, repeat: [6, 2] }),
+      emissive: 0x1c1006,
+      rim: 0x9a6c34,
+    })
+    root.add(tokri.group)
+
     scene.add(root)
     return {
       update(t) {
@@ -1070,7 +1085,7 @@ const delhi1857: EraDressing = {
         scene.remove(root)
         disposeTree(root)
       },
-      hooks: HOOKS,
+      hooks: { ...HOOKS, basket: tokri.hook },
     }
   },
 }

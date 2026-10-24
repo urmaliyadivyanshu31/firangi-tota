@@ -8,7 +8,7 @@
 // table's back edge in the portrait desk shot. Everything is procedural.
 import * as THREE from 'three'
 import { ERA_PALETTES, mix } from '../palette'
-import { DESK, SPOTS, createBatch, createDesk, createWarmLight, disposeTree, material } from '../props'
+import { DESK, SPOTS, createBasket, createBatch, createDesk, createWarmLight, disposeTree, material } from '../props'
 import { TIER_SETTINGS } from '../quality'
 import {
   blobTexture,
@@ -19,6 +19,7 @@ import {
   stainTexture,
   stoneTexture,
   toTexture,
+  weaveTexture,
   woodTexture,
 } from '../textures'
 import type { DressingHooks, EraDressing, QualityTier } from '../types'
@@ -31,6 +32,8 @@ const pal = ERA_PALETTES['lahore-1929']
 const CAMERA: EraDressing['camera'] = { pos: [0, 0.98, 0.92], look: [0, -0.12, 0.06] }
 
 const FLOOR = -0.76
+/** The bamboo basket on the durrie, at the front right of the table. */
+const BASKET: V3 = [0.34, FLOOR + 0.003, 0.5]
 /** Inner face of the back wall, and its thickness (a 9-inch brick wall, plastered). */
 const BZ = -1.0
 const TH = 0.2
@@ -1197,7 +1200,18 @@ export const lahore1929: EraDressing = {
     const point = light.group.children.find((o) => (o as THREE.PointLight).isPointLight) as THREE.PointLight | undefined
     const i0 = point?.intensity || 1
 
-    root.add(statics, desk.group, outside, lantern.group, shade, win.latch, light.group)
+    // a round bamboo basket on the durrie at the front of the table, gone dark with the room's smoke:
+    // a read note goes in it (and later into the fire)
+    const basket = createBasket({
+      tier,
+      at: BASKET,
+      profile: [[0, 0.005], [0.128, 0.005], [0.132, 0], [0.138, 0.06], [0.145, 0.13], [0.151, 0.2], [0.156, 0.244], [0.151, 0.25]],
+      map: weaveTexture(tier === 'low' ? 64 : 128, { light: '#dcb880', mid: '#aa864c', dark: '#604322', gap: '#2a1c0e', rows: 10, cols: 9, repeat: [5, 2] }),
+      emissive: 0x24170a,
+      rim: 0x5b3e1e,
+    })
+
+    root.add(statics, desk.group, outside, lantern.group, shade, win.latch, light.group, basket.group)
     scene.add(root)
 
     const glassEmissive = lantern.glass.emissiveIntensity
@@ -1216,7 +1230,7 @@ export const lahore1929: EraDressing = {
         scene.remove(root)
         disposeTree(root)
       },
-      hooks: HOOKS,
+      hooks: { ...HOOKS, basket: basket.hook },
     }
   },
 }

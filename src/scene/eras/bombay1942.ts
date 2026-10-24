@@ -8,9 +8,9 @@
 // microphone, amplifier and pick-up, hand-labelled discs, a suitcase, top-floor flat, blackout).
 import * as THREE from 'three'
 import { ERA_PALETTES, css, mix } from '../palette'
-import { SPOTS, createBatch, createDesk, createRoomShell, createWarmLight, disposeTree, material } from '../props'
+import { SPOTS, createBasket, createBatch, createDesk, createRoomShell, createWarmLight, disposeTree, material } from '../props'
 import { TIER_SETTINGS } from '../quality'
-import { clothTexture, glowTexture, makeNoise, toTexture, woodTexture } from '../textures'
+import { clothTexture, glowTexture, makeNoise, toTexture, wireTexture, woodTexture } from '../textures'
 import type { DressingHooks, EraDressing, QualityTier } from '../types'
 
 type V3 = [number, number, number]
@@ -61,6 +61,8 @@ const DADO_Y = 0.2 // top of the oil-painted dado above the desk top (about 1 m 
 const CLOCK = { x: -0.21, y: 0.37, r: 0.058 }
 /** Under the desk: the suitcase the set travels in, a bedroll and a stack of discs. */
 const FLOOR_Y = -0.76
+/** The wire wastepaper basket, on the floor at the front right of the desk. */
+const BASKET: V3 = [0.34, FLOOR_Y, 0.5]
 
 const lathe = (pts: [number, number][], seg: number) =>
   new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg)
@@ -1007,6 +1009,21 @@ const bombay1942: EraDressing = {
       root.add(spill)
     }
 
+    // ------------------------------------------------------------ the wastepaper basket
+    // galvanised wire, as in any office of the day, on the floor at the front of the desk: a read
+    // script goes in it, and shows through the mesh
+    const basket = createBasket({
+      tier,
+      at: BASKET,
+      profile: [[0.125, 0.004], [0.13, 0], [0.135, 0.07], [0.141, 0.15], [0.147, 0.23], [0.15, 0.27]],
+      map: wireTexture(low ? 32 : 64, [22, 7]),
+      seeThrough: true,
+      floor: 0x4a4740,
+      rim: 0x9c978a,
+      emissive: 0x0c0c0a,
+    })
+    root.add(basket.group)
+
     root.add(b.build())
     scene.add(root)
 
@@ -1050,7 +1067,7 @@ const bombay1942: EraDressing = {
         scene.remove(root)
         disposeTree(root) // the lamp's lights, the desk and the room shell included
       },
-      hooks: HOOKS,
+      hooks: { ...HOOKS, basket: basket.hook },
     }
   },
 }
