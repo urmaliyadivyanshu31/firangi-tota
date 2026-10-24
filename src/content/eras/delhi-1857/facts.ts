@@ -3,7 +3,7 @@ import { caveBrowne, fanshawe, hodson, jl, majumdar, mh, sen, trial, yule, CHUNI
 
 // The case file, in story order: the court and how the rising came (para 1), the city and its money
 // (para 2), what lies ahead (para 3). Each story says its value and nothing more; the checkable words
-// sit in [[ ]]. Two lines are hardHidden (their highlights are blank in Hard mode).
+// sit in [[ ]]. Every line is readable in every mode it is in (owner 10-24: every check is in the file).
 // The calendar now lives in the weekdays rule, and the titles (Canning, Governor-General) in the
 // english-titles rule.
 // The case file grows with the mode (owner 10-24): lines marked minMode 'medium' join in Medium and
@@ -271,7 +271,6 @@ export const facts: Fact[] = [
   {
     id: 'english-force',
     para: 3,
-    hardHidden: true,
     label: { en: 'English army, Ambala', hi: 'अंग्रेज़ी फ़ौज, अंबाला' },
     value: { en: 'Takes the Ridge on 8 June', hi: 'रिज पर 8 जून को क़ब्ज़ा' },
     story: {
@@ -283,7 +282,6 @@ export const facts: Fact[] = [
   {
     id: 'bakht-khan',
     para: 3,
-    hardHidden: true,
     label: { en: 'Bakht Khan', hi: 'बख़्त ख़ान' },
     value: { en: 'Reaches Delhi 1-2 July', hi: '1-2 जुलाई को दिल्ली पहुँचते हैं' },
     story: {

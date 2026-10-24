@@ -372,8 +372,10 @@ export function coverage(era: Era): string[] {
     for (const mode of modesOf(era, m)) {
       const facts = era.facts.filter((f) => inMode(f, mode))
       const rules = era.rules.filter((r) => r.arrivesOnDay <= first)
+      // a fact Hard leaves blank cannot catch a slip in Hard
+      const seen = (f: Fact) => !(mode === 'hard' && f.hardHidden)
       const caught = (m.tells ?? []).some((t) =>
-        (t.factId !== undefined && facts.some((f) => f.id === t.factId)) || (t.ruleId !== undefined && rules.some((r) => r.id === t.ruleId)))
+        (t.factId !== undefined && facts.some((f) => f.id === t.factId && seen(f))) || (t.ruleId !== undefined && rules.some((r) => r.id === t.ruleId)))
       if (!m.real && !caught) out.push(`${m.id}: no tell whose fact or rule is in the ${mode} case file or rules`)
       for (const lang of LANGS) {
         const text = fillTemplate(m.text?.[lang] ?? '', era.windowStart, lang)

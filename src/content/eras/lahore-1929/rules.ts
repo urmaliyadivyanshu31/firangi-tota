@@ -7,7 +7,16 @@ import type { Rule } from '../../types.js'
 // - "Action", not "outrage": the notice of 23 December 1928; the government's word was "outrage".
 // - Pink paper, printed heading: Irwin to the Secretary of State, 19 April 1929 (Noorani, p. 45).
 // - Party names: the Ordinance schedule of 1930 lists the comrades' aliases.
+// - The weekday: 2 April 1929 was a Tuesday (the calendar); a note's weekday must match its date.
 export const rules: Rule[] = [
+  {
+    id: 'r-weekday',
+    text: {
+      en: 'The weekday must match the date: 2 April 1929 is a Tuesday.',
+      hi: 'वार तारीख़ से मेल खाना चाहिए: 2 अप्रैल 1929 मंगलवार है।',
+    },
+    arrivesOnDay: 1,
+  },
   {
     id: 'r-balraj',
     text: {

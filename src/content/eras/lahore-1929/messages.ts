@@ -71,10 +71,10 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'A zinc handbag comes tonight. Give it only to whoever shows the two keys. — Villager',
-      hi: 'आज रात जस्ते का एक हैंडबैग आएगा। उसे सिर्फ़ उसी को देना जो दोनों चाबियाँ दिखाए। — विलेजर',
+      en: 'A zinc handbag comes tonight. Give it only to whoever shows the keys. — Villager',
+      hi: 'आज रात जस्ते का एक हैंडबैग आएगा। उसे सिर्फ़ उसी को देना जो चाबियाँ दिखाए। — विलेजर',
     },
-    checks: { en: ['zinc handbag', 'two keys', 'Villager'], hi: ['जस्ते का एक हैंडबैग', 'दोनों चाबियाँ', 'विलेजर'] },
+    checks: { en: ['whoever shows the keys', 'Villager'], hi: ['जो चाबियाँ दिखाए', 'विलेजर'] },
     why: {
       text: {
         en: "Villager was Sukhdev's party name; the keys rule is on record.",
@@ -91,10 +91,10 @@ export const messages: Message[] = [
     from: { en: 'Farmer', hi: 'फ़ार्मर' },
     to: POST_BOX,
     text: {
-      en: 'A zinc handbag comes tonight. Give it only to whoever shows the two keys. — Farmer',
-      hi: 'आज रात जस्ते का एक हैंडबैग आएगा। उसे सिर्फ़ उसी को देना जो दोनों चाबियाँ दिखाए। — फ़ार्मर',
+      en: 'A zinc handbag comes tonight. Give it only to whoever shows the keys. — Farmer',
+      hi: 'आज रात जस्ते का एक हैंडबैग आएगा। उसे सिर्फ़ उसी को देना जो चाबियाँ दिखाए। — फ़ार्मर',
     },
-    checks: { en: ['zinc handbag', 'two keys', 'Farmer'], hi: ['जस्ते का एक हैंडबैग', 'दोनों चाबियाँ', 'फ़ार्मर'] },
+    checks: { en: ['whoever shows the keys', 'Farmer'], hi: ['जो चाबियाँ दिखाए', 'फ़ार्मर'] },
     tells: [
       {
         kind: 'name',
@@ -117,6 +117,7 @@ export const messages: Message[] = [
       hi: 'मेरी कोई चिट्ठी आए, तो पंडितजी के माँगने तक रखना। — एम',
     },
     checks: { en: ['Panditji', '— M'], hi: ['पंडितजी', '— एम'] },
+    verify: { '— M': 'fact:aliases' },
     why: {
       text: { en: "M was Rajguru's party name; Panditji was Azad's.", hi: "'एम' राजगुरु का पार्टी नाम था, 'पंडितजी' आज़ाद का।" },
       sources: [SCHEDULE],
@@ -195,6 +196,7 @@ export const messages: Message[] = [
       hi: 'पुलिस पूछे कि 17 दिसंबर, सोमवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
     },
     checks: { en: ['Monday, 17 December', 'at four'], hi: ['17 दिसंबर, सोमवार', 'चार बजे'] },
+    verify: { 'at four': 'fact:saunders' },
     why: {
       text: { en: 'Saunders was shot about 4 p.m., Monday 17 December 1928.', hi: 'सॉन्डर्स को 17 दिसंबर 1928, सोमवार, शाम करीब 4 बजे गोली लगी।' },
       sources: [SAUNDERS_CH, SCHEDULE],
@@ -212,6 +214,7 @@ export const messages: Message[] = [
       hi: 'पुलिस पूछे कि 15 दिसंबर, शनिवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
     },
     checks: { en: ['Saturday, 15 December', 'at four'], hi: ['15 दिसंबर, शनिवार', 'चार बजे'] },
+    verify: { 'at four': 'fact:saunders' },
     tells: [
       {
         kind: 'date',
@@ -236,7 +239,7 @@ export const messages: Message[] = [
       en: "In December our friend left Lahore first class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
       hi: "दिसंबर में हमारा दोस्त लाहौर से फ़र्स्ट क्लास में निकला: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
     },
-    checks: { en: ['first class', 'M carrying the tiffin'], hi: ['फ़र्स्ट क्लास', 'टिफ़िन उठाए एम'] },
+    checks: { en: ['first class'], hi: ['फ़र्स्ट क्लास'] },
     why: {
       text: {
         en: 'Bhagat Singh left first class on 20 December 1928, Rajguru as servant.',
@@ -256,7 +259,7 @@ export const messages: Message[] = [
       en: "In December our friend left Lahore third class, a sahib with 'wife', child, and M carrying the tiffin. If asked, you know nothing.",
       hi: "दिसंबर में हमारा दोस्त लाहौर से थर्ड क्लास में निकला: साहब बनकर, साथ में 'पत्नी', बच्चा, और टिफ़िन उठाए एम। कोई पूछे, तो तुम्हें कुछ नहीं पता।",
     },
-    checks: { en: ['third class', 'M carrying the tiffin'], hi: ['थर्ड क्लास', 'टिफ़िन उठाए एम'] },
+    checks: { en: ['third class'], hi: ['थर्ड क्लास'] },
     tells: [
       {
         kind: 'number',
@@ -317,9 +320,9 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: 'If a new boy asks: we became the HSRA at Feroz Shah Kotla in September. Nothing more.',
-      hi: 'नया लड़का पूछे, तो बस इतना: हम सितंबर में फ़िरोज़शाह कोटला में एचएसआरए बने। इससे ज़्यादा कुछ नहीं।',
+      hi: 'नया लड़का पूछे, तो बस इतना: हम सितंबर में फ़िरोज़शाह कोटला में एच.एस.आर.ए. बने। इससे ज़्यादा कुछ नहीं।',
     },
-    checks: { en: ['HSRA', 'Feroz Shah Kotla', 'in September'], hi: ['एचएसआरए', 'फ़िरोज़शाह कोटला', 'सितंबर में'] },
+    checks: { en: ['HSRA', 'Feroz Shah Kotla', 'in September'], hi: ['एच.एस.आर.ए.', 'फ़िरोज़शाह कोटला', 'सितंबर में'] },
     why: {
       text: {
         en: 'The HRA became the HSRA at Feroz Shah Kotla, 8–9 September 1928.',
@@ -337,9 +340,9 @@ export const messages: Message[] = [
     to: POST_BOX,
     text: {
       en: 'If a new boy asks: we became the HSRA at Feroz Shah Kotla in December. Nothing more.',
-      hi: 'नया लड़का पूछे, तो बस इतना: हम दिसंबर में फ़िरोज़शाह कोटला में एचएसआरए बने। इससे ज़्यादा कुछ नहीं।',
+      hi: 'नया लड़का पूछे, तो बस इतना: हम दिसंबर में फ़िरोज़शाह कोटला में एच.एस.आर.ए. बने। इससे ज़्यादा कुछ नहीं।',
     },
-    checks: { en: ['HSRA', 'Feroz Shah Kotla', 'in December'], hi: ['एचएसआरए', 'फ़िरोज़शाह कोटला', 'दिसंबर में'] },
+    checks: { en: ['HSRA', 'Feroz Shah Kotla', 'in December'], hi: ['एच.एस.आर.ए.', 'फ़िरोज़शाह कोटला', 'दिसंबर में'] },
     tells: [
       {
         kind: 'date',
@@ -412,6 +415,7 @@ export const messages: Message[] = [
       hi: 'पंडितजी की चिट्ठी लेकर एक नया आदमी आएगा। उसे चाय पिलाना, और उसकी पिछली ज़िंदगी के बारे में कुछ मत पूछना।',
     },
     checks: { en: ['note from Panditji', 'ask nothing about his past'], hi: ['पंडितजी की चिट्ठी', 'कुछ मत पूछना'] },
+    verify: { 'ask nothing about his past': 'rule:r-past' },
     why: {
       text: {
         en: "Never asking a comrade's past was the party code (Ajoy Ghosh).",
@@ -456,7 +460,8 @@ export const messages: Message[] = [
       en: 'Someone may come for the bundle in my name … No keys, no bundle, even if he weeps.',
       hi: 'कोई मेरे नाम से गठरी लेने आ सकता है … चाबियाँ नहीं, तो गठरी नहीं, चाहे वह रो दे।',
     },
-    checks: { en: ['Someone may come', 'No keys, no bundle'], hi: ['गठरी लेने आ सकता है', 'चाबियाँ नहीं, तो गठरी नहीं'] },
+    checks: { en: ['No keys, no bundle'], hi: ['चाबियाँ नहीं, तो गठरी नहीं'] },
+    verify: { 'No keys, no bundle': 'rule:r-keys' },
     why: {
       text: {
         en: "Hand things only to whoever shows the keys: Sukhdev's own rule.",
@@ -476,7 +481,7 @@ export const messages: Message[] = [
       en: 'My cousin comes for the bundle today. He has no keys; give it to him anyway.',
       hi: 'आज मेरा चचेरा भाई गठरी लेने आएगा। उसके पास चाबियाँ नहीं हैं; फिर भी उसे दे देना।',
     },
-    checks: { en: ['My cousin', 'He has no keys'], hi: ['मेरा चचेरा भाई', 'उसके पास चाबियाँ नहीं हैं'] },
+    checks: { en: ['He has no keys'], hi: ['उसके पास चाबियाँ नहीं हैं'] },
     tells: [
       {
         kind: 'habit',
@@ -498,7 +503,7 @@ export const messages: Message[] = [
       en: 'Since our action in December, constables who know our friend have been posted at big junctions. Travel only if you must.',
       hi: 'दिसंबर वाली हमारी कार्रवाई के बाद से बड़े जंक्शनों पर हमारे दोस्त को पहचानने वाले सिपाही तैनात किए गए हैं। बहुत ज़रूरी हो, तभी सफ़र करना।',
     },
-    checks: { en: ['our action', 'in December', 'big junctions'], hi: ['दिसंबर वाली', 'हमारी कार्रवाई', 'बड़े जंक्शनों'] },
+    checks: { en: ['our action', 'in December'], hi: ['हमारी कार्रवाई', 'दिसंबर वाली'] },
     why: {
       text: {
         en: "Comrades said 'action'; constables who knew him watched the junctions (Sanyal).",
@@ -518,7 +523,7 @@ export const messages: Message[] = [
       en: 'Since our outrage in December, constables who know our friend have been posted at big junctions. Travel only if you must.',
       hi: 'दिसंबर वाली हमारी वारदात के बाद से बड़े जंक्शनों पर हमारे दोस्त को पहचानने वाले सिपाही तैनात किए गए हैं। बहुत ज़रूरी हो, तभी सफ़र करना।',
     },
-    checks: { en: ['our outrage', 'in December', 'big junctions'], hi: ['दिसंबर वाली', 'हमारी वारदात', 'बड़े जंक्शनों'] },
+    checks: { en: ['our outrage', 'in December'], hi: ['हमारी वारदात', 'दिसंबर वाली'] },
     tells: [
       {
         kind: 'habit',
@@ -544,6 +549,7 @@ export const messages: Message[] = [
       hi: 'तारीख़: {weekday}, {date}। अँधेरा होने के बाद हमेशा वाली जगह आना; चाबियों वाला आदमी तुम्हें ढूँढ लेगा।',
     },
     checks: { en: ['Dated', 'the keys'], hi: ['तारीख़:', 'चाबियों वाला'] },
+    verify: { 'Dated': 'calendar' },
     why: {
       text: { en: 'The date and weekday match; nothing here breaks a rule.', hi: 'तारीख़ और दिन मेल खाते हैं; कोई नियम नहीं टूटता।' },
       sources: [SCHEDULE, KEYS_EVIDENCE],
@@ -561,9 +567,11 @@ export const messages: Message[] = [
       hi: 'तारीख़: {weekday+1}, {date}। अँधेरा होने के बाद हमेशा वाली जगह आना; चाबियों वाला आदमी तुम्हें ढूँढ लेगा।',
     },
     checks: { en: ['Dated', 'the keys'], hi: ['तारीख़:', 'चाबियों वाला'] },
+    verify: { 'Dated': 'calendar' },
     tells: [
       {
         kind: 'weekday',
+        ruleId: 'r-weekday',
         explain: {
           en: "Wrong weekday for today's date: a plant typed up in advance.",
           hi: 'आज की तारीख़ का दिन ग़लत है: पहले से तैयार किया जाली पर्चा।',
@@ -626,10 +634,8 @@ export const messages: Message[] = [
     from: BALRAJ_CIC,
     to: PUBLIC,
     text: { en: NOTICE_23_EN('our clues'), hi: NOTICE_23_HI('हमारे सुराग़') },
-    checks: {
-      en: ['our enemy the police', 'our clues', 'Balraj, Commander-in-chief'],
-      hi: ['हमारी दुश्मन पुलिस', 'हमारे सुराग़', 'बलराज, कमांडर-इन-चीफ़'],
-    },
+    checks: { en: ['our clues', 'Balraj, Commander-in-chief'], hi: ['हमारे सुराग़', 'बलराज, कमांडर-इन-चीफ़'] },
+    verify: { 'our clues': 'rule:r-police-words' },
     document: { sources: [DOC64] },
     why: {
       text: {
@@ -647,7 +653,7 @@ export const messages: Message[] = [
     from: BALRAJ_CIC,
     to: PUBLIC,
     text: { en: NOTICE_23_EN('the miscreants'), hi: NOTICE_23_HI('बदमाशों को') },
-    checks: { en: ['our enemy the police', 'the miscreants', 'Balraj, Commander-in-chief'], hi: ['हमारी दुश्मन पुलिस', 'बदमाशों को', 'बलराज, कमांडर-इन-चीफ़'] },
+    checks: { en: ['the miscreants', 'Balraj, Commander-in-chief'], hi: ['बदमाशों को', 'बलराज, कमांडर-इन-चीफ़'] },
     tells: [
       {
         kind: 'habit',
@@ -663,185 +669,12 @@ export const messages: Message[] = [
 
   // Azad's December escape. Disguise: Maclean (Scroll), 'a panda … ramnami angochha shawl',
   // escorting Sukhdev's mother and sister; Sanyal, 'a pilgrim-party for Muttra'.
-  {
-    id: 'lh-panda-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-panda',
-    from: M,
-    to: POST_BOX,
-    text: {
-      en: "In December Panditji left Lahore dressed as a pilgrims' priest, a panda, taking Villager's mother and sister on a 'pilgrimage'. You never heard this.",
-      hi: "दिसंबर में पंडितजी पंडा बनकर लाहौर से निकले, विलेजर की माँ और बहन को 'तीर्थयात्रा' पर ले जाते हुए। यह तुमने कभी नहीं सुना।",
-    },
-    checks: { en: ['Panditji', 'a panda', "Villager's mother and sister"], hi: ['पंडितजी', 'पंडा बनकर', 'विलेजर की माँ और बहन'] },
-    why: {
-      text: {
-        en: "Azad left as a pilgrims' guide, escorting Sukhdev's mother and sister.",
-        hi: 'आज़ाद तीर्थयात्रियों के पंडा बनकर निकले, साथ में सुखदेव की माँ और बहन थीं।',
-      },
-      sources: [{ id: 'maclean-durga' }, { id: 'sanyal-1931', loc: 'ch. IV, the escape' }, SCHEDULE],
-    },
-  },
-  {
-    id: 'lh-panda-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-panda',
-    from: M,
-    to: POST_BOX,
-    text: {
-      en: 'In December Panditji left Lahore dressed as a sahib, first class, with M as his servant. You never heard this.',
-      hi: 'दिसंबर में पंडितजी साहब बनकर, फ़र्स्ट क्लास में, एम को नौकर बनाकर लाहौर से निकले। यह तुमने कभी नहीं सुना।',
-    },
-    checks: { en: ['Panditji', 'dressed as a sahib', 'M as his servant'], hi: ['पंडितजी', 'साहब बनकर', 'एम को नौकर'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: "The sahib was Bhagat Singh; Azad went as a pilgrims' priest.",
-          hi: 'साहब भगत सिंह बने थे; आज़ाद तीर्थयात्रियों के पंडा बनकर गए।',
-        },
-        sources: [{ id: 'maclean-durga' }, { id: 'sanyal-1931', loc: 'ch. IV, the escape' }],
-      },
-    ],
-  },
 
   // Gandhi and Congress in 1929: the Calcutta deadline (Dec 1928) vs Purna Swaraj (Lahore, Dec 1929).
-  {
-    id: 'lh-swaraj-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-swaraj',
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: "At the Calcutta Congress, Gandhi's formula gave the Government until 31 December this year. If it says no, Congress will fight for complete independence. We are not waiting.",
-      hi: 'कलकत्ता कांग्रेस में गांधी के फ़ॉर्मूले ने सरकार को इस साल 31 दिसंबर तक का वक़्त दिया। सरकार न माने, तो कांग्रेस पूरी आज़ादी के लिए लड़ेगी। हम इंतज़ार नहीं कर रहे।',
-    },
-    checks: { en: ['Calcutta Congress', '31 December this year', 'complete independence'], hi: ['कलकत्ता कांग्रेस', 'इस साल 31 दिसंबर', 'पूरी आज़ादी'] },
-    why: {
-      text: {
-        en: 'Calcutta Congress, December 1928: accept by 31 December 1929, or the fight begins.',
-        hi: 'कलकत्ता कांग्रेस, दिसंबर 1928: 31 दिसंबर 1929 तक मानो, वरना लड़ाई।',
-      },
-      sources: [{ id: 'pubdiv-1928' }],
-    },
-  },
-  {
-    id: 'lh-swaraj-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-swaraj',
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: 'At the Calcutta Congress, Purna Swaraj, complete independence, was declared at once. The Government has been told. We are not waiting either.',
-      hi: 'कलकत्ता कांग्रेस में फ़ौरन पूर्ण स्वराज, यानी पूरी आज़ादी, का ऐलान हो गया। सरकार को बता दिया गया है। हम भी इंतज़ार नहीं कर रहे।',
-    },
-    checks: { en: ['Calcutta Congress', 'Purna Swaraj', 'declared at once'], hi: ['कलकत्ता कांग्रेस', 'पूर्ण स्वराज', 'का ऐलान हो गया'] },
-    tells: [
-      {
-        kind: 'anachronism',
-        explain: {
-          en: 'Purna Swaraj came at Lahore in December 1929; Calcutta set a deadline.',
-          hi: 'पूर्ण स्वराज दिसंबर 1929 में लाहौर में आया; कलकत्ता ने सिर्फ़ मोहलत दी थी।',
-        },
-        sources: [{ id: 'clpr-purna-swaraj' }, { id: 'pubdiv-1928' }],
-      },
-    ],
-  },
 
   // Jatin Das: his jail hunger strike began in July 1929 (Reader chronology), so not in April.
-  {
-    id: 'lh-jatin-f',
-    tier: 3,
-    real: false,
-    from: DYAL,
-    to: POST_BOX,
-    text: {
-      en: 'Jatin Das has eaten nothing in Lahore jail for a month. Take a note to him at the jail gate tomorrow.',
-      hi: 'जतिन दास ने लाहौर जेल में एक महीने से कुछ नहीं खाया। कल जेल के फाटक पर उनके लिए एक पर्चा ले जाना।',
-    },
-    checks: { en: ['Jatin Das', 'Lahore jail', 'for a month'], hi: ['जतिन दास', 'लाहौर जेल', 'एक महीने से'] },
-    tells: [
-      {
-        kind: 'anachronism',
-        explain: {
-          en: 'Jatin Das began his hunger strike in July 1929, three months later.',
-          hi: 'जतिन दास की भूख हड़ताल जुलाई 1929 में शुरू हुई, तीन महीने बाद।',
-        },
-        sources: [{ id: 'chaman-lal-reader', loc: 'chronology: 13 July and 13 September 1929' }],
-      },
-    ],
-  },
 
-  {
-    id: 'lh-slogan-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-slogan',
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: "Teach the new boys our slogans: 'Inquilab Zindabad' and 'Down with Imperialism'.",
-      hi: "नए लड़कों को हमारे नारे सिखाओ: 'इंक़लाब ज़िंदाबाद' और 'साम्राज्यवाद मुर्दाबाद'।",
-    },
-    checks: { en: ['Inquilab Zindabad', 'Down with Imperialism'], hi: ['इंक़लाब ज़िंदाबाद', 'साम्राज्यवाद मुर्दाबाद'] },
-    why: {
-      text: {
-        en: 'Both cries were raised in the Assembly and in court in 1929.',
-        hi: 'दोनों नारे 1929 में असेंबली में और अदालत में लगे।',
-      },
-      sources: [{ id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', p. 101" }, { id: 'sanyal-1931' }, DOC64],
-    },
-  },
-  {
-    id: 'lh-slogan-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-slogan',
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: "Teach the new boys our friend's own slogan, 'Inquilab Zindabad'. He made it up himself.",
-      hi: "नए लड़कों को हमारे दोस्त का अपना नारा सिखाओ, 'इंक़लाब ज़िंदाबाद'। यह उसने ख़ुद बनाया है।",
-    },
-    checks: { en: ['Inquilab Zindabad', 'He made it up himself'], hi: ['इंक़लाब ज़िंदाबाद', 'यह उसने ख़ुद बनाया है'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: "'We are not the originators of this cry,' he wrote in 1929.",
-          hi: "उन्होंने 1929 में लिखा: 'यह नारा हमने शुरू नहीं किया।'",
-        },
-        sources: [{ id: 'bs-modern-review' }],
-      },
-    ],
-  },
 
-  {
-    id: 'lh-song-f',
-    tier: 3,
-    real: false,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: "Every night the boys sing the song our friend wrote, 'Mera Rang De Basanti Chola'.",
-      hi: "लड़के हर रात हमारे दोस्त का लिखा गीत गाते हैं, 'मेरा रंग दे बसंती चोला'।",
-    },
-    checks: { en: ['the song our friend wrote', 'Mera Rang De Basanti Chola'], hi: ['हमारे दोस्त का लिखा गीत', 'मेरा रंग दे बसंती चोला'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: "No record from then says he wrote it; they sang 'Bharat na reh sakega'.",
-          hi: "उस दौर के किसी रिकॉर्ड में नहीं कि यह गीत उन्होंने लिखा; अदालत में 'भारत न रह सकेगा' गाया गया।",
-        },
-        sources: [{ id: 'noorani-1996', loc: "ch. 'The Magisterial Farce', p. 101" }],
-      },
-    ],
-  },
 
   // Ajit Singh: 'deported, together with Lala Lajpat Rai, in 1907. For many years he had been an
   // exile abroad' (Nehru). He came back only in the 1940s (Tribune 2010: 1946; others say 1947).
@@ -849,6 +682,7 @@ export const messages: Message[] = [
     id: 'lh-ajit-g',
     tier: 3,
     real: true,
+    minMode: 'hard',
     pair: 'lh-ajit',
     from: DYAL,
     to: POST_BOX,
@@ -856,7 +690,7 @@ export const messages: Message[] = [
       en: "Our friend's uncle, Ajit Singh, deported with Lalaji in 1907, still lives in exile abroad. If a stranger brings 'word from him', say nothing.",
       hi: "हमारे दोस्त के चाचा अजीत सिंह, जो 1907 में लालाजी के साथ देश से निकाले गए थे, आज भी विदेश में हैं। कोई अजनबी 'उनका संदेसा' लाए, तो कुछ मत कहना।",
     },
-    checks: { en: ['Ajit Singh', 'in 1907', 'in exile abroad'], hi: ['अजीत सिंह', '1907 में', 'विदेश में'] },
+    checks: { en: ['Ajit Singh', 'in exile abroad'], hi: ['अजीत सिंह', 'विदेश में'] },
     why: {
       text: {
         en: 'Nehru: Ajit Singh, deported with Lajpat Rai in 1907, was long an exile abroad.',
@@ -869,6 +703,7 @@ export const messages: Message[] = [
     id: 'lh-ajit-f',
     tier: 3,
     real: false,
+    minMode: 'hard',
     pair: 'lh-ajit',
     from: DYAL,
     to: POST_BOX,
@@ -876,10 +711,11 @@ export const messages: Message[] = [
       en: "Our friend's uncle, Ajit Singh, deported with Lalaji in 1907, is back in Lahore. Take the zinc handbag to him at Bhati Gate tonight.",
       hi: 'हमारे दोस्त के चाचा अजीत सिंह, जो 1907 में लालाजी के साथ देश से निकाले गए थे, लाहौर लौट आए हैं। आज रात जस्ते का हैंडबैग भाटी गेट पर उन्हें दे आना।',
     },
-    checks: { en: ['Ajit Singh', 'in 1907', 'is back in Lahore'], hi: ['अजीत सिंह', '1907 में', 'लाहौर लौट आए हैं'] },
+    checks: { en: ['Ajit Singh', 'is back in Lahore'], hi: ['अजीत सिंह', 'लाहौर लौट आए हैं'] },
     tells: [
       {
         kind: 'knowledge',
+        factId: 'ajit',
         explain: {
           en: 'Ajit Singh was still in exile abroad; he came home only in the 1940s.',
           hi: 'अजीत सिंह तब भी विदेश में थे; वे 1940 के दशक में ही घर लौटे।',
@@ -904,7 +740,7 @@ export const messages: Message[] = [
       en: 'Tonight I take Durga Bhabhi and Sushila Didi to Delhi to see our friend one last time.',
       hi: 'आज रात मैं दुर्गा भाभी और सुशीला दीदी को दिल्ली ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने।',
     },
-    checks: { en: ['Durga Bhabhi', 'to Delhi', 'our friend'], hi: ['दुर्गा भाभी', 'दिल्ली ले जा', 'हमारे दोस्त'] },
+    checks: { en: ['to Delhi', 'our friend'], hi: ['दिल्ली ले जा', 'हमारे दोस्त'] },
     why: {
       text: {
         en: 'Sukhdev took Durga Devi and Sushila to Delhi on 7 April 1929.',
@@ -925,7 +761,7 @@ export const messages: Message[] = [
       en: 'Tonight I take Durga Bhabhi and Sushila Didi to Lucknow to see our friend one last time.',
       hi: 'आज रात मैं दुर्गा भाभी और सुशीला दीदी को लखनऊ ले जा रहा हूँ, हमारे दोस्त से आख़िरी बार मिलवाने।',
     },
-    checks: { en: ['Durga Bhabhi', 'to Lucknow', 'our friend'], hi: ['दुर्गा भाभी', 'लखनऊ ले जा', 'हमारे दोस्त'] },
+    checks: { en: ['to Lucknow', 'our friend'], hi: ['लखनऊ ले जा', 'हमारे दोस्त'] },
     tells: [
       {
         kind: 'place',
@@ -950,7 +786,7 @@ export const messages: Message[] = [
       en: "This week our friend sat for a photo at Ramnath's in Delhi, in a felt hat. Soon every paper will want it.",
       hi: 'इस हफ़्ते दिल्ली में रामनाथ के यहाँ हमारे दोस्त ने फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। जल्द हर अख़बार को यह चाहिए होगी।',
     },
-    checks: { en: ['our friend', "Ramnath's in Delhi", 'felt hat'], hi: ['हमारे दोस्त', 'दिल्ली में रामनाथ', 'फ़ेल्ट हैट'] },
+    checks: { en: ['our friend', "Ramnath's in Delhi"], hi: ['हमारे दोस्त', 'दिल्ली में रामनाथ'] },
     why: {
       text: {
         en: 'Ramnath photographed him in Delhi on 3 or 4 April, for publicity.',
@@ -971,7 +807,7 @@ export const messages: Message[] = [
       en: "This week our friend sat for a photo at Ramnath's in Lahore, in a felt hat. Soon every paper will want it.",
       hi: 'इस हफ़्ते लाहौर में रामनाथ के यहाँ हमारे दोस्त ने फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। जल्द हर अख़बार को यह चाहिए होगी।',
     },
-    checks: { en: ['our friend', "Ramnath's in Lahore", 'felt hat'], hi: ['हमारे दोस्त', 'लाहौर में रामनाथ', 'फ़ेल्ट हैट'] },
+    checks: { en: ['our friend', "Ramnath's in Lahore"], hi: ['हमारे दोस्त', 'लाहौर में रामनाथ'] },
     tells: [
       {
         kind: 'place',
@@ -1045,7 +881,7 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: { en: ASSEMBLY_EN('Monday'), hi: ASSEMBLY_HI('सोमवार') },
-    checks: { en: ['Yesterday, Monday', 'half past twelve', 'President Vithalbhai Patel'], hi: ['कल, सोमवार', 'साढ़े बारह बजे', 'प्रेसिडेंट विट्ठलभाई पटेल'] },
+    checks: { en: ['Yesterday, Monday', 'President Vithalbhai Patel'], hi: ['कल, सोमवार', 'प्रेसिडेंट विट्ठलभाई पटेल'] },
     why: {
       text: {
         en: 'Monday 8 April 1929, about 12:30; the two gave themselves up.',
@@ -1063,10 +899,11 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: { en: ASSEMBLY_EN('Sunday'), hi: ASSEMBLY_HI('रविवार') },
-    checks: { en: ['Yesterday, Sunday', 'half past twelve', 'President Vithalbhai Patel'], hi: ['कल, रविवार', 'साढ़े बारह बजे', 'प्रेसिडेंट विट्ठलभाई पटेल'] },
+    checks: { en: ['Yesterday, Sunday', 'President Vithalbhai Patel'], hi: ['कल, रविवार', 'प्रेसिडेंट विट्ठलभाई पटेल'] },
     tells: [
       {
         kind: 'weekday',
+        ruleId: 'r-weekday',
         explain: { en: 'Yesterday was Monday 8 April, not Sunday.', hi: 'कल 8 अप्रैल, सोमवार था, रविवार नहीं।' },
         sources: [{ id: 'chaman-lal-2009' }],
       },
@@ -1083,7 +920,7 @@ export const messages: Message[] = [
     from: DYAL,
     to: POST_BOX,
     text: { en: ASSEMBLY_EN('Monday', 'Vallabhbhai'), hi: ASSEMBLY_HI('सोमवार', 'वल्लभभाई') },
-    checks: { en: ['Yesterday, Monday', 'half past twelve', 'President Vallabhbhai Patel'], hi: ['कल, सोमवार', 'साढ़े बारह बजे', 'प्रेसिडेंट वल्लभभाई पटेल'] },
+    checks: { en: ['Yesterday, Monday', 'President Vallabhbhai Patel'], hi: ['कल, सोमवार', 'प्रेसिडेंट वल्लभभाई पटेल'] },
     tells: [
       {
         kind: 'name',
@@ -1111,7 +948,8 @@ export const messages: Message[] = [
       en: `${LETTER_OPEN_EN}, going to a far off destination … Yours, B. S`,
       hi: `${LETTER_OPEN_HI}, बहुत दूर की मंज़िल की ओर … तुम्हारा, बी. एस`,
     },
-    checks: { en: ['I will be gone', 'far off destination', 'B. S'], hi: ['मैं जा चुका होऊँगा', 'बहुत दूर की मंज़िल', 'बी. एस'] },
+    checks: { en: ['B. S'], hi: ['बी. एस'] },
+    verify: { 'B. S': 'rule:r-party-names' },
     document: { sources: [{ id: 'bs-letter-sukhdev' }] },
     why: {
       text: {
@@ -1133,7 +971,7 @@ export const messages: Message[] = [
       en: `${LETTER_OPEN_EN} … Write back to me at the Sadar Bazar house. Yours, B. S`,
       hi: `${LETTER_OPEN_HI} … मुझे सदर बाज़ार वाले मकान पर जवाब लिखना। तुम्हारा, बी. एस`,
     },
-    checks: { en: ['I will be gone', 'Sadar Bazar house', 'B. S'], hi: ['मैं जा चुका होऊँगा', 'सदर बाज़ार वाले मकान', 'बी. एस'] },
+    checks: { en: ['Sadar Bazar house'], hi: ['सदर बाज़ार वाले मकान'] },
     tells: [
       {
         kind: 'place',
@@ -1149,52 +987,6 @@ export const messages: Message[] = [
 
   // Day 9, Wednesday 10 April: The Tribune's report, trimmed (its 'Red leaflets' and 'fired
   // pistols' are left out: the leaflets were pink and the pair denied having pistols).
-  {
-    id: 'lh-tribune-g',
-    tier: 2,
-    real: true,
-    pair: 'lh-tribune',
-    onDay: 9,
-    from: SWAMI,
-    to: POST_BOX,
-    text: {
-      en: "Cutting from today's Tribune: 'Two young men, one a Punjabi and the other a Bengali entered the Legislative Assembly … threw bombs … They were arrested.'",
-      hi: "आज के ट्रिब्यून की कतरन: 'दो नौजवान, एक पंजाबी और दूसरा बंगाली, लेजिस्लेटिव असेंबली में घुसे … बम फेंके … उन्हें गिरफ़्तार कर लिया गया।'",
-    },
-    checks: { en: ['one a Punjabi', 'a Bengali', 'They were arrested'], hi: ['एक पंजाबी', 'दूसरा बंगाली', 'गिरफ़्तार कर लिया गया'] },
-    document: { sources: [{ id: 'dutt-tribune-2005' }] },
-    why: {
-      text: {
-        en: "The Tribune's report of 10 April 1929: Bhagat Singh, a Punjabi; Dutt, a Bengali.",
-        hi: 'ट्रिब्यून की 10 अप्रैल 1929 की ख़बर: भगत सिंह पंजाबी, दत्त बंगाली।',
-      },
-      sources: [{ id: 'dutt-tribune-2005' }, { id: 'bs-joint-statement' }],
-    },
-  },
-  {
-    id: 'lh-tribune-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-tribune',
-    onDay: 9,
-    from: SWAMI,
-    to: POST_BOX,
-    text: {
-      en: "Cutting from today's Tribune: 'Two young men, one a Punjabi and the other a Bengali entered the Legislative Assembly … threw bombs … and escaped in the smoke.'",
-      hi: "आज के ट्रिब्यून की कतरन: 'दो नौजवान, एक पंजाबी और दूसरा बंगाली, लेजिस्लेटिव असेंबली में घुसे … बम फेंके … और धुएँ में भाग निकले।'",
-    },
-    checks: { en: ['one a Punjabi', 'a Bengali', 'escaped in the smoke'], hi: ['एक पंजाबी', 'दूसरा बंगाली', 'धुएँ में भाग निकले'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: "They gave themselves up; the Tribune wrote 'They were arrested.'",
-          hi: "दोनों ने ख़ुद गिरफ़्तारी दी; ट्रिब्यून ने लिखा 'उन्हें गिरफ़्तार कर लिया गया।'",
-        },
-        sources: [{ id: 'dutt-tribune-2005' }, { id: 'bs-joint-statement' }],
-      },
-    ],
-  },
 
   // Day 9, Wednesday 10 April: Motilal Nehru's statement in the Times of India.
   {
@@ -1209,7 +1001,7 @@ export const messages: Message[] = [
       en: "Today's Times of India quotes Motilal Nehru on Monday's leaflets: 'The choice lies between Gandhi and Balraj.'",
       hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार के पर्चों पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराज के बीच करना है।'",
     },
-    checks: { en: ['Motilal Nehru', 'Gandhi and Balraj'], hi: ['मोतीलाल नेहरू', 'गांधी और बलराज'] },
+    checks: { en: ['Balraj'], hi: ['बलराज'] },
     why: {
       text: {
         en: "Motilal Nehru's words, printed 10 April 1929, naming the leaflets' 'Balraj'.",
@@ -1230,7 +1022,7 @@ export const messages: Message[] = [
       en: "Today's Times of India quotes Motilal Nehru on Monday's leaflets: 'The choice lies between Gandhi and Balram.'",
       hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार के पर्चों पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराम के बीच करना है।'",
     },
-    checks: { en: ['Motilal Nehru', 'Gandhi and Balram'], hi: ['मोतीलाल नेहरू', 'गांधी और बलराम'] },
+    checks: { en: ['Balram'], hi: ['बलराम'] },
     tells: [
       {
         kind: 'name',
@@ -1246,51 +1038,6 @@ export const messages: Message[] = [
   },
 
   // Day 9, Wednesday 10 April: Gandhi is touring Andhra (6 April – 21 May), at Bezwada today.
-  {
-    id: 'lh-gandhi-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-gandhi',
-    onDay: 9,
-    from: SWAMI,
-    to: POST_BOX,
-    text: {
-      en: 'Gandhi is far from Delhi, touring Andhra; today he speaks at a public meeting in Bezwada (Vijayawada). Watch what he says about Monday.',
-      hi: 'गांधी दिल्ली से बहुत दूर, आंध्र के दौरे पर हैं; आज वे बेज़वाड़ा (विजयवाड़ा) में एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
-    },
-    checks: { en: ['touring Andhra', 'Bezwada'], hi: ['आंध्र के दौरे', 'बेज़वाड़ा'] },
-    why: {
-      text: {
-        en: "Gandhi's Andhra tour: a public meeting at Bezwada on 10 April 1929.",
-        hi: 'गांधी का आंध्र दौरा: 10 अप्रैल 1929 को बेज़वाड़ा में आम सभा।',
-      },
-      sources: [{ id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
-    },
-  },
-  {
-    id: 'lh-gandhi-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-gandhi',
-    onDay: 9,
-    from: SWAMI,
-    to: POST_BOX,
-    text: {
-      en: 'Gandhi is in Delhi this week, near the Assembly; today he speaks at a public meeting there. Watch what he says about Monday.',
-      hi: 'गांधी इस हफ़्ते दिल्ली में, असेंबली के पास हैं; आज वे वहीं एक आम सभा में बोलेंगे। देखना, सोमवार के बारे में क्या कहते हैं।',
-    },
-    checks: { en: ['in Delhi this week', 'near the Assembly'], hi: ['इस हफ़्ते दिल्ली में', 'असेंबली के पास'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'Gandhi was touring Andhra; on 10 April he spoke at Bezwada (Vijayawada).',
-          hi: 'गांधी आंध्र के दौरे पर थे; 10 अप्रैल को वे बेज़वाड़ा (विजयवाड़ा) में बोले।',
-        },
-        sources: [{ id: 'cwmg-40', loc: 'Chronology, pp. 444–445 (April 9–13, 1929); introduction p. vii' }],
-      },
-    ],
-  },
 
   // Day 10, Thursday 11 April: the Assembly meets again.
   {
@@ -1305,10 +1052,8 @@ export const messages: Message[] = [
       en: "The Assembly called Monday's bombs a 'dastardly outrage'. Their word, not ours. Then President Patel ruled the Public Safety Bill out of order.",
       hi: "असेंबली ने सोमवार के बमों को 'कायराना वारदात' कहा। यह उनका शब्द है, हमारा नहीं। फिर प्रेसिडेंट पटेल ने पब्लिक सेफ़्टी बिल को नियम के ख़िलाफ़ बताकर रोक दिया।",
     },
-    checks: {
-      en: ['dastardly outrage', 'Their word, not ours', 'out of order'],
-      hi: ['कायराना वारदात', 'यह उनका शब्द है, हमारा नहीं', 'नियम के ख़िलाफ़'],
-    },
+    checks: { en: ['dastardly outrage', 'Their word, not ours', 'the Public Safety Bill'], hi: ['कायराना वारदात', 'यह उनका शब्द है, हमारा नहीं', 'पब्लिक सेफ़्टी बिल'] },
+    verify: { 'dastardly outrage': 'rule:r-police-words', 'Their word, not ours': 'rule:r-police-words' },
     why: {
       text: {
         en: "11 April 1929: the motion, then Patel's ruling; the comrade only quotes them.",
@@ -1363,7 +1108,7 @@ export const messages: Message[] = [
       en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. No one died; a few people were hurt.",
       hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। कोई नहीं मरा; कुछ लोग घायल हुए।',
     },
-    checks: { en: ['Sir John Simon', "President's gallery", 'No one died'], hi: ['सर जॉन साइमन', 'प्रेसिडेंट गैलरी', 'कोई नहीं मरा'] },
+    checks: { en: ["President's gallery"], hi: ['प्रेसिडेंट गैलरी'] },
     why: {
       text: {
         en: "Simon sat in the President's gallery; no one died, six were hurt.",
@@ -1372,79 +1117,10 @@ export const messages: Message[] = [
       sources: [{ id: 'bs-joint-statement' }, CHAMAN, { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }, { id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
     },
   },
-  {
-    id: 'lh-simon-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-simon',
-    onDay: 10,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. Two members have died of their wounds.",
-      hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। दो सदस्य ज़ख़्मों से मर गए हैं।',
-    },
-    checks: { en: ['Sir John Simon', "President's gallery", 'Two members have died'], hi: ['सर जॉन साइमन', 'प्रेसिडेंट गैलरी', 'दो सदस्य ज़ख़्मों से मर गए'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'No one died; six were hurt, Sir Bomanji Dalal the worst.',
-          hi: 'कोई नहीं मरा; छह लोग घायल हुए, सबसे ज़्यादा सर बोमनजी दलाल।',
-        },
-        sources: [{ id: 'bs-joint-statement' }, CHAMAN, { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }],
-      },
-    ],
-  },
 
   // Day 11, Friday 12 April: Young India of Thursday 11 April printed Sarojini Naidu's letter
   // from her American lecture tour ("a wandering singer with a spirit in my feet"). Her Berlin
   // letter of 18 June: "the Wandering Singer returns home on 22nd July".
-  {
-    id: 'lh-sarojini-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-sarojini',
-    onDay: 11,
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: "Sarojini Naidu is abroad on a lecture tour. This week's Young India prints her letter from America; she calls herself 'a wandering singer'.",
-      hi: "सरोजिनी नायडू विदेश में भाषण-यात्रा पर हैं। इस हफ़्ते के यंग इंडिया में अमेरिका से आई उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
-    },
-    checks: { en: ['abroad on a lecture tour', 'a wandering singer'], hi: ['विदेश में भाषण-यात्रा', 'घुमक्कड़ गायिका'] },
-    why: {
-      text: {
-        en: 'Young India printed her letter from the USA on 11 April 1929.',
-        hi: 'यंग इंडिया ने 11 अप्रैल 1929 को अमेरिका से आई उनकी चिट्ठी छापी।',
-      },
-      sources: [{ id: 'naidu-1929' }, { id: 'naidu-1929b' }],
-    },
-  },
-  {
-    id: 'lh-sarojini-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-sarojini',
-    onDay: 11,
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: "Sarojini Naidu watched Monday's bombs from the visitors' gallery. This week's Young India prints her letter; she calls herself 'a wandering singer'.",
-      hi: "सरोजिनी नायडू ने सोमवार के बम विज़िटर्स गैलरी से देखे। इस हफ़्ते के यंग इंडिया में उनकी चिट्ठी छपी है; वे ख़ुद को 'घुमक्कड़ गायिका' कहती हैं।",
-    },
-    checks: { en: ["from the visitors' gallery", 'a wandering singer'], hi: ['विज़िटर्स गैलरी से', 'घुमक्कड़ गायिका'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'She was abroad on her lecture tour; she came home only on 22 July.',
-          hi: 'वे विदेश में भाषण-यात्रा पर थीं; 22 जुलाई को ही घर लौटीं।',
-        },
-        sources: [{ id: 'naidu-1929' }, { id: 'naidu-1929b' }],
-      },
-    ],
-  },
 
   // Day 11, Friday 12 April: Bande Mataram prints the photographs.
   {
@@ -1459,7 +1135,8 @@ export const messages: Message[] = [
       en: "Today, {weekday}, the paper Bande Mataram prints our two friends' photographs. Cut them out; keep them flat.",
       hi: 'आज, {weekday} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर बिना मोड़े रख लेना।',
     },
-    checks: { en: ['Today,', 'Bande Mataram'], hi: ['आज,', 'बंदे मातरम अख़बार'] },
+    checks: { en: ['Today,'], hi: ['आज,'] },
+    verify: { 'Today,': 'calendar' },
     why: {
       text: {
         en: 'Bande Mataram printed the photographs on Friday 12 April 1929.',
@@ -1480,10 +1157,12 @@ export const messages: Message[] = [
       en: "Today, {weekday+1}, the paper Bande Mataram prints our two friends' photographs. Cut them out; keep them flat.",
       hi: 'आज, {weekday+1} को, बंदे मातरम अख़बार में हमारे दोनों दोस्तों की तस्वीरें छपी हैं। काटकर बिना मोड़े रख लेना।',
     },
-    checks: { en: ['Today,', 'Bande Mataram'], hi: ['आज,', 'बंदे मातरम अख़बार'] },
+    checks: { en: ['Today,'], hi: ['आज,'] },
+    verify: { 'Today,': 'calendar' },
     tells: [
       {
         kind: 'weekday',
+        ruleId: 'r-weekday',
         explain: {
           en: "Wrong weekday for today's date; a note written today would know.",
           hi: 'आज की तारीख़ का दिन ग़लत है; आज लिखा पर्चा आज का दिन जानता।',
@@ -1497,6 +1176,7 @@ export const messages: Message[] = [
     id: 'lh-jallianwala-g',
     tier: 3,
     real: true,
+    minMode: 'hard',
     pair: 'lh-jallianwala',
     onDay: 12,
     from: PANDITJI,
@@ -1506,6 +1186,7 @@ export const messages: Message[] = [
       hi: 'आज जलियाँवाला बाग़, अमृतसर की गोलीबारी को दस साल हो गए। आज रात उनके लिए एक दीया जलाना, और भीड़ से दूर रहना।',
     },
     checks: { en: ['Ten years today', 'Jallianwala Bagh'], hi: ['दस साल', 'जलियाँवाला बाग़'] },
+    verify: { 'Ten years today': 'fact:jallianwala' },
     why: {
       text: {
         en: "Dyer's troops fired on the crowd at Jallianwala Bagh on 13 April 1919.",
@@ -1518,6 +1199,7 @@ export const messages: Message[] = [
     id: 'lh-jallianwala-f',
     tier: 3,
     real: false,
+    minMode: 'hard',
     pair: 'lh-jallianwala',
     onDay: 12,
     from: PANDITJI,
@@ -1530,6 +1212,7 @@ export const messages: Message[] = [
     tells: [
       {
         kind: 'date',
+        factId: 'jallianwala',
         explain: {
           en: 'Jallianwala Bagh was 13 April 1919: ten years, not eleven.',
           hi: 'जलियाँवाला बाग़ 13 अप्रैल 1919 को हुआ: दस साल, ग्यारह नहीं।',
@@ -1542,51 +1225,6 @@ export const messages: Message[] = [
   // Day 13, Sunday 14 April: Durga Bhabhi's 8 April. Maclean (Scroll): Bhagwati Charan, Durga Devi
   // and Sushila 'hired a tonga, and began to circle the Assembly'; 'As the police were taking
   // Bhagat Singh away, young Sachi recognised him and impulsively called out Lamba Chacha!'
-  {
-    id: 'lh-durga-g',
-    tier: 2,
-    real: true,
-    pair: 'lh-durga',
-    onDay: 13,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: "On Monday Durga Bhabhi and Sushila Didi circled the Assembly in a tonga. As police led our friend away, little Sachi called out, 'Lamba Chacha!'",
-      hi: "सोमवार को दुर्गा भाभी और सुशीला दीदी तांगे में असेंबली के चक्कर लगाती रहीं। पुलिस हमारे दोस्त को ले जा रही थी, तो नन्हे शची ने पुकारा, 'लंबा चाचा!'",
-    },
-    checks: { en: ['in a tonga', 'Lamba Chacha'], hi: ['तांगे में', 'लंबा चाचा'] },
-    why: {
-      text: {
-        en: "They circled the Assembly in a tonga; Sachi called out 'Lamba Chacha!'",
-        hi: "वे तांगे में असेंबली के चक्कर लगा रही थीं; शची ने पुकारा 'लंबा चाचा!'",
-      },
-      sources: [{ id: 'maclean-durga' }, CHAMAN],
-    },
-  },
-  {
-    id: 'lh-durga-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-durga',
-    onDay: 13,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: "On Monday Durga Bhabhi and Sushila Didi sat in the visitors' gallery beside our friend. As police led him away, little Sachi called out, 'Lamba Chacha!'",
-      hi: "सोमवार को दुर्गा भाभी और सुशीला दीदी विज़िटर्स गैलरी में हमारे दोस्त के पास बैठी थीं। पुलिस उसे ले जा रही थी, तो नन्हे शची ने पुकारा, 'लंबा चाचा!'",
-    },
-    checks: { en: ["sat in the visitors' gallery", 'Lamba Chacha'], hi: ['विज़िटर्स गैलरी में', 'लंबा चाचा'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'They circled outside in a tonga; they were not in the gallery.',
-          hi: 'वे बाहर तांगे में चक्कर लगा रही थीं; गैलरी में नहीं थीं।',
-        },
-        sources: [{ id: 'maclean-durga' }],
-      },
-    ],
-  },
 
   // Day 14, Monday 15 April: the raid on House No. 69.
   {
@@ -1601,7 +1239,7 @@ export const messages: Message[] = [
       en: 'Keep away from McLeod Road. Police broke into No. 69 soon after seven; Villager and two others are taken.',
       hi: 'मैक्लोड रोड से दूर रहना। सुबह सात बजे के कुछ देर बाद पुलिस नंबर 69 में घुसी; विलेजर और दो और पकड़े गए।',
     },
-    checks: { en: ['No. 69', 'soon after seven', 'Villager'], hi: ['नंबर 69', 'सात बजे के कुछ देर बाद', 'विलेजर'] },
+    checks: { en: ['No. 69', 'Villager'], hi: ['नंबर 69', 'विलेजर'] },
     why: {
       text: {
         en: 'Police raided No. 69 on 15 April 1929, arresting Sukhdev and two others.',
@@ -1622,7 +1260,7 @@ export const messages: Message[] = [
       en: 'Keep away from McLeod Road. Police broke into No. 69 soon after seven. A man comes for the zinc handbag; he has no keys, give it anyway.',
       hi: 'मैक्लोड रोड से दूर रहना। सुबह सात बजे के कुछ देर बाद पुलिस नंबर 69 में घुसी। एक आदमी जस्ते का हैंडबैग लेने आएगा; उसके पास चाबियाँ नहीं हैं, फिर भी दे देना।',
     },
-    checks: { en: ['No. 69', 'soon after seven', 'he has no keys'], hi: ['नंबर 69', 'सात बजे के कुछ देर बाद', 'उसके पास चाबियाँ नहीं हैं'] },
+    checks: { en: ['No. 69', 'he has no keys'], hi: ['नंबर 69', 'उसके पास चाबियाँ नहीं हैं'] },
     tells: [
       {
         kind: 'habit',
@@ -1813,6 +1451,7 @@ export const messages: Message[] = [
     tells: [
       {
         kind: 'weekday',
+        ruleId: 'r-weekday',
         explain: { en: 'Today is Tuesday 2 April, so Monday is the 8th, not the 9th.', hi: 'आज मंगलवार, 2 अप्रैल है, तो सोमवार 8 तारीख़ है, 9 नहीं।' },
         sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 29" }],
       },
@@ -1970,10 +1609,10 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'Yesterday our friend and Mohan threw the bombs, then stood still until Sergeant Terry came for them.',
-      hi: 'कल हमारे दोस्त और मोहन ने बम फेंके, फिर सार्जेंट टेरी के आने तक वहीं खड़े रहे।',
+      en: 'Yesterday our friend and Mohan threw the bombs, then stood still until a police sergeant came for them.',
+      hi: 'कल हमारे दोस्त और मोहन ने बम फेंके, फिर एक पुलिस सार्जेंट के आने तक वहीं खड़े रहे।',
     },
-    checks: { en: ['our friend and Mohan', 'Sergeant Terry'], hi: ['हमारे दोस्त और मोहन', 'सार्जेंट टेरी'] },
+    checks: { en: ['our friend and Mohan'], hi: ['हमारे दोस्त और मोहन'] },
     why: {
       text: {
         en: 'Bhagat Singh and Dutt, alias Mohan, surrendered to Sergeant Terry.',
@@ -1992,10 +1631,10 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'Yesterday our friend and M threw the bombs, then stood still until Sergeant Terry came for them.',
-      hi: 'कल हमारे दोस्त और एम ने बम फेंके, फिर सार्जेंट टेरी के आने तक वहीं खड़े रहे।',
+      en: 'Yesterday our friend and M threw the bombs, then stood still until a police sergeant came for them.',
+      hi: 'कल हमारे दोस्त और एम ने बम फेंके, फिर एक पुलिस सार्जेंट के आने तक वहीं खड़े रहे।',
     },
-    checks: { en: ['our friend and M', 'Sergeant Terry'], hi: ['हमारे दोस्त और एम', 'सार्जेंट टेरी'] },
+    checks: { en: ['our friend and M'], hi: ['हमारे दोस्त और एम'] },
     tells: [
       {
         kind: 'name',
@@ -2021,7 +1660,7 @@ export const messages: Message[] = [
       en: "Today Lord Irwin spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
       hi: 'आज लॉर्ड इरविन दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
     },
-    checks: { en: ['Lord Irwin', 'both Houses'], hi: ['लॉर्ड इरविन', 'दोनों सदनों'] },
+    checks: { en: ['Lord Irwin'], hi: ['लॉर्ड इरविन'] },
     why: {
       text: {
         en: 'On 12 April 1929 Irwin addressed both Houses and announced an ordinance.',
@@ -2043,7 +1682,7 @@ export const messages: Message[] = [
       en: "Today Lord Halifax spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
       hi: 'आज लॉर्ड हैलिफ़ैक्स दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
     },
-    checks: { en: ['Lord Halifax', 'both Houses'], hi: ['लॉर्ड हैलिफ़ैक्स', 'दोनों सदनों'] },
+    checks: { en: ['Lord Halifax'], hi: ['लॉर्ड हैलिफ़ैक्स'] },
     tells: [
       {
         kind: 'name',
@@ -2069,7 +1708,7 @@ export const messages: Message[] = [
       en: 'This morning they took Villager, Kishori Lal and Jai Gopal at Kashmir Buildings. Burn every note I ever sent you.',
       hi: 'आज सुबह कश्मीर बिल्डिंग्स में विलेजर, किशोरी लाल और जय गोपाल पकड़े गए। मेरी भेजी हर चिट्ठी जला देना।',
     },
-    checks: { en: ['Kishori Lal and Jai Gopal', 'Kashmir Buildings'], hi: ['किशोरी लाल और जय गोपाल', 'कश्मीर बिल्डिंग्स'] },
+    checks: { en: ['Kashmir Buildings'], hi: ['कश्मीर बिल्डिंग्स'] },
     why: {
       text: {
         en: 'Sukhdev, Kishori Lal and Jai Gopal were arrested there, 15 April 1929.',
@@ -2091,7 +1730,7 @@ export const messages: Message[] = [
       en: 'This morning they took Villager, Kishori Lal and Jai Gopal at Kashmir House on the Mall. Burn every note I ever sent you.',
       hi: 'आज सुबह माल रोड के कश्मीर हाउस में विलेजर, किशोरी लाल और जय गोपाल पकड़े गए। मेरी भेजी हर चिट्ठी जला देना।',
     },
-    checks: { en: ['Kishori Lal and Jai Gopal', 'Kashmir House on the Mall'], hi: ['किशोरी लाल और जय गोपाल', 'माल रोड के कश्मीर हाउस'] },
+    checks: { en: ['Kashmir House on the Mall'], hi: ['माल रोड के कश्मीर हाउस'] },
     tells: [
       {
         kind: 'place',
@@ -2118,7 +1757,7 @@ export const messages: Message[] = [
       en: 'Our friend is only 21, yet he plans like an old hand. Do exactly as his note says.',
       hi: 'हमारा दोस्त सिर्फ़ 21 साल का है, फिर भी पुराने उस्ताद की तरह योजना बनाता है। उसकी चिट्ठी में जो लिखा है, ठीक वही करना।',
     },
-    checks: { en: ['only 21', 'his note'], hi: ['सिर्फ़ 21 साल', 'उसकी चिट्ठी'] },
+    checks: { en: ['only 21'], hi: ['सिर्फ़ 21 साल'] },
     why: {
       text: { en: 'Born in 1907, Bhagat Singh was 21 in April 1929.', hi: '1907 में जन्मे भगत सिंह अप्रैल 1929 में 21 साल के थे।' },
       sources: [{ id: 'sanyal-1931', loc: "ch. 'The Family and the Boy', pp. 5–6" }],
@@ -2136,7 +1775,7 @@ export const messages: Message[] = [
       en: 'Our friend is only 23, yet he plans like an old hand. Do exactly as his note says.',
       hi: 'हमारा दोस्त सिर्फ़ 23 साल का है, फिर भी पुराने उस्ताद की तरह योजना बनाता है। उसकी चिट्ठी में जो लिखा है, ठीक वही करना।',
     },
-    checks: { en: ['only 23', 'his note'], hi: ['सिर्फ़ 23 साल', 'उसकी चिट्ठी'] },
+    checks: { en: ['only 23'], hi: ['सिर्फ़ 23 साल'] },
     tells: [
       {
         kind: 'number',
@@ -2160,6 +1799,7 @@ export const messages: Message[] = [
       hi: "हमारे दोस्त का लेख पत्रिका के लिए नक़ल करना, और नीचे 'बलवंत' लिखना, उसका लिखने वाला नाम। उसका अपना नाम कभी नहीं।",
     },
     checks: { en: ['sign it Balwant', 'his pen name'], hi: ["'बलवंत' लिखना", 'लिखने वाला नाम'] },
+    verify: { 'his pen name': 'fact:balwant' },
     why: {
       text: {
         en: "Sanyal (1931): he wrote for magazines under the party name 'Balwant'.",
@@ -2181,6 +1821,7 @@ export const messages: Message[] = [
       hi: "हमारे दोस्त का लेख पत्रिका के लिए नक़ल करना, और नीचे 'बलराज' लिखना, उसका लिखने वाला नाम। उसका अपना नाम कभी नहीं।",
     },
     checks: { en: ['sign it Balraj', 'his pen name'], hi: ["'बलराज' लिखना", 'लिखने वाला नाम'] },
+    verify: { 'his pen name': 'fact:balwant' },
     tells: [
       {
         kind: 'name',
@@ -2203,7 +1844,7 @@ export const messages: Message[] = [
       en: 'Tell the new boys we are the old HRA of Kakori, 1925. Panditji is one man they never caught.',
       hi: 'नए लड़कों को बताओ कि हम 1925 वाले काकोरी की पुरानी एचआरए हैं। पंडितजी वह आदमी हैं जिन्हें वे कभी पकड़ नहीं पाए।',
     },
-    checks: { en: ['Kakori, 1925', 'never caught'], hi: ['1925 वाले काकोरी', 'कभी पकड़ नहीं पाए'] },
+    checks: { en: ['Kakori, 1925'], hi: ['1925 वाले काकोरी'] },
     why: {
       text: {
         en: 'Azad was never arrested for the 1925 Kakori train action (Manmathnath Gupta).',
@@ -2224,7 +1865,7 @@ export const messages: Message[] = [
       en: 'Tell the new boys we are the old HRA of Kakori, 1927. Panditji is one man they never caught.',
       hi: 'नए लड़कों को बताओ कि हम 1927 वाले काकोरी की पुरानी एचआरए हैं। पंडितजी वह आदमी हैं जिन्हें वे कभी पकड़ नहीं पाए।',
     },
-    checks: { en: ['Kakori, 1927', 'never caught'], hi: ['1927 वाले काकोरी', 'कभी पकड़ नहीं पाए'] },
+    checks: { en: ['Kakori, 1927'], hi: ['1927 वाले काकोरी'] },
     tells: [
       {
         kind: 'date',
@@ -2285,50 +1926,6 @@ export const messages: Message[] = [
 
   // Day 9, Wednesday 10 April: the farewell picnic of 8 April. Chaman Lal 2009 ('Kudsiya Gardens',
   // 'his favourite rasgullas and oranges', Susheela's blood tika); Maclean: 'Qudsia Park'.
-  {
-    id: 'lh-qudsia-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-qudsia',
-    minMode: 'hard',
-    onDay: 9,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: 'Word from Delhi: on Monday morning, at Qudsia Garden, they fed our friend rasgullas and oranges. Sushila Didi gave him a tika of her own blood.',
-      hi: 'दिल्ली से ख़बर: सोमवार सुबह क़ुदसिया बाग़ में उन्होंने हमारे दोस्त को रसगुल्ले और संतरे खिलाए। सुशीला दीदी ने अपने ख़ून का टीका लगाया।',
-    },
-    checks: { en: ['Qudsia Garden', 'rasgullas and oranges'], hi: ['क़ुदसिया बाग़', 'रसगुल्ले और संतरे'] },
-    why: {
-      text: {
-        en: '8 April 1929, Qudsia Garden: rasgullas, oranges and a tika of blood.',
-        hi: '8 अप्रैल 1929, क़ुदसिया बाग़: रसगुल्ले, संतरे और ख़ून का टीका।',
-      },
-      sources: [{ id: 'chaman-lal-2009' }, { id: 'maclean-durga' }],
-    },
-  },
-  {
-    id: 'lh-qudsia-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-qudsia',
-    minMode: 'hard',
-    onDay: 9,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: 'Word from Delhi: on Monday morning, at Roshanara Garden, they fed our friend rasgullas and oranges. Sushila Didi gave him a tika of her own blood.',
-      hi: 'दिल्ली से ख़बर: सोमवार सुबह रोशनआरा बाग़ में उन्होंने हमारे दोस्त को रसगुल्ले और संतरे खिलाए। सुशीला दीदी ने अपने ख़ून का टीका लगाया।',
-    },
-    checks: { en: ['Roshanara Garden', 'rasgullas and oranges'], hi: ['रोशनआरा बाग़', 'रसगुल्ले और संतरे'] },
-    tells: [
-      {
-        kind: 'place',
-        explain: { en: 'The farewell picnic was at Qudsia Garden, not Roshanara.', hi: 'विदाई की पिकनिक क़ुदसिया बाग़ में हुई थी, रोशनआरा में नहीं।' },
-        sources: [{ id: 'chaman-lal-2009' }, { id: 'maclean-durga' }],
-      },
-    ],
-  },
 
   // Day 10, Thursday 11 April: 'Sir John Simon was a witness to the scene. He was in the galleries
   // and so were Vallabhbhai Patel, Devdas Gandhi and Mahadev Desai' (Noorani p. 32). It looks forged; it is not.
@@ -2345,7 +1942,7 @@ export const messages: Message[] = [
       en: "On Monday Vallabhbhai Patel watched from the galleries, while Vithalbhai Patel sat in the President's chair.",
       hi: 'सोमवार को वल्लभभाई पटेल गैलरी से देख रहे थे, और विट्ठलभाई पटेल प्रेसिडेंट की कुर्सी पर थे।',
     },
-    checks: { en: ['Vallabhbhai Patel watched', 'Vithalbhai Patel sat'], hi: ['वल्लभभाई पटेल गैलरी से', 'विट्ठलभाई पटेल प्रेसिडेंट'] },
+    checks: { en: ['Vithalbhai Patel sat'], hi: ['विट्ठलभाई पटेल प्रेसिडेंट'] },
     why: {
       text: {
         en: 'Noorani: Vallabhbhai Patel was in the galleries; Vithalbhai presided.',
@@ -2367,7 +1964,7 @@ export const messages: Message[] = [
       en: "On Monday Vithalbhai Patel watched from the galleries, while Vallabhbhai Patel sat in the President's chair.",
       hi: 'सोमवार को विट्ठलभाई पटेल गैलरी से देख रहे थे, और वल्लभभाई पटेल प्रेसिडेंट की कुर्सी पर थे।',
     },
-    checks: { en: ['Vithalbhai Patel watched', 'Vallabhbhai Patel sat'], hi: ['विट्ठलभाई पटेल गैलरी से', 'वल्लभभाई पटेल प्रेसिडेंट'] },
+    checks: { en: ['Vallabhbhai Patel sat'], hi: ['वल्लभभाई पटेल प्रेसिडेंट'] },
     tells: [
       {
         kind: 'name',
@@ -2380,96 +1977,10 @@ export const messages: Message[] = [
 
   // Day 12, Saturday 13 April: Jaidev Kapoor 'left the Assembly minutes before'; Bhagat Singh gave
   // him a watch and 'exchanged his new shoes for Kapoor's old ones' (Chaman Lal 2009).
-  {
-    id: 'lh-jaidev-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-jaidev',
-    minMode: 'hard',
-    onDay: 12,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: "Word from Delhi: before going in, our friend gave Jaidev his watch, and took Jaidev's old shoes for his new ones.",
-      hi: 'दिल्ली से ख़बर: अंदर जाने से पहले हमारे दोस्त ने जयदेव को अपनी घड़ी दी, और अपने नए जूतों के बदले जयदेव के पुराने जूते ले लिए।',
-    },
-    checks: { en: ['gave Jaidev his watch', "Jaidev's old shoes"], hi: ['जयदेव को अपनी घड़ी दी', 'जयदेव के पुराने जूते'] },
-    why: {
-      text: {
-        en: 'Chaman Lal, from the records: the watch, and the swapped shoes.',
-        hi: 'चमन लाल, रिकॉर्ड से: घड़ी दी, और जूते बदले।',
-      },
-      sources: [{ id: 'chaman-lal-2009' }],
-    },
-  },
-  {
-    id: 'lh-jaidev-f',
-    tier: 3,
-    real: false,
-    pair: 'lh-jaidev',
-    minMode: 'hard',
-    onDay: 12,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: 'Word from Delhi: before going in, our friend gave Jaidev his watch, and Jaidev threw the second bomb beside him.',
-      hi: 'दिल्ली से ख़बर: अंदर जाने से पहले हमारे दोस्त ने जयदेव को अपनी घड़ी दी, और दूसरा बम उनके साथ खड़े जयदेव ने फेंका।',
-    },
-    checks: { en: ['gave Jaidev his watch', 'Jaidev threw the second bomb'], hi: ['जयदेव को अपनी घड़ी दी', 'जयदेव ने फेंका'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: { en: 'Jaidev left minutes before; Dutt stood beside our friend.', hi: 'जयदेव कुछ मिनट पहले निकल गए थे; हमारे दोस्त के साथ दत्त थे।' },
-        sources: [{ id: 'chaman-lal-2009' }, { id: 'bs-joint-statement' }],
-      },
-    ],
-  },
 
   // Day 12: a myth (people-and-moments §2C, 8). Asaf Ali 'appeared for the defence' from 7 May
   // (Noorani p. 32) and read their statement on 6 June.
-  {
-    id: 'lh-jinnah-f',
-    tier: 3,
-    real: false,
-    minMode: 'hard',
-    onDay: 12,
-    from: DYAL,
-    to: POST_BOX,
-    text: {
-      en: 'Jinnah himself will defend our two friends in court. Collect money for his fee, quietly.',
-      hi: 'ख़ुद जिन्ना अदालत में हमारे दोनों दोस्तों का मुक़दमा लड़ेंगे। उनकी फ़ीस के लिए चुपचाप पैसा इकट्ठा करो।',
-    },
-    checks: { en: ['Jinnah himself', 'defend our two friends'], hi: ['ख़ुद जिन्ना', 'मुक़दमा लड़ेंगे'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: { en: 'Asaf Ali was their counsel in court; Jinnah never was.', hi: 'अदालत में उनके वकील आसफ़ अली थे; जिन्ना कभी नहीं।' },
-        sources: [{ id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }, { id: 'bs-joint-statement' }],
-      },
-    ],
-  },
 
   // Day 13: Nehru 'saw Bhagat Singh for the first time' in Lahore jail when the hunger strike was
   // 'already a month old' (Nehru 1936, p. 193): months after April.
-  {
-    id: 'lh-nehru-f',
-    tier: 3,
-    real: false,
-    minMode: 'hard',
-    onDay: 13,
-    from: PANDITJI,
-    to: POST_BOX,
-    text: {
-      en: 'Jawaharlal Nehru went to see our two friends in jail yesterday, and shook their hands.',
-      hi: 'जवाहरलाल नेहरू कल जेल में हमारे दोनों दोस्तों से मिलने गए, और उनसे हाथ मिलाया।',
-    },
-    checks: { en: ['Jawaharlal Nehru', 'in jail yesterday'], hi: ['जवाहरलाल नेहरू', 'कल जेल में'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: { en: 'Nehru first saw him months later, in Lahore jail, during the hunger strike.', hi: 'नेहरू उनसे पहली बार महीनों बाद, भूख हड़ताल के दिनों में, लाहौर जेल में मिले।' },
-        sources: [{ id: 'nehru-1936', loc: 'p. 193' }],
-      },
-    ],
-  },
 ]

@@ -2,7 +2,7 @@ import type { Fact } from '../../types.js'
 
 // The announcer-operator's case file (dossier §4; people-and-moments.md §3A). In story order: how
 // August went (para 1), our own people and place (para 2), the wider war and the British (para 3).
-// Each story says its value and nothing more; the checkable words sit in [[ ]]. Three are hardHidden.
+// Each story says its value and nothing more; the checkable words sit in [[ ]]. Every line is readable in every mode it is in.
 // The wavelength (42.34 m) and the air time (8:45 pm) live in the rulebook and on the paper's header.
 // The case file grows with the mode (owner 10-24): minMode 'medium' facts join in Medium and Hard,
 // 'hard' facts in Hard only (the leaders' whereabouts, our own people, the wider rising, the first INA).
@@ -279,7 +279,6 @@ export const facts: Fact[] = [
       hi: '29 सितंबर को तमलुक में [[73 साल]] की [[मातंगिनी हाज़रा]] को [[गोली मारी गई]]।',
     },
     sources: [{ id: 'samanta-1946', loc: 'Tamluk sections' }],
-    hardHidden: true,
   },
   {
     id: 'f-netaji',
@@ -294,7 +293,6 @@ export const facts: Fact[] = [
       { id: 'huacuja-2023', loc: 'p. 1630 (text at n. 65: in Germany, broadcasting through Quit India); p. 1639 (n. 110: Azad Hind Radio)' },
       { id: 'bipan-chandra-1989', loc: 'ch. 35, p. 477 (reached Singapore only on 2 July 1943)' },
     ],
-    hardHidden: true,
   },
   {
     id: 'f-chiefs',
@@ -306,7 +304,6 @@ export const facts: Fact[] = [
       hi: 'अंग्रेज़ों के मुखिया हैं [[प्रधानमंत्री चर्चिल]] और [[वायसराय लिनलिथगो]]।',
     },
     sources: [{ id: 'top-ii-1971', loc: 'No. 662 (Linlithgow to Churchill, 31 Aug 1942)' }],
-    hardHidden: true,
   },
   {
     id: 'f-ina',
