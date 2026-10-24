@@ -53,7 +53,7 @@ describe('the sheet the paper shows', () => {
 })
 
 describe('pencil marks in the case file', () => {
-  const f = (id: string, en: string, hi = en): Fact => ({ id, label: { en: id, hi: id }, value: { en, hi }, sources: [] })
+  const f = (id: string, en: string, hi = en): Fact => ({ id, label: { en: id, hi: id }, value: { en, hi }, story: { en, hi }, para: 1, sources: [] })
   const facts = [
     f('commanders', 'Mirza Mughal is Commander-in-Chief.'),
     f('regiments', 'The 3rd Light Cavalry and the 11th and 20th Native Infantry.'),

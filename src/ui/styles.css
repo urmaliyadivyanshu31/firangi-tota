@@ -539,16 +539,39 @@ a { color: inherit; }
 .clip::after { content: ''; position: absolute; left: 2px; right: 2px; top: 8px; bottom: 3px; border: 2px solid #c9a64e; border-top: 0; border-radius: 0 0 5px 5px; }
 .pin { position: absolute; z-index: 1; top: -6px; left: 50%; width: 13px; height: 13px; margin-left: -6px; border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 35% 35%, #ffe7a6, #c58b24 60%, #7c5312); box-shadow: 1px 2px 2px rgba(0, 0, 0, .45); }
 
-.facts { display: flex; flex-direction: column; gap: 9px; }
-.fact__label { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--maroon); }
-:lang(hi) .fact__label { letter-spacing: 0; text-transform: none; font-size: 13.5px; }
-.fact__value { font-size: 15px; line-height: 1.4; }
-.fact__value.is-blank { height: 1.3em; width: 70%; border-bottom: 1.5px dashed rgba(43, 29, 19, .45); }
-/* pencil marks: a soft marker swash over the lines that matter today */
-.fact.is-pencilled .fact__ink {
-  padding: 0 2px; margin: 0 -2px; border-radius: 3px;
+/* The case file reads as a short story: a few paragraphs set like a typed file, the facts in a
+   marker swash, today's lines underlined in pencil with a tick, Hard's hidden words as inked rules. */
+.story__ink { font: 400 16px/1.62 var(--display-en); color: var(--ink); hyphens: manual; }
+:lang(hi) .story__ink { font: 400 16.5px/1.78 var(--display-hi); }
+[data-layout='wide'] .story__ink { font-size: 15px; line-height: 1.58; }
+[data-layout='wide'] :lang(hi) .story__ink { font-size: 15.5px; line-height: 1.72; }
+.story__para { margin: 0; }
+.story__para + .story__para { margin-top: .55em; text-indent: 1.3em; }
+/* ada: the file opens on a maroon initial, as a clerk's fair copy would */
+.story__para:first-child:lang(en)::first-letter { float: left; margin: .06em .1em 0 0; font-size: 2.55em; line-height: .86; color: var(--maroon); }
+.story .hl {
+  padding: 0 .12em; margin: 0 -.12em; border-radius: .25em .55em .3em .5em;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
-  background: linear-gradient(100deg, rgba(255, 210, 90, 0) 1%, rgba(255, 210, 90, .55) 3%, rgba(255, 200, 80, .42) 50%, rgba(255, 205, 85, .55) 96%, rgba(255, 210, 90, 0) 99%);
+  color: #1c1009;
+  background: linear-gradient(98deg, rgba(232, 150, 46, 0) 0, rgba(232, 150, 46, .4) 3%, rgba(226, 140, 40, .31) 52%, rgba(232, 150, 46, .42) 97%, rgba(232, 150, 46, 0) 100%) 0 70% / 100% 68% no-repeat;
+}
+/* the pencil: a tick before the sentence and a soft graphite underline along it */
+.story .fact.is-pencilled {
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  padding-bottom: .1em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='6' viewBox='0 0 60 6'%3E%3Cpath d='M0 3.2c7-.9 13 .8 20 .1s13-1 20 .2 13 .5 20-.4' fill='none' stroke='%2330333a' stroke-opacity='.62' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") 0 100% / 60px 6px repeat-x;
+}
+.story .fact__tick { white-space: nowrap; }
+.story .fact__tick::before {
+  content: ''; display: inline-block; width: .85em; height: .75em; margin: 0 .2em 0 .05em; vertical-align: -.02em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 15'%3E%3Cpath d='M1.5 8.6c1.6 1 3 2.5 4.1 4.6C8 7.6 11.4 3.6 15.6 1.4' fill='none' stroke='%2330333a' stroke-opacity='.8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.story .fact.is-pencilled .hl { background-size: 100% 74%; background-image: linear-gradient(98deg, rgba(232, 150, 46, 0) 0, rgba(232, 150, 46, .5) 3%, rgba(226, 140, 40, .4) 52%, rgba(232, 150, 46, .52) 97%, rgba(232, 150, 46, 0) 100%); }
+/* Hard: the hidden words are a blank rule in ink */
+.story .hl.is-blank {
+  display: inline-block; width: 3.4em; height: 1em; margin: 0 .12em; padding: 0; vertical-align: -.18em;
+  background: none; border-radius: 0; border-bottom: 1.6px solid var(--ink);
+  -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask);
 }
 .rules { display: flex; flex-direction: column; gap: 9px; }
 .rule { display: grid; grid-template-columns: 20px 1fr auto; align-items: start; gap: 6px; font-size: 15px; line-height: 1.4; }

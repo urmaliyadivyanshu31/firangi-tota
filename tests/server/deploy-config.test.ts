@@ -44,12 +44,18 @@ describe('vercel.json', () => {
     expect(config.trailingSlash).toBe(false)
   })
 
-  it('sends a Content-Security-Policy that allows only this origin and never eval', () => {
+  it('sends a Content-Security-Policy that allows this origin plus Google Analytics only, and never eval', () => {
+    const GA = ['https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://*.googletagmanager.com']
     expect(global['content-security-policy']).toBeTruthy()
-    expect(global['content-security-policy']).not.toMatch(/unsafe-eval|\*/)
+    expect(global['content-security-policy']).not.toMatch(/unsafe-eval/)
+    // the only wildcards are Google Analytics' own regional subdomains (owner 10-24)
+    for (const src of global['content-security-policy']!.split(/[\s;]+/).filter((x) => x.includes('*'))) {
+      expect(GA).toContain(src)
+    }
     expect(directives['default-src']).toEqual(["'self'"])
-    expect(directives['script-src']).toEqual(["'self'"]) // no inline script (the SW registers from a file)
-    expect(directives['connect-src']).toEqual(["'self'"]) // read-aloud is same-origin (/api/voice)
+    // no inline script (the SW registers from a file, Google's tag is set up from our bundle)
+    expect(directives['script-src']).toEqual(["'self'", 'https://www.googletagmanager.com'])
+    expect(directives['connect-src']).toEqual(["'self'", ...GA]) // read-aloud is same-origin (/api/voice)
     expect(directives['media-src']).toEqual(["'self'"])
     expect(directives['font-src']).toEqual(["'self'"]) // the fonts are self-hosted
     expect(directives['frame-ancestors']).toEqual(["'none'"])

@@ -35,9 +35,11 @@ describe('pickInitialTier', () => {
   it('caps a hidden GPU string at mid', () => {
     expect(pickInitialTier({ dpr: 2, gpu: '', minSide: 390, cores: 8 })).toBe('mid')
   })
-  it('caps big dense screens on unknown Android GPUs at mid', () => {
+  it('starts phones high: dense screens, unknown GPUs and a 4 GB bucket (the adapter steps down if slow)', () => {
     expect(pickInitialTier({ dpr: 3, gpu: 'Adreno (TM) 660', minSide: 412, cores: 8, memGB: 8 })).toBe('high')
-    expect(pickInitialTier({ dpr: 3, gpu: 'Maleoon 910', minSide: 412, cores: 8, memGB: 8 })).toBe('mid')
+    expect(pickInitialTier({ dpr: 3, gpu: 'Maleoon 910', minSide: 412, cores: 8, memGB: 8 })).toBe('high')
+    expect(pickInitialTier({ dpr: 2.75, gpu: 'Adreno (TM) 642L', minSide: 393, cores: 8, memGB: 4 })).toBe('high')
+    expect(pickInitialTier({ dpr: 2, gpu: 'Adreno (TM) 642L', minSide: 393, cores: 8, memGB: 2 })).toBe('low')
   })
 })
 
@@ -267,16 +269,16 @@ describe('tier memory and start tier', () => {
 
   it('remembers the settled tier under the tier key', () => {
     saveTier('mid')
-    expect(JSON.parse(localStorage.getItem('ft:tier') ?? 'null')).toMatchObject({ tier: 'mid' })
+    expect(JSON.parse(localStorage.getItem('ft:tier2') ?? 'null')).toMatchObject({ tier: 'mid' })
     expect(loadSavedTier()).toBe('mid')
   })
 
   it('ignores garbage and stale entries', () => {
-    localStorage.setItem('ft:tier', JSON.stringify({ tier: 'ultra', at: Date.now() }))
+    localStorage.setItem('ft:tier2', JSON.stringify({ tier: 'ultra', at: Date.now() }))
     expect(loadSavedTier()).toBeUndefined()
-    localStorage.setItem('ft:tier', JSON.stringify('high'))
+    localStorage.setItem('ft:tier2', JSON.stringify('high'))
     expect(loadSavedTier()).toBeUndefined()
-    localStorage.setItem('ft:tier', JSON.stringify({ tier: 'low', at: Date.now() - 40 * 864e5 }))
+    localStorage.setItem('ft:tier2', JSON.stringify({ tier: 'low', at: Date.now() - 40 * 864e5 }))
     expect(loadSavedTier()).toBeUndefined()
   })
 
@@ -289,7 +291,7 @@ describe('tier memory and start tier', () => {
     expect(loadSavedCeiling()).toBeUndefined()
     saveTier('low', { tier: 'mid', at: now - 40 * 864e5 }) // carried forward, but too old
     expect(loadSavedCeiling()).toBeUndefined()
-    localStorage.setItem('ft:tier', JSON.stringify({ tier: 'low', at: now - 40 * 864e5, ceiling: 'low', ceilingAt: now }))
+    localStorage.setItem('ft:tier2', JSON.stringify({ tier: 'low', at: now - 40 * 864e5, ceiling: 'low', ceilingAt: now }))
     expect(loadSavedCeiling()).toBeUndefined() // no tier, no ceiling
   })
 

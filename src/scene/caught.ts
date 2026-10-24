@@ -44,6 +44,12 @@ export interface CaughtBeam {
   strength: number
   /** how much the light flickers (a flame 0.2, a bulb 0) */
   flicker: number
+  /**
+   * 'cone' for an electric light (a searchlight, a torch): a beam. A flame or an oil lantern throws
+   * no beam, so its light spills in through the window as a soft moving glow ('glow'). Owner 10-24:
+   * no electric-looking beam before electric lights.
+   */
+  shape: 'cone' | 'glow'
 }
 
 export interface CaughtScore {
@@ -88,7 +94,7 @@ const ALARMS: Record<EraId, { beats: CaughtBeat[]; beam: CaughtBeam }> = {
       { at: A + DRUM_ACCENT_MS, pulse: 1 },
       ...knocks(2050, 2550, 3000),
     ],
-    beam: { from: 1000, to: 2750, color: [1, 0.52, 0.18], width: 0.3, strength: 0.5, flicker: 0.22 },
+    beam: { from: 1000, to: 2750, color: [1, 0.52, 0.18], width: 0.3, strength: 0.5, flicker: 0.3, shape: 'glow' },
   },
   // Lahore 1929: police whistles, short, short, long, then boots running up the gali; a police
   // lantern through the shutters; a lathi on the door
@@ -100,7 +106,7 @@ const ALARMS: Record<EraId, { beats: CaughtBeat[]; beam: CaughtBeam }> = {
       { at: 1350, cue: 'bootsRunning' },
       ...knocks(2300, 2700, 3100),
     ],
-    beam: { from: 1100, to: 2800, color: [1, 0.76, 0.42], width: 0.24, strength: 0.45, flicker: 0.07 },
+    beam: { from: 1100, to: 2800, color: [1, 0.72, 0.38], width: 0.24, strength: 0.45, flicker: 0.12, shape: 'glow' },
   },
   // Bombay 1942: a police whistle, then the air-raid siren winding up; a searchlight through the
   // slit in the blackout curtain; fists on the door
@@ -111,7 +117,7 @@ const ALARMS: Record<EraId, { beats: CaughtBeat[]; beam: CaughtBeam }> = {
       { at: 1000 + WAIL_RISE_MS, pulse: 1 },
       ...knocks(2150, 2600, 3050),
     ],
-    beam: { from: 1150, to: 2900, color: [0.74, 0.84, 1], width: 0.14, strength: 0.55, flicker: 0 },
+    beam: { from: 1150, to: 2900, color: [0.74, 0.84, 1], width: 0.14, strength: 0.55, flicker: 0, shape: 'cone' },
   },
   // Delhi 1947: the office telephone rings, urgent, then a whistle outside; a torch through the
   // rain on the window; knuckles on the glass-panelled door
@@ -122,7 +128,7 @@ const ALARMS: Record<EraId, { beats: CaughtBeat[]; beam: CaughtBeam }> = {
       { at: 1450, cue: 'whistleLong', pulse: 1 },
       ...knocks(2150, 2600, 3050),
     ],
-    beam: { from: 1100, to: 2800, color: [1, 0.86, 0.6], width: 0.2, strength: 0.72, flicker: 0.02 },
+    beam: { from: 1100, to: 2800, color: [1, 0.86, 0.6], width: 0.2, strength: 0.72, flicker: 0.02, shape: 'cone' },
   },
 }
 

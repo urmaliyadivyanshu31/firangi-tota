@@ -1,5 +1,6 @@
-// The caught sequence's beam: a light from outside (a mashaal, a lantern, a searchlight, a torch)
-// sweeping through the window and across the room. One additive quad held in front of the camera,
+// The caught sequence's light from outside, carried past the window: a searchlight's or a torch's
+// beam sweeping across the room, or, for a mashaal or an oil lantern (no beam before electric
+// light), a soft flickering glow spilling in from where the flame is. One additive quad held in front of the camera,
 // like the verdict flash: no light is added to the scene, so no shader recompiles, no shadow pass,
 // and the low tier pays one cheap full-screen draw while it shows. Its source is a real place in the
 // room (the window), projected every frame, so the beam comes from where the window is in the shot:
@@ -24,6 +25,7 @@ uniform float uAngle;
 uniform float uWidth;
 uniform float uReach;
 uniform float uTime;
+uniform float uCone;
 varying vec2 vUv;
 #if HAZE
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -54,7 +56,10 @@ void main() {
 #endif
   // the source itself glows when it is in the shot
   float glow = exp(-r * r * 55.0) * 0.7;
-  float a = ((cone * 0.55 + core * 0.45) * fall * haze * step(0.0, along) + glow) * uAmount;
+  float beam = (cone * 0.55 + core * 0.45) * fall * haze * step(0.0, along);
+  // a flame's light: no beam, a broad soft spill around the window that falls off across the room
+  float spill = (exp(-r * r * 1.6) * 0.75 + 0.12 * (1.0 - smoothstep(0.2, 2.2, r))) * haze;
+  float a = (mix(spill, beam, uCone) + glow) * uAmount;
   gl_FragColor = vec4(uColor, clamp(a, 0.0, 1.0));
 }`
 
@@ -64,7 +69,7 @@ export interface Beam {
    * Where the light comes from in the room, how far it is carried along the window as it sweeps
    * (half the travel, a world vector), its colour (display, 0..1) and the cone's half-angle.
    */
-  setup(o: { origin: THREE.Vector3; travel: THREE.Vector3; color: [number, number, number]; width: number }): void
+  setup(o: { origin: THREE.Vector3; travel: THREE.Vector3; color: [number, number, number]; width: number; cone: boolean }): void
   /** How bright (0 hides it), and how far it has been carried across (-1..1). */
   set(amount: number, sweep: number): void
   /** Each frame while it shows: fill the view and re-aim from the source as the camera moves. */
@@ -89,6 +94,7 @@ export function createBeam(tier: QualityTier): Beam {
       uWidth: { value: 0.2 },
       uReach: { value: 1 },
       uTime: { value: 0 },
+      uCone: { value: 1 },
     },
     transparent: true,
     depthTest: false,
@@ -115,6 +121,7 @@ export function createBeam(tier: QualityTier): Beam {
       travel.copy(o.travel)
       ;(u.uColor?.value as THREE.Color).setRGB(o.color[0], o.color[1], o.color[2])
       if (u.uWidth) u.uWidth.value = o.width
+      if (u.uCone) u.uCone.value = o.cone ? 1 : 0
     },
     set(amount, s) {
       if (u.uAmount) u.uAmount.value = amount

@@ -3,6 +3,8 @@
 // the agarbatti. The room is always on screen: the stage establishes it behind the cards, titles
 // each day, brings the message in on its paper, stamps it and flashes. Nothing here imports
 // three.js: the stage and the era desks arrive by dynamic import after the first paint (R10).
+import { gameEvent } from './analytics'
+import { updateWaiting } from './update'
 import { audio, cueForStage } from './audio/engine'
 import { ERAS, eraById } from './content/registry'
 import type { Era, EraId, Message } from './content/types'
@@ -123,7 +125,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let stampedWith: Verdict | null = null // the stamp being animated, so a redraw keeps the stamps asleep
   let gen = 0 // bumps on every navigation and every new day; async work started before it is dropped
 
-  let muted = store.get<unknown>('muted', false) === true
+  // sound starts off; the player's first tap on the speaker turns it on, and that choice is kept
+  // for the next visit (owner 10-24)
+  let muted = store.get<unknown>('muted', true) !== false
 
   // A friend's share link picks their chapter and mode: /s/<code> when the offline copy answers
   // it, or the link page's ?chapter=…&mode=… (server/share.ts). Neither is remembered.
@@ -635,6 +639,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   /** The one main page: the chosen chapter's paper over its room. */
   function showMain(): void {
+    // a newer version downloaded mid-chapter: the main page is the safe moment to load it
+    if (updateWaiting()) {
+      window.location.reload()
+      return
+    }
     leave()
     setDeskEra(selected)
     establish()
@@ -797,6 +806,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     setDeskEra(era.id)
     audio.ambience(era.id)
     play = { kind: 'chapter', era, difficulty: d, state }
+    gameEvent('chapter_start', { era: era.id, mode: d, lang: getLang() })
     beginDay()
   }
 
@@ -1035,6 +1045,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (outcome === 'survived') p.state = nextDay(p.state)
     const survived = outcome === 'survived' ? p.state.days : p.state.day - 1
     recordBest(p.era.id, p.difficulty, survived)
+    gameEvent('chapter_end', { era: p.era.id, mode: p.difficulty, outcome, days: survived, lang: getLang() })
     if (outcome === 'survived') audio.cue('survived')
   }
 

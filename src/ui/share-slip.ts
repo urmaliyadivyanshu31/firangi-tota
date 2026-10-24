@@ -1,4 +1,5 @@
 import type { Era, Lang } from '../content/types'
+import { gameEvent } from '../analytics'
 import { whatsappHref, xHref } from '../game/share'
 import { t } from '../i18n/strings'
 import { h, svg } from './h'
@@ -126,7 +127,11 @@ export function openShareSlip(p: ShareSlipProps, on: ShareSlipHandlers): HTMLEle
       : null,
   ]
 
-  const slip = h('section', { class: 'share-slip', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'ft-share-title' },
+  const slip = h('section', { class: 'share-slip', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'ft-share-title',
+    onclick: (e: Event) => {
+      const w = e.target instanceof Element ? e.target.closest('[data-share]')?.getAttribute('data-share') : null
+      if (w) gameEvent('share', { way: w, era: p.era.id })
+    } },
     h('header', { class: 'share-slip__head' },
       h('h2', { class: 'share-slip__title', id: 'ft-share-title' }, t('sharePostcard', lang)),
       stamp(p.era)),
