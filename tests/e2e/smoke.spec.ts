@@ -216,6 +216,7 @@ test('plays under the production security headers (vercel.json) with no policy v
   await begin1857Easy(page)
   await readable(page)
   await stampAndReveal(page)
-  await page.locator('.source-hit').click()
+  // a tap area over the paper's source line, or the visible chit when the flip wasn't done in time
+  await page.locator('[data-action="source"]').click()
   expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
 })
