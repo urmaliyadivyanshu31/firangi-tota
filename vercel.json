@@ -1,6 +1,11 @@
 {
   "regions": ["bom1"],
   "trailingSlash": false,
+  "rewrites": [{ "source": "/s/:code", "destination": "/api/s?code=:code" }],
+  "functions": {
+    "api/og.ts": { "maxDuration": 10, "includeFiles": "{server/og/fonts/*.ttf,node_modules/harfbuzzjs/dist/harfbuzz.wasm}" },
+    "api/s.ts": { "maxDuration": 10, "includeFiles": "{server/og/fonts/*.ttf,node_modules/harfbuzzjs/dist/harfbuzz.wasm}" }
+  },
   "headers": [
     {
       "source": "/(.*)",

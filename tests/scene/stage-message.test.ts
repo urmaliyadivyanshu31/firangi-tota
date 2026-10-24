@@ -1,6 +1,7 @@
 // The stage's day choreography in jsdom: three's WebGLRenderer is a stub, the 2D canvases record,
 // and requestAnimationFrame is pumped by hand so animations run on a known clock.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { EraId } from '../../src/content/types'
 import type { EraDressing, QualityTier, SheetSpec, StageCueName } from '../../src/scene/types'
 import { fake2d } from './fake-canvas'
 
@@ -420,5 +421,131 @@ describe('the verdict keeps the paper clear of the HUD', () => {
     expect((after?.y ?? 0) + (after?.h ?? 0)).toBeLessThanOrEqual(window.innerHeight * 0.5 + 2)
     expect(after?.h ?? 0).toBeLessThan(before?.h ?? 0)
     stage.dispose()
+  })
+})
+
+describe('caught: a wrong stamp plays out over about four seconds', () => {
+  const ALARMS: Record<EraId, StageCueName[]> = {
+    'delhi-1857': ['kettleDrum', 'bugleAlarm'],
+    'lahore-1929': ['whistleShort', 'whistleShort', 'whistleLong', 'bootsRunning'],
+    'bombay-1942': ['whistleLong', 'airRaidWail'],
+    'delhi-1947': ['phoneBell', 'whistleLong'],
+  }
+  const room = (id: EraId): EraDressing => ({ ...sampleDressing, id })
+  /** A wrong stamp on a readable paper; collects the cues heard from the stamp's flash on. */
+  async function stamped(id: EraId, o: { reduced?: boolean; tier?: QualityTier } = {}) {
+    const cues: StageCueName[] = []
+    const s = stageFor(room(id), { cues, ...o })
+    await state(s.stage.showMessage(sheet()), 6000)
+    await state(s.stage.stamp('tota'), 3000)
+    cues.length = 0
+    s.stage.flash('wrong')
+    return { ...s, cues }
+  }
+
+  for (const id of Object.keys(ALARMS) as EraId[]) {
+    it(`${id}: silence, then its own alarm, the knocks coming closer, the hush and the dark; then it resolves`, async () => {
+      const { stage, cues } = await stamped(id)
+      expect(cues).toEqual([]) // the flash of a wrong verdict is silent: the alarm has to come first
+      const p = stage.caught()
+      expect(await state(p, 60)).toBe('pending')
+      expect(cues).toEqual([]) // the beat of silence
+      expect(await state(p, 3300)).toBe('pending')
+      expect(await state(p, 1200)).toBe('done')
+      const alarm = cues.filter((c) => !c.startsWith('knock') && !c.startsWith('caught'))
+      expect(alarm).toEqual(ALARMS[id])
+      expect(cues.filter((c) => c.startsWith('knock') || c.startsWith('caught'))).toEqual(['knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark'])
+      expect(cues.indexOf('knockFar')).toBeGreaterThan(cues.indexOf(ALARMS[id][0]!))
+      stage.dispose()
+    })
+  }
+
+  it('the agarbatti burning out (no stamp) holds the full beat of silence before the alarm', async () => {
+    const cues: StageCueName[] = []
+    const { stage } = stageFor(room('bombay-1942'), { cues })
+    await state(stage.showMessage(sheet()), 6000)
+    cues.length = 0
+    const p = stage.caught()
+    await pump(240)
+    expect(cues).toEqual([])
+    await pump(100)
+    expect(cues).toEqual(['whistleLong'])
+    expect(await state(p, 4500)).toBe('done')
+    stage.dispose()
+  })
+
+  it('a tap skips to the verdict at once: nothing more is heard but the alarm being cut off', async () => {
+    const { stage, cues } = await stamped('delhi-1947')
+    const p = stage.caught()
+    await pump(700)
+    expect(cues).toContain('phoneBell')
+    const heard = cues.length
+    stage.skip()
+    expect(await state(p)).toBe('done')
+    expect(cues.slice(heard)).toEqual(['caughtHush'])
+    // and the verdict after it plays normally
+    const r = stage.reveal({
+      outcome: 'wrong', real: false, documentMark: false, highlight: ['Mirza Mughal'], note: 'Mirza Mughal, not Mirza Khizr', lang: 'en',
+      back: { verdictLine: 'You passed the forgery', tell: 'The file names Mirza Mughal.', source: 'Trial (1858), p. 1' },
+    })
+    expect(await state(r, 400)).toBe('pending')
+    expect(await state(r, 4000)).toBe('done')
+    stage.dispose()
+  })
+
+  it('a new era (the player quits) ends it at once, hushes it, and the next day is not held behind it', async () => {
+    const { stage, cues } = await stamped('lahore-1929')
+    const p = stage.caught()
+    await pump(500)
+    stage.setEra(sampleDressing)
+    expect(await state(p)).toBe('done')
+    expect(cues[cues.length - 1]).toBe('caughtHush')
+    const t = stage.dayTitle({ big: 'Day 1', small: 'Sunday, 17 May 1857' })
+    expect(await state(t, 2500)).toBe('done')
+    stage.dispose()
+  })
+
+  it('under reduced motion: the same sounds on the same beats, and it still resolves', async () => {
+    const { stage, cues } = await stamped('delhi-1857', { reduced: true })
+    const p = stage.caught()
+    expect(await state(p, 4500)).toBe('done')
+    expect(cues).toEqual(expect.arrayContaining(['kettleDrum', 'bugleAlarm', 'knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark']))
+    stage.dispose()
+  })
+
+  for (const tier of ['low', 'mid', 'high'] as const) {
+    it(`does not throw at the ${tier} tier, and the paper is back in reach for the verdict`, async () => {
+      const { stage } = await stamped('bombay-1942', { tier })
+      expect(await state(stage.caught(), 4500)).toBe('done')
+      expect(stage.getPaperRect()).not.toBeNull()
+      stage.dispose()
+    })
+  }
+
+  it('a tier change after the verdict keeps the paper on its back (the rebuilt sheet was turned face up again)', async () => {
+    history.replaceState(null, '', '?debug')
+    try {
+      const { stage } = await stamped('delhi-1857')
+      await state(stage.caught(), 4500)
+      await state(stage.reveal({
+        outcome: 'wrong', real: true, documentMark: false, highlight: ['Mirza Mughal'], note: 'the file agrees', lang: 'en',
+        back: { verdictLine: 'You rejected a genuine message', tell: 'The diary records it.', source: 'Trial (1858), p. 1' },
+      }), 4000)
+      expect(stage.getSourceRect()).not.toBeNull()
+      ;(window as unknown as { __ftStage: { setTier(t: QualityTier): void } }).__ftStage.setTier('mid')
+      await pump(100)
+      expect(stage.getSourceRect()).not.toBeNull()
+      stage.dispose()
+    } finally {
+      history.replaceState(null, '', '/')
+      document.getElementById('ft-debug')?.remove()
+    }
+  })
+
+  it('resolves at once before an era is set and after dispose', async () => {
+    const bare = createStage(mount(), { reducedMotion: false, forceTier: 'low' })
+    expect(await state(bare!.caught())).toBe('done')
+    bare?.dispose()
+    expect(await state(bare!.caught())).toBe('done')
   })
 })

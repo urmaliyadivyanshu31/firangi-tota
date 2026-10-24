@@ -26,6 +26,15 @@ The full licence texts ship beside the font files, with each family's copyright 
 
 The licences are also published at https://openfontlicense.org (OFL 1.1) and https://www.apache.org/licenses/LICENSE-2.0 (Apache 2.0).
 
+The share cards (`/api/og`, drawn on the server) set the same families from TrueType copies in
+`server/og/fonts/`, because the card's shaper reads TTF and not WOFF2: Tiro Devanagari Hindi and Kalam
+(Latin and Devanagari), Old Standard TT regular and bold, and Special Elite (Latin). They are subsets of
+the unmodified TTFs in the Google Fonts repository (https://github.com/google/fonts: `ofl/tirodevanagarihindi`,
+`ofl/kalam`, `ofl/oldstandardtt`, `apache/specialelite`), made by `scripts/og-fonts.sh`: the same Latin and
+Devanagari ranges the game uses, every OpenType layout feature kept, hinting dropped. None of these fonts
+declares a Reserved Font Name. Their licences ship beside them: `OFL-TiroDevanagariHindi.txt`,
+`OFL-Kalam.txt`, `OFL-OldStandardTT.txt` and `Apache-2.0-SpecialElite.txt`. They are never sent to the browser.
+
 ## Sounds
 
 Recorded beds are CC0 1.0 (public domain dedication), cut to 27-30 s seamless loops, mixed to mono and encoded as AAC (48 kbps, about -28 LUFS). Everything else you hear (stamps, paper, agarbatti tick, telegraph, shortwave static, valve hum, naqqara, tanpura, shehnai-like motif) is synthesized in the browser by `src/audio/synth.ts` and has no source file.
@@ -63,6 +72,21 @@ original art generated for this project with an AI image model (Gemini 3.1 Flash
 image generation) from our own prompts, in the style of a hand-coloured Company-school print, then
 cropped and saved as 480 px WebP. They show invented people, not the likeness of anyone real (MIT,
 like the code).
+
+The result cards a share link previews (`/api/og`) are drawn for this project by `server/og/card.ts`
+(MIT, like the code), with the title lettering and the parrot mark from the game.
+
+The WhatsApp and X marks on the share slip are the glyphs from Simple Icons (https://simpleicons.org,
+CC0 1.0), shown in each brand's colour only to link to that service's own share page. WhatsApp and X are
+trademarks of their owners. The other marks on the slip (the link, the phone's share menu, the stamp and
+postmark) are drawn for this project.
+
+## Server libraries
+
+The share cards are drawn on the server only, with resvg-js (https://github.com/yisibl/resvg-js, MPL-2.0)
+to rasterize, harfbuzzjs (https://github.com/harfbuzz/harfbuzzjs, MIT; HarfBuzz itself is under the Old
+MIT licence) to shape the text, Hindi included, and jpeg-js (https://github.com/eugeneware/jpeg-js,
+BSD-3-Clause) to encode. None of them is part of the game the browser downloads.
 
 ## Game text
 

@@ -1,13 +1,15 @@
 // @vitest-environment node
 // vercel.json: the voice function's region and the security headers every response carries.
 // The end-to-end tests serve the built game under these same headers (vite.config.ts preview).
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 interface VercelConfig {
   regions?: string[]
   trailingSlash?: boolean
+  rewrites?: { source: string; destination: string }[]
+  functions?: Record<string, { maxDuration?: number; includeFiles?: string }>
   headers: { source: string; headers: { key: string; value: string }[] }[]
 }
 
@@ -21,6 +23,21 @@ const directives = Object.fromEntries((global['content-security-policy'] ?? '').
 describe('vercel.json', () => {
   it('runs the voice function in Mumbai, next to the players', () => {
     expect(config.regions).toEqual(['bom1'])
+  })
+
+  it('sends share links to their page function, and gives both share functions the card fonts and the shaper', () => {
+    expect(config.rewrites).toContainEqual({ source: '/s/:code', destination: '/api/s?code=:code' })
+    for (const fn of ['api/og.ts', 'api/s.ts']) {
+      expect(existsSync(resolve(__dirname, '../..', fn))).toBe(true)
+      const include = config.functions?.[fn]?.includeFiles ?? ''
+      expect(include).toContain('server/og/fonts/*.ttf')
+      expect(include).toContain('node_modules/harfbuzzjs/dist/harfbuzz.wasm')
+      expect(config.functions?.[fn]?.maxDuration).toBeLessThanOrEqual(10)
+    }
+    for (const font of ['old-standard-tt-400', 'old-standard-tt-700', 'tiro-devanagari-hindi-400', 'special-elite-400', 'kalam-400']) {
+      expect(existsSync(resolve(__dirname, `../../server/og/fonts/${font}.ttf`)), font).toBe(true)
+    }
+    expect(existsSync(resolve(__dirname, '../../node_modules/harfbuzzjs/dist/harfbuzz.wasm'))).toBe(true)
   })
 
   it('redirects /api/voice/ to /api/voice, so a trailing slash is not a second cache entry', () => {

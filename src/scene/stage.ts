@@ -7,6 +7,8 @@ import * as THREE from 'three'
 import type { Lang } from '../content/types'
 import { mulberry32, seedFrom } from '../game/rng'
 import { arrive, placeAtRest, type ArrivalCtx, type StageCue } from './arrivals'
+import { createBeam, type Beam } from './beam'
+import { SILENCE_MS, beamAt, caughtScore, redAt, type KnockKind } from './caught'
 import { createIntroCards, introPose, type IntroCards, type IntroPlay } from './intro'
 import { introReady } from './intro-card'
 import { bindParallax, createParallaxModel } from './parallax'
@@ -125,6 +127,7 @@ interface World {
   title: TitleBoard
   calendar: CalendarLeaves | null
   flash: Flash
+  beam: Beam
   update(tMs: number, pxPerUnit: number): void
   dispose(): void
 }
@@ -333,6 +336,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const calendar = hooks.calendar ? createCalendar(hooks.calendar, t) : null
     const flash = createFlash()
     camera.add(flash.mesh)
+    const beam = createBeam(t)
+    camera.add(beam.mesh)
     scene.add(paper.group, stamps.group, dust.points, sheet.group, sheet.shadow, envelope.group, title.group, camera)
     if (calendar) scene.add(calendar.group)
     return {
@@ -347,6 +352,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       title,
       calendar,
       flash,
+      beam,
       update(tMs, px) {
         dressed.update(tMs)
         stamps.update()
@@ -363,6 +369,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         calendar?.dispose()
         camera.remove(flash.mesh)
         flash.dispose()
+        camera.remove(beam.mesh)
+        beam.dispose()
         scene.traverse((o) => {
           if ((o as THREE.Light).isLight) (o as THREE.Light).dispose()
         })
@@ -419,7 +427,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       w.sheet.setGlow(rig.shot() === 'custom' ? 1 : 0.3)
     }
     if (w.calendar && calDays !== null) w.calendar.show(calDays)
-    if (msg?.shown && revealState && revealState.token === msgToken) paintReveal(w, revealState.spec, 1, true, true)
+    if (msg?.shown && revealState && revealState.token === msgToken) {
+      // (a tier change waits out the reveal, so the rebuilt sheet shows its back, already turned)
+      paintReveal(w, revealState.spec, 1, true, true)
+      w.sheet.setFlip(1)
+    }
     if (introSpec) {
       const c = introCardsOn(w)
       c.draw(introSpec)
@@ -457,6 +469,15 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     restoreState(world)
     shadowDirty = true
+    // compile the verdict flash's and the caught beam's shaders now, not on the frame they first show
+    const fx = [world.flash.mesh, world.beam.mesh]
+    for (const m of fx) m.visible = true
+    try {
+      renderer.compile(world.scene, camera)
+    } catch {
+      /* the first frame that shows them compiles them instead */
+    }
+    for (const m of fx) m.visible = false
     return true
   }
 
@@ -689,6 +710,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     rig.update(step, clock)
     w.sheet.updateShadow(deskTop())
     if (w.flash.mesh.visible) w.flash.fit(camera)
+    if (w.beam.mesh.visible) w.beam.fit(camera, clock)
     const dressDirty = takeShadowsDirty(w.scene)
     const shadowPass = renderer.shadowMap.enabled && (shadowDirty || casters > 0 || dressDirty)
     if (shadowPass) {
@@ -743,6 +765,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     syncRunning()
     tweens.setInstant(true)
     tweens.clear()
+    caughtAbort?.()
     // display:none, not visibility:hidden, so the fallback canvas gets the mount's box
     renderer.domElement.style.display = 'none'
     const ev = new CustomEvent(STAGE_LOST_EVENT, { cancelable: true, detail: { era: dressing?.id, reason } })
@@ -933,6 +956,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         reducedMotion: reduced,
         onImpact: () => {
           if (gen !== worldGen) return
+          lastImpact = clock
           cue('stamp')
           if (onSheet && msg) {
             msg.stamp = st
@@ -1237,6 +1261,160 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     if (introCards === c && !introSpec) dropIntroCards()
   }
 
+  // ------------------------------------------------------------ the caught sequence
+
+  /** Startled: the camera sits back from the paper and looks up, toward the window and the door. */
+  const startledPose: PoseFn = (aspect) => {
+    const d = deskPose(aspect)
+    return { pos: d.pos.clone().add(new THREE.Vector3(0, -0.025, 0.03)), look: d.look.clone().add(new THREE.Vector3(0, 0.08, -0.06)), fov: d.fov }
+  }
+  /**
+   * Closing in: the camera moves straight in toward the paper from where it sat back, so the paper
+   * holds its place on the screen while the view tilts down onto it and the room leans.
+   */
+  const closingPose: PoseFn = (aspect) => {
+    const s = startledPose(aspect)
+    const paper = world ? sheetRest(world).pos : paperRest()
+    return { pos: s.pos.clone().lerp(paper, 0.42), look: paper, fov: s.fov, roll: 0.035 }
+  }
+  /** Where the beam comes from (the window the dressing keeps in its wide shot), and how far along it the light is carried. */
+  const beamSource = (w: World): { origin: THREE.Vector3; travel: THREE.Vector3 } => {
+    const pts = wallPoints(w)
+    const c = new THREE.Vector3()
+    let x0 = Infinity
+    let x1 = -Infinity
+    for (const p of pts) {
+      c.add(p)
+      x0 = Math.min(x0, p.x)
+      x1 = Math.max(x1, p.x)
+    }
+    c.multiplyScalar(1 / Math.max(1, pts.length))
+    return { origin: c, travel: new THREE.Vector3(Number.isFinite(x1 - x0) ? (x1 - x0) * 0.35 : 0.1, 0, 0) }
+  }
+  /** Each rap of a knock, closer each time: how hard the room shakes, the dust jumps, the flame gutters. */
+  const RAPS: Record<KnockKind, { shake: number; down: number; dust: number; dip: number }> = {
+    far: { shake: 0.0015, down: 0, dust: 0, dip: 0 },
+    near: { shake: 0.004, down: 0.002, dust: 0.5, dip: 0.55 },
+    door: { shake: 0.009, down: 0.006, dust: 1, dip: 0.38 },
+  }
+  const ALARM_LAMP = 0.78
+  const MIN_SILENCE = 120 // the lamp's flicker still gets its breath after the stamp has come home
+  let lastImpact = -Infinity // (stage clock) when a stamp last hit the paper
+  // ends a caught sequence at once when its world goes (setEra, a lost context, dispose), so the
+  // choreography queued behind it never waits out the rest of the alarm
+  let caughtAbort: (() => void) | null = null
+
+  /** Plays the era's score (caught.ts) on one tween: a skip or a lost context lands every beat silently. */
+  const runCaught = async () => {
+    const w = world
+    if (!w || !dressing || lost || disposed) return
+    const gen = worldGen
+    const alive = () => gen === worldGen && !lost && !disposed
+    // the stamp's return to its rest has already held part of the pause before the alarm
+    const sinceImpact = clock - lastImpact
+    const score = caughtScore(dressing.id, sinceImpact < 2000 ? Math.max(MIN_SILENCE, SILENCE_MS - sinceImpact) : SILENCE_MS)
+    caughtState = true
+    w.beam.setup({ ...beamSource(w), color: score.beam.color, width: score.beam.width })
+    w.flash.fit(camera)
+    const lamps = (k: number, now = false) => {
+      for (const l of w.warm) l.setDim(k, now)
+    }
+    let next = 0
+    let sounded = false // something is ringing, so a skip or an abort must hush it
+    let flickered = false
+    let relit = false
+    let alarmed = false
+    let pushed = false
+    let darkened = false
+    const step = (ms: number) => {
+      if (!alive()) return
+      const quiet = skipping
+      for (let b = score.beats[next]; b && b.at <= ms; b = score.beats[++next]) {
+        if (quiet) continue
+        if (b.cue) {
+          cue(b.cue)
+          sounded = b.cue !== 'caughtHush' && b.cue !== 'caughtDark'
+        }
+        if (b.rap) {
+          const r = RAPS[b.rap]
+          rig.shake(r.shake, r.down) // (the rig keeps still under reduced motion)
+          w.dust.kick(r.dust)
+          if (r.dip && !reduced && !darkened) {
+            lamps(r.dip, true)
+            lamps(ALARM_LAMP)
+          }
+        }
+      }
+      if (quiet && sounded) {
+        sounded = false
+        cue('caughtHush')
+      }
+      // 0. the stamp has landed: silence, and the lamp flickers once
+      if (!flickered && ms >= score.flicker[0]) {
+        flickered = true
+        lamps(reduced ? 0.55 : 0.15, !reduced)
+      }
+      if (!relit && ms >= score.flicker[1]) {
+        relit = true
+        lamps(1, !reduced)
+      }
+      // 1. the alarm: the light sags, the camera starts back from the paper and looks up
+      if (!alarmed && ms >= score.alarm) {
+        alarmed = true
+        lamps(ALARM_LAMP)
+        if (!reduced) void rig.goTo(startledPose, 1150, ease.inOut)
+      }
+      // 2. the room closes in: the camera moves in on the paper, tilting, while the knocks come
+      if (!pushed && ms >= score.push[0]) {
+        pushed = true
+        if (!reduced) void rig.goTo(closingPose, score.push[1] - score.push[0], ease.inOutSine)
+      }
+      // 3. the dark, and the quiet
+      if (!darkened && ms >= score.dark) {
+        darkened = true
+        lamps(0.3)
+        w.sheet.setGlow(0.2)
+        void setExposure(CAUGHT_EXPOSURE, reduced ? 300 : 700)
+      }
+      // the red light: a red lamp's glow pulsing on the alarm's hits, reaching a little further in
+      // each time; one slow tint under reduced motion; gone by the time the paper turns over
+      let amount = 0
+      let spread = 0
+      let wash = 0
+      if (ms >= score.alarm) {
+        if (reduced) {
+          const e = ms - score.alarm
+          amount = e < 260 ? (e / 260) * 0.85 : 0.85 * Math.max(0, 1 - (e - 260) / 1700)
+          spread = 1
+          wash = amount * 0.6
+        } else {
+          const red = redAt(score, ms)
+          amount = 0.38 + 0.62 * red.pulse
+          spread = red.creep
+          wash = red.pulse * 0.9
+        }
+        if (ms > score.dark) amount *= Math.max(0, 1 - (ms - score.dark) / 600)
+      }
+      w.flash.set('wrong', amount, spread, wash)
+      // the beam sweeping through (none under reduced motion)
+      const beam = reduced ? { amount: 0, sweep: 0 } : beamAt(score.beam, ms)
+      w.beam.set(beam.amount * score.beam.strength, beam.sweep)
+    }
+    const done = tweens.run(score.end, (k) => step(k * score.end), ease.linear)
+    await new Promise<void>((resolve) => {
+      caughtAbort = resolve
+      void done.then(resolve)
+    })
+    caughtAbort = null
+    if (!alive()) {
+      if (sounded) cue('caughtHush')
+      return
+    }
+    step(score.end)
+    w.flash.set('wrong', 0, 0)
+    w.beam.set(0, 0)
+  }
+
   /** The screen box (CSS px) round some world points, or null off screen. */
   const screenRect = (pts: THREE.Vector3[]): ScreenRect | null => {
     camera.updateMatrixWorld()
@@ -1260,6 +1438,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   const stage: Stage = {
     setEra(d) {
       if (disposed) return
+      caughtAbort?.()
       dressing = d
       paperShown = false
       stamped = null
@@ -1312,13 +1491,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       return run(() => doStamp(kind))
     },
     caught() {
+      // (a lost stage resolves at once, as STAGE_LOST_EVENT promises: the app plays it on its own desk)
       if (disposed || lost || !world) return Promise.resolve()
-      caughtState = true
-      for (const l of world.warm) l.setDim(0.3)
-      world.sheet.setGlow(0.2)
-      const dark = setExposure(CAUGHT_EXPOSURE, reduced ? 200 : 700)
-      const drop = reduced ? Promise.resolve() : rig.go('caught', 650, ease.out)
-      return Promise.all([dark, drop]).then(() => tweens.wait(reduced ? 0 : 250))
+      return run(() => runCaught())
     },
     setPaused(p) {
       userPaused = p
@@ -1380,35 +1555,19 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       }
       const w = world
       if (disposed || !w) return
-      cue(kind)
       // R30b: the real-document tag may show now that the verdict is in
       if (msg?.spec.documentMark && !msg.spec.revealed) stage.redrawMessage({ ...msg.spec, revealed: true })
+      // a wrong verdict holds still and silent: the red comes with the alarm, in caught()
+      if (kind === 'wrong') return
+      cue(kind)
       const fx = w.flash
       fx.fit(camera)
-      if (kind === 'right') {
-        // a soft saffron glow over the room, and the lamp swells for a breath
-        for (const l of w.warm) l.setDim(1.35)
-        void tweens.wait(380).then(() => {
-          if (!caughtState) for (const l of world?.warm ?? []) l.setDim(1)
-        })
-        void tweens.run(reduced ? 700 : 1150, (k) => fx.set('right', k < 0.14 ? k / 0.14 : Math.pow(1 - (k - 0.14) / 0.86, 1.6), 0), ease.linear).then(() => fx.set('right', 0, 0))
-      } else {
-        // a dull thud: the room knocks down a hair and the light sags while red ink bleeds in
-        rig.shake(0.004, reduced ? 0 : 0.014)
-        for (const l of w.warm) l.setDim(0.72)
-        void tweens.wait(500).then(() => {
-          if (!caughtState) for (const l of world?.warm ?? []) l.setDim(1)
-        })
-        void tweens
-          .run(reduced ? 800 : 1600, (k) => {
-            const spread = reduced ? 1 : 1 - Math.pow(1 - Math.min(1, k / 0.42), 3)
-            const amount = k < 0.62 ? 1 : 1 - (k - 0.62) / 0.38
-            // the red wash hits at once and drains over half a second
-            const wash = reduced ? 0.6 : Math.max(0, 1 - k / 0.32)
-            fx.set('wrong', amount, spread, wash)
-          }, ease.linear)
-          .then(() => fx.set('wrong', 0, 0))
-      }
+      // a soft saffron glow over the room, and the lamp swells for a breath
+      for (const l of w.warm) l.setDim(1.35)
+      void tweens.wait(380).then(() => {
+        if (!caughtState) for (const l of world?.warm ?? []) l.setDim(1)
+      })
+      void tweens.run(reduced ? 700 : 1150, (k) => fx.set('right', k < 0.14 ? k / 0.14 : Math.pow(1 - (k - 0.14) / 0.86, 1.6), 0), ease.linear).then(() => fx.set('right', 0, 0))
       // (the camera stays on the paper: the verdict plays out on it, see reveal)
     },
     reveal(r) {
@@ -1473,6 +1632,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     dispose() {
       if (disposed) return
       disposed = true
+      caughtAbort?.()
       msgToken++
       syncRunning()
       tweens.setInstant(true)
