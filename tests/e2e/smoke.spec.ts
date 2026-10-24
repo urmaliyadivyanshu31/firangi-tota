@@ -256,18 +256,25 @@ test('a caught chapter shares a post card whose link previews as a large card an
   await slip.locator('[data-action="close-share"]').click()
   await expect(slip).toHaveCount(0)
 
-  // what a link-preview crawler sees: the card tags, an absolute image URL, a 1200x630 JPEG behind it
+  // what a link-preview crawler sees: the card tags, an absolute image URL, a 1200x630 JPEG behind
+  // it, drawn at build time (dist/og) so the CDN answers at once
   const shared = await request.get('/s/1857-e0c-hi', { headers: { 'User-Agent': 'Twitterbot/1.0' } })
   expect(shared.status()).toBe(200)
   const html = await shared.text()
   expect(html).toContain('<meta name="twitter:card" content="summary_large_image">')
   const image = html.match(/property="og:image" content="([^"]+)"/)![1]!.replace(/&amp;/g, '&')
-  expect(image).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/api\/og\?c=1857-e0c-hi&v=[0-9a-f]{8}$/)
+  expect(image).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/og\/1857-e0c-hi\.[0-9a-f]{8}\.jpg$/)
+  expect(html).toContain(`<meta name="twitter:image" content="${image}">`)
   const card = await request.get(image)
   expect(card.status()).toBe(200)
   expect(card.headers()['content-type']).toBe('image/jpeg')
   expect(card.headers()['cache-control']).toContain('immutable')
-  expect((await card.body()).length).toBeLessThan(300 * 1024)
+  expect((await card.body()).length).toBeLessThanOrEqual(200 * 1024)
+  // a link shared before the cards were files still gets its card, drawn on request
+  const rev = /\.([0-9a-f]{8})\.jpg$/.exec(image)![1]!
+  const drawn = await request.get(`/api/og?c=1857-e0c-hi&v=${rev}`)
+  expect(drawn.status()).toBe(200)
+  expect(drawn.headers()['content-type']).toBe('image/jpeg')
 
   // a friend who taps it, with no offline copy yet, lands on the main page with the chapter and mode picked
   const friendCtx = await browser.newContext()

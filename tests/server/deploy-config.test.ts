@@ -4,8 +4,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { CARD_FILE_CACHE, IMAGE_TYPE } from '../../server/share'
 
 interface VercelConfig {
+  buildCommand?: string
   regions?: string[]
   trailingSlash?: boolean
   rewrites?: { source: string; destination: string }[]
@@ -38,6 +40,21 @@ describe('vercel.json', () => {
       expect(existsSync(resolve(__dirname, `../../server/og/fonts/${font}.ttf`)), font).toBe(true)
     }
     expect(existsSync(resolve(__dirname, '../../node_modules/harfbuzzjs/dist/harfbuzz.wasm'))).toBe(true)
+  })
+
+  it('builds with npm run build, which draws every share card into dist/og after the Vite build', () => {
+    expect(config.buildCommand).toBe('npm run build')
+    const pkg = JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'utf8')) as { scripts: Record<string, string> }
+    expect(pkg.scripts.build).toBe('vite build && node scripts/og-cards.mjs')
+  })
+
+  it('serves the pre-drawn cards as images cached for a year, and sends a missing one to the card function', () => {
+    const og = config.headers.find((h) => h.source === '/og/(.*)')?.headers ?? []
+    const header = (key: string) => og.find((x) => x.key === key)?.value
+    expect(header('Cache-Control')).toBe(CARD_FILE_CACHE)
+    expect(header('Content-Type')).toBe(IMAGE_TYPE)
+    // Vercel serves a file that exists before any rewrite, so only a miss reaches the function
+    expect(config.rewrites).toContainEqual({ source: '/og/:file', destination: '/api/og?file=:file' })
   })
 
   it('redirects /api/voice/ to /api/voice, so a trailing slash is not a second cache entry', () => {

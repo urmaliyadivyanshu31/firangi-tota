@@ -82,6 +82,8 @@ export default defineConfig(({ mode }) => {
             'icons/apple-touch-icon.png',
             'icons/icon-192.png',
           ],
+          // the share cards (dist/og, about 40 MB) are for link-preview crawlers, never the game
+          globIgnores: ['og/**'],
           // the 3D stage chunk is well under this; it only guards against a surprise
           maximumFileSizeToCacheInBytes: 1024 * 1024,
           cleanupOutdatedCaches: true,
@@ -89,7 +91,7 @@ export default defineConfig(({ mode }) => {
           clientsClaim: true,
           skipWaiting: true,
           navigateFallback: '/index.html',
-          navigateFallbackDenylist: [/^\/api\//],
+          navigateFallbackDenylist: [/^\/api\//, /^\/og\//],
           runtimeCaching: [
             // read-aloud: always the network, never a cache
             { urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/'), handler: 'NetworkOnly' },

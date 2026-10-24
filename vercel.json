@@ -1,7 +1,11 @@
 {
+  "buildCommand": "npm run build",
   "regions": ["bom1"],
   "trailingSlash": false,
-  "rewrites": [{ "source": "/s/:code", "destination": "/api/s?code=:code" }],
+  "rewrites": [
+    { "source": "/s/:code", "destination": "/api/s?code=:code" },
+    { "source": "/og/:file", "destination": "/api/og?file=:file" }
+  ],
   "functions": {
     "api/og.ts": { "maxDuration": 10, "includeFiles": "{server/og/fonts/*.ttf,node_modules/harfbuzzjs/dist/harfbuzz.wasm}" },
     "api/s.ts": { "maxDuration": 10, "includeFiles": "{server/og/fonts/*.ttf,node_modules/harfbuzzjs/dist/harfbuzz.wasm}" }
@@ -22,6 +26,13 @@
           "value": "microphone=(), camera=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), hid=(), midi=(), display-capture=(), browsing-topics=()"
         },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" }
+      ]
+    },
+    {
+      "source": "/og/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Content-Type", "value": "image/jpeg" }
       ]
     },
     {

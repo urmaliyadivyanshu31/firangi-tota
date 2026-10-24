@@ -97,16 +97,26 @@ the mode, the days, the outcome and the language.
 Two more functions serve those links, both in `bom1`, both without keys:
 
 - `api/s.ts` (`vercel.json` rewrites `/s/<code>` to it) answers a tiny page with Open Graph and
-  Twitter `summary_large_image` tags, then sends people on to the game with the friend's chapter and
-  mode picked (`/share-go.js`, a script link-preview crawlers do not run).
-- `api/og.ts` draws the preview card, a 1200×630 JPEG: one period paper per chapter with the year and
-  place, the outcome and the days, the era's own ending stamp and the title lettering. Only words from
-  the code's enums and the game's own content are drawn, as glyph outlines shaped by HarfBuzz, so the
-  Hindi is right. Each card has one canonical URL, versioned by a hash of its drawing and cached for a
-  year; any other spelling gets a redirect.
+  Twitter `summary_large_image` tags whose image is the card's static file, then sends people on to
+  the game with the friend's chapter and mode picked (`/share-go.js`, a script link-preview crawlers
+  do not run).
+- The preview card is a 1200×630 JPEG: one period paper per chapter with the year and place, the
+  outcome and the days, the era's own ending stamp and the title lettering. Only words from the code's
+  enums and the game's own content are drawn, as glyph outlines shaped by HarfBuzz, so the Hindi is
+  right. `npm run build` draws all 320 cards the game can produce into `dist/og/<code>.<rev>.jpg`
+  (`scripts/og-cards.mjs`, one worker thread per core, about 40 MB, each under 200 KB), where `rev` is
+  a hash of the card's drawing, and the page names that file. The CDN answers it at once with a year's
+  cache, so WhatsApp and X always get the picture; drawn on request a card took two seconds, and they
+  drop slow images. A build that changes no card copies them from `node_modules/.cache/og-cards`.
+- `api/og.ts` draws a card on request: for links shared before the files existed
+  (`/api/og?c=<code>&v=<rev>`), and for an `/og/` file that is missing (`vercel.json` sends only a
+  miss there; an older drawing's name is redirected to today's file). Any other spelling gets a
+  redirect.
 
-`npm run dev` and `npm run preview` serve both. `node dev/shoot-share-cards.mjs` fetches every card
-the way a crawler does and saves it under `docs/screens/og/`.
+`npm run dev` and `npm run preview` serve both (the dev server draws each card on request).
+`OG_CARDS=0 npm run build` skips the cards for a quick local build; CI and Vercel always draw them.
+`node dev/shoot-share-cards.mjs` fetches every card the way a crawler does and saves it under
+`docs/screens/og/`.
 
 ## Licence
 
