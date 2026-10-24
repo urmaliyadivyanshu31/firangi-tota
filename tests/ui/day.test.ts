@@ -582,6 +582,65 @@ describe('renderDay: the verdict on the paper', () => {
     expect(screen.classList.contains('is-tossing')).toBe(true)
   })
 
+  it('while a verdict leads on, the stamp’s Skip chip stands in its corner with an Enter hint; it and Enter skip the lot', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), toss: vi.fn(), skipToss: vi.fn(), pop: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true, lastVerdict: 'asli' }), {
+      revealed: true,
+      onPaper: { mirror: 'Right', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 2' }], auto: true },
+    }), on)
+    // the same chip as during the stamp: its class, its words and its icon, in the controls' corner
+    const chips = root.querySelectorAll<HTMLButtonElement>('[data-action="skip"]')
+    expect(chips).toHaveLength(1)
+    const chip = chips[0]!
+    expect(chip.classList.contains('day__skip')).toBe(true)
+    expect(chip.closest('.day__controls')).not.toBeNull()
+    expect(chip.textContent).toContain(strings.en.skip)
+    expect(chip.querySelector('.icon')).not.toBeNull()
+    expect(chip.getAttribute('aria-keyshortcuts')).toBe('Enter')
+    expect(chip.querySelector('kbd.day__skip-key')!.getAttribute('aria-hidden')).toBe('true')
+    chip.click()
+    expect(on.skipToss).toHaveBeenCalledTimes(1)
+    expect(on.toss).not.toHaveBeenCalled()
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(on.skipToss).toHaveBeenCalledTimes(2)
+    // a held Enter is one press; Space still only sends the paper on its way
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, repeat: true }))
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
+    expect(on.skipToss).toHaveBeenCalledTimes(2)
+    expect(on.toss).toHaveBeenCalledTimes(1)
+    // a focused control keeps its own Enter
+    root.querySelector<HTMLButtonElement>('.source-hit')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(on.skipToss).toHaveBeenCalledTimes(2)
+    // on its way to the basket the chip stays
+    setTossing(root)
+    expect(root.querySelector('.is-tossing [data-action="skip"]')).not.toBeNull()
+  })
+
+  it('no hold chip when the verdict ends the chapter or waits for Next; Enter never skips an arrival', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), toss: vi.fn(), skipToss: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: false, lastVerdict: 'asli' }), {
+      revealed: true,
+      onPaper: { mirror: 'Wrong', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 2' }] },
+    }), on)
+    expect(root.querySelector('.day__controls--hold')).toBeNull()
+    renderDay(root, props(e, chapter(e, { day: 7, phase: 'stamped', lastCorrect: true, lastVerdict: 'asli' }), {
+      revealed: true,
+      onPaper: { mirror: 'Right', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 2' }], auto: true, end: { receipts: [] } },
+    }), on)
+    expect(root.querySelector('.day__controls--hold')).toBeNull()
+    // the next day arriving: Enter leaves its title alone (Space or Escape skip it, as ever)
+    renderDay(root, props(e, chapter(e, { day: 3 }), { readable: false }), on)
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(on.skip).not.toHaveBeenCalled()
+    expect(on.skipToss).not.toHaveBeenCalled()
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
+    expect(on.skip).toHaveBeenCalledTimes(1)
+  })
+
   it('a keyboard player on the source line holds a verdict that leads on; a tap’s focus does not', () => {
     const e = era()
     const root = mount()

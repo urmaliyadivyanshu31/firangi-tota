@@ -640,6 +640,18 @@ a { color: inherit; }
 }
 .day__skip .icon { width: 18px; height: 18px; }
 .is-arriving .day__skip, .is-stamping .day__skip { display: inline-flex; }
+/* while a verdict leads on by itself: only the skip chip, where it stood during the stamp, and taps
+   anywhere else still reach the room */
+.paper-result > .day__controls--hold { pointer-events: none; background: none; }
+.is-auto .day__controls--hold .day__skip { display: inline-flex; }
+/* the room the tabs and the stamps took below it, so it stays in the same place */
+.day__controls-space { height: 132px; }
+[data-layout='wide'] .day__controls-space { height: 78px; }
+[data-short] .day__controls-space { display: none; }
+.day__skip-key { display: none; margin-left: 6px; padding: 0 4px; border-radius: 3px; font: 600 11px/1.5 var(--ui); opacity: .75; box-shadow: inset 0 0 0 1px currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .day__skip-key { display: inline-block; }
+}
 
 .tabs { display: flex; gap: 8px; }
 [data-layout='wide'] .tabs { justify-content: flex-end; }

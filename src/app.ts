@@ -76,15 +76,18 @@ interface Desk {
   /** Where the back's source line and the paper are on screen, for the buttons over and under them. */
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
-  /** The read paper is screwed up and tossed in the basket (it names its own beats, on both desks). */
-  toss(): Promise<void>
+  /**
+   * The read paper is screwed up and dropped in the basket (it names its own beats, on both
+   * desks); `now` puts it there at once (the player skipped it).
+   */
+  toss(now?: boolean): Promise<void>
   /** After Begin: the YOU and Tota cards on the desk; resolves once they have settled. */
   intro(s: IntroSpec): Promise<void>
   clearIntro(): Promise<void>
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
-const TOSS_GUARD_MS = 5000 // the hands screw the paper up and toss it in the basket, about 2.9 s
+const TOSS_GUARD_MS = 5000 // the hands screw the paper up and drop it in the basket, about 3 s
 // The caught sequence runs about 4.2 s (scene/caught.ts); the guard leaves it room, and a slow
 // frame or two, but never lets a desk that stopped ticking hold the verdict back.
 const CAUGHT_GUARD_MS = 6500
@@ -173,6 +176,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // animation frames (so a hidden tab holds it) and waits while the source card is open.
   let auto = false // the verdict on the paper leads on by itself (no Next button)
   let tossing = false
+  let tossNow = false // the toss under way was skipped: it is landing at once already
   let holdLeft = 0 // ms of reading still to run
   let holdRaf = 0
   let holdLast = 0
@@ -370,7 +374,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   function stageDesk(s: Stage, dressingFor: (id: EraId) => EraDressing): Desk {
     return {
-      toss: () => s.toss(),
+      toss: (now) => s.toss(now),
       reveal: (x) => s.reveal(x),
       getSourceRect: () => s.getSourceRect(),
       getPaperRect: () => s.getPaperRect(),
@@ -394,7 +398,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   /** The flat desk: the same sheet, title, imprint and flash, drawn on one canvas. */
   function fallbackDesk(f: Fallback): Desk {
     return {
-      toss: () => f.toss(),
+      toss: (now) => f.toss(now),
       reveal: (x) => f.reveal(x),
       getSourceRect: () => f.getSourceRect(),
       getPaperRect: () => f.getPaperRect(),
@@ -924,6 +928,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       next: onNext,
       skip: () => desk?.skip(),
       toss: hurry,
+      skipToss,
       pop: (open) => {
         // the hold waits while the source card is open, and gives a fresh moment when it closes
         sourceOpen = open
@@ -1130,25 +1135,36 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (auto && !tossing) holdLeft = Math.max(holdLeft, TOSS_RESUME_MS)
   }
 
-  /** A tap on the room, Space or Enter: the paper goes now; on its way already, it lands at once. */
+  /** A tap on the room or Space: the paper goes now; on its way already, it lands at once. */
   function hurry(): void {
-    if (tossing) return desk?.skip()
+    if (tossing) return void (tossNow || desk?.skip())
     if (!auto || !revealed || holdSpent < TOSS_GRACE_MS) return
     void toss()
   }
 
-  /** The read paper goes in the basket; then the next day begins by itself. */
-  async function toss(): Promise<void> {
+  /**
+   * The Skip chip or Enter: the whole of it is skipped, the reading, the crumple and the drop. The
+   * paper is in the basket at once (only its soft landing is heard) and the next day begins.
+   */
+  function skipToss(): void {
+    if (tossing) return void (tossNow || desk?.skip())
+    if (!auto || !revealed || holdSpent < TOSS_GRACE_MS) return
+    void toss(true)
+  }
+
+  /** The read paper goes in the basket (at once, when skipped); then the next day begins by itself. */
+  async function toss(now = false): Promise<void> {
     const p = play
     if (!p || !auto || tossing || !revealed) return
     tossing = true
+    tossNow = now
     busy = true // a language switch now waits for the next day
     syncHold()
     setTossing(ui)
     const token = gen
     const d = desk
     // a desk lost on the way never lands it: stop waiting as soon as a new desk is attached
-    if (d) await guard(Promise.race([d.toss(), deskSwapped.promise]), TOSS_GUARD_MS)
+    if (d) await guard(Promise.race([d.toss(now), deskSwapped.promise]), TOSS_GUARD_MS)
     if (token !== gen || play !== p) return
     busy = false
     advance(p)

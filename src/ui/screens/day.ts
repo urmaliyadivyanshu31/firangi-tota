@@ -66,7 +66,8 @@ export interface PaperReveal {
   end?: { receipts: Receipt[] }
   /**
    * The next day follows by itself: once the verdict has been read the paper goes in the basket.
-   * No Next button; a tap on the room, Space or Enter sends it at once.
+   * No Next button; a tap on the room or Space sends it at once, and the Skip chip or Enter skips
+   * the crumple and the drop as well.
    */
   auto?: boolean
 }
@@ -81,8 +82,10 @@ export interface DayHandlers {
   next(): void
   /** A tap during an animation: finish it now. */
   skip(): void
-  /** The verdict has been read (a tap on the room, Space or Enter): toss the paper now. */
+  /** The verdict has been read (a tap on the room or Space): toss the paper now. */
   toss?(): void
+  /** The Skip chip or Enter while the verdict leads on: the paper is in the basket at once, the next day begins. */
+  skipToss?(): void
   /** The source (or receipts) card opened or closed over the paper. */
   pop?(open: boolean): void
   sound(): void
@@ -147,10 +150,12 @@ function onKey(e: KeyboardEvent): void {
     a.on.skip()
     return
   }
-  // the verdict read: Space or Enter sends the paper to the basket (a focused control keeps its keys)
+  // the verdict read: Space sends the paper to the basket, Enter skips straight to the next day
+  // (a focused control keeps its keys)
   if (a.props.revealed && a.props.onPaper?.auto && (e.key === ' ' || e.key === 'Enter') && !target?.closest?.('button, a, [role="dialog"]')) {
     e.preventDefault()
-    a.on.toss?.()
+    if (e.key === 'Enter' && a.on.skipToss) a.on.skipToss()
+    else a.on.toss?.()
     return
   }
   if (a.props.revealed) return
@@ -409,8 +414,13 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     listenGroup = h('div', { class: `listen-group${picker ? ' has-picker' : ''}` }, listenBtn, more, picker, credit)
   }
 
+  // the skip chip: during the arrival and the stamp it finishes the animation; while a verdict
+  // leads on by itself (the reading, the crumple, the drop) it skips the lot, Enter its key
+  const skipChip = (onclick: () => void, key = false) =>
+    h('button', { class: 'day__skip', type: 'button', 'data-action': 'skip', onclick, ...(key ? { 'aria-keyshortcuts': 'Enter' } : {}) },
+      h('span', null, t('skip', lang)), skipIcon(), key ? h('kbd', { class: 'day__skip-key', 'aria-hidden': 'true' }, '↵') : null)
   const controls = revealed ? null : h('footer', { class: 'day__controls' },
-    h('button', { class: 'day__skip', type: 'button', 'data-action': 'skip', onclick: () => on.skip() }, h('span', null, t('skip', lang)), skipIcon()),
+    skipChip(() => on.skip()),
     h('div', { class: 'tabs' }, tab('file', t('caseFile', lang), null), tab('rules', t('rulebook', lang), anyNew ? newTag() : null), listenGroup),
     h('div', { class: 'stamps' }, stampBtn('asli', '←', '1'), stampBtn('tota', '→', '2')))
 
@@ -511,10 +521,15 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
         : [(nextBtn = h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'next', onclick: () => on.next() }, t('next', lang)))]
     // under the paper: centred on it in landscape, along the bottom on a phone
     const under = r.paperRect && isWide() ? `left:${Math.round(r.paperRect.x)}px;width:${Math.round(r.paperRect.w)}px;right:auto` : ''
+    const skipToss = on.skipToss
     result = h('div', { class: 'paper-result' },
       h('p', { class: 'sr-only paper-result__mirror', 'aria-live': 'polite' }, r.mirror),
       rect ? srcBtn : null, popScrim, pop, receiptsPop,
-      h('footer', { class: 'paper-result__actions', ...(under ? { style: under } : {}) }, rect ? null : srcBtn, actions))
+      h('footer', { class: 'paper-result__actions', ...(under ? { style: under } : {}) }, rect ? null : srcBtn, actions),
+      // the same chip, in the same corner, while the verdict leads on by itself
+      r.auto && !end && skipToss
+        ? h('footer', { class: 'day__controls day__controls--hold' }, skipChip(() => skipToss(), true), h('div', { class: 'day__controls-space', 'aria-hidden': 'true' }))
+        : null)
   }
 
   const copy = h('article', { class: 'day__message sr-only', lang, 'aria-live': 'polite', 'aria-atomic': 'true' })

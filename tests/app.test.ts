@@ -492,6 +492,65 @@ describe('the toss: after a right stamp the paper goes in the basket and the nex
     expect(m.stage.toss).toHaveBeenCalledTimes(1)
   })
 
+  it('the Skip chip or Enter skips the lot: the paper is in the basket at once and day 2 begins, its title not skipped', async () => {
+    let ui = await rightOnDay1()
+    const chip = () => $(ui, '.day__controls--hold [data-action="skip"]')
+    expect(chip()).not.toBeNull()
+    expect(ui.querySelectorAll('[data-action="skip"]')).toHaveLength(1)
+    // not the tail of the skip that finished the reveal
+    chip()!.click()
+    key('Enter')
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    frame(16)
+    frame(TOSS_GRACE_MS + 50)
+    m.stage.skip.mockClear()
+    chip()!.click()
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    expect(m.stage.toss).toHaveBeenLastCalledWith(true) // at once: no hold left, no crumple, no drop
+    key('Enter') // a second press while it goes is nothing more
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+    expect(m.stage.dayTitle).toHaveBeenCalledTimes(2)
+    expect(m.stage.skip).not.toHaveBeenCalled() // the next day's title plays as usual
+
+    // Enter does the same; Space still only sends it on its way
+    vi.clearAllMocks()
+    ui = await rightOnDay1()
+    frame(16)
+    frame(TOSS_GRACE_MS + 50)
+    key('Enter')
+    expect(m.stage.toss).toHaveBeenLastCalledWith(true)
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+    vi.clearAllMocks()
+    ui = await rightOnDay1()
+    frame(16)
+    frame(TOSS_GRACE_MS + 50)
+    key(' ')
+    expect(m.stage.toss).toHaveBeenLastCalledWith(false)
+  })
+
+  it('during the crumple and the drop the chip stays, and lands it at once', async () => {
+    const ui = await rightOnDay1()
+    const going = deferred()
+    m.stage.toss.mockImplementationOnce(() => going.promise)
+    holdOut()
+    expect(m.stage.toss).toHaveBeenLastCalledWith(false)
+    expect($(ui, '.screen--day.is-tossing')).not.toBeNull()
+    const chip = $(ui, '.day__controls--hold [data-action="skip"]')
+    expect(chip).not.toBeNull()
+    m.stage.skip.mockClear()
+    chip!.click()
+    expect(m.stage.skip).toHaveBeenCalledTimes(1)
+    key('Enter')
+    expect(m.stage.skip).toHaveBeenCalledTimes(2)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+    going.resolve()
+    await flush()
+    expect(text(ui)).toContain('Day 2 of 7')
+  })
+
   it('holds while the source card is open, and gives a fresh moment when it closes', async () => {
     const ui = await rightOnDay1()
     frame(16)
