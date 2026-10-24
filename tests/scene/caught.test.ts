@@ -111,3 +111,12 @@ describe('the red light and the beam', () => {
     expect(mid.amount).toBeCloseTo(1, 5) // a bulb does not flicker; a mashaal would
   })
 })
+
+describe('the light from outside fits its year', () => {
+  it('a flame (1857 mashaal) or an oil lantern (1929) spills a glow; only electric lights (1942, 1947) make a beam', () => {
+    expect(caughtScore('delhi-1857').beam.shape).toBe('glow')
+    expect(caughtScore('lahore-1929').beam.shape).toBe('glow')
+    expect(caughtScore('bombay-1942').beam.shape).toBe('cone')
+    expect(caughtScore('delhi-1947').beam.shape).toBe('cone')
+  })
+})
