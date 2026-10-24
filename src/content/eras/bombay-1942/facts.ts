@@ -10,11 +10,11 @@ export const facts: Fact[] = [
   {
     id: 'f-aicc',
     para: 1,
-    label: { en: 'Resolution', hi: 'प्रस्ताव' },
+    label: { en: 'Resolution, Saturday', hi: 'प्रस्ताव, शनिवार' },
     value: { en: 'Gowalia Tank, 8 Aug; 13 against', hi: 'गोवालिया टैंक, 8 अगस्त; 13 विरोध में' },
     story: {
-      en: 'The resolution passed at [[Gowalia Tank]] on [[8 August]]; only [[13]] voted against.',
-      hi: 'प्रस्ताव [[8 अगस्त]] को [[गोवालिया टैंक]] पर पास हुआ; विरोध में सिर्फ़ [[13]] वोट पड़े।',
+      en: 'The resolution passed at [[Gowalia Tank]] on [[Saturday 8 August]]; only [[13]] voted against.',
+      hi: 'प्रस्ताव [[शनिवार 8 अगस्त]] को [[गोवालिया टैंक]] पर पास हुआ; विरोध में सिर्फ़ [[13]] वोट पड़े।',
     },
     sources: [
       { id: 'iar-1942', loc: 'AICC proceedings; Chronicle p. 17' },
@@ -37,12 +37,12 @@ export const facts: Fact[] = [
     id: 'f-flag',
     para: 1,
     label: { en: 'Flag, 9 August', hi: 'झंडा, 9 अगस्त' },
-    value: { en: 'Raised by Aruna Asaf Ali', hi: 'अरुणा आसफ़ अली ने फहराया' },
+    value: { en: 'Aruna Asaf Ali, at Gowalia Tank', hi: 'अरुणा आसफ़ अली, गोवालिया टैंक पर' },
     story: {
-      en: 'On [[9 August]], the flag was raised by [[Aruna Asaf Ali]].',
-      hi: '[[9 अगस्त]] को झंडा [[अरुणा आसफ़ अली]] ने फहराया।',
+      en: 'On [[9 August]], at [[Gowalia Tank]], the flag was raised by [[Aruna Asaf Ali]].',
+      hi: '[[9 अगस्त]] को [[गोवालिया टैंक]] पर झंडा [[अरुणा आसफ़ अली]] ने फहराया।',
     },
-    sources: [{ id: 'rebel-india-1946', loc: 'Bombay section' }],
+    sources: [{ id: 'rebel-india-1946', loc: 'Bombay section (the flag at Gowalia Tank Maidan)' }],
   },
   {
     id: 'f-train',
@@ -298,12 +298,12 @@ export const facts: Fact[] = [
     id: 'f-chiefs',
     para: 3,
     label: { en: 'British chiefs', hi: 'अंग्रेज़ों के मुखिया' },
-    value: { en: 'Prime Minister Churchill; Viceroy Linlithgow', hi: 'प्रधानमंत्री चर्चिल; वायसराय लिनलिथगो' },
+    value: { en: 'Churchill, King’s First Minister; Viceroy Linlithgow', hi: 'बादशाह के प्रधानमंत्री चर्चिल; वायसराय लिनलिथगो' },
     story: {
-      en: 'The British chiefs are [[Prime Minister Churchill]] and [[Viceroy Linlithgow]].',
-      hi: 'अंग्रेज़ों के मुखिया हैं [[प्रधानमंत्री चर्चिल]] और [[वायसराय लिनलिथगो]]।',
+      en: 'The British chiefs are [[Churchill]], the [[King’s First Minister]], that is the prime minister, and [[Viceroy Linlithgow]].',
+      hi: 'अंग्रेज़ों के मुखिया हैं [[बादशाह के प्रधानमंत्री चर्चिल]] और [[वायसराय लिनलिथगो]]।',
     },
-    sources: [{ id: 'top-ii-1971', loc: 'No. 662 (Linlithgow to Churchill, 31 Aug 1942)' }],
+    sources: [{ id: 'top-ii-1971', loc: 'No. 662 (Linlithgow to Churchill, 31 Aug 1942)' }, { id: 'churchill-1942', loc: '“the King’s First Minister”' }],
   },
   {
     id: 'f-ina',
