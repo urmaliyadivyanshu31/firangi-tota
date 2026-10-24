@@ -5,7 +5,7 @@ import type { EraId, Message } from '../src/content/types'
 import { TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, type Difficulty } from '../src/game/config'
 import { dailyFrom } from '../src/game/daily'
 import { mulberry32, seedFrom } from '../src/game/rng'
-import { earnedLine, jackpotLine, rollReward } from '../src/game/rewards'
+import { earnedLine, rollReward, toastLine } from '../src/game/rewards'
 import { chapterPost, chapterStory, dailyFact, dailyPost } from '../src/game/share'
 import { closeShareSlip } from '../src/ui/share-slip'
 import { createChapter } from '../src/game/state'
@@ -235,6 +235,8 @@ beforeEach(() => {
   m.mountFallback.mockImplementation(() => m.fallback)
   m.yt.players.length = 0
   m.duckers.length = 0
+  // the reward toast draws its icon on a canvas, which jsdom cannot
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => null) as unknown as HTMLCanvasElement['getContext'])
 })
 
 afterEach(() => {
@@ -2104,7 +2106,27 @@ describe('rewards', () => {
     expect(m.stage.setPile).toHaveBeenLastCalledWith({ era: 'lahore-1929', counts: {} })
   })
 
-  it('a jackpot says so on a chit by the treasure for a moment', async () => {
+  it('a reward slides in as a toast from the top right with its line, and goes after a moment', async () => {
+    reduceMotion()
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const q = queueFor('delhi-1857', 'easy', 3)
+    const d = rollReward('delhi-1857', q[0]!.tier, draws('3'))
+    expect(document.querySelector('.rtoast')).toBeNull()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    click(ui, `[data-stamp="${right(q[0]!)}"]`)
+    await vi.advanceTimersByTimeAsync(300)
+    const toast = document.querySelector<HTMLElement>('.rtoast')!
+    expect(toast.textContent).toBe(`${toastLine(d, 'en').kicker ? `${toastLine(d, 'en').kicker} ` : ''}${toastLine(d, 'en').text}`)
+    expect(toast.classList.contains('is-in')).toBe(true)
+    expect(toast.classList.contains('rtoast--jackpot')).toBe(d.jackpot)
+    expect(document.querySelector('.rtoast-host')!.getAttribute('aria-live')).toBe('polite')
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(document.querySelector('.rtoast')).toBeNull()
+    vi.useRealTimers()
+  })
+
+  it('a jackpot gets the jackpot toast, and leaving the day takes it down', async () => {
     reduceMotion()
     // a seed whose first draw is a jackpot
     let seed = 0
@@ -2113,22 +2135,20 @@ describe('rewards', () => {
       if (rollReward('delhi-1857', q[0]!.tier, draws(String(s))).jackpot) seed = s
     }
     expect(seed).toBeGreaterThan(0)
-    const { ui } = boot(`?lang=en&seed=${seed}`)
+    const { ui } = boot(`?lang=hi&seed=${seed}`)
     await toDay1(ui)
     const q = queueFor('delhi-1857', 'easy', seed)
     const d = rollReward('delhi-1857', q[0]!.tier, draws(String(seed)))
-    m.stage.getEarnRect.mockImplementation(() => ({ x: 100, y: 400, w: 40, h: 30 }))
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     click(ui, `[data-stamp="${right(q[0]!)}"]`)
-    await flush()
-    await new Promise((r) => setTimeout(r, 200))
-    const chit = document.querySelector<HTMLElement>('.reward-slip')!
-    expect(chit.textContent).toBe(jackpotLine(d, 'en'))
-    expect(chit.getAttribute('role')).toBe('status')
-    expect(chit.classList.contains('is-on')).toBe(true)
-    expect(chit.style.left).toBe('120px')
-    // gone with the day
+    await vi.advanceTimersByTimeAsync(300)
+    const toast = document.querySelector<HTMLElement>('.rtoast')!
+    expect(toast.classList.contains('rtoast--jackpot')).toBe(true)
+    expect(toast.querySelector('.rtoast__kicker')!.textContent).toBe('किस्मत चमकी!')
+    expect(toast.querySelector('.rtoast__line')!.textContent).toBe(toastLine(d, 'hi').text)
     click(ui, '[data-action="quit"]')
-    expect(document.querySelector('.reward-slip')).toBeNull()
+    expect(document.querySelector('.rtoast')).toBeNull()
+    vi.useRealTimers()
   })
 
   it('a new desk mid-verdict shows today’s rewards already landed, and the pile without them', async () => {
