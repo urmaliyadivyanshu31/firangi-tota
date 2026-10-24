@@ -17,7 +17,7 @@ export const CARD_W = 0.2
 export const CARD_H = CARD_W * CARD_ASPECT
 const Y_YOU = BLOTTER_TOP + 0.0016
 const Y_TOTA = BLOTTER_TOP + 0.0024
-const GLOW = 0.2 // a little light of their own, so the cards read in a dim room
+const GLOW = 0.17 // a little light of their own, so the cards read in a dim room
 const CARD_PX: Record<QualityTier, number> = { high: 1024, mid: 896, low: 640 }
 const PHOTO_PX: Record<QualityTier, number> = { high: 448, mid: 384, low: 256 }
 
@@ -119,7 +119,7 @@ export function createIntroCards(tier: QualityTier): IntroCards {
   const you = makeCard(CARD_PX[tier])
   const tota = makeCard(CARD_PX[tier])
   // the buff card lies nearer the lamp: a shade darker, so it keeps its colour in the light
-  you.mat.color.setScalar(0.84)
+  you.mat.color.setScalar(0.8)
   you.holder.position.y = Y_YOU
   tota.holder.position.y = Y_TOTA
 

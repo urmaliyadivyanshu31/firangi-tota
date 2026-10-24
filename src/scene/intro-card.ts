@@ -14,7 +14,7 @@ export type Art = HTMLImageElement
 /** Both cards' height over their width. */
 export const CARD_ASPECT = 0.68
 /** The YOU photo print on its card, in card units: u across (0..1 of the width), v down (0..1 of the height). */
-export const YOU_PHOTO = { u0: 0.05, v0: 0.13, w: 0.355, h: 0.355 * 1.32 / CARD_ASPECT }
+export const YOU_PHOTO = { u0: 0.045, v0: 0.14, w: 0.34, h: 0.34 * 1.32 / CARD_ASPECT }
 /** The photo print's white border, as a share of its width. */
 const PRINT_EDGE = 0.055
 
@@ -215,8 +215,8 @@ export function drawYouCard(g: Ctx, W: number, H: number, c: IntroCard, lang: La
   g.fillRect(p.x + W * 0.006, p.y + W * 0.008, p.w, p.h)
   // a cream label pasted on, a hair askew, with the heading
   const deva = lang === 'hi' || isDeva(c.label)
-  const lx = W * 0.46
-  const lw = W * 0.46
+  const lx = W * 0.445
+  const lw = W * 0.47
   const ly = H * 0.13
   const lh = H * 0.2
   g.save()
@@ -241,7 +241,7 @@ export function drawYouCard(g: Ctx, W: number, H: number, c: IntroCard, lang: La
   }
   g.restore()
   // the line, in ink, under the label
-  fitText(g, captionOf(c.line, lang), { x: W * 0.47, y: H * 0.38, w: W * 0.45, h: H * 0.55 }, {
+  fitText(g, captionOf(c.line, lang), { x: W * 0.455, y: H * 0.38, w: W * 0.48, h: H * 0.56 }, {
     face: deva ? FACE.deva : FACE.print, max: H * 0.083, min: H * 0.052, lead: deva ? 1.42 : 1.26, color: '#2b1d13',
   })
   g.restore()
@@ -404,9 +404,9 @@ export function drawTotaCard(g: Ctx, W: number, H: number, c: IntroCard, lang: L
   g.fillRect(W * 0.08, H * 0.245, W * 0.84, Math.max(1, H * 0.008))
   g.fillRect(W * 0.08, H * 0.262, W * 0.84, Math.max(1, H * 0.0035))
   // the portrait, printed into the notice inside a fine rule
-  const px = W * 0.075
+  const px = W * 0.072
   const py = H * 0.31
-  const pw = W * 0.33
+  const pw = W * 0.32
   const ph = H * 0.6
   g.fillStyle = '#e2d4b2'
   g.fillRect(px, py, pw, ph)
@@ -418,7 +418,7 @@ export function drawTotaCard(g: Ctx, W: number, H: number, c: IntroCard, lang: L
   g.lineWidth = Math.max(1, W * 0.003)
   g.strokeRect(px, py, pw, ph)
   // the line beside it, clear of the stamp below
-  fitText(g, captionOf(c.line, lang), { x: W * 0.45, y: H * 0.32, w: W * 0.46, h: H * 0.38 }, {
+  fitText(g, captionOf(c.line, lang), { x: W * 0.43, y: H * 0.32, w: W * 0.49, h: H * 0.39 }, {
     face: deva ? FACE.deva : FACE.print, max: H * 0.08, min: H * 0.05, lead: deva ? 1.42 : 1.26, color: ink,
   })
   drawParrotStamp(g, W * 0.795, H * 0.785, H * 0.13, wink, paper)

@@ -21,7 +21,7 @@ describe('the cards', () => {
     expect(f.texts.slice(0, 3).map((t) => t.text)).toEqual(['Y', 'O', 'U'])
     const body = f.texts.slice(3)
     expect(body.map((t) => t.text).join(' ')).toBe("A munshi in Bahadur Shah Zafar's darbar at the Red Fort")
-    for (const t of body) expect(t.x + textWidth(t.text, t.font)).toBeLessThanOrEqual(W * 0.92 + 0.5)
+    for (const t of body) expect(t.x + textWidth(t.text, t.font)).toBeLessThanOrEqual(W * 0.935 + 0.5)
     expect(Math.max(...body.map((t) => t.y))).toBeLessThanOrEqual(H)
   })
 
@@ -33,8 +33,9 @@ describe('the cards', () => {
     const body = f.texts.filter((t) => t.text.length > 1)
     expect(body.map((t) => t.text).join(' ')).toBe("An agent for the Firangi, forging papers in the names of the King's men")
     for (const t of body) {
-      expect(t.x).toBeGreaterThanOrEqual(W * 0.44)
-      expect(t.y).toBeLessThanOrEqual(H * 0.7 + fontPx(t.font)) // the stamp sits below
+      expect(t.x).toBeGreaterThanOrEqual(W * 0.43)
+      expect(t.x + textWidth(t.text, t.font)).toBeLessThanOrEqual(W * 0.92 + 0.5)
+      expect(t.y).toBeLessThanOrEqual(H * 0.71 + fontPx(t.font)) // the stamp sits below
     }
   })
 
@@ -52,7 +53,7 @@ describe('the cards', () => {
     const f = fake2d()
     drawYouCard(f.ctx, W, H, { ...you, line: 'an Indian cipher-and-telegraph-and-wireless-and-teleprinter clerk' }, 'en')
     const body = f.texts.slice(3)
-    for (const t of body) expect(t.x + textWidth(t.text, t.font)).toBeLessThanOrEqual(W * 0.92 + 0.5)
+    for (const t of body) expect(t.x + textWidth(t.text, t.font)).toBeLessThanOrEqual(W * 0.935 + 0.5)
     expect(body.some((t) => t.text.endsWith('-'))).toBe(true)
   })
 

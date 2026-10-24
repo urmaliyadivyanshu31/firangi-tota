@@ -1176,7 +1176,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
 
   // (the margin is a share of the width: a short landscape screen takes a thinner one, or the
   // cards would lose a third of the little height there is)
-  const introPoseFn: PoseFn = (aspect) => introPose(aspect, box(0.05 * Math.min(1, 1.2 / aspect)))
+  // (a phone, width-bound, gets a thin margin too: every pixel of card width is type size)
+  const introPoseFn: PoseFn = (aspect) => introPose(aspect, box(aspect < 0.9 ? 0.03 : 0.05 * Math.min(1, 1.2 / aspect)))
 
   const introPlay = (token: number): IntroPlay => {
     const gen = worldGen
