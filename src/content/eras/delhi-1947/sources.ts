@@ -24,6 +24,13 @@ export const sources: Source[] = [
     url: 'https://www.constitutionofindia.net/debates/29-aug-1947/',
   },
   {
+    id: 'cad-24jan1950',
+    author: 'Constituent Assembly of India',
+    title: 'Constituent Assembly Debates, Vol. XII, 24 January 1950 (statement on the National Anthem)',
+    year: '1950',
+    url: 'https://www.constitutionofindia.net/debates/24-jan-1950/',
+  },
+  {
     id: 'capd-1947',
     author: 'Constituent Assembly of Pakistan',
     title: 'Constituent Assembly of Pakistan Debates, Vol. I, Nos. 1–4 (10–14 August 1947) (Nos. 1–3 at CAPD_I_1 to I_3)',
@@ -120,6 +127,13 @@ export const sources: Source[] = [
     title: 'tz database, "asia" file (zones Asia/Karachi and Asia/Kolkata)',
     year: '2026',
     url: 'https://github.com/eggert/tz/blob/main/asia',
+  },
+  {
+    id: 'boom-lease-2026',
+    author: 'BOOM Live',
+    title: 'AI Letter Falsely Claims India Got Independence On 99-Year Lease (the Act makes no mention of a lease)',
+    year: '2026',
+    url: 'https://www.boomlive.in/fact-check/ai-letter-falsely-claims-india-got-independence-on-99-year-lease-32101',
   },
   {
     id: 'livehistory-nadia',
