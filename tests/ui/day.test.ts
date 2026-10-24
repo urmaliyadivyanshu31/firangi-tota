@@ -376,18 +376,39 @@ describe('renderDay: case file and rulebook', () => {
     expect(on.tab.mock.calls.map((c) => c[0])).toEqual(['file', 'rules', 'rules', 'file', 'file', 'file', 'file'])
   })
 
-  it('leaves hardHidden facts as an empty blank in Hard only', () => {
+  it('reads the case file as story paragraphs, one sentence per fact, the facts highlighted', () => {
+    const e = era()
+    e.facts.push({ ...structuredClone(e.facts[1]!), id: 'f3', story: { en: 'The seal is [[round]].', hi: 'मुहर [[गोल]] होती है।' } })
+    const root = mount()
+    renderDay(root, props(e, chapter(e)), handlers())
+    const paras = [...root.querySelectorAll<HTMLElement>('.story__ink .story__para')]
+    expect(paras.map((p) => [...p.querySelectorAll<HTMLElement>('[data-fact]')].map((s) => s.dataset.fact))).toEqual([['f1'], ['f2', 'f3']])
+    expect(paras[1]!.textContent).toBe('The court sat in Delhi. The seal is round.')
+    expect([...root.querySelectorAll('.story__ink .hl')].map((x) => x.textContent)).toEqual(['Monday', 'Delhi', 'round'])
+    expect(root.querySelector('.story__ink')!.getAttribute('aria-hidden')).toBe('true')
+    // screen readers get the same sentences, plain
+    expect([...root.querySelectorAll('.story__said p')].map((p) => p.textContent)).toEqual(['The rising began on a Monday.', 'The court sat in Delhi. The seal is round.'])
+    expect(root.querySelector('.story')!.textContent).not.toContain('[[')
+    renderDay(root, props(e, chapter(e), { lang: 'hi' }), handlers())
+    expect(root.querySelector('.story__said p')!.textContent).toBe('विद्रोह सोमवार को शुरू हुआ।')
+    expect(root.querySelector('.story__ink .hl')!.textContent).toBe('सोमवार')
+  })
+
+  it("blanks a hardHidden fact's highlighted words in Hard only, and reads them as blank", () => {
     const e = era()
     e.facts[0]!.hardHidden = true
     const root = mount()
     renderDay(root, props(e, chapter(e, { difficulty: 'hard', days: 14 })), handlers())
-    const value = (id: string) => root.querySelector<HTMLElement>(`[data-fact="${id}"] .fact__value`)!
-    expect(value('f1').classList.contains('is-blank')).toBe(true)
-    expect(value('f1').textContent).toBe('')
-    expect(value('f1').getAttribute('aria-label')).toBe(strings.en.blankFact)
-    expect(value('f2').textContent).toBe('The court sat in Delhi.')
+    const line = (id: string) => root.querySelector<HTMLElement>(`.story__ink [data-fact="${id}"]`)!
+    expect(line('f1').classList.contains('is-hidden')).toBe(true)
+    expect(line('f1').querySelectorAll('.hl.is-blank')).toHaveLength(1)
+    expect(line('f1').textContent).toBe('The rising began on a .')
+    expect(line('f2').textContent).toBe('The court sat in Delhi.')
+    expect(root.querySelector('.story__said')!.textContent).toContain(`The rising began on a ${strings.en.blankFact}.`)
+    expect(root.querySelector('.story__said')!.textContent).not.toContain('Monday')
     renderDay(root, props(e, chapter(e, { difficulty: 'medium', days: 10 })), handlers())
-    expect(value('f1').textContent).toBe('The rising began on a Monday.')
+    expect(line('f1').textContent).toBe('The rising began on a Monday.')
+    expect(root.querySelector('.is-blank')).toBeNull()
   })
 
   it('pencil-marks the case-file lines that relate to the message, when pencil marks are on', () => {
@@ -397,8 +418,15 @@ describe('renderDay: case file and rulebook', () => {
     renderDay(root, props(e, chapter(e, { day: 2 })), handlers())
     const marked = () => [...root.querySelectorAll<HTMLElement>('.fact.is-pencilled')].map((f) => f.dataset.fact)
     expect(marked()).toEqual(['f2'])
+    // its sentence carries the pencil's tick, held to its first word, and reads the same
+    const line = root.querySelector<HTMLElement>('[data-fact="f2"]')!
+    expect(line.firstElementChild!.className).toBe('fact__tick')
+    expect(line.firstElementChild!.textContent).toBe('The')
+    expect(line.textContent).toBe('The court sat in Delhi.')
+    expect(root.querySelectorAll('.fact__tick')).toHaveLength(1)
     renderDay(root, props(e, chapter(e, { day: 2, difficulty: 'hard', days: 14 })), handlers())
     expect(marked()).toEqual([])
+    expect(root.querySelector('.fact__tick')).toBeNull()
   })
 
   it('pencils the same case-file lines on both halves of a pair, from the union of their checks', () => {
