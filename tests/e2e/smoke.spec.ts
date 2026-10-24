@@ -413,7 +413,7 @@ test('plays under the production security headers (vercel.json) with no policy v
   expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
 })
 
-test('the gramophone record switches to Music: YouTube’s own player from youtube-nocookie, kept for the next visit, nothing played', async ({ page }) => {
+test('the record opens its sleeve: a Focus track plays from our own server, a song in YouTube’s own player, both kept, nothing played', async ({ page }) => {
   // the test never reaches YouTube: the player page is answered with a blank page, and under
   // automation the game never asks for the IFrame API (?yt=1 only lets the frame get its address)
   const asked: string[] = []
@@ -428,23 +428,45 @@ test('the gramophone record switches to Music: YouTube’s own player from youtu
   })
   await page.goto(`${START}&yt=1`)
   await expect(page.locator('.screen--main')).toBeVisible()
-  await page.locator('[data-era="lahore-1929"]').click()
   const rec = page.locator('.controls-dock [data-action="music"]')
   await expect(rec).toHaveAttribute('aria-pressed', 'false')
   await expect(rec).toHaveAttribute('aria-label', 'संगीत')
   expect(asked).toEqual([]) // nothing of YouTube on page load
   await rec.click()
+  const sleeve = page.locator('.sleeve')
+  await expect(sleeve).toBeVisible()
+  await expect(rec).toHaveAttribute('aria-expanded', 'true')
+  await expect(sleeve.locator('[role="menuitemradio"]')).toHaveCount(8)
+  await expect(sleeve).toContainText('ध्यान')
+  await expect(sleeve).toContainText('गीत')
+  // the sleeve sits inside the screen, under the record
+  const box = (await sleeve.boundingBox())!
+  const vw = page.viewportSize()!.width
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(vw)
+  expect(box.y).toBeGreaterThan((await rec.boundingBox())!.y)
+  // a Focus track: our own recording, fetched only now
+  const focus = page.waitForRequest(/\/audio\/focus-rain\.m4a/)
+  await sleeve.locator('[data-choice="focus:rain"]').click()
+  await focus
   await expect(rec).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.controls-dock [data-action="sound"]')).toHaveAttribute('aria-pressed', 'true')
+  await expect(sleeve.locator('[data-choice="focus:rain"]')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.locator('.gramo')).toHaveCount(0)
+  expect(asked).toEqual([])
+  // a song: YouTube's own player from its privacy-enhanced host
+  await sleeve.locator('[data-choice="song:aarambh"]').click()
   const player = page.locator('.gramo .gramo__player')
-  await expect(player).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/Ha_P2DW9VR4\?.*enablejsapi=1/)
-  await expect(page.locator('.gramo')).toContainText('मेरा रंग दे बसंती चोला')
+  await expect(player).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/x9feF5rtMAc\?.*enablejsapi=1/)
+  await expect(page.locator('.gramo')).toContainText('आरंभ है प्रचंड')
+  await page.keyboard.press('Escape')
+  await expect(sleeve).toHaveCount(0)
   // YouTube's player is always visible and, once the cabinet has opened, at least 200 x 200 px
   await expect.poll(async () => { const b = await player.boundingBox(); return b ? Math.min(b.width, b.height) : 0 }).toBeGreaterThanOrEqual(200)
   expect(asked.some((u) => u.includes('iframe_api'))).toBe(false)
   expect(await noHorizontalScroll(page)).toBe(true)
   expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
-  // the next visit remembers Music, and still loads nothing until the first tap
+  // the next visit remembers the song, and still loads nothing until the first tap
   asked.length = 0
   await page.reload()
   await expect(page.locator('.controls-dock [data-action="music"]')).toHaveAttribute('aria-pressed', 'true')

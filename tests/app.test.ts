@@ -20,6 +20,7 @@ import type { EarnSpec, IntroSpec, PileSpec, RevealSpec, ScreenRect, SheetSpec, 
 const m = vi.hoisted(() => {
   // Music mode's YouTube player, stubbed: never a real network call
   const duckers: Array<(on: boolean) => void> = []
+  const focusers: Array<(s: string) => void> = []
   const players: FakePlayerT[] = []
   interface FakePlayerT {
     el: HTMLIFrameElement
@@ -86,8 +87,11 @@ const m = vi.hoisted(() => {
     audio: {
       unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn(), setHidden: vi.fn(), setRoom: vi.fn(),
       onDuck: vi.fn((fn: (on: boolean) => void) => { duckers.push(fn) }),
+      focus: vi.fn(), setMusicVolume: vi.fn(),
+      onFocus: vi.fn((fn: (s: string) => void) => { focusers.push(fn) }),
     },
     duckers,
+    focusers,
     yt: { players, load: vi.fn((): Promise<unknown> => Promise.resolve({ Player: FakePlayer })) },
   }
 })
@@ -235,6 +239,7 @@ beforeEach(() => {
   m.mountFallback.mockImplementation(() => m.fallback)
   m.yt.players.length = 0
   m.duckers.length = 0
+  m.focusers.length = 0
   // the reward toast draws its icon on a canvas, which jsdom cannot
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => null) as unknown as HTMLCanvasElement['getContext'])
 })
@@ -1738,53 +1743,200 @@ describe('the verdict on the paper: placing the buttons', () => {
   })
 })
 
-describe('Music mode: the gramophone record beside the horn', () => {
+describe('the record: its menu of Focus tracks, two songs and the room', () => {
   const gramo = () => document.querySelector<HTMLElement>('.gramo')
   const frameEl = () => document.querySelector<HTMLIFrameElement>('.gramo__player')
   const player = () => m.yt.players[m.yt.players.length - 1]!
-  /** Picks Music on the main page and waits for the cabinet and its (stubbed) player. */
-  async function pickMusic(): Promise<void> {
-    dock('[data-action="music"]')!.click()
+  const sleeve = () => document.querySelector<HTMLElement>('.sleeve')
+  const choiceBtn = (c: string) => sleeve()!.querySelector<HTMLButtonElement>(`[data-choice="${c}"]`)!
+  const checked = () => [...sleeve()!.querySelectorAll<HTMLElement>('[aria-checked="true"]')].map((b) => b.dataset.choice)
+  const keyOn = (el: Element, key: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+  /** Taps the record (the corner's, or the one given) and waits for its sleeve. */
+  async function openMenu(rec: HTMLElement = dock('[data-action="music"]')!): Promise<void> {
+    rec.click()
+    await vi.waitFor(() => expect(sleeve()).not.toBeNull())
+  }
+  /** Picks a song from the record's menu, puts the menu away, and waits for the cabinet's player. */
+  async function pickSong(id = 'aarambh'): Promise<void> {
+    await openMenu()
+    choiceBtn(`song:${id}`).click()
+    keyOn(sleeve()!, 'Escape')
     await vi.waitFor(() => expect(m.yt.players.length).toBeGreaterThan(0))
   }
 
-  it('starts in Room mode, labelled for both modes', () => {
+  it('starts in Room mode, labelled for both modes, with nothing of the menu or the songs loaded', () => {
     boot('?lang=en')
     const rec = dock('[data-action="music"]')!
     expect(rec.getAttribute('aria-pressed')).toBe('false')
     expect(rec.getAttribute('aria-label')).toBe('Music')
+    expect(rec.getAttribute('aria-haspopup')).toBe('menu')
+    expect(rec.getAttribute('aria-expanded')).toBe('false')
     expect(rec.title).toBe('Room sound')
-    expect(gramo()).toBeNull() // nothing of Music loads until it is picked
+    expect(sleeve()).toBeNull()
+    expect(gramo()).toBeNull()
+    expect(m.yt.load).not.toHaveBeenCalled()
+    expect(m.audio.focus).not.toHaveBeenCalled()
+  })
+
+  it('opens a sleeve under the record: five Focus tracks, two songs and the room, the current one ticked', async () => {
+    boot('?lang=en')
+    const rec = dock('[data-action="music"]')!
+    await openMenu()
+    expect(rec.getAttribute('aria-expanded')).toBe('true')
+    const menu = sleeve()!.querySelector('[role="menu"]')!
+    expect(menu.getAttribute('aria-label')).toBe('Music')
+    const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    expect(items.map((b) => b.dataset.choice)).toEqual([
+      'focus:rain', 'focus:river', 'focus:sunrise', 'focus:birds', 'focus:crickets', 'song:aarambh', 'song:ik-bagal', 'room',
+    ])
+    expect(sleeve()!.textContent).toContain('Focus')
+    expect(sleeve()!.textContent).toContain('Songs')
+    expect(choiceBtn('focus:rain').textContent).toBe('Monsoon on the roof')
+    expect(choiceBtn('song:ik-bagal').textContent).toContain('Ik Bagal Mein Chaand Hoga')
+    expect(choiceBtn('room').textContent).toBe('Room sound')
+    expect(checked()).toEqual(['room'])
+    expect(document.activeElement).toBe(choiceBtn('room')) // focus lands on the current choice
+    expect(m.audio.cue).toHaveBeenCalledWith('toggleClick')
+    // no full stop anywhere on it
+    expect(sleeve()!.textContent).not.toMatch(/\.\s*$/m)
+  })
+
+  it('moves with the arrow keys, Home and End, and Escape puts it away and gives the record its focus back', async () => {
+    boot('?lang=en')
+    await openMenu()
+    keyOn(document.activeElement!, 'ArrowDown') // from the last (the room) round to the first
+    expect(document.activeElement).toBe(choiceBtn('focus:rain'))
+    keyOn(document.activeElement!, 'ArrowDown')
+    expect(document.activeElement).toBe(choiceBtn('focus:river'))
+    keyOn(document.activeElement!, 'ArrowUp')
+    keyOn(document.activeElement!, 'ArrowUp')
+    expect(document.activeElement).toBe(choiceBtn('room'))
+    keyOn(document.activeElement!, 'Home')
+    expect(document.activeElement).toBe(choiceBtn('focus:rain'))
+    keyOn(document.activeElement!, 'End')
+    expect(document.activeElement).toBe(choiceBtn('room'))
+    // only the focused item is in the tab order
+    expect(sleeve()!.querySelectorAll('[role="menuitemradio"][tabindex="0"]')).toHaveLength(1)
+    keyOn(document.activeElement!, 'Escape')
+    expect(sleeve()).toBeNull()
+    const rec = dock('[data-action="music"]')!
+    expect(document.activeElement).toBe(rec)
+    expect(rec.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('goes away on a tap outside it, or on the record again', async () => {
+    const { ui } = boot('?lang=en')
+    await openMenu()
+    ui.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    expect(sleeve()).toBeNull()
+    await openMenu()
+    dock('[data-action="music"]')!.click()
+    expect(sleeve()).toBeNull()
+  })
+
+  it('a Focus track plays through the engine: sound on, the room faded out, ticked, kept, and no YouTube', async () => {
+    boot('?lang=en')
+    await openMenu()
+    choiceBtn('focus:river').click()
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
+    expect(localStorage.getItem('ft:muted')).toBe('false')
+    expect(m.audio.focus).toHaveBeenLastCalledWith({ file: 'focus-river.m4a', seconds: 109 })
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(false)
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"focus:river"')
+    expect(checked()).toEqual(['focus:river'])
+    expect(sleeve()).not.toBeNull() // it stays open, so another can be heard
+    const rec = dock('[data-action="music"]')!
+    expect(rec.getAttribute('aria-pressed')).toBe('true')
+    // the record turns once the track really plays
+    expect(rec.classList.contains('is-spinning')).toBe(false)
+    for (const fn of m.focusers) fn('playing')
+    expect(rec.classList.contains('is-spinning')).toBe(true)
+    // another track, then the room
+    choiceBtn('focus:crickets').click()
+    expect(m.audio.focus).toHaveBeenLastCalledWith({ file: 'focus-crickets.m4a', seconds: 150 })
+    choiceBtn('room').click()
+    expect(m.audio.focus).toHaveBeenLastCalledWith(null)
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"room"')
+    await flush()
+    expect(gramo()).toBeNull()
     expect(m.yt.load).not.toHaveBeenCalled()
   })
 
-  it('one tap on the record turns the sound on and plays the era’s song in the cabinet, with the room faded out', async () => {
-    const { ui } = boot('?lang=en')
-    click(ui, '[data-era="lahore-1929"]')
-    await pickMusic()
+  it('the sleeve’s brass knob sets the music volume, kept for the next visit', async () => {
+    boot('?lang=en')
+    expect(m.audio.setMusicVolume).toHaveBeenLastCalledWith(0.65)
+    await openMenu()
+    const vol = sleeve()!.querySelector<HTMLElement>('[data-action="music-volume"]')!
+    expect(vol.getAttribute('role')).toBe('slider')
+    expect(vol.getAttribute('aria-label')).toBe('Volume')
+    expect(vol.getAttribute('aria-valuenow')).toBe('65')
+    keyOn(vol, 'ArrowUp')
+    expect(vol.getAttribute('aria-valuenow')).toBe('70')
+    expect(m.audio.setMusicVolume).toHaveBeenLastCalledWith(0.7)
+    expect(localStorage.getItem('ft:musicVolume')).toBe('70')
+    expect(document.activeElement).toBe(choiceBtn('room')) // the knob's arrows never move the menu
+    keyOn(vol, 'Home')
+    expect(m.audio.setMusicVolume).toHaveBeenLastCalledWith(0)
+  })
+
+  it('a Focus track that cannot load gives way to the room', async () => {
+    boot('?lang=en')
+    await openMenu()
+    choiceBtn('focus:rain').click()
+    for (const fn of m.focusers) fn('failed')
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"room"')
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
+    expect(m.audio.focus).toHaveBeenLastCalledWith(null)
+    expect(checked()).toEqual(['room'])
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('sound off quiets a Focus track and brings the room back; sound on plays it again', async () => {
+    localStorage.setItem('ft:muted', 'false')
+    localStorage.setItem('ft:musicChoice', '"focus:birds"')
+    boot('?lang=en')
+    expect(m.audio.focus).toHaveBeenLastCalledWith({ file: 'focus-birds.m4a', seconds: 143 })
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(false)
+    dock('[data-action="sound"]')!.click()
+    expect(m.audio.focus).toHaveBeenLastCalledWith(null)
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
+    dock('[data-action="sound"]')!.click()
+    expect(m.audio.focus).toHaveBeenLastCalledWith({ file: 'focus-birds.m4a', seconds: 143 })
+  })
+
+  it('a Music mode kept from before the menu becomes the first Focus track', () => {
+    localStorage.setItem('ft:muted', 'false')
+    localStorage.setItem('ft:soundMode', '"music"')
+    boot('?lang=en')
+    expect(m.audio.focus).toHaveBeenLastCalledWith({ file: 'focus-rain.m4a', seconds: 150 })
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('picking a song turns the sound on and plays it in the cabinet, with the room faded out', async () => {
+    boot('?lang=en')
+    await pickSong('ik-bagal')
     expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
-    expect(localStorage.getItem('ft:muted')).toBe('false')
-    expect(localStorage.getItem('ft:soundMode')).toBe('"music"')
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"song:ik-bagal"')
     const rec = dock('[data-action="music"]')!
     expect(rec.getAttribute('aria-pressed')).toBe('true')
     expect(rec.title).toBe('Music')
-    expect(dock('[data-action="sound"]')!.getAttribute('aria-pressed')).toBe('true')
     expect(gramo()!.hidden).toBe(false)
     expect(m.audio.setRoom).toHaveBeenLastCalledWith(false)
-    // YouTube's own player from its privacy-enhanced host, starting on 1929's song
-    expect(frameEl()!.src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/Ha_P2DW9VR4\?/)
+    expect(m.audio.focus).toHaveBeenLastCalledWith(null)
+    // YouTube's own player from its privacy-enhanced host
+    expect(frameEl()!.src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/67_CU8E9sdY\?/)
     expect(frameEl()!.src).toContain('enablejsapi=1')
     expect(player().el).toBe(frameEl())
-    expect(gramo()!.textContent).toContain('Mera Rang De Basanti Chola')
+    expect(gramo()!.textContent).toContain('Ik Bagal Mein Chaand Hoga')
     player().events.onReady!({})
     expect(player().setVolume).toHaveBeenLastCalledWith(65)
     expect(player().playVideo).toHaveBeenCalled()
-    expect(m.audio.cue).toHaveBeenCalledWith('toggleClick')
   })
 
   it('turns the record while a song really plays, and stops it when it pauses', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     expect(dock('[data-action="music"]')!.classList.contains('is-spinning')).toBe(false)
     player().events.onStateChange!({ data: 1 })
@@ -1793,44 +1945,59 @@ describe('Music mode: the gramophone record beside the horn', () => {
     expect(dock('[data-action="music"]')!.classList.contains('is-spinning')).toBe(false)
   })
 
-  it('goes back to the room from the record or from the cabinet: the song pauses and the room fades back', async () => {
+  it('goes back to the room from the menu or from the cabinet: the song pauses and the room fades back', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
-    dock('[data-action="music"]')!.click()
+    await openMenu()
+    expect(checked()).toEqual(['song:aarambh'])
+    choiceBtn('room').click()
     expect(player().pauseVideo).toHaveBeenCalled()
     expect(gramo()!.hidden).toBe(true)
     expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
-    expect(localStorage.getItem('ft:soundMode')).toBe('"room"')
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"room"')
     // again, and this time put away from the cabinet's own knob
-    dock('[data-action="music"]')!.click()
+    choiceBtn('song:aarambh').click()
     await vi.waitFor(() => expect(gramo()!.hidden).toBe(false))
     expect(m.yt.players).toHaveLength(1) // the same player carries on
     document.querySelector<HTMLElement>('[data-action="music-fold"]')!.click()
     expect(gramo()!.hidden).toBe(true)
     expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('false')
-    expect(localStorage.getItem('ft:soundMode')).toBe('"room"')
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"room"')
+    expect(checked()).toEqual(['room'])
   })
 
-  it('steps through the playlist with the brass knobs', async () => {
+  it('a song picked from the menu while another plays is loaded in the same player', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong('aarambh')
+    player().events.onReady!({})
+    await openMenu()
+    choiceBtn('song:ik-bagal').click()
+    await vi.waitFor(() => expect(player().loadVideoById).toHaveBeenLastCalledWith('67_CU8E9sdY'))
+    expect(m.yt.players).toHaveLength(1)
+    expect(gramo()!.querySelector('.gramo__song')!.textContent).toBe('Ik Bagal Mein Chaand Hoga')
+  })
+
+  it('steps between the two songs with the brass knobs, and the menu follows', async () => {
+    boot('?lang=en')
+    await pickSong()
     player().events.onReady!({})
     const song = () => gramo()!.querySelector('.gramo__song')!.textContent
     const first = song()
     document.querySelector<HTMLElement>('[data-action="music-next"]')!.click()
     expect(player().loadVideoById).toHaveBeenCalledTimes(1)
     expect(song()).not.toBe(first)
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"song:ik-bagal"')
     document.querySelector<HTMLElement>('[data-action="music-prev"]')!.click()
     expect(song()).toBe(first)
-    // a song that ends leads on to the next
+    // a song that ends leads on to the other
     player().events.onStateChange!({ data: 0 })
     expect(player().loadVideoById).toHaveBeenCalledTimes(3)
   })
 
   it('dips the songs under the read-aloud voice and the caught alarm, then brings them back', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     for (const fn of m.duckers) fn(true)
     expect(player().setVolume).toHaveBeenLastCalledWith(39) // 60% of the default 65
@@ -1840,7 +2007,7 @@ describe('Music mode: the gramophone record beside the horn', () => {
 
   it('folds to a small frame that keeps playing, and back, remembered for the next visit', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     player().events.onStateChange!({ data: 1 })
     const frame = frameEl()
@@ -1876,7 +2043,7 @@ describe('Music mode: the gramophone record beside the horn', () => {
   it('opens small when it was left small', async () => {
     localStorage.setItem('ft:playerSize', '"mini"')
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     expect(gramo()!.dataset.size).toBe('mini')
   })
 
@@ -1884,26 +2051,28 @@ describe('Music mode: the gramophone record beside the horn', () => {
     localStorage.setItem('ft:playerSize', '"mini"')
     m.yt.load.mockImplementationOnce(() => Promise.resolve(null))
     boot('?lang=en')
-    dock('[data-action="music"]')!.click()
+    await openMenu()
+    choiceBtn('song:aarambh').click()
     await vi.waitFor(() => expect(gramo()?.classList.contains('has-note')).toBe(true))
     expect(gramo()!.dataset.size).toBe('mini')
     expect(gramo()!.querySelector('.gramo__note')!.textContent).toBe('The music could not load · room sound is back')
   })
 
-  it('turns the brass volume knob with the keys and the wheel, keeps it, and dips relative to it', async () => {
+  it('turns the cabinet’s brass volume knob with the keys and the wheel, keeps it, and dips relative to it', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     expect(player().setVolume).toHaveBeenLastCalledWith(65)
-    const vol = document.querySelector<HTMLElement>('[data-action="music-volume"]')!
+    const vol = gramo()!.querySelector<HTMLElement>('[data-action="music-volume"]')!
     expect(vol.getAttribute('role')).toBe('slider')
     expect(vol.getAttribute('aria-label')).toBe('Volume')
     expect(vol.getAttribute('aria-valuenow')).toBe('65')
-    const key = (k: string) => vol.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+    const key = (k: string) => keyOn(vol, k)
     key('ArrowUp')
     expect(vol.getAttribute('aria-valuenow')).toBe('70')
     expect(player().setVolume).toHaveBeenLastCalledWith(70)
     expect(localStorage.getItem('ft:musicVolume')).toBe('70')
+    expect(m.audio.setMusicVolume).toHaveBeenLastCalledWith(0.7) // a Focus track picked later plays at it too
     key('PageDown')
     expect(vol.getAttribute('aria-valuenow')).toBe('60')
     key('End')
@@ -1930,29 +2099,30 @@ describe('Music mode: the gramophone record beside the horn', () => {
   it('starts at the kept volume, and the default when what was kept is nonsense', async () => {
     localStorage.setItem('ft:musicVolume', '30')
     boot('?lang=en')
-    await pickMusic()
+    expect(m.audio.setMusicVolume).toHaveBeenLastCalledWith(0.3)
+    await pickSong()
     player().events.onReady!({})
     expect(player().setVolume).toHaveBeenLastCalledWith(30)
-    expect(document.querySelector('[data-action="music-volume"]')!.getAttribute('aria-valuenow')).toBe('30')
+    expect(gramo()!.querySelector('[data-action="music-volume"]')!.getAttribute('aria-valuenow')).toBe('30')
   })
 
   it('ignores a kept volume that is not a number', async () => {
     localStorage.setItem('ft:musicVolume', '"loud"')
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     expect(player().setVolume).toHaveBeenLastCalledWith(65)
   })
 
   it('sound off silences the songs too, and sound on brings them back', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     player().events.onStateChange!({ data: 1 })
     dock('[data-action="sound"]')!.click()
     expect(player().pauseVideo).toHaveBeenCalled()
     expect(gramo()!.hidden).toBe(true)
-    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('true') // still Music, just quiet
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('true') // still a song, just quiet
     dock('[data-action="sound"]')!.click()
     await vi.waitFor(() => expect(gramo()!.hidden).toBe(false))
     expect(player().playVideo).toHaveBeenCalledTimes(2)
@@ -1960,7 +2130,7 @@ describe('Music mode: the gramophone record beside the horn', () => {
 
   it('pauses on a hidden tab and plays on when it comes back', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     player().events.onStateChange!({ data: 1 })
     setHidden(true)
@@ -1969,9 +2139,9 @@ describe('Music mode: the gramophone record beside the horn', () => {
     expect(player().playVideo).toHaveBeenCalledTimes(2)
   })
 
-  it('remembers Music for the next visit, and starts it on the first tap, not on page load', async () => {
+  it('remembers a song for the next visit, and starts it on the first tap, not on page load', async () => {
     localStorage.setItem('ft:muted', 'false')
-    localStorage.setItem('ft:soundMode', '"music"')
+    localStorage.setItem('ft:musicChoice', '"song:ik-bagal"')
     boot('?lang=en')
     expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('true')
     await flush()
@@ -1980,23 +2150,25 @@ describe('Music mode: the gramophone record beside the horn', () => {
     document.body.dispatchEvent(new Event('pointerup', { bubbles: true }))
     await vi.waitFor(() => expect(m.yt.players).toHaveLength(1))
     expect(gramo()!.hidden).toBe(false)
+    expect(gramo()!.textContent).toContain('Ik Bagal Mein Chaand Hoga')
   })
 
   it('falls back to the room quietly, with a note on the cabinet, when YouTube cannot load', async () => {
     m.yt.load.mockImplementationOnce(() => Promise.resolve(null))
     boot('?lang=en')
-    dock('[data-action="music"]')!.click()
+    await openMenu()
+    choiceBtn('song:aarambh').click()
     await vi.waitFor(() => expect(gramo()?.querySelector<HTMLElement>('.gramo__note')?.hidden).toBe(false))
     expect(gramo()!.querySelector('.gramo__note')!.textContent).toBe('The music could not load · room sound is back')
     expect(frameEl()).toBeNull()
     expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
     expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('false')
-    expect(localStorage.getItem('ft:soundMode')).toBe('"room"')
+    expect(localStorage.getItem('ft:musicChoice')).toBe('"room"')
   })
 
-  it('skips a song that will not play here, and gives way to the room if none will', async () => {
+  it('skips a song that will not play here, and gives way to the room if neither will', async () => {
     boot('?lang=en')
-    await pickMusic()
+    await pickSong()
     player().events.onReady!({})
     player().events.onError!({ data: 150 })
     expect(player().loadVideoById).toHaveBeenCalledTimes(1)
@@ -2009,32 +2181,46 @@ describe('Music mode: the gramophone record beside the horn', () => {
     Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => true })
     try {
       boot('?lang=en')
-      dock('[data-action="music"]')!.click()
+      await openMenu()
+      choiceBtn('song:aarambh').click()
       await vi.waitFor(() => expect(frameEl()).not.toBeNull())
       await flush()
       expect(m.yt.load).not.toHaveBeenCalled()
       expect(frameEl()!.getAttribute('src')).toBe('about:blank')
-      expect(frameEl()!.dataset.src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]{11}\?/)
+      expect(frameEl()!.dataset.src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/x9feF5rtMAc\?/)
     } finally {
       Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => false })
     }
   })
 
-  it('switches from the day’s top bar too, and relabels the cabinet in Hindi', async () => {
+  it('opens from the day’s top bar too, and speaks Hindi', async () => {
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
-    click(ui, '.hud [data-action="music"]')
+    click(ui, '.hud [data-action="lang"] [data-lang="hi"]')
+    const rec = $(ui, '.hud [data-action="music"]')!
+    expect(rec.getAttribute('aria-label')).toBe('संगीत')
+    await openMenu(rec)
+    expect(sleeve()!.getAttribute('lang')).toBe('hi')
+    expect(sleeve()!.textContent).toContain('ध्यान')
+    expect(sleeve()!.textContent).toContain('गीत')
+    expect(choiceBtn('room').textContent).toBe('कमरे की आवाज़')
+    expect(choiceBtn('focus:rain').textContent).toBe('छत पर बरसात')
+    choiceBtn('song:aarambh').click()
     await vi.waitFor(() => expect(m.yt.players).toHaveLength(1))
     expect($(ui, '.hud [data-action="music"]')!.getAttribute('aria-pressed')).toBe('true')
     expect(gramo()!.dataset.screen).toBe('day')
-    expect(gramo()!.textContent).toContain('Aarambh Hai Prachand') // 1857's song
-    click(ui, '.hud [data-action="lang"] [data-lang="hi"]')
-    expect($(ui, '.hud [data-action="music"]')!.getAttribute('aria-label')).toBe('संगीत')
     expect(gramo()!.textContent).toContain('आरंभ है प्रचंड')
     expect(gramo()!.querySelector('[data-action="music-next"]')!.getAttribute('aria-label')).toBe('अगला गाना')
-    click(ui, '.hud [data-action="music"]')
+    choiceBtn('room').click()
     expect($(ui, '.hud [data-action="music"]')!.title).toBe('कमरे की आवाज़')
     expect(gramo()!.hidden).toBe(true)
+  })
+
+  it('leaving the screen puts the sleeve away', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await openMenu()
+    await toDay1(ui)
+    expect(sleeve()).toBeNull()
   })
 })
 
