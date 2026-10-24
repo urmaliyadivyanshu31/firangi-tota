@@ -2,6 +2,7 @@ import type { Era, EraId, Message } from '../content/types'
 import { ERAS } from '../content/registry'
 import { DAILY_EPOCH } from './config'
 import { mulberry32, seedFrom } from './rng'
+import { inMode } from './run'
 
 const IST_OFFSET_MS = 330 * 60_000
 const DAY_MS = 86_400_000
@@ -21,7 +22,8 @@ export function dailyFrom(nowMs: number, eras: Era[]): Daily {
   const rng = mulberry32(seedFrom(isoDate))
 
   // Seeded shuffle of the pool without onDay messages (they depend on a chapter's day), one per pair.
-  const pool = era.messages.filter((m) => m.onDay === undefined)
+  // the daily puzzle reads like Medium (its case file is Medium's), so no Hard-only message
+  const pool = era.messages.filter((m) => m.onDay === undefined && inMode(m, 'medium'))
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1))
     ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
