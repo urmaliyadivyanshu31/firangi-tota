@@ -19,7 +19,11 @@ export interface Fact {
   /** Its paragraph in the case file (facts are listed in story order, so paragraphs only go up). */
   para: 1 | 2 | 3
   sources: SourceRef[]; hardHidden?: boolean
+  /** The case file grows with the mode (owner 10-24): no minMode = every mode; 'medium' = Medium and Hard; 'hard' = Hard only. */
+  minMode?: MinMode
 }
+/** The lowest difficulty a fact is in the case file for, or a message can appear in. */
+export type MinMode = 'medium' | 'hard'
 export interface Rule { id: string; text: L10n; arrivesOnDay: number } // 1-based day index
 export interface Tell {
   kind: TellKind; explain: L10n; factId?: string; sources?: SourceRef[]
@@ -27,6 +31,8 @@ export interface Tell {
 }
 export interface Message {
   id: string; tier: Tier; real: boolean; pair?: string; onDay?: number;
+  /** Only in this mode and above (a message that needs a Medium or Hard case-file fact). Both halves of a pair share it. */
+  minMode?: MinMode;
   from: L10n; to: L10n; text: L10n;               // text may contain {date} {weekday} {date+N} {weekday+N}
   checks?: { en: string[]; hi: string[] };        // pencil-mark substrings (after placeholder fill)
   document?: { sources: SourceRef[] };            // present => "📜 Real document"

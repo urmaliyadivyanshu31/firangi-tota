@@ -172,3 +172,29 @@ describe('buildRun', () => {
     expect(hits / 500).toBeLessThan(EVENT_CHANCE + 0.07)
   })
 })
+
+describe('modes: the case file and the messages grow with the difficulty', () => {
+  it('inMode: no minMode is everywhere; medium is Medium and Hard; hard is Hard only', async () => {
+    const { inMode } = await import('../../src/game/run')
+    expect(inMode({}, 'easy')).toBe(true)
+    expect(inMode({ minMode: 'medium' }, 'easy')).toBe(false)
+    expect(inMode({ minMode: 'medium' }, 'medium')).toBe(true)
+    expect(inMode({ minMode: 'hard' }, 'medium')).toBe(false)
+    expect(inMode({ minMode: 'hard' }, 'hard')).toBe(true)
+  })
+
+  it('a run never shows a message above its mode', () => {
+    const base = fixtureEra()
+    // one undated unit (a pair, or a single message) becomes Hard-only
+    const unit = base.messages.find((m) => m.onDay === undefined)!
+    const key = unit.pair ?? unit.id
+    const tagged: Era = { ...base, messages: base.messages.map((m) => ((m.pair ?? m.id) === key ? { ...m, minMode: 'hard' as const } : m)) }
+    const hardOnly = new Set(tagged.messages.filter((m) => m.minMode === 'hard').map((m) => m.id))
+    expect(hardOnly.size).toBeGreaterThan(0)
+    for (let seed = 1; seed <= 60; seed++) {
+      for (const d of ['easy', 'medium'] as const) {
+        for (const m of buildRun(tagged, d, mulberry32(seed))) expect(hardOnly.has(m.id)).toBe(false)
+      }
+    }
+  })
+})

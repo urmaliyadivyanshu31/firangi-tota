@@ -1,6 +1,13 @@
 import type { Era, Message, Tier } from '../content/types'
 import { DAYS, EVENT_CHANCE, type Difficulty } from './config'
 
+const MODE_RANK: Record<Difficulty | 'medium' | 'hard', number> = { easy: 0, medium: 1, hard: 2 }
+
+/** A message (or a case-file fact) belongs in mode `d` when its minMode is at or below it. */
+export function inMode(x: { minMode?: 'medium' | 'hard' }, d: Difficulty): boolean {
+  return x.minMode === undefined || MODE_RANK[x.minMode] <= MODE_RANK[d]
+}
+
 /**
  * First day this message may appear: when the last rule needed to catch the tells of the message,
  * or of any message sharing its pair key, has arrived (a pair is gated as a unit, so a
@@ -43,7 +50,9 @@ export const unitOf = (m: Message): string => m.pair ?? `#${m.id}`
  * pair and no-duplicate rules never relax. Recent units only steer the picks, so a replay
  * brings different messages in a different order while every dated event keeps its true day.
  */
-export function buildRun(era: Era, d: Difficulty, rng: () => number, recent: ReadonlySet<string> = new Set()): Message[] {
+export function buildRun(full: Era, d: Difficulty, rng: () => number, recent: ReadonlySet<string> = new Set()): Message[] {
+  // only the messages this mode can show (a Hard-only message needs the Hard case file)
+  const era: Era = { ...full, messages: full.messages.filter((m) => inMode(m, d)) }
   const days = DAYS[d]
   const fresh = (m: Message) => !recent.has(unitOf(m))
   // the undated pool alone can fill the whole run, so a dated event seen last time may give way

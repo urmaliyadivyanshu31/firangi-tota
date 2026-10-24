@@ -258,6 +258,16 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
   const factIds = new Set(era.facts.map((f) => f.id))
   const ruleIds = new Set(era.rules.map((r) => r.id))
 
+  // a pair is gated as a unit: a Hard-only forgery must never reveal its genuine twin as the "easy" kind
+  const pairModes = new Map<string, string>()
+  for (const m of era.messages) {
+    if (m.pair === undefined) continue
+    const k = m.minMode ?? 'easy'
+    const seen = pairModes.get(m.pair)
+    if (seen === undefined) pairModes.set(m.pair, k)
+    else if (seen !== k) add(m.id, `pair "${m.pair}" mixes minMode ${seen} and ${k}`)
+  }
+
   const refs = (id: string, field: string, list: SourceRef[] | undefined, required: boolean) => {
     if (required && (!list || list.length === 0)) add(id, `${field} needs at least one source`)
     for (const r of list ?? []) {
@@ -332,6 +342,10 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
     m.tells?.forEach((t, i) => {
       l10n(id, `tells[${i}].explain`, t.explain)
       if (t.factId !== undefined && !factIds.has(t.factId)) add(id, `tells[${i}] has unknown fact "${t.factId}"`)
+      // the fact that catches this slip must be in the case file wherever the message can appear
+      const fact = t.factId !== undefined ? era.facts.find((f) => f.id === t.factId) : undefined
+      const rank = (x?: 'medium' | 'hard') => (x === 'hard' ? 2 : x === 'medium' ? 1 : 0)
+      if (fact && rank(fact.minMode) > rank(m.minMode)) add(id, `tells[${i}] needs fact "${fact.id}" (case file from ${fact.minMode}), so the message needs minMode "${fact.minMode}" or higher`)
       if (t.ruleId !== undefined && !ruleIds.has(t.ruleId)) add(id, `unknown rule ${t.ruleId}`)
       refs(id, `tells[${i}]`, t.sources, false)
     })
