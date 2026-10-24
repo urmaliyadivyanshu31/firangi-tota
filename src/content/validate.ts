@@ -4,7 +4,7 @@ import { earliestDay } from '../game/run'
 
 const LANGS: Lang[] = ['en', 'hi']
 
-/** Minimalism limits (see .superpowers/sdd/.../minimal-brief.md). Flip per era in tests as cuts merge. */
+/** Word limits for every player-facing field (the numbers are below, and in docs/content-style.md, "Length"). Flip per era in tests as cuts merge. */
 export const ENFORCE_WORD_LIMITS = true
 
 /** Surface patterns must not reveal genuine vs forged (ellipsis share, message length). */
