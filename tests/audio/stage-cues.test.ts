@@ -38,6 +38,8 @@ const NEW: Cue[] = [
   'fileOpen', 'cardTurn', 'stampPress', 'toggleClick', 'plaqueFlick', 'incense', 'clockTick', 'tensionTick', 'endTelegram',
   // the caught sequence (caughtHush only fades what is already sounding, so it is checked on its own)
   'bugleAlarm', 'kettleDrum', 'whistleShort', 'whistleLong', 'bootsRunning', 'airRaidWail', 'phoneBell', 'knockFar', 'knockNear', 'knockDoor', 'caughtDark',
+  // the intro after Begin
+  'cardSlide', 'clipSnap',
 ]
 
 beforeEach(() => {
@@ -186,11 +188,12 @@ describe('the toss', () => {
 
 describe('cueForStage', () => {
   it('maps every stage cue to a sound, except the stamp the app voices itself and the wrong flash the caught sequence voices', () => {
-    const all: StageCueName[] = ['title', 'flip', 'arrive', 'seal', 'unfold', 'flap', 'key', 'space', 'ding', 'return', 'stamp', 'right', 'wrong', 'verdictStamp']
+    const all: StageCueName[] = ['title', 'flip', 'arrive', 'seal', 'unfold', 'flap', 'key', 'space', 'ding', 'return', 'stamp', 'right', 'wrong', 'verdictStamp', 'cardSlide', 'clipSnap']
     const out = Object.fromEntries(all.map((n) => [n, cueForStage(n)]))
     expect(out).toEqual({
       title: 'titleSettle', flip: 'page', arrive: 'arrive', seal: 'sealCrack', unfold: 'paperUnfold', flap: 'envelopeFlap',
       key: 'typeKey', space: 'typeSpace', ding: 'typeDing', return: 'typeReturn', stamp: null, right: 'correct', wrong: null, verdictStamp: 'stampAsli',
+      cardSlide: 'cardSlide', clipSnap: 'clipSnap',
     })
     // the caught sequence's beats sound as themselves
     const caught: StageCueName[] = ['bugleAlarm', 'kettleDrum', 'whistleShort', 'whistleLong', 'bootsRunning', 'airRaidWail', 'phoneBell', 'knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark']

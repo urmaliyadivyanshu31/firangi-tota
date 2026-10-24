@@ -35,6 +35,9 @@ const MAP: Record<StageCueName, Cue | null> = {
   knockDoor: 'knockDoor',
   caughtHush: 'caughtHush',
   caughtDark: 'caughtDark',
+  // after Begin: the intro cards slide onto the desk, the clip snaps onto the YOU photo
+  cardSlide: 'cardSlide',
+  clipSnap: 'clipSnap',
   // the read paper tossed into the basket, and landing there
   toss: 'paperToss',
   tossLand: 'basketLand',

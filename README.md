@@ -10,6 +10,7 @@ Inspired by [Politburo or Parrot](https://github.com/atomiquest/Politburo-or-Par
 
 The game opens on one page: the title paper over the room of the chapter you pick. Choose one of the
 four chapters, choose how long you want to hold out (Easy 7 days, Medium 10, Hard 14), and Begin.
+Two cards land on the desk first: who you are, and who the Tota is.
 
 1. Each day opens with its date, then the message comes in on a paper on your desk, in a 3D room of
    its era (a flat 2D desk on devices without WebGL).
@@ -31,8 +32,8 @@ to the हिंदी / English switch. The 🎙 microphone button (Listen) on 
 there only in builds with read-aloud (see below).
 
 After the first visit the game also plays offline: it installs as an app, and the shell, the 3D
-rooms and the core fonts are kept on the device. The rooms' recorded sound and the other fonts are
-kept the first time they play. Read-aloud always needs the network.
+rooms and the core fonts are kept on the device. The rooms' recorded sound, the other fonts and the
+intro portraits are kept the first time they are used. Read-aloud always needs the network.
 
 ## Run it
 

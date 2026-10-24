@@ -67,6 +67,12 @@ The parrot mark, the seal and the icons are drawn for this project (MIT, like th
 The app icons in `public/icons/` (192, 512, maskable and apple-touch) are rendered from that parrot
 mark by `scripts/icons.mjs` (MIT, like the code).
 The share image `public/og.jpg` is our own screenshot of the game (the 1857 desk and the title paper), made by `dev/shoot-og.mjs` (MIT, like the code).
+The eight intro portraits in `public/art/` (who you are and who the Tota is, one pair per chapter) are
+original art generated for this project with an AI image model (Gemini 3.1 Flash Image, through Figma's
+image generation) from our own prompts, in the style of a hand-coloured Company-school print, then
+cropped and saved as 480 px WebP. They show invented people, not the likeness of anyone real (MIT,
+like the code).
+
 The result cards a share link previews (`/api/og`) are drawn for this project by `server/og/card.ts`
 (MIT, like the code), with the title lettering and the parrot mark from the game.
 

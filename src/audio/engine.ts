@@ -2,6 +2,7 @@
 // Everything is a safe no-op until unlock() succeeds, or when Web Audio is missing.
 import type { EraId } from '../content/types'
 import { startAmbience, type AmbienceHandle } from './ambience'
+import { silentUnderAutomation } from './automation'
 import { createSampler, type SampleName, type Sampler } from './samples'
 import { playCue, type Cue, type CueOptions } from './synth'
 
@@ -41,7 +42,7 @@ export function createAudioEngine(): AudioEngine {
   const beds = new Map<string, Promise<AudioBuffer | null>>()
 
   function applyMute(): void {
-    if (master) master.gain.value = muted ? 0 : MASTER_LEVEL
+    if (master) master.gain.value = muted || silentUnderAutomation() ? 0 : MASTER_LEVEL
   }
 
   /** Sleeps while the tab is hidden, wakes when it is visible and not muted (saves the battery). */

@@ -366,8 +366,6 @@ a { color: inherit; }
 
 /* who you are, who the Tota is, how long you will hold out, and Begin */
 .doc__era { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
-.doc__line { font-size: 15px; line-height: 1.35; }
-.doc__label { font-weight: var(--semi); color: var(--maroon); }
 .doc__q { margin-top: 4px; font: 400 18px/1.25 var(--display); }
 .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
 .mode {
@@ -392,6 +390,54 @@ a { color: inherit; }
 .btn--begin { margin-top: 4px; }
 .doc__credits { text-align: center; padding: 0 0 8px; }
 .doc__creditsbtn { min-height: 48px; padding: 0 8px; font-size: 12.5px; color: var(--ink-soft); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+
+/* ---------- After Begin: who you are and who the Tota is, as cards on the desk ---------- */
+
+/* The cards are in the room (the stage draws them); here only a tap catcher, the words for screen
+   readers and one paper slip, Continue, with a small agarbatti along its foot that burns down
+   while the game waits and goes on by itself when it is out. */
+.screen--main.is-leaving { pointer-events: none; }
+.screen--main.is-leaving .stack { animation: doc-out .34s var(--ease-out) forwards; }
+@keyframes doc-out { to { opacity: 0; transform: translateY(26px) scale(.985); } }
+.screen--intro { pointer-events: none; }
+.screen--intro .intro__tap { display: block; pointer-events: auto; }
+.intro__foot {
+  position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; justify-content: center;
+  padding: 26px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: linear-gradient(rgba(var(--soot), 0), rgba(var(--soot), .42));
+  pointer-events: none;
+}
+.intro__foot.is-under { bottom: auto; padding-top: 0; padding-bottom: 0; background: none; }
+/* the slip comes up once the cards are down (until then a tap, Space or Enter still goes on) */
+.intro__go { pointer-events: auto; min-width: 210px; padding: 8px 18px 15px 28px; gap: 4px; opacity: 0; }
+.is-settled .intro__go { opacity: 1; animation: card-in .4s var(--ease-out) both; }
+.intro__go .icon { width: 20px; height: 20px; opacity: .8; }
+/* ada: the agarbatti along the slip's foot is lit once the cards are down, and burns right to left */
+.intro__fuse { position: absolute; left: 24px; right: 24px; bottom: 8px; height: 0; }
+.intro__burn {
+  position: absolute; left: 0; top: -1.5px; width: 100%; height: 3px; border-radius: 1.5px 1px 1px 1.5px;
+  background: linear-gradient(180deg, #b07a4c 0, #8a5a35 35%, #5b3a22 100%);
+}
+.intro__ember { position: absolute; left: 100%; top: 0; width: 0; height: 0; opacity: 0; }
+.intro__ember::before {
+  content: ''; position: absolute; left: -3.5px; top: -3.5px; width: 7px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 45% 50%, #fff5cc 0, #ffb347 35%, #e2461c 72%, rgba(226, 70, 28, 0) 100%);
+  box-shadow: 0 0 6px 2px rgba(255, 130, 40, .55);
+  animation: ember 1.8s ease-in-out infinite;
+}
+.is-settled .intro__burn { animation: intro-burn 6s linear forwards; }
+.is-settled .intro__ember { opacity: 1; animation: intro-ember 6s linear forwards; }
+@media (min-width: 900px) and (min-height: 600px) {
+  .intro__go { min-width: 290px; min-height: 68px; padding: 10px 26px 19px 36px; font-size: 25px; gap: 6px; }
+  .intro__go .icon { width: 26px; height: 26px; }
+  .intro__fuse { left: 32px; right: 32px; bottom: 9px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .intro__foot { padding-top: 6px; padding-bottom: max(6px, env(safe-area-inset-bottom)); background: none; }
+  .intro__go { min-height: 44px; padding-top: 4px; padding-bottom: 12px; }
+}
+@keyframes intro-burn { from { width: 100%; } to { width: 0; } }
+@keyframes intro-ember { from { left: 100%; } to { left: 0; } }
 
 /* ---------- The day: top bar ---------- */
 
@@ -902,7 +948,6 @@ a { color: inherit; }
   .art__glint { width: 42px; height: 42px; right: 7px; top: 9px; }
   .art__press { font-size: 11px; top: 18%; }
   .art--dial { left: 27%; right: 27%; top: 6%; }
-  .doc__line { font-size: 18px; }
   .doc__q { font-size: 23px; }
   .mode { min-height: 84px; }
   .mode__days { font-size: 32px; }
@@ -1023,4 +1068,5 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
   .agarbatti__smoke, .agarbatti__ember::after { display: none; }
+  .intro__fuse { display: none; }
 }

@@ -6,6 +6,7 @@
 // - There is no speechSynthesis fallback. If the clip cannot play, the state becomes 'error'.
 import type { EraId, Lang } from '../content/types'
 import { DEFAULT_VOICE, type VoiceChoice } from '../content/voices'
+import { silentUnderAutomation } from './automation'
 
 export type { VoiceChoice } from '../content/voices'
 // Labels and credits for a voice picker: VOICES and voiceChoices() in src/content/voices.ts.
@@ -81,6 +82,7 @@ export function createVoice(opts: VoiceOptions = {}): Voice {
     if (el) return el
     const a = make()
     a.preload = 'auto'
+    if (silentUnderAutomation()) a.muted = true
     a.setAttribute('playsinline', '')
     const live = (fn: () => void) => () => {
       if (elGen === gen && current) fn()

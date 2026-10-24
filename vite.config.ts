@@ -34,8 +34,8 @@ export default defineConfig(({ mode }) => {
       // Offline after the first visit (Ruling R34). The service worker precaches only the app shell
       // (the HTML, every JS chunk, the lazy stage and era desks included, the CSS, the manifest),
       // the core fonts (the UI's Latin 400 and the papers' default faces, the ones index.html
-      // preloads) and the small icons. Recorded audio, rarer font weights and scripts, and the
-      // large install icons are cached on first use instead. Read-aloud (/api/voice) is never
+      // preloads) and the small icons. Recorded audio, rarer font weights and scripts, the intro
+      // portraits and the large install icons are cached on first use instead. Read-aloud (/api/voice) is never
       // cached: it is in no precache list and its route is network-only.
       VitePWA({
         registerType: 'autoUpdate',
@@ -99,11 +99,12 @@ export default defineConfig(({ mode }) => {
               handler: 'StaleWhileRevalidate',
               options: { cacheName: 'ft-fonts', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 32 }, cacheableResponse: { statuses: [200] } },
             },
-            // the install icons and the share image
+            // the install icons, the share image and the intro portraits (public/art/, two per
+            // chapter, fetched when Begin is pressed)
             {
-              urlPattern: ({ url, sameOrigin }) => sameOrigin && (url.pathname.startsWith('/icons/') || url.pathname === '/og.jpg'),
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && (url.pathname.startsWith('/icons/') || url.pathname.startsWith('/art/') || url.pathname === '/og.jpg'),
               handler: 'StaleWhileRevalidate',
-              options: { cacheName: 'ft-images', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 16 }, cacheableResponse: { statuses: [200] } },
+              options: { cacheName: 'ft-images', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 32 }, cacheableResponse: { statuses: [200] } },
             },
             // hashed font files from the build (the pencil hand): a new version is a new name, so
             // the cached copy never needs checking

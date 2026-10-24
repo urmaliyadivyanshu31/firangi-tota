@@ -149,3 +149,13 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - Background sound: one calm instrumental bed and one gentle natural layer per chapter, quieter,
   with soft everyday sounds now and then (a page turning, footsteps, a cup), so the room feels
   lived in. Nothing startling and nothing religious. Music from video sites is an idea for later.
+
+## 2026-10-24: Who you are and who the Tota is, as pictures
+
+- The "You" and "Tota" lines left the main page. After Begin, before day 1, the room shows them as
+  two illustrated cards on the desk: YOU as a dossier card with a portrait under a paper clip, and
+  THE TOTA as a police notice with a small green parrot stamp. It plays on every Begin, a tap goes
+  on, and it goes on by itself a few seconds after the cards settle.
+- The owner chose original period-print art, one pair of portraits per chapter (eight in all), in
+  one style: an Indian Company-school print on cream paper, in muted saffron, indigo, maroon and
+  ink. No real person's likeness, no religious symbols, and every Tota carries a small green parrot.

@@ -26,7 +26,8 @@ describe('renderMain: the one page', () => {
     const tabs = [...doc.querySelectorAll<HTMLElement>('[role="tab"]')]
     expect(tabs.map((t) => t.dataset.era)).toEqual(['delhi-1857', 'lahore-1929', 'bombay-1942', 'delhi-1947'])
     expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false', 'false'])
-    expect(doc.querySelector('[role="tabpanel"]')!.textContent).toContain(fourEras().find((e) => e.id === 'delhi-1857')!.persona.en)
+    // who you are and who the Tota is come after Begin, as cards on the desk, not on this page
+    expect(doc.textContent).not.toContain(fourEras().find((e) => e.id === 'delhi-1857')!.persona.en)
   })
 
   it('takes the chosen era’s own paper and its artefact tab', () => {
@@ -39,12 +40,12 @@ describe('renderMain: the one page', () => {
     expect(root.querySelector('[data-era="delhi-1947"] .art--strip')).not.toBeNull()
   })
 
-  it('shows you and the Tota in one line each, the days picker and Begin', () => {
+  it('shows the days picker and Begin, and leaves you and the Tota to the intro after it', () => {
     const root = mount()
     const e = fourEras().find((x) => x.id === 'delhi-1857')!
     renderMain(root, props({ difficulty: 'medium' }), handlers())
-    const lines = [...root.querySelectorAll('.doc__line')].map((l) => l.textContent)
-    expect(lines).toEqual([`You: ${e.persona.en}`, `Tota: ${e.forger.en}`])
+    expect(root.querySelector('.doc__line')).toBeNull()
+    expect(root.textContent).not.toContain(e.forger.en)
     for (const d of ['easy', 'medium', 'hard'] as const) {
       const b = root.querySelector<HTMLElement>(`[data-mode="${d}"]`)!
       expect(b.textContent).toContain(String(DAYS[d]))
