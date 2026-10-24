@@ -162,9 +162,32 @@ test('a tap on the room sends the read paper on at once', async ({ page }) => {
   await page.waitForTimeout(700) // the first moment is the tail of a skip, not a toss
   const vp = page.viewportSize()!
   await page.mouse.click(vp.width / 2, vp.height * 0.4)
-  // the hands screw it up and toss it in about 2.9 s; without the tap the hold alone would run
+  // the hands screw it up and drop it in about 3 s; without the tap the hold alone would run
   // 3.5 s first
   await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 4600, intervals: [100] }).toBe(2)
+  await readable(page)
+})
+
+test('the Skip chip, or Enter, skips the reading, the crumple and the drop: the next day comes at once', async ({ page }) => {
+  await page.goto(START)
+  await begin1857Easy(page)
+  await readable(page)
+  await stampAndReveal(page)
+  await page.waitForTimeout(700) // the first moment is the tail of a skip, not a skip of the lot
+  const chip = page.locator('.day__controls--hold [data-action="skip"]')
+  await expect(chip).toBeVisible()
+  const t0 = Date.now()
+  await chip.click()
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 2000, intervals: [50] }).toBe(2)
+  expect(Date.now() - t0).toBeLessThan(1000) // no hold, no crumple, no drop
+  await readable(page)
+  // day 2, by keyboard
+  await stampAndReveal(page)
+  await page.waitForTimeout(700)
+  const t1 = Date.now()
+  await page.keyboard.press('Enter')
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 2000, intervals: [50] }).toBe(3)
+  expect(Date.now() - t1).toBeLessThan(1000)
   await readable(page)
 })
 

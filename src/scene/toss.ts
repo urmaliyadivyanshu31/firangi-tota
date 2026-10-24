@@ -84,10 +84,11 @@ export function gripPose(hw: number, c: THREE.Vector3, k: number, twist: number,
   // the palm's middle on the paper's edge (on the desk, it stays clear of the wood)
   const target = v1.set(hw + 0.003 - 0.004 * press, Math.max(c.y + 0.004 + 0.012 * (1 - k), 0.03 + 0.012 * pick), c.z + 0.008)
   out.pos.copy(target).sub(v2.copy(PALM_C).applyQuaternion(out.quat))
-  out.curl = 0.2 + 0.05 * pick + 0.36 * k + 0.12 * press
+  // the fingers spread over the paper's sides, closing round it only as it becomes a ball
+  out.curl = 0.16 + 0.04 * pick + 0.26 * k * k + 0.12 * press
   // the thumbs lie along the top on their own side, never across into the other hand
   out.thumb = 0.3 + 0.12 * k + 0.06 * press
-  out.spread = 1 - 0.4 * k
+  out.spread = 1.25 - 0.45 * k
   return out
 }
 
@@ -263,7 +264,12 @@ export async function crumpleAndToss(play: TossPlay): Promise<void> {
     const twist0 = tw0
     // the camera draws back and round to take in the basket and where the ball will be let go
     rig.updateWorldMatrix(true, false)
-    const cam = play.camTo('basket', TOSS.take + TOSS.carry + TOSS.swing, [rig.localToWorld(drop.at.clone()), rig.localToWorld(drop.at.clone().add(new THREE.Vector3(0, 0.09, -0.03)))])
+    const cam = play.camTo('basket', TOSS.take + TOSS.carry + TOSS.swing, [
+      drop.at.clone(),
+      drop.at.clone().add(new THREE.Vector3(0, 0.09, -0.03)),
+      new THREE.Vector3(drop.at.x - 0.06, 0, play.deskFront - 0.03),
+      new THREE.Vector3(drop.at.x + 0.08, 0, play.deskFront - 0.03),
+    ].map((q) => rig.localToWorld(q)))
     await tw.run(TOSS.take, (t) => {
       const e = ease.inOut(t)
       ball.group.position.lerpVectors(b0, b1, e)

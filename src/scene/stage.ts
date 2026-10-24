@@ -711,10 +711,10 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   /** The era's basket; a room without one gets an unseen basket in front of the desk. */
   const basketOf = (w: World): NonNullable<DressingHooks['basket']> => w.hooks.basket ?? { mouth: [0.4, -0.47, 0.52], r: 0.12, depth: 0.28 }
   /**
-   * The drop shot: drawn back and round to the left until the hand letting the ball go, the near
-   * right corner of the paper's spot it came from and the whole basket fit, seen from the front,
-   * lower than the desk shot, so the fall into the basket reads and the arm (which comes from the
-   * right) never stands between the camera and the basket.
+   * The drop shot: drawn back and round to the left until the hand letting the ball go, the desk's
+   * edge behind it and the whole basket fit, seen from the front, lower than the desk shot, so the
+   * fall into the basket reads and the arm (which comes from the right) never stands between the
+   * camera and the basket.
    */
   const tossPose: PoseFn = (aspect) => {
     const w = world
@@ -722,8 +722,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const bk = basketOf(w)
     const m = new THREE.Vector3(...bk.mouth)
     const r = sheetRest(w)
-    // the basket whole, the hand over it, and the near right corner of the paper's spot
-    const pts = rectOnDesk(r.pos.clone().add(new THREE.Vector3(SHEET_W * 0.3, 0, w.sheet.h() * 0.4)), SHEET_W * 0.4, w.sheet.h() * 0.2, r.yaw)
+    // the basket whole, and the hand over it with the desk's edge behind (the toss names them);
+    // without them, the near right corner of the paper's spot
+    const pts = tossAlso.length ? [] : rectOnDesk(r.pos.clone().add(new THREE.Vector3(SHEET_W * 0.3, 0, w.sheet.h() * 0.4)), SHEET_W * 0.4, w.sheet.h() * 0.2, r.yaw)
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2
       pts.push(new THREE.Vector3(m.x + Math.cos(a) * bk.r, m.y, m.z + Math.sin(a) * bk.r))
@@ -731,7 +732,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     pts.push(new THREE.Vector3(m.x, m.y - bk.depth, m.z + (bk.foot ?? bk.r)))
     pts.push(...tossAlso)
     const portrait = aspect < 0.9
-    const dir = new THREE.Vector3(portrait ? -0.2 : -0.28, portrait ? 0.95 : 0.82, 1).normalize()
+    const dir = new THREE.Vector3(portrait ? -0.2 : -0.3, portrait ? 0.95 : 1.2, 1).normalize()
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.06 : 0.1) })
   }
   /**
