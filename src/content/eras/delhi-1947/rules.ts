@@ -29,7 +29,7 @@ export const rules: Rule[] = [
   {
     id: 'council-house',
     text: {
-      en: 'No Lok Sabha or President of India yet; Rajendra Prasad presides over the Assembly.',
+      en: "No Lok Sabha or President of India yet; Rajendra Prasad is the Assembly's President.",
       hi: 'अभी न लोकसभा है, न भारत का राष्ट्रपति; संविधान सभा के अध्यक्ष राजेंद्र प्रसाद हैं।',
     },
     arrivesOnDay: 3,

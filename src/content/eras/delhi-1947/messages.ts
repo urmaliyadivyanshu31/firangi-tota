@@ -196,8 +196,8 @@ export const messages: Message[] = [
     from: ABELL,
     to: ABBOTT,
     text: {
-      en: 'TOP SECRET. I enclose a map showing roughly the boundary which Sir Cyril Radcliffe proposes… The award itself is expected within the next 48 hours…',
-      hi: 'TOP SECRET. साथ में एक नक्शा भेज रहा हूँ, जिसमें मोटे तौर पर वह सीमा है जो सर सिरिल रैडक्लिफ़ खींचना चाहते हैं… फ़ैसला ख़ुद अगले 48 घंटों में आने की उम्मीद है…',
+      en: 'TOP SECRET. I enclose a map showing roughly the boundary which Sir Cyril Radcliffe proposes… There will not be any great changes from this boundary…',
+      hi: 'TOP SECRET. साथ में एक नक्शा भेज रहा हूँ, जिसमें मोटे तौर पर वह सीमा है जो सर सिरिल रैडक्लिफ़ खींचना चाहते हैं… इस सीमा में कोई बड़ा बदलाव नहीं होगा…',
     },
     checks: { en: ['Sir Cyril Radcliffe'], hi: ['सर सिरिल रैडक्लिफ़'] },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 377' }] },
@@ -387,7 +387,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE, KARACHI, Monday {date}. Mr Jinnah was elected President of Pakistan's Constituent Assembly today, at its second sitting.",
       hi: 'IMMEDIATE, कराची, सोमवार {date}। मिस्टर जिन्ना आज पाकिस्तान की संविधान सभा के अध्यक्ष चुने गए, उसकी दूसरी बैठक में।',
     },
-    checks: { en: ['Monday', 'Mr Jinnah', 'elected President'], hi: ['सोमवार', 'मिस्टर जिन्ना', 'अध्यक्ष चुने गए'] },
+    checks: { en: ['Monday', 'Mr Jinnah'], hi: ['सोमवार', 'मिस्टर जिन्ना'] },
     why: {
       text: {
         en: 'Elected on Monday 11 August, at the second sitting.',
@@ -408,7 +408,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE, KARACHI, Sunday {date}. Mr Jinnah was elected President of Pakistan's Constituent Assembly today, at its second sitting.",
       hi: 'IMMEDIATE, कराची, रविवार {date}। मिस्टर जिन्ना आज पाकिस्तान की संविधान सभा के अध्यक्ष चुने गए, उसकी दूसरी बैठक में।',
     },
-    checks: { en: ['Sunday', 'Mr Jinnah', 'elected President'], hi: ['रविवार', 'मिस्टर जिन्ना', 'अध्यक्ष चुने गए'] },
+    checks: { en: ['Sunday', 'Mr Jinnah'], hi: ['रविवार', 'मिस्टर जिन्ना'] },
     tells: [
       {
         kind: 'weekday',
@@ -482,8 +482,8 @@ export const messages: Message[] = [
     from: BC,
     to: PSV,
     text: {
-      en: 'IMMEDIATE. Sir Cyril Radcliffe signed the Sylhet award today. All three awards stay sealed while His Excellency is in Karachi.',
-      hi: 'IMMEDIATE. सर सिरिल रैडक्लिफ़ ने आज सिलहट के फ़ैसले पर दस्तख़त किए। हिज़ एक्सेलेंसी कराची में हैं, तब तक तीनों फ़ैसले बंद रहेंगे।',
+      en: 'IMMEDIATE. Sir Cyril Radcliffe signed the Sylhet award today. All three awards stay sealed while the Viceroy is in Karachi.',
+      hi: 'IMMEDIATE. सर सिरिल रैडक्लिफ़ ने आज सिलहट के फ़ैसले पर दस्तख़त किए। वायसराय कराची में हैं, तब तक तीनों फ़ैसले बंद रहेंगे।',
     },
     checks: { en: ['Sylhet award today', 'stay sealed'], hi: ['सिलहट के फ़ैसले पर', 'बंद रहेंगे'] },
     verify: { 'stay sealed': 'fact:awards' },
@@ -881,8 +881,8 @@ export const messages: Message[] = [
     from: { en: 'Conference Secretary, Government House', hi: 'कॉन्फ़्रेंस सचिव, गवर्नमेंट हाउस' },
     to: CIPHER,
     text: {
-      en: 'Ministers now have the awards. Pandit Nehru, Mr Liaquat Ali Khan and Sardar Patel meet Lord Mountbatten here at 5 pm.',
-      hi: 'मंत्रियों को फ़ैसले मिल गए हैं। पंडित नेहरू, मिस्टर लियाक़त अली ख़ान और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
+      en: 'Ministers now have the awards, a day before they are published. Pandit Nehru, Mr Liaquat Ali Khan and Sardar Patel meet Lord Mountbatten here at 5 pm.',
+      hi: 'मंत्रियों को फ़ैसले मिल गए हैं, छपने से एक दिन पहले। पंडित नेहरू, मिस्टर लियाक़त अली ख़ान और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
     },
     checks: { en: ['Sardar Patel'], hi: ['सरदार पटेल'] },
     why: {
@@ -902,8 +902,8 @@ export const messages: Message[] = [
     from: { en: 'Conference Secretary, Government House', hi: 'कॉन्फ़्रेंस सचिव, गवर्नमेंट हाउस' },
     to: CIPHER,
     text: {
-      en: 'Ministers now have the awards. Pandit Nehru, Mr Jinnah and Sardar Patel meet Lord Mountbatten here at 5 pm.',
-      hi: 'मंत्रियों को फ़ैसले मिल गए हैं। पंडित नेहरू, मिस्टर जिन्ना और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
+      en: 'Ministers now have the awards, a day before they are published. Pandit Nehru, Mr Jinnah and Sardar Patel meet Lord Mountbatten here at 5 pm.',
+      hi: 'मंत्रियों को फ़ैसले मिल गए हैं, छपने से एक दिन पहले। पंडित नेहरू, मिस्टर जिन्ना और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
     },
     checks: { en: ['Mr Jinnah'], hi: ['मिस्टर जिन्ना'] },
     tells: [
@@ -1025,10 +1025,10 @@ export const messages: Message[] = [
     from: DEWAN,
     to: MENON,
     text: {
-      en: 'IMMEDIATE, JUNAGADH, {weekday} {date}. Reference your telegram of yesterday: Junagadh has joined Pakistan, as announced on 15 August.',
-      hi: 'IMMEDIATE, जूनागढ़, {weekday} {date}। कल के आपके तार के जवाब में: जूनागढ़ पाकिस्तान में शामिल हो गया है, जैसा 15 अगस्त को ऐलान हुआ था।',
+      en: 'IMMEDIATE, JUNAGADH, Monday {date}. Reference your telegram of yesterday: Junagadh has joined Pakistan, as announced on 15 August.',
+      hi: 'IMMEDIATE, जूनागढ़, सोमवार {date}। कल के आपके तार के जवाब में: जूनागढ़ पाकिस्तान में शामिल हो गया है, जैसा 15 अगस्त को ऐलान हुआ था।',
     },
-    checks: { en: ['IMMEDIATE', 'announced on 15 August'], hi: ['IMMEDIATE', '15 अगस्त को ऐलान'] },
+    checks: { en: ['IMMEDIATE', 'Monday'], hi: ['IMMEDIATE', 'सोमवार'] },
     why: {
       text: {
         en: "Menon: 'the next day he telegraphed to me that Junagadh had acceded to Pakistan.'",
@@ -1049,7 +1049,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE, JUNAGADH, Tuesday {date}. Reference your telegram of yesterday: Junagadh has joined Pakistan, as announced on 15 August.',
       hi: 'IMMEDIATE, जूनागढ़, मंगलवार {date}। कल के आपके तार के जवाब में: जूनागढ़ पाकिस्तान में शामिल हो गया है, जैसा 15 अगस्त को ऐलान हुआ था।',
     },
-    checks: { en: ['Tuesday', 'announced on 15 August'], hi: ['मंगलवार', '15 अगस्त को ऐलान'] },
+    checks: { en: ['IMMEDIATE', 'Tuesday'], hi: ['IMMEDIATE', 'मंगलवार'] },
     tells: [
       {
         kind: 'weekday',
@@ -1110,10 +1110,10 @@ export const messages: Message[] = [
     from: HEAD,
     to: CLERK,
     text: {
-      en: 'Note for the desk: the Indian Independence Act became law on Friday 18 July. Its appointed day is Friday 15 August.',
-      hi: 'मेज़ के लिए नोट: भारत की आज़ादी के क़ानून को शुक्रवार 18 जुलाई को राजा की मंज़ूरी मिली। उसका तय दिन शुक्रवार 15 अगस्त है।',
+      en: 'Note for the desk: the Indian Independence Act became law on 18 July. Freedom comes on its appointed day, Friday 15 August.',
+      hi: 'मेज़ के लिए नोट: भारत की आज़ादी का क़ानून 18 जुलाई को बना। उसके तय दिन, शुक्रवार 15 अगस्त को आज़ादी आती है।',
     },
-    checks: { en: ['Friday 18 July', 'Friday 15 August'], hi: ['शुक्रवार 18 जुलाई', 'शुक्रवार 15 अगस्त'] },
+    checks: { en: ['18 July', 'Friday 15 August'], hi: ['18 जुलाई', 'शुक्रवार 15 अगस्त'] },
     why: {
       text: { en: 'Introduced 4 July; law, by Royal Assent, on Friday 18 July.', hi: 'बिल 4 जुलाई को पेश हुआ; शुक्रवार 18 जुलाई को राजा की मंज़ूरी से क़ानून बना।' },
       sources: [{ id: 'menon-1957', loc: 'ch. XVII' }],
@@ -1127,10 +1127,10 @@ export const messages: Message[] = [
     from: HEAD,
     to: CLERK,
     text: {
-      en: 'Note for the desk: the Indian Independence Act became law on Friday 4 July. Its appointed day is Friday 15 August.',
-      hi: 'मेज़ के लिए नोट: भारत की आज़ादी के क़ानून को शुक्रवार 4 जुलाई को राजा की मंज़ूरी मिली। उसका तय दिन शुक्रवार 15 अगस्त है।',
+      en: 'Note for the desk: the Indian Independence Act became law on 4 July. Freedom comes on its appointed day, Friday 15 August.',
+      hi: 'मेज़ के लिए नोट: भारत की आज़ादी का क़ानून 4 जुलाई को बना। उसके तय दिन, शुक्रवार 15 अगस्त को आज़ादी आती है।',
     },
-    checks: { en: ['Friday 4 July', 'Friday 15 August'], hi: ['शुक्रवार 4 जुलाई', 'शुक्रवार 15 अगस्त'] },
+    checks: { en: ['4 July', 'Friday 15 August'], hi: ['4 जुलाई', 'शुक्रवार 15 अगस्त'] },
     tells: [
       {
         kind: 'date',
@@ -1454,13 +1454,14 @@ export const messages: Message[] = [
     tier: 2,
     real: true,
     pair: 'flag-adopted',
+    minMode: 'medium',
     from: CAI,
     to: { en: 'Cipher Office file', hi: 'साइफ़र दफ़्तर की फ़ाइल' },
     text: {
-      en: 'Tuesday 22 July. Resolved that the National Flag of India shall be horizontal tricolour of deep Saffron (Kesari), white and dark green in equal proportion… a Wheel in navy blue…',
-      hi: 'मंगलवार 22 जुलाई। तय हुआ कि भारत का राष्ट्रीय झंडा आड़ा तिरंगा होगा: गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर… बीच में गहरे नीले रंग का चक्र…',
+      en: '22 July. Resolved that the National Flag of India shall be horizontal tricolour of deep Saffron (Kesari), white and dark green in equal proportion… a Wheel in navy blue…',
+      hi: '22 जुलाई। तय हुआ कि भारत का राष्ट्रीय झंडा आड़ा तिरंगा होगा: गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर… बीच में गहरे नीले रंग का चक्र…',
     },
-    checks: { en: ['Tuesday 22 July'], hi: ['मंगलवार 22 जुलाई'] },
+    checks: { en: ['Wheel in navy blue'], hi: ['गहरे नीले रंग का चक्र'] },
     document: { sources: [{ id: 'cad-22jul1947' }] },
     why: {
       text: { en: 'The flag resolution of the Constituent Assembly, Tuesday 22 July 1947.', hi: 'संविधान सभा का झंडे का प्रस्ताव, मंगलवार 22 जुलाई 1947।' },
@@ -1468,23 +1469,23 @@ export const messages: Message[] = [
     },
   },
   {
-    id: 'flag-monday',
+    id: 'flag-saffron',
     tier: 2,
     real: false,
     pair: 'flag-adopted',
+    minMode: 'medium',
     from: CAI,
     to: { en: 'Cipher Office file', hi: 'साइफ़र दफ़्तर की फ़ाइल' },
     text: {
-      en: 'Monday 22 July. Resolved that the National Flag of India shall be horizontal tricolour of deep Saffron (Kesari), white and dark green in equal proportion… a Wheel in navy blue…',
-      hi: 'सोमवार 22 जुलाई। तय हुआ कि भारत का राष्ट्रीय झंडा आड़ा तिरंगा होगा: गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर… बीच में गहरे नीले रंग का चक्र…',
+      en: '22 July. Resolved that the National Flag of India shall be horizontal tricolour of deep Saffron (Kesari), white and dark green in equal proportion… a Wheel in saffron…',
+      hi: '22 जुलाई। तय हुआ कि भारत का राष्ट्रीय झंडा आड़ा तिरंगा होगा: गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर… बीच में केसरिया रंग का चक्र…',
     },
-    checks: { en: ['Monday 22 July'], hi: ['सोमवार 22 जुलाई'] },
+    checks: { en: ['Wheel in saffron'], hi: ['केसरिया रंग का चक्र'] },
     tells: [
       {
-        kind: 'weekday',
-        explain: { en: '22 July 1947 was a Tuesday, not a Monday.', hi: '22 जुलाई 1947 मंगलवार था, सोमवार नहीं।' },
-        factId: 'appointed-day',
-        ruleId: 'weekday',
+        kind: 'knowledge',
+        explain: { en: 'The Wheel at the centre is navy blue, not saffron.', hi: 'बीच का चक्र गहरे नीले रंग का है, केसरिया नहीं।' },
+        factId: 'tricolour',
         sources: [{ id: 'cad-22jul1947' }],
       },
     ],
@@ -1585,8 +1586,8 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. PATNA. At his prayer meeting today, Gandhiji said the 15th should be marked by fasting, spinning and prayer.',
       hi: 'IMMEDIATE. पटना। आज प्रार्थना सभा में गांधीजी ने कहा कि 15 तारीख़ उपवास, चरखा कातने और प्रार्थना से मनाई जाए।',
     },
-    checks: { en: ['fasting, spinning and prayer'], hi: ['उपवास, चरखा कातने और प्रार्थना'] },
-    verify: { 'fasting, spinning and prayer': 'fact:gandhi' },
+    checks: { en: ['marked by fasting'], hi: ['उपवास'] },
+    verify: { 'marked by fasting': 'fact:gandhi' },
     why: {
       text: {
         en: 'At Patna on 8 August he asked for fasting, spinning and prayer.',
