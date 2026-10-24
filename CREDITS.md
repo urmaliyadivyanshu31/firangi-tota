@@ -28,14 +28,37 @@ The licences are also published at https://openfontlicense.org (OFL 1.1) and htt
 
 ## Sounds
 
-Recorded beds are CC0 1.0 (public domain dedication), cut to 27-30 s seamless loops, mixed to mono and encoded as AAC (48 kbps, about -28 LUFS). Everything else you hear (stamps, paper, agarbatti tick, telegraph, shortwave static, valve hum, naqqara, tanpura, shehnai-like motif) is synthesized in the browser by `src/audio/synth.ts` and has no source file.
+Every recorded sound is CC0 1.0 (public domain dedication), cut from the sound's Freesound HQ preview by `dev/ambience-assets.mjs` and stored as mono AAC: each era's room bed as a 34-40 s seamless loop (48 kbps), its instrument as an 18-39 s loop cut on the instrument's own cycle (32 kbps), and the rooms' small sounds as one sprite, `public/audio/room.m4a` (32 kbps). Everything else you hear (stamps, paper, agarbatti tick, telegraph, 1942's low pad and valve hum, the 1947 ceiling fan, the room clocks, the tonga bell) is synthesized in the browser by `src/audio/synth.ts` and `src/audio/ambience-synth.ts` and has no source file.
 
 | File | Source sound | Author | URL | Licence |
 |---|---|---|---|---|
-| `public/audio/delhi-1857.m4a` | "Crows of Calcutta" mixed with "G52-05-Ox Cart" | Calcuttan; craigsmith | https://freesound.org/people/Calcuttan/sounds/249567/ ; https://freesound.org/people/craigsmith/sounds/437078/ | CC0 1.0 |
-| `public/audio/lahore-1929.m4a` | "Steam Train Station Noises" | BobMorris1 | https://freesound.org/people/BobMorris1/sounds/414613/ | CC0 1.0 |
-| `public/audio/bombay-1942.m4a` | "Indoors_Shed_RainOnTinRoof_01" | MrFossy | https://freesound.org/people/MrFossy/sounds/521773/ | CC0 1.0 |
-| `public/audio/delhi-1947.m4a` | "Night time crickets, distant dogs and traffic" | SukritSen | https://freesound.org/people/SukritSen/sounds/482687/ | CC0 1.0 |
+| `public/audio/delhi-1857.m4a` (a garden fountain) | "Garden Fountain.wav" | kkingotu | https://freesound.org/people/kkingotu/sounds/434815/ | CC0 1.0 |
+| `public/audio/lahore-1929.m4a` (a breeze) | "Wheat Field Ambience" | florianreichelt | https://freesound.org/people/florianreichelt/sounds/447810/ | CC0 1.0 |
+| `public/audio/bombay-1942.m4a` (monsoon rain and the sea) | "The sound of rain pouring on a balcony" mixed with "Calm ocean waves" | hoshisato; SamsterBirdies | https://freesound.org/people/hoshisato/sounds/825226/ ; https://freesound.org/people/SamsterBirdies/sounds/578524/ | CC0 1.0 |
+| `public/audio/delhi-1947.m4a` (rain outside) | "Rain background" | xkeril | https://freesound.org/people/xkeril/sounds/669485/ | CC0 1.0 |
+| `public/audio/delhi-1857-music.m4a` (tanpura in C#) | "Tanpura 10" | sankalp | https://freesound.org/people/sankalp/sounds/153262/ | CC0 1.0 |
+| `public/audio/lahore-1929-music.m4a` (harmonium, lowered to A) | "Harmonium Drone2" | easy_thunder | https://freesound.org/people/easy_thunder/sounds/264442/ | CC0 1.0 |
+| `public/audio/delhi-1947-music.m4a` (tanpura in E) | "Tanpura in E" | iluppai | https://freesound.org/people/iluppai/sounds/148850/ | CC0 1.0 |
+| `public/audio/room.m4a` (a page turned) | "Turning a page in a book" | pierreluclandry | https://freesound.org/people/pierreluclandry/sounds/840192/ | CC0 1.0 |
+| `public/audio/room.m4a` (a pen nib) | "Fountain Pen Scratching Paper" | DataJuggler | https://freesound.org/people/DataJuggler/sounds/750171/ | CC0 1.0 |
+| `public/audio/room.m4a` (a pencil) | "Writing with pencil 2" | fthgurdy | https://freesound.org/people/fthgurdy/sounds/376705/ | CC0 1.0 |
+| `public/audio/room.m4a` (wood creaking) | "Creaking in Room 8.wav" | Greg_Surr | https://freesound.org/people/Greg_Surr/sounds/590171/ | CC0 1.0 |
+| `public/audio/room.m4a` (a chair) | "Squeaky Chair" | jashngooyen | https://freesound.org/people/jashngooyen/sounds/556763/ | CC0 1.0 |
+| `public/audio/room.m4a` (a cup on its saucer) | "Tea cup set down 2.mp3" | TheHiraHira | https://freesound.org/people/TheHiraHira/sounds/460241/ | CC0 1.0 |
+| `public/audio/room.m4a` (tea poured) | "pouring with two drips at the end" | Mafon2 | https://freesound.org/people/Mafon2/sounds/330025/ | CC0 1.0 |
+| `public/audio/room.m4a` (a spoon in a cup) | "Spoon in a teacup" | HeyItsArnold | https://freesound.org/people/HeyItsArnold/sounds/444892/ | CC0 1.0 |
+| `public/audio/room.m4a` (footsteps passing) | "Monastery Footsteps.wav" | markadirector | https://freesound.org/people/markadirector/sounds/467417/ | CC0 1.0 |
+| `public/audio/room.m4a` (a door closing) | "Close Wooden Door Quiet" | nozefian | https://freesound.org/people/nozefian/sounds/397918/ | CC0 1.0 |
+| `public/audio/room.m4a` (a cough next door) | "distant cough.mp3" | TheWah | https://freesound.org/people/TheWah/sounds/98676/ | CC0 1.0 |
+| `public/audio/room.m4a` (voices far off, filtered past words) | "Indoor adult murmur, couple.wav" | SpliceSound | https://freesound.org/people/SpliceSound/sounds/260124/ | CC0 1.0 |
+| `public/audio/room.m4a` (a bird's wings) | "Light Wing Flap" | TurboFool | https://freesound.org/people/TurboFool/sounds/561009/ | CC0 1.0 |
+| `public/audio/room.m4a` (bangles) | "Bangles.wav" | breglad15 | https://freesound.org/people/breglad15/sounds/175435/ | CC0 1.0 |
+| `public/audio/room.m4a` (a hookah) | "Hookah bubling.wav" | oresamp | https://freesound.org/people/oresamp/sounds/417603/ | CC0 1.0 |
+| `public/audio/room.m4a` (sparrows) | "House sparrows" | freemaster2 | https://freesound.org/people/freemaster2/sounds/670176/ | CC0 1.0 |
+| `public/audio/room.m4a` (a dove) | "Domestic Dove Coo" | haulaway | https://freesound.org/people/haulaway/sounds/735366/ | CC0 1.0 |
+| `public/audio/room.m4a` (a magpie robin) | "Magpie Robin Singing.wav" | soumen59 | https://freesound.org/people/soumen59/sounds/478637/ | CC0 1.0 |
+| `public/audio/room.m4a` (a myna) | "Dubai Birds Common Myna and House Sparrow" | qubodup | https://freesound.org/people/qubodup/sounds/752071/ | CC0 1.0 |
+| `public/audio/room.m4a` (a bicycle bell far off) | "bell.wav" | 13gkopeckak | https://freesound.org/people/13gkopeckak/sounds/378912/ | CC0 1.0 |
 | `public/audio/typewriter.wav` (five key strikes and the space bar) | "Typing on a 1920s Remington" | rpnelson | https://freesound.org/people/rpnelson/sounds/793351/ | CC0 1.0 |
 | `public/audio/typewriter.wav` (margin bell and carriage return) | "Typewriter bell & carriage reset" | knufds | https://freesound.org/people/knufds/sounds/345955/ | CC0 1.0 |
 
@@ -44,9 +67,7 @@ original files; the licence is the same CC0), high-passed, levelled and stored a
 16-bit WAV (about 100 KB) so every key starts on its exact sample. Everything else new is
 synthesized in `src/audio/synth.ts`: the seal crack, the paper and envelope sounds, the day-title
 settle (a tabla "dha" in 1857), the bell for a right answer and the siren for a wrong one, the
-interface sounds, the agarbatti and clock ticks, the teleprinter burst of the ending telegram, and
-the occasional sounds of each era's street (naqqara, hooves, crows, tonga and bicycle bells, a train
-whistle, a tram gong, an air-raid siren test, the sea, rain gusts, thunder, telegraph ticks).
+interface sounds, the agarbatti and clock ticks, and the teleprinter burst of the ending telegram.
 
 ## Voice
 
