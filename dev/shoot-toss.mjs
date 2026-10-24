@@ -1,5 +1,6 @@
 // Plays the real app through a right stamp and records the toss: the verdict held on the paper,
-// the paper lifted and tossed into the desk's basket, and the next day starting by itself.
+// the hands screwing the paper up into a ball and flicking it into the desk's basket, and the next
+// day starting by itself.
 // Start the dev server first (npx vite --port 5180 --strictPort --host 127.0.0.1), then:
 //   node dev/shoot-toss.mjs [base] [outDir]
 //   env SIZES=390x844,1440x900  ERAS=delhi-1857,...  LANGS=en,hi  TIER=low  VIDEO=1  REDUCED=1  FALLBACK=1  DAYS=2
@@ -16,8 +17,9 @@ const VIDEO = !!process.env.VIDEO
 const REDUCED = !!process.env.REDUCED
 const FALLBACK = !!process.env.FALLBACK
 const DAYS = Number(process.env.DAYS ?? 1)
-// moments after the verdict is up (ms): the held verdict (TOSS_HOLD_MS is 3.5 s), then the toss frame by frame
-const SHOTS = (process.env.SHOTS ?? '1500,3550,3750,3950,4150,4350,4600,5000,5700').split(',').map(Number)
+// moments after the verdict is up (ms): the held verdict (TOSS_HOLD_MS is 3.5 s), then the toss frame
+// by frame: the hands in, three squeezes, the ball on the palm, the flick, the flight, the landing
+const SHOTS = (process.env.SHOTS ?? '1500,3700,3950,4250,4550,4850,5100,5300,5500,5750,6000,6400').split(',').map(Number)
 mkdirSync(OUT, { recursive: true })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // --mute-audio: a shoot never plays the game's sound through the machine's speakers

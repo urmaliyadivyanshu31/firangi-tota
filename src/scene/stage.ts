@@ -1429,6 +1429,13 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     const kit = kitFor(w)
     prepareBall(w, kit)
+    // on high the hands and the ball cast the lamp's shadow on the desk (the map is redrawn each
+    // frame while they move, as for the stamp); elsewhere they cast none
+    const cast = TIER_SETTINGS[tier].shadows === 'pcf'
+    kit.rig.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) o.castShadow = cast
+    })
+    if (cast) casters++
     // the flat ball takes the sheet's place on the same frame, so nothing blinks
     g.visible = false
     airborne = true
@@ -1454,6 +1461,10 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       })
     } finally {
       airborne = false
+      if (cast) {
+        casters--
+        shadowDirty = true // once more without the hands
+      }
       // a toss cut short (a lost context) still ends with the paper in the basket
       if (gen === worldGen && msg?.shown) {
         land()
