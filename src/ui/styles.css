@@ -217,7 +217,7 @@ a { color: inherit; }
    it turns slowly (one turn in 2.4 s, unhurried for a 78) while a song really plays */
 .disc { width: 36px; height: 36px; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .55)); }
 .disc__record { transform-box: view-box; transform-origin: 19px 21px; }
-.disc__arm { transform-box: view-box; transform-origin: 35.2px 5.2px; transform: rotate(-34deg); transition: transform .5s var(--ease-out); }
+.disc__arm { transform-box: view-box; transform-origin: 35.2px 5.2px; transform: rotate(-24deg); transition: transform .5s var(--ease-out); }
 .plaque__btn--disc[aria-pressed='true'] .disc__arm { transform: none; }
 .plaque__btn--disc[aria-pressed='false'] .disc__record { opacity: .82; }
 .plaque__btn--disc.is-spinning .disc__record { animation: disc-turn 2.4s linear infinite; }
