@@ -166,3 +166,15 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   sequence, the intro, sharing and the calm background sound.
 - The voice key lives only in the Production environment again (previews have no voice), and the
   voice, share-card and share-link routes are rate limited per visitor.
+- The intro waits for Continue; nothing on it goes on by itself. The day cards say "7 days",
+  "10 days", "14 days".
+- Phones start at full quality; only budget GPUs start lower, and a phone that struggles steps down
+  for two days at most. Sound starts off, and the first tap on the speaker turns it on for good.
+- The case file reads as a short story with its facts highlighted, in both languages.
+- 1947's intro cards and telegram lie on a leather desk pad, framed like the other chapters.
+- No electric-looking beam before electric light: 1857's mashaal and 1929's lantern spill a glow;
+  only 1942's searchlight and 1947's torch make a beam.
+- After a right stamp, two hands crumple the paper (palms facing, fingers round it) and drop the
+  ball into the basket. Skip, or Enter, puts it in at once and starts the next day.
+- Google Analytics and Vercel Analytics count visits and a few game events. Share cards are drawn
+  ahead of time so previews load at once on WhatsApp and X.
