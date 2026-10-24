@@ -38,9 +38,11 @@ const MAP: Record<StageCueName, Cue | null> = {
   // after Begin: the intro cards slide onto the desk, the clip snaps onto the YOU photo
   cardSlide: 'cardSlide',
   clipSnap: 'clipSnap',
-  // the read paper tossed into the basket, and landing there
-  toss: 'paperToss',
-  tossLand: 'basketLand',
+  // the read paper flicked from the hand into the basket, and landing there as a ball
+  toss: 'paperFlick',
+  tossLand: 'ballLand',
+  // the hands screwing the paper up, one crinkle per squeeze
+  crumple: 'paperCrumple',
 }
 
 /** The sound for a stage cue, or null when the stage moment has no sound of its own. */

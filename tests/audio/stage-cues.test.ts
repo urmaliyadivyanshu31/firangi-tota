@@ -163,12 +163,13 @@ describe('the caught bus', () => {
 })
 
 describe('the toss', () => {
-  it('the paper leaving the desk and landing in the basket each sound, held well under full scale, and stay silent when muted', () => {
-    expect(cueForStage('toss')).toBe('paperToss')
-    expect(cueForStage('tossLand')).toBe('basketLand')
+  it('each squeeze crinkles, the flick and the ball landing each sound, held well under full scale, and stay silent when muted', () => {
+    expect(cueForStage('crumple')).toBe('paperCrumple')
+    expect(cueForStage('toss')).toBe('paperFlick')
+    expect(cueForStage('tossLand')).toBe('ballLand')
     const a = createAudioEngine()
     a.unlock()
-    for (const c of ['paperToss', 'basketLand'] as const) {
+    for (const c of ['paperCrumple', 'paperFlick', 'ballLand'] as const) {
       const before = made.nodes.length
       a.cue(c)
       const mine = made.nodes.slice(before)
@@ -180,9 +181,25 @@ describe('the toss', () => {
     }
     a.setMuted(true)
     const before = made.nodes.length
-    a.cue('paperToss')
-    a.cue('basketLand')
+    a.cue('paperCrumple')
+    a.cue('paperFlick')
+    a.cue('ballLand')
     expect(made.nodes.length).toBe(before)
+  })
+
+  it('a crinkle is a crackle of many short bursts, and no two squeezes are the same', () => {
+    const ctx = new MockCtx() as unknown as AudioContext
+    const dest = (ctx as unknown as MockCtx).destination as unknown as AudioNode
+    const burstsOf = () => {
+      const from = made.sources.length
+      playCue(ctx, dest, 'paperCrumple')
+      return made.sources.slice(from)
+    }
+    const a = burstsOf()
+    const b = burstsOf()
+    expect(a.length).toBeGreaterThanOrEqual(10)
+    const at = (xs: MockNode[]) => xs.map((n) => n.start.mock.calls[0]?.[0] as number).join(',')
+    expect(at(a)).not.toBe(at(b))
   })
 })
 

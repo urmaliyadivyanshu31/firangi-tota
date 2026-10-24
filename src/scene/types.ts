@@ -192,8 +192,10 @@ export type StageCueName =
   | 'knockFar' | 'knockNear' | 'knockDoor' | 'caughtHush' | 'caughtDark'
   // after Begin: an intro card slides onto the desk; the paper clip snaps onto the YOU photo
   | 'cardSlide' | 'clipSnap'
-  // the read paper tossed into the desk's basket: it leaves the desk, then it lands
+  // the read paper tossed into the desk's basket: it leaves the hand, then it lands
   | 'toss' | 'tossLand'
+  // the read paper screwed up in the hands: one per squeeze
+  | 'crumple'
 
 export interface StageOptions {
   reducedMotion: boolean
@@ -258,9 +260,10 @@ export interface Stage {
   /** Where the paper is on screen (CSS px), to place a Next button below it. */
   getPaperRect(): ScreenRect | null
   /**
-   * The read paper is done with: it lifts off the desk and is tossed into the era's basket while
-   * the camera draws back to watch it land (about 1.5 s, skippable). Under reduced motion it fades
-   * out instead. The next day's title takes over from there.
+   * The read paper is done with: two hands in the persona's sleeves come in, screw it up into a
+   * ball in three squeezes, and one flicks it into the era's basket while the camera draws back to
+   * watch it land (about 2.9 s, landing at 2.4 s; skip() lands it at once). Under reduced motion it
+   * fades out instead, with no hands. The next day's title takes over from there.
    */
   toss(): Promise<void>
 

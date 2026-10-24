@@ -76,7 +76,7 @@ interface Desk {
   /** Where the back's source line and the paper are on screen, for the buttons over and under them. */
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
-  /** The read paper goes in the basket (it names its own beats, on both desks). */
+  /** The read paper is screwed up and tossed in the basket (it names its own beats, on both desks). */
   toss(): Promise<void>
   /** After Begin: the YOU and Tota cards on the desk; resolves once they have settled. */
   intro(s: IntroSpec): Promise<void>
@@ -84,7 +84,7 @@ interface Desk {
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
-const TOSS_GUARD_MS = 4000 // the paper into the basket, about 1.5 s
+const TOSS_GUARD_MS = 5000 // the hands screw the paper up and toss it in the basket, about 2.9 s
 // The caught sequence runs about 4.2 s (scene/caught.ts); the guard leaves it room, and a slow
 // frame or two, but never lets a desk that stopped ticking hold the verdict back.
 const CAUGHT_GUARD_MS = 6500

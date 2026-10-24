@@ -576,7 +576,7 @@ describe('the toss: after a right stamp the paper goes in the basket and the nex
     try {
       holdOut()
       expect(m.stage.toss).toHaveBeenCalledTimes(1)
-      await vi.advanceTimersByTimeAsync(3000)
+      await vi.advanceTimersByTimeAsync(4000) // longer than the whole crumple and throw (about 2.9 s)
       expect(text(ui)).toContain('Day 1 of 7')
       await vi.advanceTimersByTimeAsync(1500) // past TOSS_GUARD_MS
       expect(text(ui)).toContain('Day 2 of 7')
@@ -612,10 +612,12 @@ describe('the toss: after a right stamp the paper goes in the basket and the nex
     const { ui } = boot('?lang=en&seed=3')
     await toDay1(ui)
     const opts = m.mountFallback.mock.calls[0]![2] as { onCue: (n: StageCueName) => void }
+    opts.onCue('crumple')
     opts.onCue('toss')
     opts.onCue('tossLand')
-    expect(m.audio.cue).toHaveBeenCalledWith('paperToss')
-    expect(m.audio.cue).toHaveBeenCalledWith('basketLand')
+    expect(m.audio.cue).toHaveBeenCalledWith('paperCrumple')
+    expect(m.audio.cue).toHaveBeenCalledWith('paperFlick')
+    expect(m.audio.cue).toHaveBeenCalledWith('ballLand')
     click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
     await flush()
     holdOut()

@@ -6,10 +6,10 @@ import { drawIntroSpread, introReady } from './intro-card'
 import { ERA_PALETTES, WOODS, css, mix, type Palette } from './palette'
 import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type PageRect } from './sheet'
 import { beamAt, caughtScore, redAt, type CaughtScore, type KnockKind } from './caught'
+import { drawBasketBalls, drawToss2D, dropping, planCrumple2D, type Crumple2D } from './crumple2d'
+import { TOSS, TOSS_AT } from './toss-beats'
 import type { DayTitle, FlashKind, IntroSpec, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StageCueName, StampKind } from './types'
 
-/** The toss, in ms, as on the 3D stage: lift, the arc, the settle and a held breath; or a fade. */
-const TOSS = { lift: 260, fly: 740, settle: 140, hold: 380, fade: 320 } as const
 
 export interface Fallback {
   setEra(id: EraId): void
@@ -38,7 +38,10 @@ export interface Fallback {
   skip(): void
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
-  /** The read paper arcs into the basket drawn on the floor (or fades, under reduced motion). */
+  /**
+   * Two drawn hands screw the read card up into a ball and flick it into the basket drawn on the
+   * floor, on the 3D stage's beats (or it fades, under reduced motion).
+   */
   toss(): Promise<void>
   /** After Begin: the YOU and Tota cards fade up on the desk (see Stage.intro); skip() finishes it. */
   intro(s: IntroSpec): Promise<void>
@@ -121,9 +124,9 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
   let H = 844
   let dpr = 1
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
-  // the toss: the card in flight (drawn from its own picture over the still), and the papers
-  // already in the basket
-  let tossing: { t0: number; from: PaperBox; sprite: HTMLCanvasElement | null; landed: boolean; finish: () => void } | null = null
+  // the toss: the card being screwed up and flown (drawn from its own picture over the still), the
+  // beats already heard, and the balls already in the basket
+  let tossing: { t0: number; from: PaperBox; sprite: HTMLCanvasElement | null; plan: Crumple2D; heard: number; landed: boolean; finish: () => void } | null = null
   let tossRaf = 0
   let binned = 0
   const cue = (name: StageCueName) => {
@@ -275,25 +278,45 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     if (more) raf = requestAnimationFrame(frame)
   }
 
-  /** One frame of the toss: the still, the card on its way, the basket's front over it as it goes in. */
+  /** The toss's beats, in order: each squeeze's crinkle, the flick, the landing (or, faded, a crinkle and the landing). */
+  const tossBeats = (): [number, StageCueName][] =>
+    reduced ? [[0, 'crumple'], [TOSS.fade, 'tossLand']] : [...TOSS_AT.squeezes.map((at): [number, StageCueName] => [at, 'crumple']), [TOSS_AT.release, 'toss'], [TOSS_AT.land, 'tossLand']]
+
+  /** Lands the ball: it joins the basket's balls in the still. */
+  const landToss = (t: NonNullable<typeof tossing>) => {
+    if (t.landed) return
+    t.landed = true
+    binned++
+  }
+
+  /** One frame of the toss: the still, the hands and the paper, the basket's front over the ball as it drops in. */
   const tossFrame = (now: number) => {
     tossRaf = 0
     const t = tossing
     if (!g || disposed || !t) return
     const e = Math.max(0, now - t.t0) // a frame stamped just before the toss began counts as its start
+    // every beat due by now, once and in order (a slow frame may pass two)
+    const beats = tossBeats()
+    for (let b = beats[t.heard]; b && b[0] <= e; b = beats[++t.heard]) {
+      if (b[1] === 'tossLand') {
+        landToss(t)
+        compose() // the still now has this ball in the basket
+      }
+      cue(b[1])
+    }
     g.setTransform(1, 0, 0, 1, 0, 0)
     if (base) g.drawImage(base, 0, 0)
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const lands = reduced ? TOSS.fade : TOSS.lift + TOSS.fly
-    if (!t.landed && e >= lands) {
-      t.landed = true
-      binned++
-      cue('tossLand')
-      compose() // the still now has this paper standing in the basket
+    const p = ERA_PALETTES[current]
+    if (reduced) {
+      if (!t.landed && t.sprite) drawFlight(g, t.from, t.sprite, e)
+    } else if (!t.landed) {
+      const b = basketSpot(W, H)
+      drawToss2D(g, W, H, { from: t.from, card: t.sprite, plan: t.plan, era: current, basket: b }, e, p)
+      if (dropping(e)) drawBasket(g, b, p, 0, true)
     }
-    if (!t.landed && t.sprite) drawFlight(g, W, H, t.from, t.sprite, e, reduced, ERA_PALETTES[current])
-    if (e >= (reduced ? TOSS.fade : lands + TOSS.settle + TOSS.hold)) return t.finish()
-    tossRaf = requestAnimationFrame(tossFrame)
+    if (e >= (reduced ? TOSS.fade : TOSS_AT.end)) return t.finish()
+    if (typeof requestAnimationFrame === 'function') tossRaf = requestAnimationFrame(tossFrame)
   }
 
   let timer = 0
@@ -336,21 +359,22 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
       stamp = null
       verdict = null
       sourceRect = null
-      cue('toss')
       return new Promise<void>((resolve) => {
         const t = {
           t0: clock(),
           from: box,
           sprite,
+          plan: planCrumple2D(17 + binned * 7919),
+          heard: 0,
           landed: false,
+          // skipped or cut short, it lands at once, and only the landing is heard
           finish: () => {
             if (tossing !== t) return
             tossing = null
             if (tossRaf) cancelAnimationFrame(tossRaf)
             tossRaf = 0
             if (!t.landed) {
-              t.landed = true
-              binned++
+              landToss(t)
               if (!disposed) cue('tossLand')
             }
             if (!disposed) compose()
@@ -360,9 +384,8 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
         tossing = t
         compose()
         // the still has lost the card: put it back on this same frame, so it never blinks out
-        if (g && sprite) drawFlight(g, W, H, box, sprite, 0, reduced, ERA_PALETTES[current])
+        tossFrame(t.t0)
         if (typeof requestAnimationFrame !== 'function') t.finish()
-        else tossRaf = requestAnimationFrame(tossFrame)
       })
     },
     showMessage(s) {
@@ -615,22 +638,8 @@ function drawBasket(g: CanvasRenderingContext2D, b: { x: number; y: number; r: n
     g.beginPath()
     g.ellipse(b.x, b.y, rx, ry, 0, 0, Math.PI * 2)
     g.fill()
-    // the read papers, standing in it, their tops over the rim
-    const n = Math.min(papers, 6)
-    for (let i = 0; i < n; i++) {
-      const off = ((i * 0.618) % 1) - 0.5
-      g.save()
-      g.translate(b.x + off * rx * 0.9, b.y + ry * 0.4)
-      g.rotate(off * 0.7)
-      g.fillStyle = css(mix(p.paper, 0xffffff, 0.04 + (i % 2) * 0.05))
-      g.strokeStyle = css(p.ink, 0.25)
-      g.lineWidth = 1
-      g.beginPath()
-      g.rect(-rx * 0.34, -ry * (1.6 + (i % 3) * 0.35), rx * 0.68, ry * 2.4)
-      g.fill()
-      g.stroke()
-      g.restore()
-    }
+    // the read papers, screwed up into balls, their tops over the rim
+    drawBasketBalls(g, b, ry, papers, p)
   }
   // the woven body, narrowing to its foot
   g.beginPath()
@@ -674,52 +683,17 @@ function drawBasket(g: CanvasRenderingContext2D, b: { x: number; y: number; r: n
   g.restore()
 }
 
-/** The card on its way: it lifts, arcs over and drops into the basket, turning once; or it fades. */
-function drawFlight(g: CanvasRenderingContext2D, W: number, H: number, from: PaperBox, card: HTMLCanvasElement, e: number, reduced: boolean, p: Palette): void {
-  const b = basketSpot(W, H)
-  const fx = from.x + from.w / 2
-  const fy = from.y + from.h / 2
-  let x = fx
-  let y = fy
-  let s = 1
-  let rot = -0.012
-  let alpha = 1
-  if (reduced) {
-    alpha = Math.max(0, 1 - e / TOSS.fade)
-  } else if (e < TOSS.lift) {
-    const k = 1 - Math.pow(1 - e / TOSS.lift, 3)
-    y = fy - 14 * k
-    s = 1 + 0.03 * k
-    rot = -0.012 - 0.05 * k
-  } else {
-    const t = Math.min(1, (e - TOSS.lift) / TOSS.fly)
-    const y1 = fy - 14
-    const c1x = fx + (b.x - fx) * 0.2
-    const c1y = y1 - H * 0.16
-    const c2x = b.x
-    const c2y = b.y - H * 0.26
-    const ex = b.x
-    const ey = b.y + b.r * 0.2
-    const u = 1 - t
-    x = u * u * u * fx + 3 * u * u * t * c1x + 3 * u * t * t * c2x + t * t * t * ex
-    y = u * u * u * y1 + 3 * u * u * t * c1y + 3 * u * t * t * c2y + t * t * t * ey
-    const end = (b.r * 1.3) / Math.max(1, from.w)
-    s = 1.03 + (end - 1.03) * Math.pow(t, 0.7)
-    const turn = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-    rot = -0.062 + Math.PI * 2 * turn
-  }
+/** Under reduced motion the card only fades where it lies. */
+function drawFlight(g: CanvasRenderingContext2D, from: PaperBox, card: HTMLCanvasElement, e: number): void {
   g.save()
-  g.globalAlpha = alpha
-  g.translate(x, y)
-  g.rotate(rot)
-  g.scale(s, s)
+  g.globalAlpha = Math.max(0, 1 - e / TOSS.fade)
+  g.translate(from.x + from.w / 2, from.y + from.h / 2)
+  g.rotate(-0.012)
   g.shadowColor = 'rgba(0,0,0,0.45)'
-  g.shadowBlur = 14 / Math.max(0.2, s)
-  g.shadowOffsetY = 6 / Math.max(0.2, s)
+  g.shadowBlur = 14
+  g.shadowOffsetY = 6
   g.drawImage(card, -from.w / 2, -from.h / 2, from.w, from.h)
   g.restore()
-  // the basket's front over the card as it drops in
-  if (!reduced && e >= TOSS.lift) drawBasket(g, b, p, 0, true)
 }
 
 function drawTitleOver(g: CanvasRenderingContext2D, W: number, H: number, t: DayTitle, era: EraId): void {

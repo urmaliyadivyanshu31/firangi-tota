@@ -425,7 +425,7 @@ describe('the verdict keeps the paper clear of the HUD', () => {
   })
 })
 
-describe('toss: the read paper goes in the basket', () => {
+describe('toss: the read paper is screwed up and goes in the basket', () => {
   const verdict = {
     outcome: 'right' as const,
     real: true,
@@ -452,88 +452,169 @@ describe('toss: the read paper goes in the basket', () => {
     return { dressing, basket, hook, box }
   }
   /** The paper read, its verdict on its back. */
-  async function readPaper(d: EraDressing, o: { reduced?: boolean; cues?: StageCueName[] } = {}) {
+  async function readPaper(d: EraDressing, o: { reduced?: boolean; cues?: StageCueName[]; tier?: QualityTier } = {}) {
     const s = stageFor(d, o)
     await state(s.stage.showMessage(sheet()), 6000)
     await state(s.stage.reveal(verdict), 5000)
     return s
   }
+  const named = (scene: InstanceType<typeof THREE.Scene> | null, name: string) => scene!.getObjectByName(name)!
+  /** How far apart the points of the ball's mesh lie, across x (m). */
+  const spanX = (scene: InstanceType<typeof THREE.Scene> | null) => {
+    const mesh = named(scene, 'paper-ball-verdict') as InstanceType<typeof THREE.Mesh>
+    const p = mesh.geometry.getAttribute('position')
+    let lo = Infinity
+    let hi = -Infinity
+    for (let i = 0; i < p.count; i++) {
+      lo = Math.min(lo, p.getX(i))
+      hi = Math.max(hi, p.getX(i))
+    }
+    return hi - lo
+  }
 
-  it('lifts, flies and lands in the basket: the basket rocks, the sounds mark both beats, the paper ends inside', async () => {
+  it('the hands come in, three squeezes screw the paper into a ball, one hand flicks it in: each beat sounds, the basket rocks, the ball ends inside', async () => {
     const cues: StageCueName[] = []
     const { dressing, basket, hook, box } = withBasket()
     const { stage } = await readPaper(dressing, { cues })
     expect(stage.getPaperRect()).not.toBeNull()
+    // the hands and the ball were made while the verdict was read, and wait out of sight
+    expect(named(box.scene, 'hands').visible).toBe(false)
+    expect(named(box.scene, 'paper-ball').visible).toBe(false)
     cues.length = 0
     const p = stage.toss()
-    expect(await state(p, 200)).toBe('pending')
-    expect(cues).toEqual(['toss'])
+    await pump(32)
+    // the flat ball takes the sheet's place: the sheet is hidden, the hands are in
+    expect(named(box.scene, 'message-sheet').visible).toBe(false)
+    expect(named(box.scene, 'paper-ball').visible).toBe(true)
+    expect(named(box.scene, 'hands').visible).toBe(true)
+    const flat = spanX(box.scene)
+    expect(flat).toBeCloseTo(0.21, 2)
+    // after the first squeeze it is pushed in from the sides; by the third it is a ball
+    await pump(600)
+    expect(cues).toEqual(['crumple'])
+    const squeezed = spanX(box.scene)
+    expect(squeezed).toBeLessThan(flat * 0.75)
+    await pump(700)
+    expect(cues).toEqual(['crumple', 'crumple', 'crumple'])
+    const ball = spanX(box.scene)
+    expect(ball).toBeLessThan(squeezed)
+    expect(ball).toBeGreaterThan(0.06)
+    expect(ball).toBeLessThan(0.095) // about 7.5 cm across
+    expect(await state(p, 300)).toBe('pending')
     let rocked = false
     for (let t = 0; t < 1400 && !rocked; t += 16) {
       await pump(16)
       rocked = !basket.quaternion.equals(new THREE.Quaternion())
     }
     expect(rocked).toBe(true)
-    expect(cues).toEqual(['toss', 'tossLand'])
+    expect(cues).toEqual(['crumple', 'crumple', 'crumple', 'toss', 'tossLand'])
     expect(await state(p, 2000)).toBe('done')
     expect(basket.quaternion.equals(new THREE.Quaternion())).toBe(true) // settled back on its foot
     expect(stage.getPaperRect()).toBeNull() // no longer on the desk
-    // the sheet stands in the basket: inside its mouth, below its rim
-    const sheetGroup = box.scene!.getObjectByName('message-sheet')!
-    expect(sheetGroup.visible).toBe(true)
-    const at = sheetGroup.getWorldPosition(new THREE.Vector3())
+    expect(named(box.scene, 'hands').visible).toBe(false) // gone again
+    // the ball lies in the basket: inside its mouth, below its rim, above its floor
+    const ballGroup = named(box.scene, 'paper-ball')
+    expect(ballGroup.visible).toBe(true)
+    const at = ballGroup.getWorldPosition(new THREE.Vector3())
     expect(Math.hypot(at.x - hook.mouth[0], at.z - hook.mouth[2])).toBeLessThan(hook.r)
     expect(at.y).toBeLessThan(hook.mouth[1])
     expect(at.y).toBeGreaterThan(hook.mouth[1] - hook.depth)
     stage.dispose()
   })
 
-  it('skip lands it at once', async () => {
+  it('lands in about 2.2 to 2.6 seconds from the end of the hold', async () => {
     const cues: StageCueName[] = []
     const { dressing } = withBasket()
     const { stage } = await readPaper(dressing, { cues })
-    const p = stage.toss()
-    await pump(50)
-    stage.skip()
-    expect(await state(p)).toBe('done')
-    expect(cues).toContain('tossLand')
+    cues.length = 0
+    void stage.toss()
+    let ms = 0
+    while (!cues.includes('tossLand') && ms < 4000) {
+      await pump(16)
+      ms += 16
+    }
+    expect(ms).toBeGreaterThanOrEqual(2200)
+    expect(ms).toBeLessThanOrEqual(2600)
     stage.dispose()
   })
 
-  it('under reduced motion the paper fades from the desk, with the same sounds, and no flight', async () => {
+  it('a tap during the crumple lands it at once, with no more crinkles, and the hands gone', async () => {
+    const cues: StageCueName[] = []
+    const { dressing, hook, box } = withBasket()
+    const { stage } = await readPaper(dressing, { cues })
+    cues.length = 0
+    const p = stage.toss()
+    await pump(500)
+    expect(cues).toEqual(['crumple'])
+    stage.skip()
+    expect(await state(p)).toBe('done')
+    expect(cues).toEqual(['crumple', 'tossLand'])
+    expect(named(box.scene, 'hands').visible).toBe(false)
+    const at = named(box.scene, 'paper-ball').getWorldPosition(new THREE.Vector3())
+    expect(Math.hypot(at.x - hook.mouth[0], at.z - hook.mouth[2])).toBeLessThan(hook.r)
+    stage.dispose()
+  })
+
+  it('a tap during the flight lands it at once', async () => {
+    const cues: StageCueName[] = []
+    const { dressing } = withBasket()
+    const { stage } = await readPaper(dressing, { cues })
+    cues.length = 0
+    const p = stage.toss()
+    while (!cues.includes('toss')) await pump(16)
+    stage.skip()
+    expect(await state(p)).toBe('done')
+    expect(cues.at(-1)).toBe('tossLand')
+    stage.dispose()
+  })
+
+  it('under reduced motion the paper fades from the desk, with a crinkle and the landing, and no hands or flight', async () => {
     const cues: StageCueName[] = []
     const { dressing, basket, box } = withBasket()
     const { stage } = await readPaper(dressing, { cues, reduced: true })
     cues.length = 0
     expect(await state(stage.toss(), 600)).toBe('done')
-    expect(cues).toEqual(['toss', 'tossLand'])
-    expect(box.scene!.getObjectByName('message-sheet')!.visible).toBe(false)
+    expect(cues).toEqual(['crumple', 'tossLand'])
+    expect(named(box.scene, 'message-sheet').visible).toBe(false)
+    expect(box.scene!.getObjectByName('hands')).toBeUndefined() // never even made
     expect(basket.quaternion.equals(new THREE.Quaternion())).toBe(true) // nothing moved
-    // and the basket holds it, as one of its papers
-    expect(box.scene!.getObjectByName('bin-papers')!.children).toHaveLength(1)
+    // and the basket holds it, as one of its balls
+    const bin = named(box.scene, 'bin-papers')
+    expect(bin.children).toHaveLength(1)
+    expect((bin.children[0] as InstanceType<typeof THREE.InstancedMesh>).count).toBe(1)
     stage.dispose()
   })
 
-  it('the paper stays in the basket while the camera leaves it, then joins the papers there; the next day reuses the sheet', async () => {
+  it('the ball stays in the basket while the camera leaves it, then joins the pile: one instanced mesh for every ball', async () => {
     const { dressing, box } = withBasket()
     const { stage } = await readPaper(dressing)
-    await state(stage.toss(), 3000)
-    const bin = box.scene!.getObjectByName('bin-papers')!
-    const sheetGroup = box.scene!.getObjectByName('message-sheet')!
+    await state(stage.toss(), 3500)
+    const bin = named(box.scene, 'bin-papers')
+    const ball = named(box.scene, 'paper-ball')
     expect(bin.children).toHaveLength(0)
     const title = stage.dayTitle({ big: 'Day 2', small: 'Monday, 18 May 1857' })
     await pump(100)
-    expect(sheetGroup.visible).toBe(true) // still in view while the camera turns to the wall
+    expect(ball.visible).toBe(true) // still in view while the camera turns to the wall
     expect(await state(title, 2500)).toBe('done')
-    expect(sheetGroup.visible).toBe(false)
+    expect(ball.visible).toBe(false)
     expect(bin.children).toHaveLength(1)
+    const pile = bin.children[0] as InstanceType<typeof THREE.InstancedMesh>
+    expect(pile.isInstancedMesh).toBe(true)
+    expect(pile.count).toBe(1)
     expect(await state(stage.showMessage(sheet({ body: 'A second petition.' })), 6000)).toBe('done')
     expect(stage.getPaperRect()).not.toBeNull()
-    // a second toss lands on the first: still one mesh for every paper in the basket
+    expect(named(box.scene, 'message-sheet').visible).toBe(true) // the sheet is back for the new message
+    // a second toss lands on the first: still one mesh, now two balls, the second higher or beside
     await state(stage.reveal(verdict), 5000)
-    await state(stage.toss(), 3000)
+    await state(stage.toss(), 3500)
     await state(stage.dayTitle({ big: 'Day 3', small: 'Tuesday, 19 May 1857' }), 2500)
     expect(bin.children).toHaveLength(1)
+    expect(pile.count).toBe(2)
+    const m0 = new THREE.Matrix4()
+    const m1 = new THREE.Matrix4()
+    pile.getMatrixAt(0, m0)
+    pile.getMatrixAt(1, m1)
+    expect(new THREE.Vector3().setFromMatrixPosition(m0).distanceTo(new THREE.Vector3().setFromMatrixPosition(m1))).toBeGreaterThan(0.05)
     stage.dispose()
   })
 
@@ -558,18 +639,18 @@ describe('toss: the read paper goes in the basket', () => {
   })
 
   for (const tier of ['low', 'mid', 'high'] as const) {
-    it(`flies into the 1947 basket at the ${tier} tier`, async () => {
+    it(`screws up and tosses into the 1947 basket at the ${tier} tier`, async () => {
       const cues: StageCueName[] = []
       const s = stageFor(delhi1947, { tier, cues })
       await state(s.stage.showMessage(sheet({ channel: 'telegram' })), 9000)
       await state(s.stage.reveal(verdict), 5000)
-      expect(await state(s.stage.toss(), 3000)).toBe('done')
-      expect(cues).toEqual(expect.arrayContaining(['toss', 'tossLand']))
+      cues.length = 0
+      expect(await state(s.stage.toss(), 3500)).toBe('done')
+      expect(cues).toEqual(['crumple', 'crumple', 'crumple', 'toss', 'tossLand'])
       s.stage.dispose()
     })
   }
 })
-
 describe('caught: a wrong stamp plays out over about four seconds', () => {
   const ALARMS: Record<EraId, StageCueName[]> = {
     'delhi-1857': ['kettleDrum', 'bugleAlarm'],

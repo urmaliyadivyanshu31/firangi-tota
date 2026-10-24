@@ -21,8 +21,9 @@ export type Cue =
   | 'knockFar' | 'knockNear' | 'knockDoor' | 'caughtHush' | 'caughtDark'
   // after Begin: an intro card slid across the desk, the paper clip snapping onto the YOU photo
   | 'cardSlide' | 'clipSnap'
-  // the read paper tossed into the desk's basket: a soft whoosh off the desk, then it lands in the cane
-  | 'paperToss' | 'basketLand'
+  // the read paper screwed up in the hands (one per squeeze), flicked from the hand, and landing as a
+  // ball in the basket
+  | 'paperCrumple' | 'paperFlick' | 'ballLand'
 
 /** What some cues need to know: the era (the day title's settle) and how close the end is (0..1). */
 export interface CueOptions {
@@ -456,53 +457,89 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
     case 'caughtDark':
       caughtDark(ctx, dest, t)
       break
-    case 'paperToss':
-      paperWhoosh(ctx, dest, t)
+    case 'paperCrumple':
+      paperCrumple(ctx, dest, t)
       break
-    case 'basketLand':
-      basketLand(ctx, dest, t)
+    case 'paperFlick':
+      paperFlick(ctx, dest, t)
+      break
+    case 'ballLand':
+      ballLand(ctx, dest, t)
       break
   }
 }
 
 /**
- * A sheet thrown through the air (about 0.8 s): a breathy swish that rises as it leaves the hand
- * and falls away, with the paper's own flutter riding on it. Soft: it is a page, not a wind.
+ * One squeeze of a sheet being screwed up (about 0.35 s): the dry body of the paper giving way, a
+ * crackle of small sharp creases running through it, and the soft press of the palms. Every call is
+ * a little different, so two or three in a row sound like hands, not a loop.
  */
-function paperWhoosh(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+function paperCrumple(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const len = 0.26 + Math.random() * 0.1
+  // the body: a papery hiss that swells as the hands close and falls away
   const src = ctx.createBufferSource()
   src.buffer = noiseBuffer(ctx)
   const bp = ctx.createBiquadFilter()
   bp.type = 'bandpass'
-  bp.Q.value = 0.9
-  bp.frequency.setValueAtTime(700, t)
-  bp.frequency.exponentialRampToValueAtTime(2600, t + 0.22)
-  bp.frequency.exponentialRampToValueAtTime(900, t + 0.75)
+  bp.Q.value = 0.7
+  bp.frequency.setValueAtTime(2200 + Math.random() * 900, t)
+  bp.frequency.linearRampToValueAtTime(3600 + Math.random() * 1200, t + len * 0.6)
   const g = ctx.createGain()
   g.gain.setValueAtTime(0.0001, t)
-  g.gain.linearRampToValueAtTime(0.085, t + 0.16)
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8)
+  g.gain.linearRampToValueAtTime(0.05 + Math.random() * 0.02, t + 0.05)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len)
   src.connect(bp)
   bp.connect(g)
   g.connect(dest)
-  src.start(t, Math.random() * 1.1)
-  src.stop(t + 0.85)
-  // the flutter: a few small dry flaps as it turns over
-  for (let i = 0; i < 4; i++) {
-    noiseBurst(ctx, dest, t + 0.12 + i * 0.13 + Math.random() * 0.03, { type: 'bandpass', freq: 3400 + Math.random() * 1400, q: 1.2, peak: 0.035 + Math.random() * 0.02, attack: 0.004, decay: 0.035 })
+  src.start(t, Math.random() * 1.5)
+  src.stop(t + len + 0.05)
+  // the crackle: tiny sharp clicks, thickest while the paper gives way
+  const n = 12 + Math.floor(Math.random() * 6)
+  for (let i = 0; i < n; i++) {
+    const at = t + Math.pow(Math.random(), 1.3) * len * 0.85
+    noiseBurst(ctx, dest, at, { type: 'highpass', freq: 3200 + Math.random() * 3600, q: 0.8, peak: 0.022 + Math.random() * 0.042, attack: 0.001, decay: 0.006 + Math.random() * 0.014 })
   }
+  // the palms pressing in: a muffled low push
+  noiseBurst(ctx, dest, t + 0.01, { type: 'lowpass', freq: 520 + Math.random() * 200, peak: 0.045, attack: 0.02, decay: 0.09 })
+}
+
+/** The ball leaving the hand (about 0.2 s): a quick breath of air and the flick of the fingers. */
+function paperFlick(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const src = ctx.createBufferSource()
+  src.buffer = noiseBuffer(ctx)
+  const bp = ctx.createBiquadFilter()
+  bp.type = 'bandpass'
+  bp.Q.value = 1.1
+  bp.frequency.setValueAtTime(1100, t)
+  bp.frequency.exponentialRampToValueAtTime(3400, t + 0.12)
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.linearRampToValueAtTime(0.06, t + 0.04)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2)
+  src.connect(bp)
+  bp.connect(g)
+  g.connect(dest)
+  src.start(t, Math.random() * 1.5)
+  src.stop(t + 0.25)
+  noiseBurst(ctx, dest, t, { type: 'bandpass', freq: 2600, q: 3, peak: 0.05, attack: 0.001, decay: 0.012 })
+  // the ball's own rustle as it turns over
+  noiseBurst(ctx, dest, t + 0.05, { type: 'highpass', freq: 4200, q: 0.7, peak: 0.025, attack: 0.002, decay: 0.03 })
 }
 
 /**
- * The paper drops into a cane basket (about 0.5 s): a dry rustle as it slides in among the others,
- * a soft hollow knock of the weave, and two small creaks of the cane as the basket rocks.
+ * A paper ball dropping into the basket (about 0.4 s): a soft, hollow thud, the ball's own crackle
+ * as it settles, and a creak or two of the cane as the basket rocks.
  */
-function basketLand(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
-  rustle(ctx, dest, t, 0.26, 0.11)
-  tone(ctx, dest, t + 0.01, { type: 'sine', from: 150, to: 92, peak: 0.13, attack: 0.004, decay: 0.16 })
-  noiseBurst(ctx, dest, t + 0.01, { type: 'lowpass', freq: 520, peak: 0.08, attack: 0.003, decay: 0.07 })
-  for (const at of [0.09, 0.24]) {
-    noiseBurst(ctx, dest, t + at + Math.random() * 0.02, { type: 'bandpass', freq: 1500 + Math.random() * 500, q: 5, peak: 0.04, attack: 0.002, decay: 0.03 })
+function ballLand(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  tone(ctx, dest, t, { type: 'sine', from: 165, to: 96, peak: 0.11, attack: 0.003, decay: 0.1 })
+  noiseBurst(ctx, dest, t, { type: 'lowpass', freq: 640, peak: 0.08, attack: 0.002, decay: 0.06 })
+  for (let i = 0; i < 4; i++) {
+    noiseBurst(ctx, dest, t + 0.02 + Math.random() * 0.14, { type: 'highpass', freq: 3800 + Math.random() * 2400, q: 0.8, peak: 0.018 + Math.random() * 0.02, attack: 0.001, decay: 0.008 + Math.random() * 0.01 })
+  }
+  // the small bounce, softer
+  tone(ctx, dest, t + 0.12, { type: 'sine', from: 150, to: 104, peak: 0.035, attack: 0.003, decay: 0.06 })
+  for (const at of [0.1, 0.26]) {
+    noiseBurst(ctx, dest, t + at + Math.random() * 0.03, { type: 'bandpass', freq: 1400 + Math.random() * 500, q: 5, peak: 0.03, attack: 0.002, decay: 0.03 })
   }
 }
 

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { drawBasketBalls } from '../../src/scene/crumple2d'
 import { mountFallback } from '../../src/scene/fallback'
+import { TOSS_AT } from '../../src/scene/toss-beats'
 import { ERA_PALETTES } from '../../src/scene/palette'
 import type { EraId } from '../../src/content/types'
 import type { SheetSpec } from '../../src/scene/types'
@@ -220,35 +222,52 @@ describe('mountFallback: the message on paper', () => {
     }
     afterEach(() => vi.unstubAllGlobals())
 
-    it('flies the card on frames, naming both beats, with the same timing as the 3D toss', async () => {
+    it('drawn hands screw the card up on the 3D beats: three crinkles, the flick, the landing, then a held breath', async () => {
       const { fb, f, cues } = await readCard()
       expect(fb.getPaperRect()).not.toBeNull()
       let done = false
       void fb.toss().then(() => (done = true))
-      expect(cues).toEqual(['toss'])
+      expect(cues).toEqual([]) // the hands are only coming in
       expect(fb.getPaperRect()).toBeNull() // off the desk: no source button over it
       expect(fb.getSourceRect()).toBeNull()
       const drawn = f.calls.filter((c) => c === 'drawImage').length
-      pump(600)
-      expect(f.calls.filter((c) => c === 'drawImage').length).toBeGreaterThan(drawn + 20) // the card, frame by frame
-      expect(cues).toEqual(['toss'])
-      pump(450) // past the lift and the arc (1000 ms)
-      expect(cues).toEqual(['toss', 'tossLand'])
+      pump(TOSS_AT.squeezes[0]! + 16)
+      expect(cues).toEqual(['crumple'])
+      expect(f.calls.filter((c) => c === 'drawImage').length).toBeGreaterThan(drawn + 10) // the card, frame by frame
+      pump(TOSS_AT.roll - TOSS_AT.squeezes[0]!)
+      expect(cues).toEqual(['crumple', 'crumple', 'crumple'])
+      pump(TOSS_AT.release - TOSS_AT.roll)
+      expect(cues).toEqual(['crumple', 'crumple', 'crumple', 'toss'])
+      pump(TOSS_AT.land - TOSS_AT.release)
+      expect(cues).toEqual(['crumple', 'crumple', 'crumple', 'toss', 'tossLand'])
       await Promise.resolve()
-      expect(done).toBe(false) // the settle and a held breath
-      pump(600)
+      expect(done).toBe(false) // the ball settles and the shot holds a breath
+      pump(TOSS_AT.end - TOSS_AT.land + 32)
       await Promise.resolve()
       expect(done).toBe(true)
       fb.dispose()
     })
 
-    it('skip lands it at once; dispose never leaves it hanging', async () => {
+    it('draws two hands in the persona’s sleeves, and the card squashed into a creased ball between them', async () => {
+      const { fb, f } = await readCard()
+      void fb.toss()
+      const before = f.calls.length
+      pump(TOSS_AT.roll - 40)
+      const during = f.calls.slice(before)
+      // the hands are drawn shapes (rotated, mirrored for the left), the ball is clipped to its outline
+      expect(during.filter((c) => c === 'rotate').length).toBeGreaterThan(20)
+      expect(during.filter((c) => c === 'clip').length).toBeGreaterThan(5)
+      expect(during.filter((c) => c === 'scale').length).toBeGreaterThan(5)
+      fb.dispose()
+    })
+
+    it('skip lands it at once with only the landing heard; dispose never leaves it hanging', async () => {
       const a = await readCard()
       const p = a.fb.toss()
-      pump(100)
+      pump(TOSS_AT.squeezes[0]! + 50)
       a.fb.skip()
       await p
-      expect(a.cues).toEqual(['toss', 'tossLand'])
+      expect(a.cues).toEqual(['crumple', 'tossLand'])
       a.fb.dispose()
       const b = await readCard()
       const q = b.fb.toss()
@@ -256,20 +275,35 @@ describe('mountFallback: the message on paper', () => {
       await expect(q).resolves.toBeUndefined()
     })
 
-    it('under reduced motion the card fades where it lies, then is gone', async () => {
+    it('under reduced motion the card fades where it lies, with a crinkle and the landing, then is gone', async () => {
       const { fb, cues } = await readCard({ reduced: true })
       let done = false
       void fb.toss().then(() => (done = true))
+      expect(cues).toEqual(['crumple'])
       pump(200)
       await Promise.resolve()
       expect(done).toBe(false)
       pump(200)
       await Promise.resolve()
       expect(done).toBe(true)
-      expect(cues).toEqual(['toss', 'tossLand'])
+      expect(cues).toEqual(['crumple', 'tossLand'])
       fb.dispose()
     })
 
+    it('the basket shows the read papers as balls', () => {
+      const f = fakeCanvas()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+      const ballsIn = (n: number) => {
+        const c = document.createElement('canvas')
+        const g = c.getContext('2d') as CanvasRenderingContext2D
+        const from = f.calls.length
+        drawBasketBalls(g, { x: 100, y: 100, r: 40 }, 12, n, ERA_PALETTES['delhi-1857'])
+        return f.calls.slice(from).filter((x) => x === 'fill').length
+      }
+      expect(ballsIn(0)).toBe(0)
+      expect(ballsIn(3)).toBe(3)
+      expect(ballsIn(20)).toBe(9) // a full basket shows its top layers
+    })
     it('resolves at once with no paper on the desk', async () => {
       const f = fakeCanvas()
       vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
