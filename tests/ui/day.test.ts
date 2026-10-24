@@ -533,14 +533,45 @@ describe('renderDay: the verdict on the paper', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
     expect(on.toss).toHaveBeenCalledTimes(3)
     expect(on.stamp).not.toHaveBeenCalled()
-    // the source card opening and closing is reported, so the hold can wait for it
-    src.click()
+    // the source card opening and closing is reported, so the hold can wait for it (by touch)
+    const tapOn = (el: HTMLElement) => {
+      el.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+      el.click()
+    }
+    tapOn(src)
     expect(on.pop).toHaveBeenLastCalledWith(true)
+    tapOn(root.querySelector<HTMLElement>('[data-action="close-source"]')!)
+    expect(on.pop).toHaveBeenLastCalledWith(false)
+    // by keyboard, Escape closes it and the player lands back on the source line, which still holds
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    src.click()
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(on.pop).toHaveBeenLastCalledWith(true)
+    src.blur()
     expect(on.pop).toHaveBeenLastCalledWith(false)
     // on its way to the basket, the source button goes with the paper
     setTossing(root)
     expect(screen.classList.contains('is-tossing')).toBe(true)
+  })
+
+  it('a keyboard player on the source line holds a verdict that leads on; a tap’s focus does not', () => {
+    const e = era()
+    const root = mount()
+    const on = { ...handlers(), toss: vi.fn(), pop: vi.fn() }
+    renderDay(root, props(e, chapter(e, { day: 2, phase: 'stamped', lastCorrect: true, lastVerdict: 'asli' }), {
+      revealed: true,
+      onPaper: { mirror: 'Right', sourceRect: rect, sources: [{ id: 's1', loc: 'p. 2' }], auto: true },
+    }), on)
+    const src = root.querySelector<HTMLButtonElement>('.source-hit')!
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }))
+    src.focus()
+    expect(on.pop).toHaveBeenLastCalledWith(true)
+    src.blur()
+    expect(on.pop).toHaveBeenLastCalledWith(false)
+    on.pop.mockClear()
+    src.dispatchEvent(new Event('pointerdown', { bubbles: true })) // focus from a tap
+    src.focus()
+    expect(on.pop).not.toHaveBeenCalled()
   })
 
   it('a verdict that does not lead on keeps Next, and a tap on the room does nothing', () => {

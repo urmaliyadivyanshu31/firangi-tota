@@ -120,6 +120,8 @@ interface Active {
 // One day screen is live at a time; the keyboard, layout and voice listeners follow the latest render.
 let active: Active | null = null
 let keysBound = false
+// what the player last used, so focus that came from the keyboard can be told from a tap's
+let lastInput: 'key' | 'pointer' = 'pointer'
 let unsubLayout: () => void = () => {}
 const announced = new WeakMap<HTMLElement, string>()
 
@@ -477,9 +479,20 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       popScrim.hidden = true
       srcBtn.setAttribute('aria-expanded', 'false')
       result?.querySelector('[data-action="receipts"]')?.setAttribute('aria-expanded', 'false')
-      if (wasOpen && focusInside) opener?.focus({ preventScroll: true })
+      // reported before the focus goes back, so a keyboard player landing on the source holds it again
       if (wasOpen) on.pop?.(false)
+      if (wasOpen && focusInside) opener?.focus({ preventScroll: true })
       return wasOpen
+    }
+    // A keyboard (or screen-reader) player on the source line holds a verdict that leads on, as the
+    // open card does; leaving it gives the hold back. A tap's focus does not count.
+    if (r.auto) {
+      srcBtn.addEventListener('focus', () => {
+        if (lastInput === 'key') on.pop?.(true)
+      })
+      srcBtn.addEventListener('blur', () => {
+        if (pop.hidden) on.pop?.(false)
+      })
     }
     const again = on.again
     const home = on.home
@@ -541,6 +554,8 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   }
   if (!keysBound) {
     document.addEventListener('keydown', onKey)
+    document.addEventListener('keydown', () => (lastInput = 'key'), { capture: true, passive: true })
+    document.addEventListener('pointerdown', () => (lastInput = 'pointer'), { capture: true, passive: true })
     keysBound = true
   }
 

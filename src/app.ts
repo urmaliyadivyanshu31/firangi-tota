@@ -261,8 +261,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const p = play
     if (p && screen === 'day') {
       // A desk that arrives once the paper was readable (a lost context) shows it at once; during
-      // the arrival, arrive() brings it in on whichever desk is there.
-      if (readable || revealed) catchUp(p)
+      // the arrival, arrive() brings it in on whichever desk is there. A paper already on its way
+      // to the basket is not brought back: the next day's title follows on the new desk.
+      if ((readable || revealed) && !tossing) catchUp(p)
     } else if (screen === 'main') {
       void desk.establish()
     }

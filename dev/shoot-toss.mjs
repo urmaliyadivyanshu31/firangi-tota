@@ -16,8 +16,8 @@ const VIDEO = !!process.env.VIDEO
 const REDUCED = !!process.env.REDUCED
 const FALLBACK = !!process.env.FALLBACK
 const DAYS = Number(process.env.DAYS ?? 1)
-// moments after the verdict is up (ms): the held verdict, then the toss frame by frame
-const SHOTS = (process.env.SHOTS ?? '1500,3050,3250,3450,3650,3850,4100,4500,5200').split(',').map(Number)
+// moments after the verdict is up (ms): the held verdict (TOSS_HOLD_MS is 3.5 s), then the toss frame by frame
+const SHOTS = (process.env.SHOTS ?? '1500,3550,3750,3950,4150,4350,4600,5000,5700').split(',').map(Number)
 mkdirSync(OUT, { recursive: true })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const args = FALLBACK ? ['--disable-webgl', '--disable-webgl2'] : ['--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=metal', '--use-gl=angle']

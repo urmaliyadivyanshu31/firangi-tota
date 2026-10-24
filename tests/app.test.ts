@@ -471,14 +471,35 @@ describe('the toss: after a right stamp the paper goes in the basket and the nex
     const ui = await rightOnDay1()
     frame(16)
     seconds(2) // a second of the hold is left
-    click(ui, '[data-action="source"]')
+    // by touch: a tap opens the card, a tap on its close slip closes it
+    const tapOn = (sel: string) => {
+      $(ui, sel)!.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+      click(ui, sel)
+    }
+    tapOn('[data-action="source"]')
     expect($(ui, '#ft-source-pop')!.hidden).toBe(false)
     seconds(20)
     expect(m.stage.toss).not.toHaveBeenCalled()
-    click(ui, '[data-action="close-source"]')
+    tapOn('[data-action="close-source"]')
     frame(16)
     frames(TOSS_RESUME_MS - 100)
     expect(m.stage.toss).not.toHaveBeenCalled() // at least TOSS_RESUME_MS again, not the second that was left
+    frame(200)
+    expect(m.stage.toss).toHaveBeenCalledTimes(1)
+  })
+
+  it('a keyboard player on the source line holds it as long as they stay there', async () => {
+    const ui = await rightOnDay1()
+    frame(16)
+    seconds(3) // half a second of the hold is left
+    key('Tab')
+    $(ui, '[data-action="source"]')!.focus()
+    seconds(20)
+    expect(m.stage.toss).not.toHaveBeenCalled()
+    $(ui, '[data-action="source"]')!.blur()
+    frame(16)
+    frames(TOSS_RESUME_MS - 100)
+    expect(m.stage.toss).not.toHaveBeenCalled()
     frame(200)
     expect(m.stage.toss).toHaveBeenCalledTimes(1)
   })
