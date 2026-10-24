@@ -12,6 +12,7 @@ import { DAYS, TIMER_S, TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, pencilOn, t
 import { dailyFrom, type Daily } from './game/daily'
 import { dayDate } from './game/dates'
 import { mulberry32, seedFrom } from './game/rng'
+import { addDrops, earnedLine, jackpotLine, loadCollection, rollReward, saveDrops, survivalDrops, type Counts, type Drop } from './game/rewards'
 import { unitOf } from './game/run'
 import { chapterPost, chapterStory, dailyFact, dailyPost } from './game/share'
 import { codeFromPath, isShareResult, parseShareCode, shareCode, type ShareResult } from './game/share-code'
@@ -24,7 +25,7 @@ import type { Voice, VoiceState } from './audio/voice'
 import { DEFAULT_VOICE, VOICES, voiceChoices, type VoiceChoice } from './content/voices'
 import {
   STAGE_LOST_EVENT, loadStage, mountFallback,
-  type DayTitle, type EraDressing, type Fallback, type FlashKind, type IntroSpec, type QualityTier, type RevealSpec, type ScreenRect, type SheetSpec, type Stage, type StageCueName, type StampKind,
+  type DayTitle, type EarnSpec, type EraDressing, type Fallback, type PileSpec, type FlashKind, type IntroSpec, type QualityTier, type RevealSpec, type ScreenRect, type SheetSpec, type Stage, type StageCueName, type StampKind,
 } from './scene/index'
 import { controlCluster, setMusicToggle, setSoundToggle, type MusicState } from './ui/controls'
 import type { Gramophone } from './ui/gramophone'
@@ -88,6 +89,11 @@ interface Desk {
   /** After Begin: the YOU and Tota cards on the desk; resolves once they have settled. */
   intro(s: IntroSpec): Promise<void>
   clearIntro(): Promise<void>
+  /** The treasures in the desk's corner: this run's during a chapter, the collection between chapters. */
+  setPile(p: PileSpec): void
+  /** A right stamp's rewards drop onto the paper's back (about 0.8 s, never awaited by the hold). */
+  earn(e: EarnSpec): Promise<void>
+  getEarnRect(): ScreenRect | null
 }
 
 const REVEAL_GUARD_MS = 9000 // the circle, the margin note and the turn of the paper
@@ -192,6 +198,14 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   let holdLast = 0
   let sourceOpen = false
   let holdSpent = 0 // ms of frames since the verdict went up, so the tail of a skip is not a toss
+
+  // Rewards (src/game/rewards.ts): what this run has earned, today's drops (on the paper until it
+  // is tossed), and the draw's random source (seeded under ?seed, so a test run earns the same)
+  let runEarned: Counts = {}
+  let todayDrops: Drop[] | null = null
+  let rewardRng: () => number = env.random
+  let rewardSlip: HTMLElement | null = null
+  let rewardSlipTimer = 0
 
   // the intro after Begin, and its wait before going on by itself
   let intro: { era: Era; difficulty: Difficulty; started: boolean; settled: boolean } | null = null
@@ -320,6 +334,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     } else {
       desk = fallbackDesk(mountFallback(root.stage, deskEra ?? ERAS[0]?.id ?? 'delhi-1857', { onCue }))
     }
+    desk.setPile(pileNow())
     const p = play
     if (p && screen === 'day') {
       // A desk that arrives once the paper was readable (a lost context) shows it at once; during
@@ -357,7 +372,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     d.skip()
     drawDay()
     void guard(done, REVEAL_GUARD_MS).then(() => {
-      if (token === gen && desk === d && play === p && revealed) drawDay()
+      if (token !== gen || desk !== d || play !== p || !revealed) return
+      // today's rewards lie on the new desk's paper too, already landed
+      if (todayDrops && !tossing) void d.earn({ drops: todayDrops, after: runEarned, now: true })
+      drawDay()
     })
   }
 
@@ -408,6 +426,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       dispose: () => s.dispose(),
       intro: (x) => s.intro(x),
       clearIntro: () => s.clearIntro(),
+      setPile: (x) => s.setPile(x),
+      earn: (x) => s.earn(x),
+      getEarnRect: () => s.getEarnRect(),
       cues: true,
     }
   }
@@ -432,6 +453,9 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       dispose: () => f.dispose(),
       intro: (x) => f.intro(x),
       clearIntro: () => f.clearIntro(),
+      setPile: (x) => f.setPile(x),
+      earn: (x) => f.earn(x),
+      getEarnRect: () => f.getEarnRect(),
       cues: false,
     }
   }
@@ -507,10 +531,88 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   /** Shows an era's desk. A desk with a paper or the caught dimming on it is rebuilt clean. */
   function setDeskEra(id: EraId | null | undefined): void {
-    if (!id || (id === deskEra && !deskDirty)) return
-    deskEra = id
-    deskDirty = false
-    desk?.setEra(id)
+    if (id && !(id === deskEra && !deskDirty)) {
+      deskEra = id
+      deskDirty = false
+      desk?.setEra(id)
+    }
+    syncPile()
+  }
+
+  /**
+   * What the desk's corner holds: during a chapter (or the daily puzzle) what this run has earned,
+   * less today's drops while they still lie on the paper; between chapters, the whole collection of
+   * the era on the desk.
+   */
+  function pileNow(): PileSpec {
+    const p = play
+    if (p) {
+      const counts = { ...runEarned }
+      if (todayDrops && revealed && !tossing) for (const d of todayDrops) counts[d.item] = Math.max(0, (counts[d.item] ?? 0) - d.qty)
+      return { era: p.era.id, counts }
+    }
+    const era = deskEra ?? selected
+    return { era, counts: loadCollection()[era] ?? {} }
+  }
+
+  function syncPile(): void {
+    desk?.setPile(pileNow())
+  }
+
+  /** A fresh run earns from nothing; under ?seed its draws repeat exactly. */
+  function resetRewards(era: EraId, mode: string): void {
+    runEarned = {}
+    todayDrops = null
+    rewardRng = seed === null ? env.random : mulberry32(seedFrom(`rewards|${seed}|${era}|${mode}`))
+  }
+
+  /**
+   * A right stamp's rewards: one random draw (a loot drop: mostly everyday coins and sweets, now and
+   * then a rupee, rarely a jackpot), plus the keepsake for surviving the chapter. Kept at once, then
+   * dropped onto the paper. They never change play: no pardon, hint or time.
+   */
+  function earnRewards(p: Play, msg: Message, end: 'caught' | 'survived' | undefined): void {
+    const drops = [rollReward(p.era.id, msg.tier, rewardRng)]
+    if (end === 'survived' && p.kind === 'chapter') drops.push(...survivalDrops(p.era.id, p.difficulty))
+    saveDrops(p.era.id, drops)
+    runEarned = addDrops(runEarned, drops)
+    todayDrops = drops
+    for (const d of drops) gameEvent('reward', { era: p.era.id, item: d.item, qty: d.qty, jackpot: d.jackpot })
+    void desk?.earn({ drops, after: runEarned })
+    const jackpot = drops.find((d) => d.jackpot)
+    if (jackpot) showRewardSlip(jackpot)
+  }
+
+  /** A jackpot's short line on a paper chit by the treasure, for a moment ("A gold mohur!"). */
+  function showRewardSlip(d: Drop): void {
+    hideRewardSlip()
+    const token = gen
+    const lang = getLang()
+    const el = h('p', { class: 'reward-slip', role: 'status', lang }, jackpotLine(d, lang))
+    rewardSlip = el
+    document.body.appendChild(el)
+    const place = () => {
+      if (rewardSlip !== el || token !== gen) return
+      const r = desk?.getEarnRect() ?? desk?.getPaperRect() ?? null
+      const W = window.innerWidth || 390
+      const x = r ? r.x + r.w / 2 : W / 2
+      const y = r ? r.y : window.innerHeight * 0.5
+      const half = (el.offsetWidth || 180) / 2 + 8
+      el.style.left = `${Math.round(Math.min(W - half, Math.max(half, x)))}px`
+      el.style.top = `${Math.round(Math.max(70, y - 10))}px`
+      el.classList.add('is-on')
+    }
+    // after the treasure has landed
+    rewardSlipTimer = window.setTimeout(() => {
+      place()
+      rewardSlipTimer = window.setTimeout(hideRewardSlip, 2600)
+    }, reducedMotion ? 150 : 650)
+  }
+
+  function hideRewardSlip(): void {
+    window.clearTimeout(rewardSlipTimer)
+    rewardSlip?.remove()
+    rewardSlip = null
   }
 
   /** The wide shot of the room, behind the cards. */
@@ -628,6 +730,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     endHold()
     stopVoice()
     disarmTimer()
+    hideRewardSlip()
     closeShareSlip() // the slip belongs to the screen it was opened on
   }
 
@@ -761,7 +864,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     establish()
     audio.ambience(selected)
     syncPause()
-    show('main', () => renderMain(ui, { eras: ERAS, best: bests(), selected, difficulty }, {
+    show('main', () => renderMain(ui, { eras: ERAS, best: bests(), selected, difficulty, collection: loadCollection() }, {
       select: (id) => {
         if (id === selected || screen !== 'main') return // (not while the page slides away after Begin)
         selected = id
@@ -915,9 +1018,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     }
     if (seed === null) rememberRun(era.id, state.queue)
     leave()
+    resetRewards(era.id, d)
+    play = { kind: 'chapter', era, difficulty: d, state }
     setDeskEra(era.id)
     audio.ambience(era.id)
-    play = { kind: 'chapter', era, difficulty: d, state }
     gameEvent('chapter_start', { era: era.id, mode: d, lang: getLang() })
     beginDay()
   }
@@ -971,6 +1075,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     paper = null
     verdictEnd = null
     endHold()
+    todayDrops = null
+    hideRewardSlip()
     deskDirty = true
     timerArmed = false
     timeLeft = timeTotal = TIMER_S[p.state.difficulty]
@@ -1091,7 +1197,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       paperRect: desk?.getPaperRect() ?? null,
       sources: [...(msg ? messageSources(msg, p.era) : []), ...(r.end ? p.era.epilogue.sources : [])],
       ...(msg ? { kind: kindLine(msg, r.spec.lang) } : {}),
-      ...(r.end ? { end: { receipts: p.era.receipts } } : {}),
+      ...(r.end ? { end: { receipts: p.era.receipts, earned: earnedLine(runEarned, r.spec.lang) } } : {}),
       ...(auto ? { auto: true } : {}),
     }
   }
@@ -1150,6 +1256,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       if (token !== gen) return
       paper = { spec, ...(end ? { end } : {}) }
       if (end && p.kind === 'chapter') closeChapter(p, end)
+      if (correct) earnRewards(p, msg, end)
     }
     revealed = true
     busy = false
@@ -1323,10 +1430,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     // Answers are saved as they are given, so leaving mid-puzzle resumes rather than restarts.
     const results = rec && rec.era === d.era ? rec.results.slice(0, d.messages.length) : []
     leave()
-    setDeskEra(d.era)
-    audio.ambience(d.era)
+    resetRewards(d.era, `daily${d.number}`)
     const state: ChapterState = { era: d.era, difficulty: 'medium', day: results.length + 1, days: d.messages.length, queue: d.messages, phase: 'reading' }
     play = { kind: 'daily', era: eraById(d.era), daily: d, state, results }
+    setDeskEra(d.era)
+    audio.ambience(d.era)
     beginDay()
   }
 

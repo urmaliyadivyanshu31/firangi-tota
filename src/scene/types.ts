@@ -196,6 +196,32 @@ export type StageCueName =
   | 'toss' | 'tossLand'
   // the read paper screwed up in the hands: one per squeeze
   | 'crumple'
+  // a reward landing after a right stamp: a coin, a jackpot, a sweet box or packet, a paper keepsake
+  | 'coin' | 'coinJackpot' | 'sweetDown' | 'paperDown'
+
+/** One reward as the desk shows it: the item (src/game/rewards.ts), how many, and whether it was a jackpot. */
+export interface RewardDrop {
+  item: string
+  qty: number
+  jackpot: boolean
+}
+
+/** The small pile of treasures in the desk's free front-right corner: item id to count. */
+export interface PileSpec {
+  era: EraId
+  counts: Record<string, number>
+}
+
+/**
+ * Rewards earned by a right stamp: they drop onto the paper's back (spun coins clink, a box lid
+ * lifts, a paper keepsake rocks down) and join the pile when the paper goes. `after` is the pile
+ * once they have joined it. `now`: already landed (a new desk catching up), no motion or sound.
+ */
+export interface EarnSpec {
+  drops: RewardDrop[]
+  after: Record<string, number>
+  now?: boolean
+}
 
 export interface StageOptions {
   reducedMotion: boolean
@@ -278,6 +304,22 @@ export interface Stage {
   intro(s: IntroSpec): Promise<void>
   /** The intro cards leave the desk (about 0.4 s). It is queued, so a day title asked for next plays after it. */
   clearIntro(): Promise<void>
+
+  /**
+   * The treasures on the desk's free front-right corner (src/scene/rewards.ts): this run's during a
+   * chapter, the whole collection between chapters, the coin stacks capped with a count slip. Drops
+   * still lying on the paper are put away without motion.
+   */
+  setPile(p: PileSpec): void
+  /**
+   * After a right stamp's verdict: the rewards drop onto the paper's back beside its stamp (about
+   * 0.8 s; a jackpot a little longer and brighter), each sounding as it lands. They go to the pile
+   * when the paper is tossed (or at once on the next day). Never delays the hold, toss or skip; under
+   * reduced motion they fade in.
+   */
+  earn(e: EarnSpec): Promise<void>
+  /** Where the rewards lying on the paper are on screen (CSS px), for the jackpot's line. */
+  getEarnRect(): ScreenRect | null
 }
 
 /**

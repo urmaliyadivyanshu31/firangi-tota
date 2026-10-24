@@ -24,6 +24,9 @@ export type Cue =
   // the read paper screwed up in the hands (one per squeeze), flicked from the hand, and landing as a
   // ball in the basket
   | 'paperCrumple' | 'paperFlick' | 'ballLand'
+  // a reward landing on the desk after a right stamp: a coin's clink, a jackpot's brighter shower, a
+  // sweet box or packet set down
+  | 'coinClink' | 'jackpotClink' | 'boxSoft'
 
 /** What some cues need to know: the era (the day title's settle) and how close the end is (0..1). */
 export interface CueOptions {
@@ -466,6 +469,36 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
     case 'ballLand':
       ballLand(ctx, dest, t)
       break
+    case 'coinClink':
+      coinClink(ctx, dest, t, 0.09)
+      // and the small second clink of it settling flat
+      coinClink(ctx, dest, t + 0.085 + Math.random() * 0.03, 0.035)
+      break
+    case 'jackpotClink':
+      // a shower of coins, then one bright ring over them, held well under full scale
+      for (let i = 0; i < 4; i++) coinClink(ctx, dest, t + i * 0.055 + Math.random() * 0.02, 0.07 - i * 0.01)
+      brassTing(ctx, dest, t + 0.2, 1568, 0.08)
+      brassTing(ctx, dest, t + 0.32, 2093, 0.05)
+      break
+    case 'boxSoft':
+      // a light card box or a paper packet set down on the wood
+      tone(ctx, dest, t, { type: 'sine', from: 190, to: 95, peak: 0.11, attack: 0.004, decay: 0.09 })
+      noiseBurst(ctx, dest, t, { type: 'lowpass', freq: 900, peak: 0.07, attack: 0.003, decay: 0.06 })
+      noiseBurst(ctx, dest, t + 0.012, { type: 'bandpass', freq: 2400, q: 0.8, peak: 0.025, attack: 0.002, decay: 0.04 })
+      break
+  }
+}
+
+/**
+ * A small coin meeting the desk or another coin: a tick, then a few inharmonic metal partials that
+ * die fast (a struck disc rings at about 1 : 2.3 : 3.9 : 5.6 of its lowest mode).
+ */
+function coinClink(ctx: BaseAudioContext, dest: AudioNode, t: number, peak: number): void {
+  noiseBurst(ctx, dest, t, { type: 'highpass', freq: 5200, q: 0.7, peak: peak * 0.6, attack: 0.001, decay: 0.01 })
+  const f = 2350 + Math.random() * 500
+  const partials: Array<[number, number, number]> = [[1, 1, 0.16], [2.32, 0.55, 0.11], [3.89, 0.3, 0.08], [5.6, 0.16, 0.05]]
+  for (const [ratio, level, decay] of partials) {
+    tone(ctx, dest, t, { type: 'sine', from: f * ratio, peak: peak * level, attack: 0.001, decay })
   }
 }
 

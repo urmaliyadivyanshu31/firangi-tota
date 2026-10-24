@@ -235,6 +235,23 @@ test('a wrong stamp plays out over time, then ends the chapter on the paper; a t
   expect(Date.now() - t1).toBeLessThan(whole - 1500) // the rest of the alarm and the dark were skipped
 })
 
+test('a right stamp earns a period treasure, kept for the home page’s treasure box', async ({ page }) => {
+  await page.goto(START)
+  await begin1857Easy(page)
+  await readable(page)
+  await stampAndReveal(page)
+  const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('ft:rewards') ?? '{}') as Record<string, Record<string, number>>)
+  const counts = Object.values(kept['delhi-1857'] ?? {})
+  expect(counts.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(1)
+  // the paper still goes by itself: the reward never holds it up
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 15_000 }).toBe(2)
+  await page.locator('[data-action="quit"]').click()
+  await expect(page.locator('.screen--main')).toBeVisible()
+  await page.locator('[data-action="treasure"]').click()
+  await expect(page.locator('#ft-treasure')).toBeVisible()
+  await expect(page.locator('#ft-treasure .treasure__item')).toHaveCount(Object.keys(kept['delhi-1857'] ?? {}).length)
+})
+
 test('plays day 1 on the 2D fallback when WebGL is disabled', async ({ page, browserName, playwright }) => {
   let p = page
   let browser: Browser | null = null

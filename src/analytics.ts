@@ -59,8 +59,8 @@ export function startAnalytics(): void {
   }
 }
 
-/** A chapter begun or ended, or a way of sharing picked. Analytics never breaks the game. */
-export function gameEvent(name: 'chapter_start' | 'chapter_end' | 'share', props: Props): void {
+/** A chapter begun or ended, a way of sharing picked, or a reward earned. Analytics never breaks the game. */
+export function gameEvent(name: 'chapter_start' | 'chapter_end' | 'share' | 'reward', props: Props): void {
   if (!enabled()) return
   try {
     track(name, props)

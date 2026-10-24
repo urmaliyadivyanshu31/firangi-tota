@@ -4,6 +4,8 @@ import { getLang } from '../../i18n/lang'
 import { t, tf, type Strings } from '../../i18n/strings'
 import { h, mount, svg } from '../h'
 import { lettering } from '../ornament'
+import { eraItems, type Collection } from '../../game/rewards'
+import { drawIcon } from '../../scene/reward-art'
 
 // The one page the game opens on: a period document over the live room of the chosen chapter. It
 // carries the title, a two-line hook, the four chapters as artefact tabs, how many days you will
@@ -22,6 +24,8 @@ export interface MainProps {
   best: Partial<Record<EraId, Best>>
   selected: EraId
   difficulty: Difficulty
+  /** The rewards kept so far, per chapter (src/game/rewards.ts). */
+  collection?: Collection
 }
 
 export interface MainHandlers {
@@ -118,7 +122,8 @@ export function renderMain(root: HTMLElement, p: MainProps, on: MainHandlers): v
       h('button', { class: 'btn btn--primary btn--block btn--begin', type: 'button', 'data-action': 'begin', onclick: () => on.begin() },
         h('span', null, t('begin', lang)))),
     h('p', { class: 'doc__credits' },
-      h('button', { class: 'doc__creditsbtn', type: 'button', 'data-action': 'credits', onclick: () => on.credits() }, t('homeCredits', lang)))))
+      h('button', { class: 'doc__creditsbtn', type: 'button', 'data-action': 'credits', onclick: () => on.credits() }, t('homeCredits', lang)))),
+    treasure(era, p.collection?.[era.id] ?? {}, lang))
 
   const screen = h('div', { class: `screen screen--main era-${era.id}`, lang }, h('div', { class: 'stack' }, doc))
   const hadFocus = root.querySelector('[role="tab"]:focus') !== null
@@ -130,6 +135,66 @@ export function renderMain(root: HTMLElement, p: MainProps, on: MainHandlers): v
     document.addEventListener('keydown', onKey)
     keysBound = true
   }
+}
+
+/** The chosen chapter's treasures, kept open across redraws (a language switch) until closed. */
+let treasureOpen = false
+
+/**
+ * A small wooden treasure box on the paper's corner, shown once the chapter has earned anything; a tap
+ * lifts its lid and hangs a paper tag with each treasure and its count.
+ */
+function treasure(era: Era, counts: Readonly<Record<string, number>>, lang: 'en' | 'hi'): HTMLElement | null {
+  const items = eraItems(era.id).filter((i) => (counts[i.id] ?? 0) > 0)
+  if (!items.length) return null
+  const tag = h('div', { class: 'treasure__tag', id: 'ft-treasure', role: 'group', 'aria-label': `${t('treasure', lang)} · ${era.title[lang]}` },
+    h('p', { class: 'treasure__title' }, `${t('treasure', lang)} · ${era.title[lang]}`),
+    h('ul', { class: 'treasure__row' }, items.map((it) => {
+      const n = Math.floor(counts[it.id] ?? 0)
+      const c = document.createElement('canvas')
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      c.width = c.height = Math.round(34 * dpr)
+      c.setAttribute('aria-hidden', 'true')
+      try {
+        const g = c.getContext('2d')
+        if (g) {
+          g.scale(dpr, dpr)
+          drawIcon(g, it.id, 0, 0, 34)
+        }
+      } catch {
+        /* no canvas: the count and the name still say it */
+      }
+      const name = n === 1 ? it.name[lang].one : `${n} ${it.name[lang].many}`
+      return h('li', { class: 'treasure__item', title: name }, c, h('span', { class: 'treasure__count', 'aria-hidden': 'true' }, `×${n}`), h('span', { class: 'sr-only' }, name))
+    })))
+  tag.hidden = !treasureOpen
+  const wrap = h('div', { class: `treasure${treasureOpen ? ' is-open' : ''}` }, tag)
+  const btn = h('button', { class: 'treasure__box', type: 'button', 'data-action': 'treasure', 'aria-expanded': String(treasureOpen), 'aria-controls': 'ft-treasure', 'aria-label': t('treasure', lang),
+    onclick: () => {
+      treasureOpen = !treasureOpen
+      tag.hidden = !treasureOpen
+      wrap.classList.toggle('is-open', treasureOpen)
+      btn.setAttribute('aria-expanded', String(treasureOpen))
+    } }, chestSvg())
+  wrap.appendChild(btn)
+  return wrap
+}
+
+/** A small sheesham box with brass corners and a hasp; its lid lifts when open. */
+function chestSvg(): SVGSVGElement {
+  return svg(`<svg viewBox="0 0 44 38" focusable="false" aria-hidden="true">
+  <rect x="5" y="16" width="34" height="19" rx="2" fill="#6b3f1f"/>
+  <path d="M5 21h34M5 28h34" stroke="#4a2a12" stroke-width="1"/>
+  <rect x="5" y="16" width="34" height="19" rx="2" fill="none" stroke="#c9a24e" stroke-width="1.4"/>
+  <path d="M5 30v5h5M39 30v5h-5M5 21v-5h5M39 21v-5h-5" stroke="#e0bb62" stroke-width="2" fill="none"/>
+  <g class="treasure__lid">
+    <path d="M5 16c0-6 3-9 8-9h18c5 0 8 3 8 9z" fill="#7a4a24" stroke="#c9a24e" stroke-width="1.4"/>
+    <path d="M9 10.5h26" stroke="#4a2a12" stroke-width="1"/>
+    <circle cx="22" cy="10" r="1.8" fill="#f1cf6a" stroke="#8a6420" stroke-width=".7"/>
+  </g>
+  <rect x="19.5" y="15" width="5" height="7" rx="1" fill="#e0bb62" stroke="#8a6420" stroke-width=".7"/>
+  <circle cx="22" cy="19.4" r=".9" fill="#5a3a12"/>
+</svg>`)
 }
 
 /** The era's own mark on the paper: a seal, a leaflet's banner, punched holes, a telegram head. */
