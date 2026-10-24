@@ -140,6 +140,13 @@ export const sources: Source[] = [
     url: 'https://archive.org/details/HindSwaraj-CWMG-076',
   },
   {
+    id: 'cwmg-76-vol',
+    author: 'M. K. Gandhi',
+    title: 'Collected Works of Mahatma Gandhi, vol. 76 (1942): Introduction, and No. 435, telegram to Chimanlal N. Shah, 15 August 1942, p. 410',
+    year: '1942',
+    url: 'https://archive.org/details/HindSwaraj-CWMG-076',
+  },
+  {
     id: 'nehru-1946',
     author: 'Jawaharlal Nehru',
     title: 'The Discovery of India (Signet Press, Calcutta): preface (written in Ahmadnagar Fort, April–September 1944); p. 593',

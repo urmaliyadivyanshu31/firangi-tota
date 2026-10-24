@@ -4,6 +4,8 @@ import type { Fact } from '../../types.js'
 // August went (para 1), our own people and place (para 2), the wider war and the British (para 3).
 // Each story says its value and nothing more; the checkable words sit in [[ ]]. Three are hardHidden.
 // The wavelength (42.34 m) and the air time (8:45 pm) live in the rulebook and on the paper's header.
+// The case file grows with the mode (owner 10-24): minMode 'medium' facts join in Medium and Hard,
+// 'hard' facts in Hard only (the leaders' whereabouts, our own people, the wider rising, the first INA).
 export const facts: Fact[] = [
   {
     id: 'f-aicc',
@@ -65,6 +67,57 @@ export const facts: Fact[] = [
     sources: [{ id: 'top-ii-1971', loc: 'Introduction p. xii; No. 553 (letter from Aga Khan’s Palace, 14 Aug 1942)' }],
   },
   {
+    id: 'f-palace',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'With Gandhiji', hi: 'गांधीजी के साथ' },
+    value: { en: 'Kasturba and Sarojini Naidu', hi: 'कस्तूरबा और सरोजिनी नायडू' },
+    story: {
+      en: 'At the palace, [[Kasturba]] and [[Sarojini Naidu]] are held with Gandhiji.',
+      hi: 'महल में गांधीजी के साथ [[कस्तूरबा]] और [[सरोजिनी नायडू]] भी बंद हैं।',
+    },
+    sources: [{ id: 'mkgandhi-agakhan' }],
+  },
+  {
+    id: 'f-mahadev',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'Mahadev Desai', hi: 'महादेव देसाई' },
+    value: { en: 'Died 15 Aug, Aga Khan Palace', hi: '15 अगस्त को आग़ा ख़ान महल में गुज़रे' },
+    story: {
+      en: '[[Mahadev Desai]] died at the [[Aga Khan Palace]] on [[15 August]].',
+      hi: '[[महादेव देसाई]] [[15 अगस्त]] को [[आग़ा ख़ान महल]] में गुज़र गए।',
+    },
+    sources: [{ id: 'cwmg-76-vol', loc: 'Introduction; No. 435, telegram to Chimanlal N. Shah, 15-8-1942, p. 410' }, { id: 'mkgandhi-agakhan' }],
+  },
+  {
+    id: 'f-fort',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'Ahmednagar Fort', hi: 'अहमदनगर क़िला' },
+    value: { en: 'With Nehru: Azad, Pant, Asaf Ali', hi: 'नेहरू के साथ: आज़ाद, पंत, आसफ़ अली' },
+    story: {
+      en: 'In [[Ahmednagar Fort]], [[Nehru]] is held with [[Azad]], [[Pant]] and [[Asaf Ali]].',
+      hi: '[[अहमदनगर क़िले]] में [[नेहरू]] के साथ [[आज़ाद]], [[पंत]] और [[आसफ़ अली]] बंद हैं।',
+    },
+    sources: [
+      { id: 'nehru-1946', loc: 'Preface (eleven companions; names Azad, Pant, Narendra Deva, M. Asaf Ali)' },
+      { id: 'top-ii-1971', loc: 'Introduction p. xii (Working Committee to Ahmednagar Fort)' },
+    ],
+  },
+  {
+    id: 'f-lastmsg',
+    para: 1,
+    minMode: 'hard',
+    label: { en: 'Gandhiji’s last message', hi: 'गांधीजी का आख़िरी संदेश' },
+    value: { en: 'Says: Karenge Ya Marenge', hi: 'उसमें: करेंगे या मरेंगे' },
+    story: {
+      en: 'Gandhiji’s last message, left at his arrest, says [[Karenge Ya Marenge]].',
+      hi: 'गिरफ़्तारी के वक़्त छोड़े गांधीजी के आख़िरी संदेश में लिखा है: [[करेंगे या मरेंगे]]।',
+    },
+    sources: [{ id: 'goi-1943', loc: 'App. X' }],
+  },
+  {
     id: 'f-team',
     para: 2,
     label: { en: 'Our people', hi: 'हमारे लोग' },
@@ -80,6 +133,60 @@ export const facts: Fact[] = [
     ],
   },
   {
+    id: 'f-khakhar',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'Chief organiser', hi: 'संगठन के मुखिया' },
+    value: { en: 'Babubhai Khakhar, answering to Lohia', hi: 'बाबूभाई खाखर, उनके ऊपर लोहिया' },
+    story: {
+      en: 'Our chief organiser is [[Babubhai Khakhar]], and he answers to [[Lohia]].',
+      hi: 'हमारे संगठन के मुखिया [[बाबूभाई खाखर]] हैं, और उनके ऊपर [[लोहिया]] हैं।',
+    },
+    sources: [
+      { id: 'chatterjee-1989', loc: 'Home Dept records: Khakar “chief organiser… responsible to Ram Manohar Lohia”' },
+      { id: 'usha-mehta-1969' },
+    ],
+  },
+  {
+    id: 'f-underground',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'Underground leaders', hi: 'छिपकर काम करते नेता' },
+    value: { en: 'Aruna Asaf Ali, Achyut Patwardhan', hi: 'अरुणा आसफ़ अली, अच्युत पटवर्धन' },
+    story: {
+      en: 'Our underground leaders include [[Aruna Asaf Ali]] and [[Achyut Patwardhan]].',
+      hi: 'छिपकर काम करने वाले हमारे नेताओं में [[अरुणा आसफ़ अली]] और [[अच्युत पटवर्धन]] हैं।',
+    },
+    sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35, p. 468 (the underground leadership)' }],
+  },
+  {
+    id: 'f-voices',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'English talks', hi: 'अंग्रेज़ी भाषण' },
+    value: { en: 'Lohia and Coomi Dastur', hi: 'लोहिया और कूमी दस्तूर' },
+    story: {
+      en: 'Our English talks are mostly read by [[Lohia]] and [[Coomi Dastur]].',
+      hi: 'हमारे अंग्रेज़ी भाषण ज़्यादातर [[लोहिया]] और [[कूमी दस्तूर]] पढ़ते हैं।',
+    },
+    sources: [{ id: 'usha-mehta-1969', loc: '“Most of the speeches in English were relayed by Dr. Lohia and Miss Dastur”' }],
+  },
+  {
+    id: 'f-parekh',
+    para: 2,
+    minMode: 'medium',
+    label: { en: 'Our transmitter', hi: 'हमारा ट्रांसमीटर' },
+    value: { en: 'Parekh Wadi, Girgaum, since 15 October', hi: 'पारेख वाड़ी, गिरगाँव, 15 अक्टूबर से' },
+    story: {
+      en: 'Since [[15 October]], our transmitter has been at [[Parekh Wadi]], in [[Girgaum]].',
+      hi: '[[15 अक्टूबर]] से हमारा ट्रांसमीटर [[गिरगाँव]] की [[पारेख वाड़ी]] में है।',
+    },
+    sources: [
+      { id: 'huacuja-2023', loc: 'Fig. 4, police list of sites (from Sengupta and Chatterjee 1988)' },
+      { id: 'chatterjee-1989', loc: 'sites: Parekh Wadi Building, Girgaum Back Road' },
+    ],
+  },
+  {
     id: 'f-newsite',
     para: 2,
     label: { en: 'Second site', hi: 'दूसरा ठिकाना' },
@@ -91,6 +198,75 @@ export const facts: Fact[] = [
     sources: [
       { id: 'huacuja-2023', loc: 'Fig. 4, police list of sites (from Sengupta and Chatterjee 1988)' },
       { id: 'chatterjee-1989' },
+    ],
+  },
+  {
+    id: 'f-printer',
+    para: 2,
+    minMode: 'hard',
+    label: { en: 'Our technician', hi: 'हमारे मिस्त्री' },
+    value: { en: 'Nariman Printer, paid for it', hi: 'नरीमन प्रिंटर, पैसे लेकर' },
+    story: {
+      en: 'Our sets are built by [[Nariman Printer]], who does it [[for pay]].',
+      hi: 'हमारे सेट [[नरीमन प्रिंटर]] बनाते हैं, और यह काम वे [[पैसे लेकर]] करते हैं।',
+    },
+    sources: [
+      { id: 'chatterjee-1989', loc: 'Home Dept: Printer built the set; “for the sake of profit”' },
+      { id: 'thakkar-2021', loc: 'Scroll excerpt (court: financial motives)' },
+    ],
+  },
+  {
+    id: 'f-motwane',
+    para: 2,
+    minMode: 'hard',
+    label: { en: 'Chicago Radio', hi: 'शिकागो रेडियो' },
+    value: { en: 'Owner: Nanak Motwane', hi: 'मालिक: नानक मोटवाने' },
+    story: {
+      en: 'Chicago Radio’s owner is [[Nanak Motwane]].',
+      hi: 'शिकागो रेडियो के मालिक [[नानक मोटवाने]] हैं।',
+    },
+    sources: [
+      { id: 'usha-mehta-1969', loc: '“Nanak Motwani, the proprietor of the Chicago Radio Co.”' },
+      { id: 'huacuja-2023', loc: 'the accused' },
+    ],
+  },
+  {
+    id: 'f-tuning',
+    para: 2,
+    minMode: 'hard',
+    label: { en: 'Tuning advice', hi: 'सुई की सलाह' },
+    value: { en: 'Move between 39 and 43 metres', hi: '39 से 43 मीटर के बीच घुमाइए' },
+    story: {
+      en: 'When reception fades, we tell listeners to [[move between 39 and 43 metres]].',
+      hi: 'आवाज़ धीमी हो तो हम सुनने वालों से कहते हैं, [[39 से 43 मीटर के बीच]] सुई घुमाइए।',
+    },
+    sources: [{ id: 'huacuja-2023', loc: 'n. 120 (transcript of 18 Oct 1942)' }],
+  },
+  {
+    id: 'f-antiindia',
+    para: 2,
+    minMode: 'hard',
+    label: { en: 'Official radio', hi: 'सरकारी रेडियो' },
+    value: { en: 'Anti-India Radio: it jams us', hi: 'एंटी-इंडिया रेडियो: हमें जाम करता है' },
+    story: {
+      en: 'Here, the official radio is often called [[Anti-India Radio]], because it [[jams]] our broadcasts.',
+      hi: 'यहाँ सरकारी रेडियो को अक्सर [[एंटी-इंडिया रेडियो]] कहा जाता है, क्योंकि वह हमारी आवाज़ [[जाम करता है]]।',
+    },
+    sources: [{ id: 'usha-mehta-1969', loc: 'the official radio jammed them; colleagues called it “not ‘All India Radio’ but ‘Anti-India Radio’”' }],
+  },
+  {
+    id: 'f-ballia',
+    para: 3,
+    minMode: 'medium',
+    label: { en: 'Ballia, August', hi: 'बलिया, अगस्त' },
+    value: { en: 'Chittu Pande’s own government, a week', hi: 'चित्तू पांडे की अपनी सरकार, एक हफ़्ता' },
+    story: {
+      en: 'In August, [[Chittu Pande]] ran Ballia’s [[own government]] for [[a week]], until soldiers marched in.',
+      hi: 'अगस्त में [[चित्तू पांडे]] ने बलिया में [[अपनी सरकार]] [[एक हफ़्ता]] चलाई, फिर फ़ौज आ गई।',
+    },
+    sources: [
+      { id: 'bipan-chandra-1989', loc: 'ch. 35 (parallel governments: Ballia, soldiers “a week after”)' },
+      { id: 'usha-mehta-1969', loc: 'first to broadcast “the happenings in Ballia”' },
     ],
   },
   {
@@ -131,5 +307,17 @@ export const facts: Fact[] = [
     },
     sources: [{ id: 'top-ii-1971', loc: 'No. 662 (Linlithgow to Churchill, 31 Aug 1942)' }],
     hardHidden: true,
+  },
+  {
+    id: 'f-ina',
+    para: 3,
+    minMode: 'hard',
+    label: { en: 'First INA', hi: 'पहली आज़ाद हिंद फ़ौज' },
+    value: { en: 'Raised by Mohan Singh, in Malaya', hi: 'मोहन सिंह ने मलाया में खड़ी की' },
+    story: {
+      en: 'The first INA was raised by [[Mohan Singh]], in [[Malaya]], from prisoners of war.',
+      hi: 'पहली आज़ाद हिंद फ़ौज [[मोहन सिंह]] ने [[मलाया]] में जंगी क़ैदियों से खड़ी की।',
+    },
+    sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35, pp. 476–7 (INA conceived in Malaya by Mohan Singh; first division 1 Sep 1942)' }],
   },
 ]
