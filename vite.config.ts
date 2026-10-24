@@ -85,23 +85,32 @@ export default defineConfig(({ mode }) => {
             { urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/'), handler: 'NetworkOnly' },
             // These are static files: a cached copy answers whatever the server's Vary header says
             // (src/offline.ts re-fetches files a CSS font request asked for, with other headers).
+            // Their names carry no hash, so they are stale-while-revalidate: the cached copy plays at
+            // once (and offline), and a replaced file reaches returning players on their next visit.
             // The recorded room beds and the typewriter, on first use (after the first tap)
             {
               urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/audio/'),
-              handler: 'CacheFirst',
+              handler: 'StaleWhileRevalidate',
               options: { cacheName: 'ft-audio', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 24 }, cacheableResponse: { statuses: [200] } },
             },
-            // the other font files (Devanagari UI, bolder weights, typewriter, handwriting), on first use
+            // the other font files in /fonts/ (Devanagari UI, bolder weights, typewriter), on first use
             {
-              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith('.woff2'),
-              handler: 'CacheFirst',
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/fonts/') && url.pathname.endsWith('.woff2'),
+              handler: 'StaleWhileRevalidate',
               options: { cacheName: 'ft-fonts', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 32 }, cacheableResponse: { statuses: [200] } },
             },
             // the install icons and the share image
             {
               urlPattern: ({ url, sameOrigin }) => sameOrigin && (url.pathname.startsWith('/icons/') || url.pathname === '/og.jpg'),
-              handler: 'CacheFirst',
+              handler: 'StaleWhileRevalidate',
               options: { cacheName: 'ft-images', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 16 }, cacheableResponse: { statuses: [200] } },
+            },
+            // hashed font files from the build (the pencil hand): a new version is a new name, so
+            // the cached copy never needs checking
+            {
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/') && url.pathname.endsWith('.woff2'),
+              handler: 'CacheFirst',
+              options: { cacheName: 'ft-assets', matchOptions: { ignoreVary: true }, expiration: { maxEntries: 8 }, cacheableResponse: { statuses: [200] } },
             },
           ],
         },
