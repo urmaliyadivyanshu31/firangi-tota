@@ -586,6 +586,26 @@ a { color: inherit; }
   background: none; border-radius: 0; border-bottom: 1.6px solid var(--ink);
   -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask);
 }
+/* Medium and Hard: a longer file that scrolls inside the card. While lines lie below, its foot fades
+   into the paper and an inked mark sits there; at the end both go. */
+.sheet--scroll { position: relative; }
+.sheet--scroll .sheet__body { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: rgba(43, 29, 19, .32) transparent; }
+.sheet--scroll .sheet__body:focus-visible { outline: 2px solid rgba(125, 31, 44, .55); outline-offset: -4px; border-radius: 4px; }
+.sheet--scroll.has-more .sheet__body {
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 64px), rgba(0, 0, 0, .35) calc(100% - 22px), rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(#000 calc(100% - 64px), rgba(0, 0, 0, .35) calc(100% - 22px), rgba(0, 0, 0, 0) 100%);
+}
+.scroll-cue {
+  position: absolute; z-index: 1; left: 50%; bottom: max(2px, env(safe-area-inset-bottom)); width: 44px; height: 34px; margin-left: -22px;
+  display: grid; place-items: center; color: var(--maroon); cursor: pointer;
+  opacity: 0; pointer-events: none; transform: translateY(4px); transition: opacity .3s, transform .3s var(--ease-out);
+}
+.scroll-cue__mark { width: 22px; height: 19px; -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask); }
+.sheet--scroll.has-more .scroll-cue { opacity: .9; pointer-events: auto; transform: none; }
+/* ada: the mark nods once in a while, like a clerk's pen tapping the page */
+.sheet--scroll.has-more .scroll-cue__mark { animation: cue-nod 3.2s var(--ease-out) 1.2s infinite; }
+@keyframes cue-nod { 0%, 70%, 100% { transform: none; } 80% { transform: translateY(3px); } 90% { transform: translateY(-.5px); } }
+[data-layout='wide'] .scroll-cue { bottom: 2px; }
 .rules { display: flex; flex-direction: column; gap: 9px; }
 .rule { display: grid; grid-template-columns: 20px 1fr auto; align-items: start; gap: 6px; font-size: 15px; line-height: 1.4; }
 .rule__n { font: 400 15px/1.4 var(--display-en); color: var(--maroon); }
@@ -613,6 +633,12 @@ a { color: inherit; }
 /* ada: a card lifts toward you when you reach for it */
 [data-layout='wide'] .sheet:hover, [data-layout='wide'] .sheet:focus-within { transform: rotate(0) translateY(-3px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 4px 6px rgba(0, 0, 0, .3), 0 26px 40px -14px rgba(0, 0, 0, .75); }
 [data-layout='wide'] .sheet__close, [data-layout='wide'] .tab, [data-layout='wide'] .sheet-scrim { display: none; }
+/* Medium and Hard: a wider column for the longer file, which shrinks and scrolls first; the rulebook
+   keeps its lines (up to 42% of the column, then it scrolls too) and is never pushed off */
+.screen--day[data-mode='medium'] { --dossier-w: clamp(330px, 26vw, 372px); }
+.screen--day[data-mode='hard'] { --dossier-w: clamp(330px, 29vw, 414px); }
+[data-layout='wide'] .sheet--file.sheet--scroll { flex: 0 1 auto; }
+[data-layout='wide'][data-mode='medium'] .sheet--rules, [data-layout='wide'][data-mode='hard'] .sheet--rules { flex: 0 0 auto; max-height: 42%; }
 
 /* portrait: the cards slide up over the lower room, and back down with a tap or a swipe */
 [data-layout='narrow'] .sheet {
@@ -624,6 +650,9 @@ a { color: inherit; }
 }
 [data-layout='narrow'] .sheet.is-open { transform: none; visibility: visible; transition: transform .42s var(--ease-spring); }
 [data-layout='narrow'] .sheet.is-dragging { transition: none; }
+/* the longer files get a taller drawer */
+[data-layout='narrow'][data-mode='medium'] .sheet--file { max-height: min(80vh, 700px); }
+[data-layout='narrow'][data-mode='hard'] .sheet--file { max-height: min(86vh, 760px); }
 [data-layout='narrow'] .sheet__head { touch-action: none; padding-top: 18px; border-radius: 14px 14px 0 0; }
 [data-layout='narrow'] .sheet__grab { display: block; position: absolute; top: 7px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: rgba(43, 29, 19, .28); }
 [data-layout='narrow'] .sheet--rules .sheet__grab { background: rgba(246, 234, 208, .45); }
@@ -1087,6 +1116,8 @@ a { color: inherit; }
   width: min(400px, 56vw); max-height: none; padding-bottom: 0; border-radius: 6px;
   transform: translateX(-108%);
 }
+[data-short][data-mode='medium'] .sheet--file { width: min(440px, 60vw); max-height: none; }
+[data-short][data-mode='hard'] .sheet--file { width: min(480px, 64vw); max-height: none; }
 [data-short] .sheet__head { padding-top: 12px; border-radius: 6px 6px 0 0; }
 [data-short] .sheet__grab { display: none; }
 [data-short] .clip { top: -5px; }
@@ -1106,6 +1137,8 @@ a { color: inherit; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
   .plaque__btn--disc.is-spinning .disc__record, .gramo.is-playing .gramo__crown::after { animation: none; }
   .agarbatti__smoke, .agarbatti__ember::after { display: none; }
+  .sheet--scroll .sheet__body { scroll-behavior: auto; }
+  .sheet--scroll.has-more .scroll-cue__mark { animation: none; }
 }
 
 /* ---------- Music mode: the songs in YouTube's own player, set in a walnut radio cabinet ---------- */

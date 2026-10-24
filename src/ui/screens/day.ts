@@ -1,13 +1,15 @@
 import type { Era, Fact, Lang, Receipt, SourceRef } from '../../content/types'
 import { storyParas, storyParts } from '../../content/story'
 import type { ChapterState } from '../../game/state'
+import type { Difficulty } from '../../game/config'
+import { inMode } from '../../game/run'
 import { t, tf } from '../../i18n/strings'
 import type { VoiceState } from '../../audio/voice'
 import type { ScreenRect, SheetSpec } from '../../scene/index'
 import { announce, h, mount, svg, type Child } from '../h'
 import { hud, setMusic, setSound, setTimer, type ModeKind } from '../hud'
 import type { MusicState } from '../controls'
-import { isShort, isWide, onLayoutChange } from '../layout'
+import { isShort, isWide, onLayoutChange, reducedMotion } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
 import { pairChecks, relatedFacts } from '../pencil'
@@ -239,7 +241,9 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   const { era, state, lang, revealed } = p
   const msg = state.queue[state.day - 1]
   if (!msg) throw new Error(`No message for day ${state.day} (queue has ${state.queue.length})`)
-  const hard = state.difficulty === 'hard'
+  // the case file's mode: the daily puzzle reads as Medium
+  const fileMode: Difficulty = p.daily !== undefined ? 'medium' : state.difficulty
+  const scrolls = fileMode !== 'easy'
   const waiting = !p.readable && !revealed
 
   // ---- the top bar
@@ -254,9 +258,11 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   })
 
   // ---- the case file and the rulebook
-  // worked out from both halves of a pair, so genuine and forged always pencil the same lines
-  const marked = new Set(p.sheet.pencil ? relatedFacts(pairChecks(msg, era, lang, p.sheet.checks), era.facts, lang) : [])
-  const facts = caseFile(era.facts, lang, hard, marked)
+  // Only this mode's facts. The pencil ticks its lines in Easy alone (Medium and Hard find the clue
+  // themselves), worked out from both halves of a pair, so genuine and forged always tick the same.
+  const shownFacts = era.facts.filter((f) => inMode(f, fileMode))
+  const marked = new Set(fileMode === 'easy' && p.sheet.pencil ? relatedFacts(pairChecks(msg, era, lang, p.sheet.checks), shownFacts, lang) : [])
+  const facts = caseFile(shownFacts, lang, fileMode, marked)
 
   const arrived = p.allRules ? era.rules : era.rules.filter((r) => r.arrivesOnDay <= state.day)
   const isNew = (day: number) => !p.allRules && state.day > 1 && day === state.day
@@ -271,6 +277,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   let open: Tab | null = null
   let wide = isWide()
   const tabs: Partial<Record<Tab, HTMLButtonElement>> = {}
+  const cueUpdates: (() => void)[] = []
 
   function sheetEl(kind: Tab, title: string, content: HTMLElement, tag: HTMLElement | null): HTMLElement {
     const head = h('header', { class: 'sheet__head' },
@@ -278,10 +285,20 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       h('h2', { class: 'sheet__title' }, title, tag),
       h('button', { class: 'sheet__close', type: 'button', 'aria-label': t('closePanel', lang), title: t('closePanel', lang),
         onclick: () => { setOpen(null); tabs[kind]?.focus() } }, closeIcon()))
-    const el = h('section', { class: `sheet sheet--${kind}`, id: `ft-panel-${kind}`, 'data-panel': kind, 'aria-label': title },
+    // Medium and Hard: the longer file scrolls inside the card, its foot fading into the paper with
+    // an inked mark while more lies below; the body takes the keyboard's arrows and Page keys
+    const long = kind === 'file' && scrolls
+    const body = h('div', { class: 'sheet__body', ...(long ? { tabindex: '0' } : {}) }, content)
+    const cue = long
+      ? h('span', { class: 'scroll-cue', 'aria-hidden': 'true',
+          onclick: () => body.scrollBy({ top: Math.round(body.clientHeight * 0.7), behavior: reducedMotion() ? 'auto' : 'smooth' }) }, moreMark())
+      : null
+    const el = h('section', { class: `sheet sheet--${kind}${long ? ' sheet--scroll' : ''}`, id: `ft-panel-${kind}`, 'data-panel': kind, 'aria-label': title },
       h('span', { class: kind === 'file' ? 'clip' : 'pin', 'aria-hidden': 'true' }),
       head,
-      h('div', { class: 'sheet__body' }, content))
+      body,
+      cue)
+    if (long) cueUpdates.push(watchScroll(el, body))
     swipeDown(el, head, () => setOpen(null))
     return el
   }
@@ -335,6 +352,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
       tabs[k]?.classList.toggle('is-open', !wide && open === k)
     }
     scrim.classList.toggle('is-on', !wide && open !== null)
+    for (const update of cueUpdates) update()
     if (wide) {
       const first = facts.querySelector<HTMLElement>('.is-pencilled')
       if (first && typeof first.scrollIntoView === 'function') first.scrollIntoView({ block: 'nearest' })
@@ -542,7 +560,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   const auto = revealed && p.onPaper?.auto === true
   const tapcatch = h('div', { class: 'tapcatch', 'aria-hidden': 'true', onpointerdown: () => (auto && on.toss ? on.toss() : on.skip()) })
   const cls = ['screen', 'screen--day', `era-${era.id}`, waiting ? 'is-arriving' : '', revealed ? 'is-revealed' : '', auto ? 'is-auto' : '', auto && p.tossing ? 'is-tossing' : ''].filter(Boolean).join(' ')
-  const screen = h('div', { class: cls, lang, 'data-channel': era.channel },
+  const screen = h('div', { class: cls, lang, 'data-channel': era.channel, 'data-mode': fileMode },
     tapcatch, top, copy,
     h('aside', { class: 'dossier', 'aria-label': `${t('caseFile', lang)}, ${t('rulebook', lang)}` }, panels.file, panels.rules),
     scrim, controls, result)
@@ -584,19 +602,21 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
 }
 
 /**
- * The case file as a short story: two or three paragraphs of flowing sentences, one per fact, with
- * the checkable words in a marker swash. The sentences the pencil points to today are underlined in
- * pencil; in Hard a hidden fact's highlighted words are blank rules. Screen readers get the same
- * sentences as plain text, a blank read as "blank".
+ * The case file as a short story: two or three paragraphs of flowing sentences, one per fact of this
+ * mode. Easy and Medium put the checkable words in a marker swash; Hard is plain ink. In Easy the
+ * sentences the pencil points to today are underlined in pencil with a tick. In Hard a hidden fact's
+ * checkable words are blank rules. Screen readers get the same sentences as plain text in every
+ * mode, a blank read as "blank".
  */
-function caseFile(facts: Fact[], lang: Lang, hard: boolean, marked: Set<string>): HTMLElement {
+export function caseFile(facts: Fact[], lang: Lang, mode: Difficulty, marked: Set<string> = new Set()): HTMLElement {
   const paras = storyParas(facts)
+  const hard = mode === 'hard'
   const hidden = (f: Fact) => hard && f.hardHidden === true
   const sentence = (f: Fact) => {
     const pencilled = marked.has(f.id)
     const cls = ['fact', pencilled ? 'is-pencilled' : '', hidden(f) ? 'is-hidden' : ''].filter(Boolean).join(' ')
     const nodes: Child[] = storyParts(f.story[lang]).map((part) =>
-      !part.hl ? part.text : hidden(f) ? h('span', { class: 'hl is-blank' }) : h('span', { class: 'hl' }, part.text))
+      !part.hl ? part.text : hidden(f) ? h('span', { class: 'hl is-blank' }) : hard ? part.text : h('span', { class: 'hl' }, part.text))
     if (pencilled) {
       // the pencil's tick stays on the line of the sentence's first word
       const first = nodes.shift()
@@ -606,10 +626,36 @@ function caseFile(facts: Fact[], lang: Lang, hard: boolean, marked: Set<string>)
     return h('span', { class: cls, 'data-fact': f.id }, nodes)
   }
   const plain = (f: Fact) => storyParts(f.story[lang]).map((part) => (part.hl && hidden(f) ? t('blankFact', lang) : part.text)).join('')
-  return h('div', { class: 'story' },
+  return h('div', { class: `story story--${mode}` },
     h('div', { class: 'story__ink', 'aria-hidden': 'true' }, paras.map((list) =>
       h('p', { class: 'story__para' }, list.flatMap((f, i) => (i > 0 ? [' ', sentence(f)] : [sentence(f)]))))),
     h('div', { class: 'story__said sr-only' }, paras.map((list) => h('p', null, list.map(plain).join(' ')))))
+}
+
+/**
+ * Keeps a scrolling card's cue honest: `has-more` while lines lie below the fold, gone at the end
+ * (or when it all fits). Returns the check, for a re-layout to run.
+ */
+export function watchScroll(card: HTMLElement, body: HTMLElement): () => void {
+  const update = () => { card.classList.toggle('has-more', body.scrollHeight - body.clientHeight - body.scrollTop > 6) }
+  body.addEventListener('scroll', update, { passive: true })
+  if (typeof ResizeObserver === 'function') {
+    // the fonts arriving, a rotation or a language reflow changes what fits
+    const ro = new ResizeObserver(() => (body.isConnected ? update() : ro.disconnect()))
+    ro.observe(body)
+    if (body.firstElementChild) ro.observe(body.firstElementChild)
+  }
+  update()
+  return update
+}
+
+/** The inked "more below" mark at a scrolling card's foot: two loose pen chevrons and a flick. */
+function moreMark(): SVGSVGElement {
+  return svg(`<svg class="scroll-cue__mark" viewBox="0 0 26 22" aria-hidden="true" focusable="false">
+  <path d="M5.2 3.6c2.6 1.9 5 3.7 7.7 6 2.4-2.4 5-4.3 7.9-6.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+  <path d="M4.4 10.4c2.9 2.1 5.6 4.2 8.6 6.9 2.7-2.8 5.5-4.9 8.7-7.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10.6 20.3c1.6-.5 3.3-.6 5 .1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>
+</svg>`)
 }
 
 function splitFirstWord(text: string): [string, string] {
