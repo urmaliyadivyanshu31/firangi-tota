@@ -418,10 +418,10 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
       kettleDrum(ctx, caughtBus(ctx, dest), t)
       break
     case 'whistleShort':
-      peaWhistle(ctx, caughtBus(ctx, dest), t, 0.26, 0.07)
+      peaWhistle(ctx, caughtBus(ctx, dest), t, 0.26, 0.095)
       break
     case 'whistleLong':
-      peaWhistle(ctx, caughtBus(ctx, dest), t, 0.85, 0.07)
+      peaWhistle(ctx, caughtBus(ctx, dest), t, 0.85, 0.095)
       break
     case 'bootsRunning':
       bootsRunning(ctx, caughtBus(ctx, dest), t)
@@ -510,9 +510,9 @@ function bugleAlarm(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
   BUGLE_FIGURES_MS.forEach((off, i) => {
     const at = t + off / 1000
     const [a, b, c] = figures[i] ?? figures[0]
-    bugleNote(ctx, dest, at, a, 0.085, 0.09)
-    bugleNote(ctx, dest, at + 0.125, b, 0.085, 0.09)
-    bugleNote(ctx, dest, at + 0.25, c, i === 2 ? 0.42 : 0.22, 0.11)
+    bugleNote(ctx, dest, at, a, 0.085, 0.12)
+    bugleNote(ctx, dest, at + 0.125, b, 0.085, 0.12)
+    bugleNote(ctx, dest, at + 0.25, c, i === 2 ? 0.42 : 0.22, 0.15)
   })
 }
 
@@ -576,7 +576,7 @@ function bootsRunning(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
     const step = (when: number, p: number) => {
       tone(ctx, dest, when, { type: 'sine', from: 96, to: 58, peak: p, attack: 0.003, decay: 0.075 })
       noiseBurst(ctx, dest, when, { type: 'lowpass', freq: 480 + 1500 * k, peak: p * 0.6, attack: 0.002, decay: 0.05 })
-      noiseBurst(ctx, dest, when + 0.012, { type: 'bandpass', freq: 2700, q: 2, peak: p * 0.3 * k, attack: 0.001, decay: 0.014 })
+      noiseBurst(ctx, dest, when + 0.012, { type: 'bandpass', freq: 2700, q: 2, peak: p * 0.45 * k, attack: 0.001, decay: 0.014 })
     }
     const peak = 0.05 + 0.2 * k
     step(t + at, peak)
@@ -625,8 +625,8 @@ function phoneBell(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
     const at = t + off / 1000
     const g = ctx.createGain()
     g.gain.setValueAtTime(0.0001, at)
-    g.gain.linearRampToValueAtTime(0.07, at + 0.012)
-    g.gain.setValueAtTime(0.07, at + 0.38)
+    g.gain.linearRampToValueAtTime(0.15, at + 0.012)
+    g.gain.setValueAtTime(0.15, at + 0.38)
     g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5)
     g.connect(dest)
     // a square wave swings the clapper: one bell is struck as the other rings down
@@ -665,8 +665,8 @@ function rap(ctx: BaseAudioContext, dest: AudioNode, t: number, power: number, e
   lp.frequency.value = muffle
   lp.connect(dest)
   tone(ctx, lp, t, { type: 'sine', from: 118, to: 66, peak: 0.5 * power, attack: 0.003, decay: 0.2 })
-  tone(ctx, lp, t, { type: 'triangle', from: 250, to: 170, peak: 0.16 * power, attack: 0.002, decay: 0.07 })
-  noiseBurst(ctx, lp, t, { type: 'bandpass', freq: 850, q: 0.9, peak: 0.24 * power, attack: 0.001, decay: 0.05 })
+  tone(ctx, lp, t, { type: 'triangle', from: 250, to: 170, peak: 0.2 * power, attack: 0.002, decay: 0.07 })
+  noiseBurst(ctx, lp, t, { type: 'bandpass', freq: 850, q: 0.9, peak: 0.32 * power, attack: 0.001, decay: 0.05 })
   if (era === 'delhi-1857') {
     // the haveli door's iron kundi beaten against its plate
     brassTing(ctx, lp, t + 0.006, 610, 0.05 * power)
@@ -693,7 +693,7 @@ function knock(ctx: BaseAudioContext, dest: AudioNode, t: number, kind: KnockKin
 
 /** Under the quiet after the alarm: a low swell sinking away, and the ring of silence in the ears. */
 function caughtDark(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
-  tone(ctx, dest, t, { type: 'sine', from: 64, to: 42, peak: 0.24, attack: 0.28, decay: 1.3 })
+  tone(ctx, dest, t, { type: 'sine', from: 64, to: 42, peak: 0.2, attack: 0.28, decay: 1.3 })
   tone(ctx, dest, t, { type: 'sine', from: 96, to: 63, peak: 0.06, attack: 0.3, decay: 1.0 })
   tone(ctx, dest, t + 0.1, { type: 'sine', from: 3150, peak: 0.007, attack: 0.35, decay: 1.4 })
 }
