@@ -162,8 +162,26 @@ test('a tap on the room sends the read paper on at once', async ({ page }) => {
   await page.waitForTimeout(700) // the first moment is the tail of a skip, not a toss
   const vp = page.viewportSize()!
   await page.mouse.click(vp.width / 2, vp.height * 0.4)
-  // the toss takes about 1.5 s; without the tap the hold alone would run 3 s first
-  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 2600, intervals: [100] }).toBe(2)
+  // the hands screw it up and toss it in about 2.9 s; without the tap the hold alone would run
+  // 3.5 s first
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 4600, intervals: [100] }).toBe(2)
+  await readable(page)
+})
+
+test('a second tap during the crumple lands the ball at once', async ({ page }) => {
+  await page.goto(START)
+  await begin1857Easy(page)
+  await readable(page)
+  await stampAndReveal(page)
+  await page.waitForTimeout(700) // the first moment is the tail of a skip, not a toss
+  const vp = page.viewportSize()!
+  await page.mouse.click(vp.width / 2, vp.height * 0.4)
+  await expect(page.locator('.screen--day.is-tossing')).toBeVisible()
+  await page.waitForTimeout(500) // the hands are screwing it up
+  const t0 = Date.now()
+  await page.mouse.click(vp.width / 2, vp.height * 0.4)
+  await expect.poll(() => ft(page, (f) => f.play?.state.day), { timeout: 4000, intervals: [50] }).toBe(2)
+  expect(Date.now() - t0).toBeLessThan(1500) // not the rest of the crumple and the throw
   await readable(page)
 })
 

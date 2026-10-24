@@ -5,26 +5,14 @@
 import * as THREE from 'three'
 import { BALL_R, type BinBall, type PaperBall } from './crumple'
 import { basisQuat, mirrorPose, type HandPose, type Hands } from './hands'
+import { SQUEEZE_K, SQUEEZE_TWIST, TOSS } from './toss-beats'
 import { ease, type Tweens } from './tween'
 import type { StageCueName } from './types'
 
-/**
- * The beats, in ms. The camera starts to draw back (`lead`), the hands come in (`reach`), three squeezes screw the paper up, the right hand
- * rolls the ball onto its palm while the left withdraws (`roll`), cocks it (`windup`) and flicks it
- * (`flick`) as the camera draws back to the basket (`camOut`); the ball flies (`fly`), drops in and
- * bounces (`settle`), and the shot holds a breath (`hold`). From the start to the landing is about
- * 2.4 s. Under reduced motion it only fades (`fade`).
- */
-export const TOSS = { lead: 80, reach: 250, squeezes: [300, 320, 380] as const, roll: 220, windup: 130, flick: 110, fly: 600, settle: 170, hold: 320, fade: 320, camIn: 650, camPush: 760, camOut: 850 } as const
+export { TOSS, TOSS_LANDS_MS } from './toss-beats'
 
-/** How far each squeeze has screwed the paper up (0 flat … 1 a ball), and the wring after it. */
-const SQUEEZE_K = [0.42, 0.76, 1] as const
-const SQUEEZE_TWIST = [0.3, -0.26, 0.12] as const
 /** How high the hands lift the paper off the desk while they crush it (m). */
 export const CRUMPLE_LIFT = 0.072
-
-/** From the start of the toss to the ball landing (ms). */
-export const TOSS_LANDS_MS = TOSS.lead + TOSS.reach + TOSS.squeezes.reduce((a, b) => a + b, 0) + TOSS.roll + TOSS.windup + TOSS.flick + TOSS.fly
 
 export interface TossPlay {
   tw: Tweens

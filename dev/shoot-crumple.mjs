@@ -10,7 +10,7 @@ const OUT = process.argv[3] ?? 'docs/screens/crumple-dev'
 const SIZES = (process.env.SIZES ?? '390x844').split(',').map((s) => s.split('x').map(Number))
 const ERAS = (process.env.ERAS ?? 'delhi-1857').split(',')
 const LANG = process.env.LANG_ ?? 'en'
-const TIER = process.env.TIER ? `&tier=${process.env.TIER}` : ''
+const TIER = (process.env.TIER ? `&tier=${process.env.TIER}` : '') + (process.env.FALLBACK ? '&fallback' : '')
 const AT = (process.env.AT ?? '150,400,700,1000,1300,1550,1750,1950,2200,2500').split(',').map(Number)
 mkdirSync(OUT, { recursive: true })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -18,7 +18,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const browser = await chromium.launch({ args: ['--mute-audio', '--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=metal', '--use-gl=angle'] })
 for (const [w, h] of SIZES) {
   for (const era of ERAS) {
-    const tag = `${era}-${w}x${h}${process.env.TIER ? `-${process.env.TIER}` : ''}`
+    const tag = `${era}-${w}x${h}${process.env.TIER ? `-${process.env.TIER}` : ''}${process.env.FALLBACK ? '-2d' : ''}`
     const mobile = Math.min(w, h) < 600
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: mobile ? 2 : 1 })
     const page = await ctx.newPage()

@@ -576,7 +576,7 @@ describe('the toss: after a right stamp the paper goes in the basket and the nex
     try {
       holdOut()
       expect(m.stage.toss).toHaveBeenCalledTimes(1)
-      await vi.advanceTimersByTimeAsync(3000)
+      await vi.advanceTimersByTimeAsync(4000) // longer than the whole crumple and throw (about 2.9 s)
       expect(text(ui)).toContain('Day 1 of 7')
       await vi.advanceTimersByTimeAsync(1500) // past TOSS_GUARD_MS
       expect(text(ui)).toContain('Day 2 of 7')
