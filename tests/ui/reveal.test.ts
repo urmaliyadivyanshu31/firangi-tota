@@ -84,31 +84,55 @@ describe('the reveal on the paper', () => {
       expect(r.highlight).toEqual([forged.checks[lang][2]]) // only the differing substring
       expect(buildReveal({ era: e, msg: genuine, verdict: 'asli', lang }).highlight).toEqual(genuine.checks[lang]) // genuine: all
     }
-    // nothing differs, or no twin: every check
+    // nothing differs: the first check (the word beside the slip); no twin: every check
     forged.checks = { ...genuine.checks }
-    expect(revealHighlight(forged, e, 'en')).toEqual(genuine.checks.en)
+    expect(revealHighlight(forged, e, 'en')).toEqual([genuine.checks.en[0]])
     delete forged.pair
     forged.checks = { en: ['a', 'b'], hi: ['क', 'ख'] }
     expect(revealHighlight(forged, e, 'en')).toEqual(['a', 'b'])
   })
 
-  it('in the real content, a paired forgery circles fewer details than it underlines, and never one its twin shares', () => {
-    let narrowed = 0
+  it('in the real content, a paired forgery circles a check its twin shares only when every one is shared, and then only the first', () => {
     for (const era of ERAS) {
       for (const m of era.messages as Message[]) {
         if (m.real || !m.pair) continue
         const twins = era.messages.filter((o) => o !== m && o.pair === m.pair)
+        if (twins.length === 0) continue
         for (const lang of ['en', 'hi'] as Lang[]) {
           const hl = revealHighlight(m, era, lang)
-          const all = m.checks?.[lang] ?? []
-          expect(hl.length).toBeGreaterThan(0)
-          if (hl.length < all.length) {
-            narrowed++
-            for (const c of hl) expect(twins.some((t) => (t.checks?.[lang] ?? []).some((x) => x.includes(c)))).toBe(false)
-          }
+          const all = (m.checks?.[lang] ?? []).filter((c) => c.trim() !== '')
+          const shared = (c: string) => twins.some((t) => (t.checks?.[lang] ?? []).some((x) => x.includes(c)))
+          expect(hl.length, `${m.id} [${lang}]`).toBeGreaterThan(0)
+          if (all.every(shared)) expect([[all[0]], all], `${m.id} [${lang}]`).toContainEqual(hl) // the first, or all when swapped
+          else for (const c of hl) expect(shared(c), `${m.id} [${lang}] ${c}`).toBe(false)
         }
       }
     }
-    expect(narrowed).toBeGreaterThan(100)
   })
+
+  // The pairs whose halves check the same words, or did: each forgery circles exactly its slip.
+  const SLIPS: Record<string, Record<Lang, string>> = {
+    'd14-junagadh-tuesday': { en: 'Tuesday', hi: 'मंगलवार' },
+    'daily-report-forged': { en: 'Report for', hi: 'की रिपोर्ट' },
+    'lh-date1-f': { en: 'Dated', hi: 'तारीख़:' },
+    'lh-papers-f': { en: 'Today,', hi: 'आज,' },
+    'b42-weekday-f': { en: 'Tonight', hi: 'आज रात' },
+  }
+  it('b42-songs-f: the songs swapped, so both are circled, in both languages', () => {
+    const era = ERAS.find((e) => e.messages.some((m) => m.id === 'b42-songs-f'))!
+    const msg = era.messages.find((m) => m.id === 'b42-songs-f')!
+    for (const lang of ['en', 'hi'] as Lang[]) expect(revealHighlight(msg, era, lang)).toEqual(msg.checks![lang])
+  })
+
+  for (const [id, slip] of Object.entries(SLIPS)) {
+    it(`${id}: the verdict circles only the slip, in both languages`, () => {
+      const era = ERAS.find((e) => e.messages.some((m) => m.id === id))!
+      const msg = era.messages.find((m) => m.id === id)!
+      expect(msg.real).toBe(false)
+      for (const lang of ['en', 'hi'] as Lang[]) {
+        expect(buildReveal({ era, msg, verdict: 'tota', lang }).highlight).toEqual([slip[lang]])
+        expect(buildReveal({ era, msg, verdict: 'asli', lang }).highlight).toEqual([slip[lang]])
+      }
+    })
+  }
 })
