@@ -159,3 +159,10 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - The owner chose original period-print art, one pair of portraits per chapter (eight in all), in
   one style: an Indian Company-school print on cream paper, in muted saffron, indigo, maroon and
   ink. No real person's likeness, no religious symbols, and every Tota carries a small green parrot.
+
+## 2026-10-24: Live on firangitota.com
+
+- The owner asked to put the game on firangitota.com. It went live with the toss, the caught
+  sequence, the intro, sharing and the calm background sound.
+- The voice key lives only in the Production environment again (previews have no voice), and the
+  voice, share-card and share-link routes are rate limited per visitor.
