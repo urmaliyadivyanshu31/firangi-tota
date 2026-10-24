@@ -192,8 +192,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'If police ask where you were on Monday, 17 December, at four: studying at home. Then burn this.',
-      hi: 'पुलिस पूछे कि 17 दिसंबर, सोमवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
+      en: 'If police ask where you were when Saunders was shot, on Monday, 17 December, at four: studying at home. Then burn this.',
+      hi: 'पुलिस पूछे कि सॉन्डर्स पर गोली चलते वक़्त, 17 दिसंबर, सोमवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
     },
     checks: { en: ['Monday, 17 December', 'at four'], hi: ['17 दिसंबर, सोमवार', 'चार बजे'] },
     verify: { 'at four': 'fact:saunders' },
@@ -210,8 +210,8 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'If police ask where you were on Saturday, 15 December, at four: studying at home. Then burn this.',
-      hi: 'पुलिस पूछे कि 15 दिसंबर, शनिवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
+      en: 'If police ask where you were when Saunders was shot, on Saturday, 15 December, at four: studying at home. Then burn this.',
+      hi: 'पुलिस पूछे कि सॉन्डर्स पर गोली चलते वक़्त, 15 दिसंबर, शनिवार को चार बजे कहाँ थे, तो कहना: घर पर पढ़ रहा था। फिर यह जला देना।',
     },
     checks: { en: ['Saturday, 15 December', 'at four'], hi: ['15 दिसंबर, शनिवार', 'चार बजे'] },
     verify: { 'at four': 'fact:saunders' },
@@ -786,7 +786,7 @@ export const messages: Message[] = [
       en: "This week our friend sat for a photo at Ramnath's in Delhi, in a felt hat. Soon every paper will want it.",
       hi: 'इस हफ़्ते दिल्ली में रामनाथ के यहाँ हमारे दोस्त ने फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। जल्द हर अख़बार को यह चाहिए होगी।',
     },
-    checks: { en: ['our friend', "Ramnath's in Delhi"], hi: ['हमारे दोस्त', 'दिल्ली में रामनाथ'] },
+    checks: { en: ['our friend', 'in Delhi'], hi: ['हमारे दोस्त', 'दिल्ली में'] },
     why: {
       text: {
         en: 'Ramnath photographed him in Delhi on 3 or 4 April, for publicity.',
@@ -807,7 +807,7 @@ export const messages: Message[] = [
       en: "This week our friend sat for a photo at Ramnath's in Lahore, in a felt hat. Soon every paper will want it.",
       hi: 'इस हफ़्ते लाहौर में रामनाथ के यहाँ हमारे दोस्त ने फ़ेल्ट हैट पहनकर फ़ोटो खिंचवाई। जल्द हर अख़बार को यह चाहिए होगी।',
     },
-    checks: { en: ['our friend', "Ramnath's in Lahore"], hi: ['हमारे दोस्त', 'लाहौर में रामनाथ'] },
+    checks: { en: ['our friend', 'in Lahore'], hi: ['हमारे दोस्त', 'लाहौर में'] },
     tells: [
       {
         kind: 'place',
@@ -998,8 +998,8 @@ export const messages: Message[] = [
     from: SWAMI,
     to: POST_BOX,
     text: {
-      en: "Today's Times of India quotes Motilal Nehru on Monday's leaflets: 'The choice lies between Gandhi and Balraj.'",
-      hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार के पर्चों पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराज के बीच करना है।'",
+      en: "Today's Times of India quotes Motilal Nehru on the notice dropped on Monday: 'The choice lies between Gandhi and Balraj.'",
+      hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार को गिराए गए नोटिस पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराज के बीच करना है।'",
     },
     checks: { en: ['Balraj'], hi: ['बलराज'] },
     why: {
@@ -1019,8 +1019,8 @@ export const messages: Message[] = [
     from: SWAMI,
     to: POST_BOX,
     text: {
-      en: "Today's Times of India quotes Motilal Nehru on Monday's leaflets: 'The choice lies between Gandhi and Balram.'",
-      hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार के पर्चों पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराम के बीच करना है।'",
+      en: "Today's Times of India quotes Motilal Nehru on the notice dropped on Monday: 'The choice lies between Gandhi and Balram.'",
+      hi: "आज के टाइम्स ऑफ़ इंडिया में सोमवार को गिराए गए नोटिस पर मोतीलाल नेहरू: 'फ़ैसला गांधी और बलराम के बीच करना है।'",
     },
     checks: { en: ['Balram'], hi: ['बलराम'] },
     tells: [
@@ -1093,30 +1093,8 @@ export const messages: Message[] = [
     ],
   },
 
-  // Day 10, Thursday 11 April: who sat in the gallery, and what the bombs did. Joint statement
-  // (6 June 1929): Simon 'was sitting in the President's gallery'. Six were hurt: Noorani p. 32,
-  // 'Sir Bomanji Dalal was wounded in the thigh … Sir George Schuster and four others were slightly injured'.
-  {
-    id: 'lh-simon-g',
-    tier: 3,
-    real: true,
-    pair: 'lh-simon',
-    onDay: 10,
-    from: VILLAGER,
-    to: POST_BOX,
-    text: {
-      en: "Sir John Simon, whose Commission Lalaji marched against, sat in the President's gallery on Monday. No one died; a few people were hurt.",
-      hi: 'जिस साइमन कमीशन के ख़िलाफ़ लालाजी ने जुलूस निकाला था, उसके सर जॉन साइमन सोमवार को प्रेसिडेंट गैलरी में बैठे थे। कोई नहीं मरा; कुछ लोग घायल हुए।',
-    },
-    checks: { en: ["President's gallery"], hi: ['प्रेसिडेंट गैलरी'] },
-    why: {
-      text: {
-        en: "Simon sat in the President's gallery; no one died, six were hurt.",
-        hi: 'साइमन प्रेसिडेंट गैलरी में थे; कोई नहीं मरा, छह लोग घायल हुए।',
-      },
-      sources: [{ id: 'bs-joint-statement' }, CHAMAN, { id: 'noorani-1996', loc: "ch. 'Bombs in the Central Assembly', p. 32" }, { id: 'sanyal-1931', loc: "ch. 'The Saunders Murder'" }],
-    },
-  },
+  // Day 10: Simon in the President's gallery was cut (owner 10-24 play-test): no case file
+  // could confirm Simon, the gallery or who was hurt.
 
   // Day 11, Friday 12 April: Young India of Thursday 11 April printed Sarojini Naidu's letter
   // from her American lecture tour ("a wandering singer with a spirit in my feet"). Her Berlin
@@ -1284,10 +1262,10 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'If Prabhat comes from Delhi, give him the cycle and ask nothing. He knows the way. — Villager',
-      hi: 'प्रभात दिल्ली से आए, तो उसे साइकिल दे देना और कुछ मत पूछना। उसे रास्ता पता है। — विलेजर',
+      en: 'If Prabhat, our courier, comes from Delhi, give him the cycle and ask nothing. He knows the way. — Villager',
+      hi: 'हमारा हरकारा प्रभात दिल्ली से आए, तो उसे साइकिल दे देना और कुछ मत पूछना। उसे रास्ता पता है। — विलेजर',
     },
-    checks: { en: ['Prabhat', 'from Delhi'], hi: ['प्रभात', 'दिल्ली से'] },
+    checks: { en: ['Prabhat', 'our courier'], hi: ['प्रभात', 'हमारा हरकारा'] },
     why: {
       text: {
         en: "Prabhat was Shiv Verma's party name; he carried our friend's letter from Delhi.",
@@ -1305,10 +1283,10 @@ export const messages: Message[] = [
     from: VILLAGER,
     to: POST_BOX,
     text: {
-      en: 'If Prakash comes from Delhi, give him the cycle and ask nothing. He knows the way. — Villager',
-      hi: 'प्रकाश दिल्ली से आए, तो उसे साइकिल दे देना और कुछ मत पूछना। उसे रास्ता पता है। — विलेजर',
+      en: 'If Prakash, our courier, comes from Delhi, give him the cycle and ask nothing. He knows the way. — Villager',
+      hi: 'हमारा हरकारा प्रकाश दिल्ली से आए, तो उसे साइकिल दे देना और कुछ मत पूछना। उसे रास्ता पता है। — विलेजर',
     },
-    checks: { en: ['Prakash', 'from Delhi'], hi: ['प्रकाश', 'दिल्ली से'] },
+    checks: { en: ['Prakash', 'our courier'], hi: ['प्रकाश', 'हमारा हरकारा'] },
     tells: [
       {
         kind: 'name',
@@ -1514,7 +1492,7 @@ export const messages: Message[] = [
       en: "In December the target was Scott, the Superintendent, not young Saunders. Never boast of it; our notice said sorry for a man's death.",
       hi: 'दिसंबर में निशाना स्कॉट थे, सुपरिंटेंडेंट, नौजवान सॉन्डर्स नहीं। इस पर कभी शेख़ी मत मारना; हमारे नोटिस ने एक इंसान की मौत पर अफ़सोस जताया था।',
     },
-    checks: { en: ['Scott, the Superintendent', 'young Saunders'], hi: ['स्कॉट थे, सुपरिंटेंडेंट', 'नौजवान सॉन्डर्स'] },
+    checks: { en: ['Scott, the Superintendent', 'Saunders'], hi: ['स्कॉट थे, सुपरिंटेंडेंट', 'सॉन्डर्स'] },
     why: {
       text: {
         en: 'The plan was to kill Scott; Saunders, his junior, was shot instead.',
@@ -1535,7 +1513,7 @@ export const messages: Message[] = [
       en: "In December the target was Stead, the Inspector-General, not young Saunders. Never boast of it; our notice said sorry for a man's death.",
       hi: 'दिसंबर में निशाना स्टेड थे, इंस्पेक्टर-जनरल, नौजवान सॉन्डर्स नहीं। इस पर कभी शेख़ी मत मारना; हमारे नोटिस ने एक इंसान की मौत पर अफ़सोस जताया था।',
     },
-    checks: { en: ['Stead, the Inspector-General', 'young Saunders'], hi: ['स्टेड थे, इंस्पेक्टर-जनरल', 'नौजवान सॉन्डर्स'] },
+    checks: { en: ['Stead, the Inspector-General', 'Saunders'], hi: ['स्टेड थे, इंस्पेक्टर-जनरल', 'सॉन्डर्स'] },
     tells: [
       {
         kind: 'name',
@@ -1657,8 +1635,8 @@ export const messages: Message[] = [
     from: SWAMI,
     to: POST_BOX,
     text: {
-      en: "Today Lord Irwin spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
-      hi: 'आज लॉर्ड इरविन दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
+      en: "Today the Viceroy, Lord Irwin, spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
+      hi: 'आज वायसराय लॉर्ड इरविन दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
     },
     checks: { en: ['Lord Irwin'], hi: ['लॉर्ड इरविन'] },
     why: {
@@ -1679,8 +1657,8 @@ export const messages: Message[] = [
     from: SWAMI,
     to: POST_BOX,
     text: {
-      en: "Today Lord Halifax spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
-      hi: 'आज लॉर्ड हैलिफ़ैक्स दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
+      en: "Today the Viceroy, Lord Halifax, spoke to both Houses together. He will take the Safety Bill's powers by ordinance.",
+      hi: 'आज वायसराय लॉर्ड हैलिफ़ैक्स दोनों सदनों के सामने एक साथ बोले। सेफ़्टी बिल वाली ताक़त वे ऑर्डिनेंस से ले लेंगे।',
     },
     checks: { en: ['Lord Halifax'], hi: ['लॉर्ड हैलिफ़ैक्स'] },
     tells: [

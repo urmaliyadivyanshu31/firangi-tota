@@ -21,8 +21,8 @@ export const facts: Fact[] = [
     label: { en: "Sukhdev's names", hi: 'सुखदेव के नाम' },
     value: { en: 'Dyal, Swami, Villager', hi: 'दयाल, स्वामी, विलेजर (गाँववाला)' },
     story: {
-      en: 'Sukhdev goes by [[Dyal]], [[Swami]] or [[Villager]].',
-      hi: 'सुखदेव के नाम हैं [[दयाल]], [[स्वामी]] और [[विलेजर]], यानी गाँववाला।',
+      en: 'Sukhdev goes by [[Dyal]], [[Swami]] or [[Villager]], always in exactly those words.',
+      hi: 'सुखदेव के नाम हैं [[दयाल]], [[स्वामी]] और [[विलेजर]] (यानी गाँववाला), और ये ठीक इन्हीं शब्दों में लिखे जाते हैं।',
     },
     sources: [
       { id: 'noorani-1996', loc: 'Ordinance No. III of 1930, Schedule, pp. 295–296' },
@@ -232,8 +232,8 @@ export const facts: Fact[] = [
     label: { en: 'Jallianwala Bagh', hi: 'जलियाँवाला बाग़' },
     value: { en: 'Amritsar, 13 April 1919', hi: 'अमृतसर, 13 अप्रैल 1919' },
     story: {
-      en: 'At [[Amritsar]], troops fired on the crowd in Jallianwala Bagh on [[13 April 1919]].',
-      hi: '[[अमृतसर]] के जलियाँवाला बाग़ में [[13 अप्रैल 1919]] को फ़ौज ने भीड़ पर गोली चलाई।',
+      en: 'At [[Amritsar]], troops fired on the crowd in Jallianwala Bagh on [[13 April 1919]], ten years before this April.',
+      hi: '[[अमृतसर]] के जलियाँवाला बाग़ में [[13 अप्रैल 1919]] को, यानी इस अप्रैल से ठीक दस साल पहले, फ़ौज ने भीड़ पर गोली चलाई।',
     },
     sources: [{ id: 'collett-2005' }],
   },
@@ -296,8 +296,8 @@ export const facts: Fact[] = [
     label: { en: 'Saunders shot', hi: 'सॉन्डर्स पर गोली' },
     value: { en: 'Monday 17 December 1928, 4 p.m.', hi: 'सोमवार, 17 दिसंबर 1928, शाम 4 बजे' },
     story: {
-      en: 'Saunders was shot at [[4 p.m.]] on [[Monday 17 December 1928]].',
-      hi: 'सॉन्डर्स पर [[सोमवार, 17 दिसंबर 1928]] को [[शाम 4 बजे]] गोली चली।',
+      en: 'Saunders was shot dead at [[4 p.m.]] on [[Monday 17 December 1928]].',
+      hi: 'सॉन्डर्स [[सोमवार, 17 दिसंबर 1928]] को [[शाम 4 बजे]] गोली लगने से मारा गया।',
     },
     sources: [{ id: 'noorani-1996', loc: "ch. 'Saunders Murder', pp. 19–23" }],
   },
