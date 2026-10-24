@@ -151,7 +151,7 @@ describe('renderCredits', () => {
     expect(doc.textContent).toContain('Apache License 2.0')
     expect(doc.textContent).toContain('CC0 1.0')
     expect(doc.querySelector('a[href="https://fonts.google.com/specimen/Mukta"]')).not.toBeNull()
-    expect(doc.querySelector('a[href="https://freesound.org/people/MrFossy/sounds/521773/"]')).not.toBeNull()
+    expect(doc.querySelector('a[href="https://freesound.org/people/sankalp/sounds/153262/"]')).not.toBeNull()
     // the read-aloud voice and its provider's terms
     expect(doc.textContent).toContain(VOICES.dastango.fish!.referenceId) // the voice the game actually uses
     expect(doc.querySelector('a[href="https://fish.audio/terms"]')).not.toBeNull()
