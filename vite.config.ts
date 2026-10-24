@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync } from 'node:fs'
 import { defineConfig, loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { voiceDevServer } from './server/vite-plugin'
@@ -15,6 +16,14 @@ function securityHeaders(): Record<string, string> {
   return Object.fromEntries(all.map((h) => [h.key, h.value]))
 }
 
+/** A hash of every recording in public/audio: the audio URLs carry it, so a changed file is fetched fresh. */
+function audioRevision(): string {
+  const dir = new URL('./public/audio/', import.meta.url)
+  const h = createHash('sha256')
+  for (const f of readdirSync(dir).sort()) h.update(f).update(readFileSync(new URL(f, dir)))
+  return h.digest('hex').slice(0, 10)
+}
+
 /** The fonts the first screen needs (index.html preloads them), precached for offline play. */
 const CORE_FONTS = ['mukta-400-latin.woff2', 'old-standard-tt-400-latin.woff2', 'tiro-devanagari-hindi-400-devanagari.woff2']
 
@@ -24,6 +33,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     build: { target: 'es2019' },
+    define: { 'import.meta.env.AUDIO_REV': JSON.stringify(audioRevision()) },
     preview: { headers: securityHeaders() },
     plugins: [
       voiceDevServer({

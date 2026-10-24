@@ -4,6 +4,7 @@
 // each day, brings the message in on its paper, stamps it and flashes. Nothing here imports
 // three.js: the stage and the era desks arrive by dynamic import after the first paint (R10).
 import { gameEvent } from './analytics'
+import { updateWaiting } from './update'
 import { audio, cueForStage } from './audio/engine'
 import { ERAS, eraById } from './content/registry'
 import type { Era, EraId, Message } from './content/types'
@@ -638,6 +639,11 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   /** The one main page: the chosen chapter's paper over its room. */
   function showMain(): void {
+    // a newer version downloaded mid-chapter: the main page is the safe moment to load it
+    if (updateWaiting()) {
+      window.location.reload()
+      return
+    }
     leave()
     setDeskEra(selected)
     establish()

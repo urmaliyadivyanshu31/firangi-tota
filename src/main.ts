@@ -3,9 +3,11 @@ import './ui/styles.css'
 import { startAnalytics } from './analytics'
 import { startApp } from './app'
 import { warmFirstUseCache } from './offline'
+import { watchForUpdate } from './update'
 
 const stage = document.getElementById('stage')
 const ui = document.getElementById('ui')
 if (stage && ui) startApp({ stage, ui }, { now: Date.now, random: Math.random, url: new URL(location.href) })
 warmFirstUseCache()
+watchForUpdate(() => document.querySelector('.screen--main') !== null)
 startAnalytics()
