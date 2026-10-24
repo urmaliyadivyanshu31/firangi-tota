@@ -17,8 +17,8 @@ export const facts: Fact[] = [
     label: { en: 'The King', hi: 'बादशाह' },
     value: { en: 'Bahadur Shah Zafar; coins: Siraj-ud-din (Suraj-u-din)', hi: 'बहादुर शाह ज़फ़र; सिक्कों पर: सिराजुद्दीन' },
     story: {
-      en: 'You serve [[Bahadur Shah Zafar]]; his coins name him [[Siraj-ud-din]], also spelt [[Suraj-u-din]].',
-      hi: 'आप [[बहादुर शाह ज़फ़र]] की सेवा में हैं; उनके सिक्कों पर उनका नाम [[सिराजुद्दीन]] लिखा है।',
+      en: 'You serve the King, [[Bahadur Shah Zafar]]; his coins name him [[Siraj-ud-din]], also spelt [[Suraj-u-din]].',
+      hi: 'आप बादशाह [[बहादुर शाह ज़फ़र]] की सेवा में हैं; उनके सिक्कों पर उनका नाम [[सिराजुद्दीन]] लिखा है।',
     },
     sources: [jl('pp.96-97'), mh('p.59'), sen('p.95')],
   },
@@ -45,6 +45,21 @@ export const facts: Fact[] = [
       hi: '18 मई को शहज़ादे [[ख़िज़्र सुल्तान]], [[अबू बक्र]] और [[अब्दुल्लाह]] को भी कमान मिलती है।',
     },
     sources: [jl('p.96'), sen('p.74')],
+  },
+  {
+    // JL pp.91-92 (15 May, the sepoys accuse him of writing to the English), pp.98-99 (20 May, his
+    // device to send the soldiers towards Meerut), p.103 (26 May, the King shields him); Chuni Lal,
+    // 17 May: the King tells the soldiers to trust him. "Hakim" is the physician's title.
+    id: 'ahsanullah',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'The physician', hi: 'शाही हकीम' },
+    value: { en: 'Hakim Ahsanullah Khan', hi: 'हकीम अहसनुल्लाह ख़ान' },
+    story: {
+      en: "The King's physician and adviser is [[Hakim Ahsanullah Khan]].",
+      hi: 'बादशाह के हकीम और सलाहकार हैं [[हकीम अहसनुल्लाह ख़ान]]।',
+    },
+    sources: [jl('pp.91-92'), jl('pp.98-99'), jl('p.103'), trial(CHUNI_17)],
   },
   {
     // Sen p.69: "a minor son, Jawan Bakht, the child of his old age by his favourite queen, Zinat Mahal".
@@ -77,9 +92,9 @@ export const facts: Fact[] = [
     id: 'regiments',
     para: 1,
     label: { en: 'Regiments', hi: 'पलटनें' },
-    value: { en: '3rd Cavalry; Infantry 11/20/38/54/74', hi: 'तीसरी घुड़सवार; पैदल 11/20/38/54/74' },
+    value: { en: '3rd Light Cavalry; Native Infantry 11/20/38/54/74', hi: 'तीसरी घुड़सवार; पैदल 11/20/38/54/74' },
     story: {
-      en: "The sepoys' regiments are the [[3rd Cavalry]], on horse, and the [[11th, 20th, 38th, 54th and 74th Infantry]], on foot.",
+      en: "The sepoys' regiments are the [[3rd Light Cavalry]], on horse, and the [[11th, 20th, 38th, 54th and 74th Native Infantry]], on foot.",
       hi: 'सिपाहियों की पलटनें ये हैं: घोड़ों पर [[तीसरी घुड़सवार]], और पैदल [[11वीं, 20वीं, 38वीं, 54वीं और 74वीं]]।',
     },
     sources: [sen('pp.59-62'), mh('p.53')],
@@ -98,6 +113,20 @@ export const facts: Fact[] = [
       hi: 'फ़रवरी में रोटियाँ [[गाँव-गाँव]] पहुँचीं; उनका [[मतलब]] किसी को [[पता नहीं]] था।',
     },
     sources: [mh('pp.39-40'), trial(JATMALL_CHAPATI), trial(METCALFE_CHAPATI), majumdar('pp.202-03')],
+  },
+  {
+    // Mangal Pandey's attack at Barrackpore was on 29 March (Sen pp.49-50; Majumdar pp.46-47); he was
+    // hanged on 8 April (Cave-Browne I p.21; Kaye I, 9th ed., p.548).
+    id: 'pandey',
+    para: 1,
+    minMode: 'medium',
+    label: { en: 'Mangal Pandey', hi: 'मंगल पांडे' },
+    value: { en: '34th; hanged at Barrackpore, 8 April', hi: '34वीं; बैरकपुर में फाँसी, 8 अप्रैल' },
+    story: {
+      en: 'Mangal Pandey of the [[34th]] was hanged at [[Barrackpore]] on [[8 April]].',
+      hi: '[[34वीं]] पलटन के मंगल पांडे को [[8 अप्रैल]] को [[बैरकपुर]] में फाँसी दी गई।',
+    },
+    sources: [sen('pp.49-50'), majumdar('pp.46-47'), caveBrowne('p.21'), { id: 'kaye-1880', loc: 'p.548' }],
   },
   {
     // Meerut rose on the evening of Sunday 10 May (Sen pp.58-60); the riders reached Delhi on the
@@ -126,6 +155,20 @@ export const facts: Fact[] = [
     sources: [sen('p.73')],
   },
   {
+    // Sen p.74: two young signallers in the Delhi telegraph office wired the news to Ambala; from
+    // there it reached the Punjab (Lahore had it on the morning of 12 May, Sen p.327).
+    id: 'telegraph',
+    para: 1,
+    minMode: 'hard',
+    label: { en: 'Telegraph, 11 May', hi: 'तार, 11 मई' },
+    value: { en: 'Signallers wire Ambala and the Punjab', hi: 'तारबाबू अंबाला और पंजाब को तार देते हैं' },
+    story: {
+      en: 'On 11 May [[two young signallers]] wire the news of Delhi to [[Ambala]] and the [[Punjab]].',
+      hi: '11 मई को [[दो नौजवान तारबाबू]] दिल्ली की ख़बर [[अंबाला]] और [[पंजाब]] तक तार से भेज देते हैं।',
+    },
+    sources: [sen('p.74'), sen('p.327')],
+  },
+  {
     id: 'lahore-gates',
     para: 2,
     label: { en: 'Lahore Gates', hi: 'लाहौरी दरवाज़े' },
@@ -146,6 +189,20 @@ export const facts: Fact[] = [
       hi: 'बल्लभगढ़ की सड़क [[दक्षिण]] के [[दिल्ली दरवाज़े]] से शहर में आती है।',
     },
     sources: [trial('Petition No. 63, 22 May 1857, p.33'), fanshawe('pp.5-6')],
+  },
+  {
+    // JL p.100, 21 May: "Rajah Nahar Sing of Bulubgarh had made himself master of the country as far as
+    // Palwal". Petition No. 64 (24 May) is his, "Chief of Ballabhgarh", under his seal.
+    id: 'nahar-singh',
+    para: 2,
+    minMode: 'medium',
+    label: { en: "Ballabhgarh's chief", hi: 'बल्लभगढ़ के सरदार' },
+    value: { en: 'Raja Nahar Singh, master to Palwal', hi: 'राजा नाहर सिंह, पलवल तक मालिक' },
+    story: {
+      en: "Ballabhgarh's chief is [[Raja Nahar Singh]], master of the country as far as [[Palwal]].",
+      hi: 'बल्लभगढ़ के सरदार [[राजा नाहर सिंह]] हैं, जो [[पलवल]] तक के इलाक़े के मालिक हैं।',
+    },
+    sources: [jl('p.100'), trial('Petition No. 64, dated 24 May 1857, p.34')],
   },
   {
     id: 'money',
@@ -215,13 +272,13 @@ export const facts: Fact[] = [
     id: 'english-force',
     para: 3,
     hardHidden: true,
-    label: { en: 'English army', hi: 'अंग्रेज़ी फ़ौज' },
+    label: { en: 'English army, Ambala', hi: 'अंग्रेज़ी फ़ौज, अंबाला' },
     value: { en: 'Takes the Ridge on 8 June', hi: 'रिज पर 8 जून को क़ब्ज़ा' },
     story: {
-      en: 'Ahead, the English army takes the [[Ridge]] on [[8 June]].',
-      hi: 'आगे, अंग्रेज़ी फ़ौज [[8 जून]] को [[रिज]] पर क़ब्ज़ा करती है।',
+      en: 'Ahead, the English army marches from Ambala and takes the [[Ridge]] on [[8 June]].',
+      hi: 'आगे, अंग्रेज़ी फ़ौज अंबाला से चलकर [[8 जून]] को [[रिज]] पर क़ब्ज़ा करती है।',
     },
-    sources: [sen('p.79'), trial(CHUNI_17), jl('pp.107-08')],
+    sources: [sen('p.77'), sen('p.79'), trial(CHUNI_17), jl('pp.107-08')],
   },
   {
     id: 'bakht-khan',
@@ -258,10 +315,24 @@ export const facts: Fact[] = [
     label: { en: 'The Lawrences', hi: 'दो लॉरेंस' },
     value: { en: 'Henry: Oudh; John: the Punjab', hi: 'हेनरी: अवध; जॉन: पंजाब' },
     story: {
-      en: 'The Lawrences: [[Henry]] runs [[Oudh]], and [[John]] runs the [[Punjab]].',
-      hi: 'दो लॉरेंस हैं: [[हेनरी]] [[अवध]] सँभालते हैं, और [[जॉन]] [[पंजाब]]।',
+      en: 'The Lawrences are chief commissioners: [[Henry]] of [[Oudh]], and [[John]] of the [[Punjab]].',
+      hi: 'दोनों लॉरेंस चीफ़ कमिश्नर हैं: [[हेनरी]] [[अवध]] के, और [[जॉन]] [[पंजाब]] के।',
     },
     sources: [sen('p.179'), sen('pp.182-83'), sen('p.327')],
+  },
+  {
+    // Kanpur rose late on 4 June; till then Nana Sahib guarded the treasury for the English (Sen
+    // pp.131-33, p.136). Jhansi's sepoys rose on 5 June (Sen pp.270-71).
+    id: 'kanpur-jhansi',
+    para: 3,
+    minMode: 'medium',
+    label: { en: 'Kanpur and Jhansi', hi: 'कानपुर और झाँसी' },
+    value: { en: 'Kanpur 4 June; Jhansi 5 June', hi: 'कानपुर 4 जून; झाँसी 5 जून' },
+    story: {
+      en: 'Ahead, [[Kanpur]] rises only on [[4 June]], and [[Jhansi]] on [[5 June]].',
+      hi: 'आगे, [[कानपुर]] [[4 जून]] को जाकर उठता है, और [[झाँसी]] [[5 जून]] को।',
+    },
+    sources: [sen('pp.131-33'), sen('p.136'), sen('pp.270-71')],
   },
   {
     // Hodson's letters, pp.234-36: he set out on 20 May with "a party of the Jheend Horse" and on
