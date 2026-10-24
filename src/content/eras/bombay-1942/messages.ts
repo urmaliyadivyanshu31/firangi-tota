@@ -12,6 +12,8 @@ import type { L10n, Message } from '../../types.js'
 // Aga Khan Palace on Lord Halifax's son; d11 three months since 9 August;
 // d12 JP has escaped; d13 Churchill's "liquidation" speech; d14 the morning broadcast, the raid
 // on the organisers' office and Lohia's "the work must go on".
+// Medium adds d14 "another transmitter overnight"; Hard adds d13 Churchill on the Battle of Egypt.
+// Medium and Hard messages (minMode) sit at the end of the pool, each caught by its own case-file fact.
 //
 // "Records" are gramophone records (rule r-records, day 1). Hindi keeps police papers as
 // "पुलिस के काग़ज़" so "रिकॉर्ड" only ever means a gramophone record.
@@ -1510,5 +1512,792 @@ export const messages: Message[] = [
       },
       sources: [{ id: 'iar-1942', loc: 'September chronicle; October chronicle, 10 Oct' }],
     },
+  },
+
+  // ───────────────────────── Medium (minMode 'medium'): the case file grows ─────────────────────────
+  // Caught by the Medium facts (f-palace, f-mahadev, f-fort, f-khakhar, f-underground, f-voices,
+  // f-parekh, f-ballia) or by the rulebook.
+
+  {
+    id: 'b42-m-mahadev-g',
+    tier: 1,
+    real: true,
+    pair: 'm-mahadev',
+    minMode: 'medium',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Remember Mahadev Desai, who died at the Aga Khan Palace on 15 August. Gandhiji wired: “Mahadev has died yogi’s and patriot’s death.”',
+      hi: 'महादेव देसाई को याद कीजिए, जो 15 अगस्त को आग़ा ख़ान महल में गुज़र गए। गांधीजी ने तार भेजा: “महादेव ने योगी और देशभक्त की मौत पाई है।”',
+    },
+    checks: { en: ['Mahadev Desai', 'on 15 August', 'Aga Khan Palace'], hi: ['महादेव देसाई', '15 अगस्त', 'आग़ा ख़ान महल'] },
+    document: { sources: [{ id: 'cwmg-76-vol', loc: 'No. 435, telegram to Chimanlal N. Shah, 15-8-1942, p. 410' }] },
+    why: {
+      text: {
+        en: 'Real telegram: Mahadev Desai died at the Aga Khan Palace on 15 August 1942.',
+        hi: 'असली तार: महादेव देसाई 15 अगस्त 1942 को आग़ा ख़ान महल में गुज़रे।',
+      },
+      sources: [{ id: 'cwmg-76-vol', loc: 'Introduction; No. 435, p. 410' }, { id: 'mkgandhi-agakhan' }],
+    },
+  },
+  {
+    id: 'b42-m-mahadev-f',
+    tier: 1,
+    real: false,
+    pair: 'm-mahadev',
+    minMode: 'medium',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Remember Mahadev Desai, who died at the Aga Khan Palace on 15 September. Gandhiji wired: “Mahadev has died yogi’s and patriot’s death.”',
+      hi: 'महादेव देसाई को याद कीजिए, जो 15 सितंबर को आग़ा ख़ान महल में गुज़र गए। गांधीजी ने तार भेजा: “महादेव ने योगी और देशभक्त की मौत पाई है।”',
+    },
+    checks: { en: ['Mahadev Desai', 'on 15 September', 'Aga Khan Palace'], hi: ['महादेव देसाई', '15 सितंबर', 'आग़ा ख़ान महल'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: 'Mahadev Desai died on 15 August, not 15 September.', hi: 'महादेव देसाई 15 अगस्त को गुज़रे, 15 सितंबर को नहीं।' },
+        factId: 'f-mahadev',
+        sources: [{ id: 'cwmg-76-vol', loc: 'Introduction; No. 435, p. 410' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-kasturba-g',
+    tier: 1,
+    real: true,
+    pair: 'm-kasturba',
+    minMode: 'medium',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Listeners ask after Kasturba. She is held with Gandhiji at the Aga Khan Palace, and so is Sarojini Naidu.',
+      hi: 'सुनने वाले कस्तूरबा का हाल पूछते हैं। वे आग़ा ख़ान महल में गांधीजी के साथ बंद हैं, और सरोजिनी नायडू भी।',
+    },
+    checks: { en: ['Kasturba', 'Aga Khan Palace', 'Sarojini Naidu'], hi: ['कस्तूरबा', 'आग़ा ख़ान महल', 'सरोजिनी नायडू'] },
+    why: {
+      text: {
+        en: 'Kasturba and Sarojini Naidu were interned with Gandhi at the Aga Khan Palace.',
+        hi: 'कस्तूरबा और सरोजिनी नायडू गांधी के साथ आग़ा ख़ान महल में नज़रबंद थीं।',
+      },
+      sources: [{ id: 'mkgandhi-agakhan' }],
+    },
+  },
+  {
+    id: 'b42-m-kasturba-f',
+    tier: 1,
+    real: false,
+    pair: 'm-kasturba',
+    minMode: 'medium',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Listeners ask after Kasturba. She is held with Nehru in Ahmednagar Fort, and so is Sarojini Naidu.',
+      hi: 'सुनने वाले कस्तूरबा का हाल पूछते हैं। वे अहमदनगर क़िले में नेहरू के साथ बंद हैं, और सरोजिनी नायडू भी।',
+    },
+    checks: { en: ['Kasturba', 'Ahmednagar Fort', 'Sarojini Naidu'], hi: ['कस्तूरबा', 'अहमदनगर क़िले', 'सरोजिनी नायडू'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'Both are held with Gandhiji at the Aga Khan Palace, not Ahmednagar.', hi: 'दोनों गांधीजी के साथ आग़ा ख़ान महल में हैं, अहमदनगर में नहीं।' },
+        factId: 'f-palace',
+        sources: [{ id: 'mkgandhi-agakhan' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-aruna-g',
+    tier: 2,
+    real: true,
+    pair: 'm-aruna',
+    minMode: 'medium',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Asaf Ali is locked in Ahmednagar Fort with Nehru, but his wife, Aruna Asaf Ali, is still free and underground.',
+      hi: 'आसफ़ अली नेहरू के साथ अहमदनगर क़िले में बंद हैं, पर उनकी पत्नी अरुणा आसफ़ अली अब भी आज़ाद हैं और छिपकर काम कर रही हैं।',
+    },
+    checks: { en: ['Asaf Ali is locked in Ahmednagar Fort', 'still free and underground'], hi: ['आसफ़ अली नेहरू के साथ', 'अब भी आज़ाद हैं'] },
+    why: {
+      text: {
+        en: 'Asaf Ali was one of Nehru’s fort companions; Aruna led the underground.',
+        hi: 'आसफ़ अली क़िले में नेहरू के साथी थे; अरुणा छिपकर आंदोलन चला रही थीं।',
+      },
+      sources: [{ id: 'nehru-1946', loc: 'Preface (M. Asaf Ali)' }, { id: 'bipan-chandra-1989', loc: 'ch. 35, p. 468' }],
+    },
+  },
+  {
+    id: 'b42-m-aruna-f',
+    tier: 2,
+    real: false,
+    pair: 'm-aruna',
+    minMode: 'medium',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'Aruna Asaf Ali is locked in Ahmednagar Fort with Nehru, but her husband, Asaf Ali, is still free and underground.',
+      hi: 'अरुणा आसफ़ अली नेहरू के साथ अहमदनगर क़िले में बंद हैं, पर उनके पति आसफ़ अली अब भी आज़ाद हैं और छिपकर काम कर रहे हैं।',
+    },
+    checks: { en: ['Aruna Asaf Ali is locked in Ahmednagar Fort', 'still free and underground'], hi: ['अरुणा आसफ़ अली नेहरू के साथ', 'अब भी आज़ाद हैं'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Swapped: Asaf Ali is in the fort; Aruna is the one underground.', hi: 'उलट दिया: आसफ़ अली क़िले में हैं; छिपकर काम अरुणा कर रही हैं।' },
+        factId: 'f-fort',
+        sources: [{ id: 'nehru-1946', loc: 'Preface' }, { id: 'bipan-chandra-1989', loc: 'ch. 35, p. 468' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-ballia-g',
+    tier: 1,
+    real: true,
+    pair: 'm-ballia',
+    minMode: 'medium',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'We were first with the news from Ballia: in August, Chittu Pande ran its own government for a week, till soldiers marched in.',
+      hi: 'बलिया की ख़बर सबसे पहले हमने दी: अगस्त में चित्तू पांडे ने वहाँ एक हफ़्ता अपनी सरकार चलाई, फिर फ़ौज आ गई।',
+    },
+    checks: { en: ['Chittu Pande', 'for a week'], hi: ['चित्तू पांडे', 'एक हफ़्ता'] },
+    why: {
+      text: {
+        en: 'Usha Mehta: the radio broke the Ballia news. Soldiers came a week later.',
+        hi: 'उषा मेहता: बलिया की ख़बर पहले रेडियो ने दी। एक हफ़्ते बाद फ़ौज आई।',
+      },
+      sources: [{ id: 'usha-mehta-1969' }, { id: 'bipan-chandra-1989', loc: 'ch. 35 (parallel governments)' }],
+    },
+  },
+  {
+    id: 'b42-m-ballia-f',
+    tier: 1,
+    real: false,
+    pair: 'm-ballia',
+    minMode: 'medium',
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'We were first with the news from Ballia: since August, Chittu Pande’s own government has held out there, and it still holds.',
+      hi: 'बलिया की ख़बर सबसे पहले हमने दी: अगस्त से चित्तू पांडे की अपनी सरकार वहाँ टिकी है, और अब भी चल रही है।',
+    },
+    checks: { en: ['Chittu Pande’s', 'it still holds'], hi: ['चित्तू पांडे', 'अब भी चल रही है'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: 'It lasted a week in August; then soldiers marched in.', hi: 'वह अगस्त में एक हफ़्ता चली; फिर फ़ौज आ गई।' },
+        factId: 'f-ballia',
+        sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35 (parallel governments)' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-parekh-g',
+    tier: 1,
+    real: true,
+    pair: 'm-parekh',
+    minMode: 'medium',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'Burn this after reading. Tonight’s records go to Parekh Wadi in Girgaum, where we have worked since 15 October.',
+      hi: 'पढ़कर जला दीजिए। आज रात के रिकॉर्ड गिरगाँव की पारेख वाड़ी जाएँगे, जहाँ हम 15 अक्टूबर से काम कर रहे हैं।',
+    },
+    checks: { en: ['Parekh Wadi in Girgaum', 'since 15 October'], hi: ['गिरगाँव की पारेख वाड़ी', '15 अक्टूबर से'] },
+    why: {
+      text: {
+        en: 'Police list of sites: Parekh Wadi, Girgaum Back Road, from 15 October 1942.',
+        hi: 'पुलिस की ठिकानों वाली सूची: पारेख वाड़ी, गिरगाँव बैक रोड, 15 अक्टूबर 1942 से।',
+      },
+      sources: [
+        { id: 'huacuja-2023', loc: 'Fig. 4, police list of sites' },
+        { id: 'chatterjee-1989', loc: 'sites' },
+      ],
+    },
+  },
+  {
+    id: 'b42-m-parekh-f',
+    tier: 1,
+    real: false,
+    pair: 'm-parekh',
+    minMode: 'medium',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'Burn this after reading. Tonight’s records go to Parekh Wadi in Khetwadi, where we have worked since 15 October.',
+      hi: 'पढ़कर जला दीजिए। आज रात के रिकॉर्ड खेतवाड़ी की पारेख वाड़ी जाएँगे, जहाँ हम 15 अक्टूबर से काम कर रहे हैं।',
+    },
+    checks: { en: ['Parekh Wadi in Khetwadi', 'since 15 October'], hi: ['खेतवाड़ी की पारेख वाड़ी', '15 अक्टूबर से'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'Parekh Wadi is in Girgaum, not Khetwadi.', hi: 'पारेख वाड़ी गिरगाँव में है, खेतवाड़ी में नहीं।' },
+        factId: 'f-parekh',
+        sources: [{ id: 'huacuja-2023', loc: 'Fig. 4, police list of sites' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-khakhar-g',
+    tier: 1,
+    real: true,
+    pair: 'm-khakhar',
+    minMode: 'medium',
+    from: ORGANISERS,
+    to: ANN,
+    text: {
+      en: 'Babubhai Khakhar, our chief organiser, has cleared tonight’s script with Lohia. Read it as written.',
+      hi: 'हमारे संगठन के मुखिया बाबूभाई खाखर ने आज रात की स्क्रिप्ट लोहिया से पास करा ली है। जैसी लिखी है, वैसी पढ़िए।',
+    },
+    checks: { en: ['Babubhai Khakhar', 'with Lohia'], hi: ['बाबूभाई खाखर', 'लोहिया से'] },
+    why: {
+      text: {
+        en: 'Police records: Khakhar was the chief organiser, “responsible to Ram Manohar Lohia”.',
+        hi: 'पुलिस के काग़ज़: खाखर सबसे बड़े संगठन वाले थे, और लोहिया को जवाब देते थे।',
+      },
+      sources: [{ id: 'chatterjee-1989', loc: 'Home Dept records' }],
+    },
+  },
+  {
+    id: 'b42-m-khakhar-f',
+    tier: 1,
+    real: false,
+    pair: 'm-khakhar',
+    minMode: 'medium',
+    from: ORGANISERS,
+    to: ANN,
+    text: {
+      en: 'Babubhai Desai, our chief organiser, has cleared tonight’s script with Lohia. Read it as written.',
+      hi: 'हमारे संगठन के मुखिया बाबूभाई देसाई ने आज रात की स्क्रिप्ट लोहिया से पास करा ली है। जैसी लिखी है, वैसी पढ़िए।',
+    },
+    checks: { en: ['Babubhai Desai', 'with Lohia'], hi: ['बाबूभाई देसाई', 'लोहिया से'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Our chief organiser is Babubhai Khakhar, not Babubhai Desai.', hi: 'हमारे मुखिया बाबूभाई खाखर हैं, बाबूभाई देसाई नहीं।' },
+        factId: 'f-khakhar',
+        sources: [{ id: 'chatterjee-1989', loc: 'Home Dept records' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-coomi-g',
+    tier: 2,
+    real: true,
+    pair: 'm-coomi',
+    minMode: 'medium',
+    from: REC,
+    to: ANN,
+    text: {
+      en: 'Tonight’s English talk was read onto the record by Coomi Dastur. Play it after the Hindustani news.',
+      hi: 'आज रात का अंग्रेज़ी भाषण कूमी दस्तूर ने रिकॉर्ड पर पढ़ा है। हिंदुस्तानी ख़बरों के बाद इसे बजाइए।',
+    },
+    checks: { en: ['English talk', 'Coomi Dastur'], hi: ['अंग्रेज़ी भाषण', 'कूमी दस्तूर'] },
+    why: {
+      text: {
+        en: 'Usha Mehta: English speeches were mostly by Lohia and Miss Dastur.',
+        hi: 'उषा मेहता: अंग्रेज़ी भाषण ज़्यादातर लोहिया और मिस दस्तूर पढ़ते थे।',
+      },
+      sources: [{ id: 'usha-mehta-1969' }],
+    },
+  },
+  {
+    id: 'b42-m-coomi-f',
+    tier: 2,
+    real: false,
+    pair: 'm-coomi',
+    minMode: 'medium',
+    from: REC,
+    to: ANN,
+    text: {
+      en: 'Tonight’s English talk was read onto the record by Sarojini Naidu. Play it after the Hindustani news.',
+      hi: 'आज रात का अंग्रेज़ी भाषण सरोजिनी नायडू ने रिकॉर्ड पर पढ़ा है। हिंदुस्तानी ख़बरों के बाद इसे बजाइए।',
+    },
+    checks: { en: ['English talk', 'Sarojini Naidu'], hi: ['अंग्रेज़ी भाषण', 'सरोजिनी नायडू'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Coomi Dastur reads them; Sarojini Naidu is held at the Aga Khan Palace.', hi: 'ये कूमी दस्तूर पढ़ती हैं; सरोजिनी नायडू आग़ा ख़ान महल में बंद हैं।' },
+        factId: 'f-voices',
+        sources: [{ id: 'usha-mehta-1969' }, { id: 'mkgandhi-agakhan' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-m-soldiers-g',
+    tier: 2,
+    real: true,
+    pair: 'm-soldiers',
+    minMode: 'medium',
+    from: OLD,
+    to: ANN,
+    text: {
+      en: 'From the 27 October script, Gandhiji to soldiers: “Your just orders we shall carry out but the order to fire on our own people we shall never obey.”',
+      hi: '27 अक्टूबर की स्क्रिप्ट से, सिपाहियों से गांधीजी: “आपके जायज़ हुक्म हम मानेंगे, पर अपने ही लोगों पर गोली चलाने का हुक्म हम कभी नहीं मानेंगे।”',
+    },
+    checks: { en: ['27 October', 'Gandhiji to soldiers'], hi: ['27 अक्टूबर', 'सिपाहियों से गांधीजी'] },
+    document: { sources: [{ id: 'chatterjee-1989', loc: 'Gandhiji’s appeal to soldiers, on air 27 Oct 1942' }] },
+    why: {
+      text: {
+        en: 'Real words: Gandhiji’s appeal to soldiers went on air on 27 October 1942.',
+        hi: 'असली शब्द: सिपाहियों से गांधीजी की अपील 27 अक्टूबर 1942 को रेडियो पर गई।',
+      },
+      sources: [{ id: 'chatterjee-1989', loc: '“Directives to Soldiers”' }],
+    },
+  },
+  {
+    id: 'b42-m-soldiers-f',
+    tier: 2,
+    real: false,
+    pair: 'm-soldiers',
+    minMode: 'medium',
+    from: OLD,
+    to: ANN,
+    text: {
+      en: 'From the 27 October script, Mr. Gandhi to soldiers: “Your just orders we shall carry out but the order to fire on our own people we shall never obey.”',
+      hi: '27 अक्टूबर की स्क्रिप्ट से, सिपाहियों से मिस्टर गांधी: “आपके जायज़ हुक्म हम मानेंगे, पर अपने ही लोगों पर गोली चलाने का हुक्म हम कभी नहीं मानेंगे।”',
+    },
+    checks: { en: ['27 October', 'Mr. Gandhi to soldiers'], hi: ['27 अक्टूबर', 'सिपाहियों से मिस्टर गांधी'] },
+    tells: [
+      {
+        kind: 'habit',
+        explain: { en: 'Gandhiji, never “Mr. Gandhi”: that is the government’s word.', hi: 'गांधीजी, “मिस्टर गांधी” कभी नहीं; यह सरकारी शब्द है।' },
+        ruleId: 'r-words',
+        sources: [{ id: 'chatterjee-1989', loc: '“Directives to Soldiers”' }],
+      },
+    ],
+  },
+
+  // Day 14, Thu 12 Nov: after the office raid, Usha Mehta asked for a new transmitter overnight,
+  // and the evening programme ran as usual.
+  {
+    id: 'b42-m-d14-overnight-g',
+    tier: 2,
+    real: true,
+    pair: 'm-d14-overnight',
+    minMode: 'medium',
+    onDay: 14,
+    from: ORGANISERS,
+    to: ANN,
+    text: {
+      en: 'Our office has been raided. The technician’s assistant will build another transmitter overnight; tonight we go on air at 8:45 as usual.',
+      hi: 'हमारे दफ़्तर पर छापा पड़ा है। मिस्त्री का सहायक रातों-रात दूसरा ट्रांसमीटर बनाएगा; आज रात हम हमेशा की तरह 8:45 पर बोलेंगे।',
+    },
+    checks: { en: ['another transmitter overnight', '8:45 as usual'], hi: ['दूसरा ट्रांसमीटर', '8:45 पर'] },
+    why: {
+      text: {
+        en: 'Usha Mehta, 12 November: she asked for a transmitter overnight; the programme ran.',
+        hi: 'उषा मेहता, 12 नवंबर: रातों-रात नया ट्रांसमीटर माँगा; प्रोग्राम हमेशा की तरह चला।',
+      },
+      sources: [{ id: 'usha-mehta-1969', loc: '12 Nov 1942' }, { id: 'huacuja-2023', loc: 'n. 120 (on air from 8:45 pm)' }],
+    },
+  },
+  {
+    id: 'b42-m-d14-overnight-f',
+    tier: 2,
+    real: false,
+    pair: 'm-d14-overnight',
+    minMode: 'medium',
+    onDay: 14,
+    from: ORGANISERS,
+    to: ANN,
+    text: {
+      en: 'Our office has been raided. The technician’s assistant will build another transmitter overnight; tonight we go on air at 9:15 as usual.',
+      hi: 'हमारे दफ़्तर पर छापा पड़ा है। मिस्त्री का सहायक रातों-रात दूसरा ट्रांसमीटर बनाएगा; आज रात हम हमेशा की तरह 9:15 पर बोलेंगे।',
+    },
+    checks: { en: ['another transmitter overnight', '9:15 as usual'], hi: ['दूसरा ट्रांसमीटर', '9:15 पर'] },
+    tells: [
+      {
+        kind: 'number',
+        explain: { en: 'We go on air at 8:45 pm, not 9:15.', hi: 'हम रात 8:45 पर बोलते हैं, 9:15 पर नहीं।' },
+        ruleId: 'r-onair',
+        sources: [{ id: 'huacuja-2023', loc: 'n. 120 (transcript of 18 Oct 1942)' }],
+      },
+    ],
+  },
+
+  // ───────────────────────── Hard (minMode 'hard'): deeper, still well known ─────────────────────────
+  // Caught by the Hard facts (f-lastmsg, f-printer, f-motwane, f-tuning, f-ina) or by knowledge;
+  // three genuine ones look wrong but check out.
+
+  {
+    id: 'b42-h-tuning-g',
+    tier: 2,
+    real: true,
+    pair: 'h-tuning',
+    minMode: 'hard',
+    from: OLD,
+    to: ANN,
+    text: {
+      en: 'From the 18 October script: “We are always on the air from 8:45 pm till you hear Vande Mataram. Move between 39 and 43 meters, which at times is necessary.”',
+      hi: '18 अक्टूबर की स्क्रिप्ट से: “वंदे मातरम् सुनाई देने तक हम रात 8:45 से हमेशा रेडियो पर हैं। 39 से 43 मीटर के बीच सुई घुमाइए, कभी-कभी यह ज़रूरी होता है।”',
+    },
+    checks: { en: ['8:45 pm', 'between 39 and 43 meters'], hi: ['रात 8:45', '39 से 43 मीटर'] },
+    document: { sources: [{ id: 'huacuja-2023', loc: 'n. 120 (police transcript of 18 Oct 1942)' }] },
+    why: {
+      text: {
+        en: 'Real words, 18 October 1942, as police wrote them down.',
+        hi: 'असली शब्द, 18 अक्टूबर 1942, जैसे पुलिस ने लिखे।',
+      },
+      sources: [{ id: 'huacuja-2023', loc: 'n. 120 (police transcript of 18 Oct 1942)' }],
+    },
+  },
+  {
+    id: 'b42-h-tuning-f',
+    tier: 2,
+    real: false,
+    pair: 'h-tuning',
+    minMode: 'hard',
+    from: OLD,
+    to: ANN,
+    text: {
+      en: 'From the 18 October script: “We are always on the air from 8:45 pm till you hear Vande Mataram. Move between 49 and 53 meters, which at times is necessary.”',
+      hi: '18 अक्टूबर की स्क्रिप्ट से: “वंदे मातरम् सुनाई देने तक हम रात 8:45 से हमेशा रेडियो पर हैं। 49 से 53 मीटर के बीच सुई घुमाइए, कभी-कभी यह ज़रूरी होता है।”',
+    },
+    checks: { en: ['8:45 pm', 'between 49 and 53 meters'], hi: ['रात 8:45', '49 से 53 मीटर'] },
+    tells: [
+      {
+        kind: 'number',
+        explain: { en: 'We say between 39 and 43 metres, not 49 and 53.', hi: 'हम 39 से 43 मीटर कहते हैं, 49 से 53 नहीं।' },
+        factId: 'f-tuning',
+        sources: [{ id: 'huacuja-2023', loc: 'n. 120 (transcript of 18 Oct 1942)' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-h-printer-g',
+    tier: 1,
+    real: true,
+    pair: 'h-printer',
+    minMode: 'hard',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'The transmitter hums again. Nariman Printer has mended it, and he wants his money tonight.',
+      hi: 'ट्रांसमीटर फिर चल पड़ा। नरीमन प्रिंटर ने उसे ठीक कर दिया है, और उन्हें आज रात अपने पैसे चाहिए।',
+    },
+    checks: { en: ['Nariman Printer', 'wants his money'], hi: ['नरीमन प्रिंटर', 'अपने पैसे चाहिए'] },
+    why: {
+      text: {
+        en: 'Printer built the set; police said he worked “for the sake of profit”.',
+        hi: 'सेट प्रिंटर ने बनाया; पुलिस ने लिखा, वे “मुनाफ़े के लिए” काम करते थे।',
+      },
+      sources: [{ id: 'chatterjee-1989', loc: 'Home Dept on Printer' }, { id: 'thakkar-2021', loc: 'Scroll excerpt' }],
+    },
+  },
+  {
+    id: 'b42-h-printer-f',
+    tier: 1,
+    real: false,
+    pair: 'h-printer',
+    minMode: 'hard',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'The transmitter hums again. K. F. Nariman has mended it, and he wants his money tonight.',
+      hi: 'ट्रांसमीटर फिर चल पड़ा। के.एफ़. नरीमन ने उसे ठीक कर दिया है, और उन्हें आज रात अपने पैसे चाहिए।',
+    },
+    checks: { en: ['K. F. Nariman', 'wants his money'], hi: ['के.एफ़. नरीमन', 'अपने पैसे चाहिए'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Nariman Printer builds our sets; K. F. Nariman is another man.', hi: 'हमारे सेट नरीमन प्रिंटर बनाते हैं; के.एफ़. नरीमन कोई और हैं।' },
+        factId: 'f-printer',
+        sources: [{ id: 'chatterjee-1989', loc: 'Home Dept on Printer' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-h-motwane-g',
+    tier: 1,
+    real: true,
+    pair: 'h-motwane',
+    minMode: 'hard',
+    from: ORGANISERS,
+    to: ANN,
+    text: {
+      en: 'Nanak Motwane, who owns Chicago Radio, says send no one to his shop: the CID is watching it.',
+      hi: 'शिकागो रेडियो के मालिक नानक मोटवाने कहते हैं, उनकी दुकान पर किसी को मत भेजिए: सी.आई.डी. नज़र रख रही है।',
+    },
+    checks: { en: ['Nanak Motwane', 'owns Chicago Radio'], hi: ['नानक मोटवाने', 'शिकागो रेडियो के मालिक'] },
+    why: {
+      text: {
+        en: 'Motwane owned Chicago Radio; the CID’s Kokje watched the radio shops.',
+        hi: 'मोटवाने शिकागो रेडियो के मालिक थे; सी.आई.डी. के कोकजे रेडियो की दुकानों पर नज़र रखते थे।',
+      },
+      sources: [{ id: 'usha-mehta-1969' }, { id: 'huacuja-2023', loc: 'Kokje watched radio shops' }],
+    },
+  },
+  {
+    id: 'b42-h-motwane-f',
+    tier: 1,
+    real: false,
+    pair: 'h-motwane',
+    minMode: 'hard',
+    from: ORGANISERS,
+    to: ANN,
+    text: {
+      en: 'Vithalbhai Jhaveri, who owns Chicago Radio, says send no one to his shop: the CID is watching it.',
+      hi: 'शिकागो रेडियो के मालिक विट्ठलभाई झवेरी कहते हैं, उनकी दुकान पर किसी को मत भेजिए: सी.आई.डी. नज़र रख रही है।',
+    },
+    checks: { en: ['Vithalbhai Jhaveri', 'owns Chicago Radio'], hi: ['विट्ठलभाई झवेरी', 'शिकागो रेडियो के मालिक'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: 'Nanak Motwane owns Chicago Radio; Vithalbhai Jhaveri makes our records.', hi: 'शिकागो रेडियो के मालिक नानक मोटवाने हैं; विट्ठलभाई झवेरी हमारे रिकॉर्ड बनाते हैं।' },
+        factId: 'f-motwane',
+        sources: [{ id: 'usha-mehta-1969' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-h-ina-g',
+    tier: 3,
+    real: true,
+    pair: 'h-ina',
+    minMode: 'hard',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Listeners ask about the army raised in Malaya from Indian prisoners of war. It is Mohan Singh’s; we speak only for the Congress.',
+      hi: 'सुनने वाले मलाया में हिंदुस्तानी जंगी क़ैदियों से बनी फ़ौज के बारे में पूछते हैं। वह मोहन सिंह की है; हम सिर्फ़ कांग्रेस की तरफ़ से बोलते हैं।',
+    },
+    checks: { en: ['raised in Malaya', 'Mohan Singh’s'], hi: ['मलाया में', 'मोहन सिंह की'] },
+    why: {
+      text: {
+        en: 'In 1942 the INA was Mohan Singh’s, raised in Malaya from Indian prisoners.',
+        hi: '1942 में आज़ाद हिंद फ़ौज मोहन सिंह की थी, मलाया में जंगी क़ैदियों से बनी।',
+      },
+      sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35, pp. 476–7' }],
+    },
+  },
+  {
+    id: 'b42-h-ina-f',
+    tier: 3,
+    real: false,
+    pair: 'h-ina',
+    minMode: 'hard',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Listeners ask about the army raised in Malaya from Indian prisoners of war. It is Netaji Subhas Bose’s; we speak only for the Congress.',
+      hi: 'सुनने वाले मलाया में हिंदुस्तानी जंगी क़ैदियों से बनी फ़ौज के बारे में पूछते हैं। वह नेताजी सुभाष बोस की है; हम सिर्फ़ कांग्रेस की तरफ़ से बोलते हैं।',
+    },
+    checks: { en: ['raised in Malaya', 'Netaji Subhas Bose’s'], hi: ['मलाया में', 'नेताजी सुभाष बोस की'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'In 1942 it is Mohan Singh’s; Netaji reached Singapore only in July 1943.', hi: '1942 में यह मोहन सिंह की है; नेताजी सिंगापुर जुलाई 1943 में पहुँचे।' },
+        factId: 'f-ina',
+        sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35, p. 477' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-h-lastmsg-g',
+    tier: 2,
+    real: true,
+    pair: 'h-lastmsg',
+    minMode: 'hard',
+    from: LEAFLET,
+    to: ANN,
+    text: {
+      en: 'Tell every listener tonight: Gandhiji’s last message, left at his arrest, says “Karenge Ya Marenge”.',
+      hi: 'आज रात हर सुनने वाले से कहिए: गिरफ़्तारी के वक़्त छोड़े गांधीजी के आख़िरी संदेश में लिखा है, “करेंगे या मरेंगे”।',
+    },
+    checks: { en: ['Gandhiji’s last message', 'Karenge Ya Marenge'], hi: ['गांधीजी के आख़िरी संदेश', 'करेंगे या मरेंगे'] },
+    why: {
+      text: {
+        en: 'His written last message has “Karenge Ya Marenge”; the government printed it in 1943.',
+        hi: 'उनके लिखे आख़िरी संदेश में “करेंगे या मरेंगे” है; सरकार ने 1943 में छापा।',
+      },
+      sources: [{ id: 'goi-1943', loc: 'App. X' }],
+    },
+  },
+  {
+    id: 'b42-h-lastmsg-f',
+    tier: 2,
+    real: false,
+    pair: 'h-lastmsg',
+    minMode: 'hard',
+    from: LEAFLET,
+    to: ANN,
+    text: {
+      en: 'Tell every listener tonight: Sardar Patel’s last message, left at his arrest, says “Karenge Ya Marenge”.',
+      hi: 'आज रात हर सुनने वाले से कहिए: गिरफ़्तारी के वक़्त छोड़े सरदार पटेल के आख़िरी संदेश में लिखा है, “करेंगे या मरेंगे”।',
+    },
+    checks: { en: ['Sardar Patel’s last message', 'Karenge Ya Marenge'], hi: ['सरदार पटेल के आख़िरी संदेश', 'करेंगे या मरेंगे'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: { en: '“Karenge Ya Marenge” is in Gandhiji’s last message, not Patel’s.', hi: '“करेंगे या मरेंगे” गांधीजी के आख़िरी संदेश में है, पटेल के नहीं।' },
+        factId: 'f-lastmsg',
+        sources: [{ id: 'goi-1943', loc: 'App. X' }],
+      },
+    ],
+  },
+
+  // Day 13, Wed 11 Nov: the same Mansion House speech of 10 November, on the Battle of Egypt.
+  {
+    id: 'b42-h-d13-egypt-g',
+    tier: 3,
+    real: true,
+    pair: 'h-d13-egypt',
+    minMode: 'hard',
+    onDay: 13,
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'From London: Churchill says Rommel is beaten in Egypt. “It is not even the beginning of the end. But it is, perhaps, the end of the beginning.”',
+      hi: 'लंदन से: चर्चिल कहते हैं, मिस्र में रोमेल हार गया। “यह अंत की शुरुआत भी नहीं है। पर शायद यह शुरुआत का अंत है।”',
+    },
+    checks: { en: ['From London', 'beaten in Egypt'], hi: ['लंदन से', 'मिस्र में रोमेल'] },
+    document: { sources: [{ id: 'churchill-1942' }] },
+    why: {
+      text: {
+        en: 'Churchill, Mansion House, 10 November 1942, on the Battle of Egypt.',
+        hi: 'चर्चिल, मैंशन हाउस, 10 नवंबर 1942, मिस्र की लड़ाई पर।',
+      },
+      sources: [{ id: 'churchill-1942' }],
+    },
+  },
+  {
+    id: 'b42-h-d13-egypt-f',
+    tier: 3,
+    real: false,
+    pair: 'h-d13-egypt',
+    minMode: 'hard',
+    onDay: 13,
+    from: SLIP,
+    to: ANN,
+    text: {
+      en: 'From London: Churchill says Rommel is beaten in Burma. “It is not even the beginning of the end. But it is, perhaps, the end of the beginning.”',
+      hi: 'लंदन से: चर्चिल कहते हैं, बर्मा में रोमेल हार गया। “यह अंत की शुरुआत भी नहीं है। पर शायद यह शुरुआत का अंत है।”',
+    },
+    checks: { en: ['From London', 'beaten in Burma'], hi: ['लंदन से', 'बर्मा में रोमेल'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: { en: 'Rommel fought in North Africa; Churchill spoke of the Battle of Egypt.', hi: 'रोमेल उत्तरी अफ़्रीका में लड़ा; चर्चिल ने मिस्र की लड़ाई की बात की।' },
+        sources: [{ id: 'churchill-1942' }],
+      },
+    ],
+  },
+
+  {
+    id: 'b42-h-antiindia-g',
+    tier: 3,
+    real: true,
+    minMode: 'hard',
+    from: NEWSDESK,
+    to: ANN,
+    text: {
+      en: 'Anti-India Radio is jamming us again tonight. If the sound fades, tell listeners to keep turning the dial.',
+      hi: 'एंटी-इंडिया रेडियो आज रात फिर हमें जाम कर रहा है। आवाज़ धीमी हो तो सुनने वालों से कहिए, सुई घुमाते रहें।',
+    },
+    checks: { en: ['Anti-India Radio', 'jamming us again'], hi: ['एंटी-इंडिया रेडियो', 'फिर हमें जाम'] },
+    why: {
+      text: {
+        en: 'Usha Mehta: the official radio jammed them, so colleagues called it “Anti-India Radio”.',
+        hi: 'उषा मेहता: सरकारी रेडियो उन्हें जाम करता था, इसलिए साथी उसे “एंटी-इंडिया रेडियो” कहते थे।',
+      },
+      sources: [{ id: 'usha-mehta-1969' }],
+    },
+  },
+
+  {
+    id: 'b42-h-sympathy-g',
+    tier: 3,
+    real: true,
+    minMode: 'hard',
+    from: SCRIPT,
+    to: ANN,
+    text: {
+      en: 'Read it again before “Vande Mataram”: we “sympathise with the sufferings of the people of War-time England, the people of bomb-tormented cities of China, Russia, England and Germany.”',
+      hi: '“वंदे मातरम्” से पहले फिर पढ़िए: हम “जंग में घिरे इंग्लैंड के लोगों के, और चीन, रूस, इंग्लैंड और जर्मनी के बमों से तबाह शहरों के लोगों के दुख में साथ हैं।”',
+    },
+    checks: { en: ['sympathise', 'Germany'], hi: ['दुख में साथ', 'जर्मनी'] },
+    document: { sources: [{ id: 'usha-mehta-1969' }] },
+    why: {
+      text: {
+        en: 'Usha Mehta recalled this line: sympathy for every people, enmity for none.',
+        hi: 'उषा मेहता को यह बात याद थी: हर किसी के दुख में साथ, दुश्मनी किसी से नहीं।',
+      },
+      sources: [{ id: 'usha-mehta-1969' }],
+    },
+  },
+
+  {
+    id: 'b42-h-sumati-g',
+    tier: 3,
+    real: true,
+    minMode: 'hard',
+    from: COURIER,
+    to: ANN,
+    text: {
+      en: 'Good news: Sumati Morarjee lends Achyut Patwardhan a different car every day, borrowed from her unsuspecting wealthy friends.',
+      hi: 'अच्छी ख़बर: सुमति मोरारजी अच्युत पटवर्धन को रोज़ एक नई गाड़ी देती हैं, जो वे अपने अनजान अमीर दोस्तों से माँग लाती हैं।',
+    },
+    checks: { en: ['Sumati Morarjee', 'a different car every day'], hi: ['सुमति मोरारजी', 'रोज़ एक नई गाड़ी'] },
+    why: {
+      text: {
+        en: 'True: she kept Patwardhan ahead of the police with a borrowed car each day.',
+        hi: 'सच: वे पटवर्धन को पुलिस से बचाने के लिए रोज़ दूसरी उधार गाड़ी देती थीं।',
+      },
+      sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35, p. 468' }],
+    },
+  },
+
+  // Things still to come: true events, but not yet in November 1942.
+  {
+    id: 'b42-h-jatiya-f',
+    tier: 3,
+    real: false,
+    minMode: 'hard',
+    from: { en: 'News slip, from Bengal', hi: 'ख़बर की पर्ची, बंगाल से' },
+    to: ANN,
+    text: {
+      en: 'News from Tamluk: a national government, the Jatiya Sarkar, now rules there in the people’s name.',
+      hi: 'तमलुक से ख़बर: वहाँ अब जनता के नाम पर एक राष्ट्रीय सरकार, जातीय सरकार, राज कर रही है।',
+    },
+    checks: { en: ['News from Tamluk', 'the Jatiya Sarkar'], hi: ['तमलुक से ख़बर', 'जातीय सरकार'] },
+    tells: [
+      {
+        kind: 'anachronism',
+        explain: { en: 'Tamluk’s Jatiya Sarkar was set up on 17 December 1942.', hi: 'तमलुक की जातीय सरकार 17 दिसंबर 1942 को बनी।' },
+        sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35 (parallel governments: Tamluk)' }],
+      },
+    ],
+  },
+  {
+    id: 'b42-h-fast-f',
+    tier: 3,
+    real: false,
+    minMode: 'hard',
+    from: { en: 'News slip, from Poona', hi: 'ख़बर की पर्ची, पूना से' },
+    to: ANN,
+    text: {
+      en: 'From Poona: Gandhiji has begun a fast of twenty-one days at the Aga Khan Palace.',
+      hi: 'पूना से: गांधीजी ने आग़ा ख़ान महल में 21 दिन का उपवास शुरू किया है।',
+    },
+    checks: { en: ['From Poona', 'a fast of twenty-one days'], hi: ['पूना से', '21 दिन का उपवास'] },
+    tells: [
+      {
+        kind: 'anachronism',
+        explain: { en: 'That 21-day fast began on 10 February 1943.', hi: '21 दिन का वह उपवास 10 फ़रवरी 1943 को शुरू हुआ।' },
+        sources: [{ id: 'bipan-chandra-1989', loc: 'ch. 35 (fast from 10 February 1943)' }],
+      },
+    ],
   },
 ]
