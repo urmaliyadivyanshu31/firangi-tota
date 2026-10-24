@@ -464,7 +464,7 @@ describe('renderDay: case file and rulebook', () => {
     expect(said()).toContain('The ink is black.')
     renderDay(root, props(e, chapter(e), { daily: 7, allRules: true }), handlers())
     expect(ids()).toEqual(['f1', 'f2', 'f3'])
-    expect(root.querySelector('.screen--day')!.getAttribute('data-mode')).toBe('medium')
+    expect(root.querySelector('.screen--day')!.getAttribute('data-file')).toBe('medium')
   })
 
   it('marks per mode: Easy highlights and pencils, Medium highlights only, Hard is plain ink; readers get the same sentences', () => {
@@ -514,7 +514,7 @@ describe('renderDay: case file and rulebook', () => {
 
     for (const difficulty of ['medium', 'hard'] as const) {
       renderDay(root, props(e, chapter(e, { difficulty, days: 14 })), handlers())
-      expect(root.querySelector('.screen--day')!.getAttribute('data-mode')).toBe(difficulty)
+      expect(root.querySelector('.screen--day')!.getAttribute('data-file')).toBe(difficulty)
       expect(card().classList.contains('sheet--scroll')).toBe(true)
       expect(body().getAttribute('tabindex')).toBe('0') // the keyboard's arrows and Page keys scroll it
       const cue = card().querySelector<HTMLElement>('.scroll-cue')!

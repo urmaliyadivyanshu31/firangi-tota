@@ -635,10 +635,10 @@ a { color: inherit; }
 [data-layout='wide'] .sheet__close, [data-layout='wide'] .tab, [data-layout='wide'] .sheet-scrim { display: none; }
 /* Medium and Hard: a wider column for the longer file, which shrinks and scrolls first; the rulebook
    keeps its lines (up to 42% of the column, then it scrolls too) and is never pushed off */
-.screen--day[data-mode='medium'] { --dossier-w: clamp(330px, 26vw, 372px); }
-.screen--day[data-mode='hard'] { --dossier-w: clamp(330px, 29vw, 414px); }
+.screen--day[data-file='medium'] { --dossier-w: clamp(330px, 26vw, 372px); }
+.screen--day[data-file='hard'] { --dossier-w: clamp(330px, 29vw, 414px); }
 [data-layout='wide'] .sheet--file.sheet--scroll { flex: 0 1 auto; }
-[data-layout='wide'][data-mode='medium'] .sheet--rules, [data-layout='wide'][data-mode='hard'] .sheet--rules { flex: 0 0 auto; max-height: 42%; }
+[data-layout='wide'][data-file='medium'] .sheet--rules, [data-layout='wide'][data-file='hard'] .sheet--rules { flex: 0 0 auto; max-height: 42%; }
 
 /* portrait: the cards slide up over the lower room, and back down with a tap or a swipe */
 [data-layout='narrow'] .sheet {
@@ -651,8 +651,8 @@ a { color: inherit; }
 [data-layout='narrow'] .sheet.is-open { transform: none; visibility: visible; transition: transform .42s var(--ease-spring); }
 [data-layout='narrow'] .sheet.is-dragging { transition: none; }
 /* the longer files get a taller drawer */
-[data-layout='narrow'][data-mode='medium'] .sheet--file { max-height: min(80vh, 700px); }
-[data-layout='narrow'][data-mode='hard'] .sheet--file { max-height: min(86vh, 760px); }
+[data-layout='narrow'][data-file='medium'] .sheet--file { max-height: min(80vh, 700px); }
+[data-layout='narrow'][data-file='hard'] .sheet--file { max-height: min(86vh, 760px); }
 [data-layout='narrow'] .sheet__head { touch-action: none; padding-top: 18px; border-radius: 14px 14px 0 0; }
 [data-layout='narrow'] .sheet__grab { display: block; position: absolute; top: 7px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: rgba(43, 29, 19, .28); }
 [data-layout='narrow'] .sheet--rules .sheet__grab { background: rgba(246, 234, 208, .45); }
@@ -1116,8 +1116,8 @@ a { color: inherit; }
   width: min(400px, 56vw); max-height: none; padding-bottom: 0; border-radius: 6px;
   transform: translateX(-108%);
 }
-[data-short][data-mode='medium'] .sheet--file { width: min(440px, 60vw); max-height: none; }
-[data-short][data-mode='hard'] .sheet--file { width: min(480px, 64vw); max-height: none; }
+[data-short][data-file='medium'] .sheet--file { width: min(440px, 60vw); max-height: none; }
+[data-short][data-file='hard'] .sheet--file { width: min(480px, 64vw); max-height: none; }
 [data-short] .sheet__head { padding-top: 12px; border-radius: 6px 6px 0 0; }
 [data-short] .sheet__grab { display: none; }
 [data-short] .clip { top: -5px; }

@@ -560,7 +560,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   const auto = revealed && p.onPaper?.auto === true
   const tapcatch = h('div', { class: 'tapcatch', 'aria-hidden': 'true', onpointerdown: () => (auto && on.toss ? on.toss() : on.skip()) })
   const cls = ['screen', 'screen--day', `era-${era.id}`, waiting ? 'is-arriving' : '', revealed ? 'is-revealed' : '', auto ? 'is-auto' : '', auto && p.tossing ? 'is-tossing' : ''].filter(Boolean).join(' ')
-  const screen = h('div', { class: cls, lang, 'data-channel': era.channel, 'data-mode': fileMode },
+  const screen = h('div', { class: cls, lang, 'data-channel': era.channel, 'data-file': fileMode },
     tapcatch, top, copy,
     h('aside', { class: 'dossier', 'aria-label': `${t('caseFile', lang)}, ${t('rulebook', lang)}` }, panels.file, panels.rules),
     scrim, controls, result)
