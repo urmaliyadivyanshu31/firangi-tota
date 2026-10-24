@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { dailyFrom } from '../../src/game/daily'
-import { shareText } from '../../src/game/share'
+import { DAILY_TOTAL } from '../../src/game/share-code'
 import { fixturePool } from './fixture'
 
 const pool = fixturePool()
@@ -47,10 +47,8 @@ describe('dailyFrom balance and order', () => {
   })
 })
 
-describe('shareText', () => {
-  it('formats the result grid', () => {
-    expect(shareText({ daily: 12, eraTitle: 'Dilli 1857', results: [true, true, false, true, true] })).toBe(
-      'Firangi Tota · Aaj ka Taar #12 · Dilli 1857\n✅✅❌✅✅\nfirangitota.com',
-    )
+describe('the share code', () => {
+  it('counts the same number of messages as the daily puzzle has', () => {
+    expect(dailyFrom(Date.UTC(2026, 10, 1, 12), pool).messages).toHaveLength(DAILY_TOTAL)
   })
 })

@@ -10,12 +10,12 @@ import { DAYS, TIMER_S, pencilOn, type Difficulty } from './game/config'
 import { dailyFrom, type Daily } from './game/daily'
 import { dayDate } from './game/dates'
 import { mulberry32, seedFrom } from './game/rng'
-import { chapterShareText, shareText } from './game/share'
+import { chapterPost, chapterStory, dailyFact, dailyPost } from './game/share'
+import { codeFromPath, isShareResult, parseShareCode, shareCode, type ShareResult } from './game/share-code'
 import { createChapter, nextDay, stamp, type ChapterState, type Verdict } from './game/state'
 import { store } from './game/storage'
 import type { Lang } from './content/types'
 import { getLang, setLang } from './i18n/lang'
-import { strings, t } from './i18n/strings'
 import type { Voice, VoiceState } from './audio/voice'
 import { DEFAULT_VOICE, VOICES, voiceChoices, type VoiceChoice } from './content/voices'
 import {
@@ -29,7 +29,8 @@ import { buildReveal, kindLine, messageSources } from './ui/reveal'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
 import { renderDay, setReadable, setSound, setStamping, setTimer, setVoiceState } from './ui/screens/day'
-import { MODE_KEY, renderMain, suggestedEra, type Best } from './ui/screens/main'
+import { renderMain, suggestedEra, type Best } from './ui/screens/main'
+import { closeShareSlip, openShareSlip } from './ui/share-slip'
 
 export interface AppRoot { stage: HTMLElement; ui: HTMLElement }
 export interface AppEnv {
@@ -109,17 +110,24 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   let muted = store.get<unknown>('muted', false) === true
 
+  // A friend's share link picks their chapter and mode: /s/<code> when the offline copy answers
+  // it, or the link page's ?chapter=…&mode=… (server/share.ts). Neither is remembered.
+  const sharedCode = codeFromPath(env.url.pathname)
+  const shared = sharedCode ? parseShareCode(sharedCode)?.result ?? null : null
+  const sharedEra = ERAS.find((e) => e.id === (shared ? shared.era : params.get('chapter')))?.id
+  const sharedMode = DIFFICULTIES.find((d) => d === (shared ? shared.mode : params.get('mode')))
+
   // the main page's choices
-  let selected: EraId = suggestedEra(ERAS, bests())?.id ?? ERAS[0]?.id ?? 'delhi-1857'
+  let selected: EraId = sharedEra ?? suggestedEra(ERAS, bests())?.id ?? ERAS[0]?.id ?? 'delhi-1857'
   const savedMode = store.get<unknown>('difficulty', 'easy')
-  let difficulty: Difficulty = DIFFICULTIES.find((d) => d === savedMode) ?? 'easy'
+  let difficulty: Difficulty = sharedMode ?? DIFFICULTIES.find((d) => d === savedMode) ?? 'easy'
 
   // sound and language, top right on every screen (in the top bar during a day)
   const controls = h('div', { class: 'controls-dock' })
 
   // the desk (3D stage or 2D fallback), and what it should show
   let desk: Desk | null = null
-  let deskEra: EraId | null = suggestedEra(ERAS, bests())?.id ?? null
+  let deskEra: EraId | null = sharedEra ?? suggestedEra(ERAS, bests())?.id ?? null
   let deskDirty = false // a paper, a stamp or the caught dimming is on it
   let stageLoad: Promise<void> | null = null
   // settles whenever a new desk is attached, so a reveal on a lost desk is not waited for
@@ -204,8 +212,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   }
 
   document.body.appendChild(controls)
-  // the daily puzzle is off the main page for now; ?daily still opens it
-  if (params.has('daily')) openDaily()
+  // the address bar drops the share link's path and picks once they are read
+  if (sharedCode !== null || params.has('chapter') || params.has('mode')) cleanShareUrl()
+  // the daily puzzle is off the main page for now; ?daily (or a shared daily result) still opens it
+  if (params.has('daily') || shared?.mode === 'daily') openDaily()
   else showMain()
 
   // Ruling R10: the first screen paints without three.js; the stage loads after that paint, when
@@ -524,7 +534,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     stampedWith = null
     stopVoice()
     disarmTimer()
-    clearToast()
+    closeShareSlip() // the slip belongs to the screen it was opened on
   }
 
   function toggleSound(): boolean {
@@ -596,7 +606,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   }
 
   function showCredits(back: () => void): void {
-    clearToast()
+    closeShareSlip()
     show('credits', () => renderCredits(ui, { back }))
   }
 
@@ -729,7 +739,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       },
       home: showMain,
       share: () => {
-        if (p.kind === 'chapter' && paper?.end) void share(chapterLine(p, paper.end))
+        if (p.kind === 'chapter' && paper?.end) shareChapter(p, paper.end)
       },
     })
     // a redraw mid-stamp (a language switch) keeps the stamps asleep until the verdict is up
@@ -820,9 +830,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     if (outcome === 'survived') audio.cue('survived')
   }
 
-  function chapterLine(p: Extract<Play, { kind: 'chapter' }>, outcome: 'survived' | 'caught'): string {
-    const survived = outcome === 'survived' ? p.state.days : p.state.day - 1
-    return chapterShareText({ eraTitle: p.era.title.en, mode: strings.en[MODE_KEY[p.difficulty]], survived, days: p.state.days })
+  /** The chapter's share slip: its result, the forgery worth telling, a dare and the link. */
+  function shareChapter(p: Extract<Play, { kind: 'chapter' }>, outcome: 'survived' | 'caught'): void {
+    const lang = getLang()
+    const days = outcome === 'survived' ? p.state.days : p.state.day - 1
+    const result: ShareResult = { era: p.era.id, mode: p.difficulty, outcome, days, lang }
+    openShare(p.era, result, chapterPost({ result, ...chapterStory(p.state, outcome, lang) }))
   }
 
   /** The stamp comes down; its thunk lands on the stage's impact beat (or when it is done). */
@@ -899,12 +912,16 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   function showDailyResult(d: Daily, results: boolean[]): void {
     const era = eraById(d.era)
-    const line = shareText({ daily: d.number, eraTitle: era.title[getLang()], results })
     leave()
     syncPause()
     const now = env.now()
     show('end', () => renderDailyEnd(ui, { era, number: d.number, results, nextAt: nextDailyAt(now), now: env.now }, {
-      share: () => void share(line),
+      share: () => {
+        const lang = getLang()
+        const right = results.filter(Boolean).length
+        const result: ShareResult = { era: era.id, mode: 'daily', outcome: right >= results.length ? 'survived' : 'caught', days: right, lang }
+        openShare(era, result, dailyPost({ result, number: d.number, eraTitle: era.title[lang], results, fact: dailyFact(d.messages, results, lang) }))
+      },
       chapter: () => {
         selected = era.id
         showMain()
@@ -938,20 +955,43 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   // ------------------------------------------------------------------ sharing
 
-  async function share(text: string): Promise<void> {
-    const lang = getLang()
-    const nav = navigator as Navigator & { share?: (d: { text: string }) => Promise<void> }
-    if (typeof nav.share === 'function') {
-      try {
-        await nav.share({ text })
-        return
-      } catch (err) {
-        if ((err as { name?: string } | null)?.name === 'AbortError') return // the player closed the sheet
-      }
+  /**
+   * The share slip for a result: the post in the language on screen and its /s/<code> link on this
+   * site's origin (so previews work on preview deployments too).
+   */
+  function openShare(era: Era, result: ShareResult, text: string): void {
+    const url = isShareResult(result) ? `${env.url.origin}/s/${shareCode(result)}` : `${env.url.origin}/`
+    const nav = navigator as Navigator & { share?: (d: { text?: string; url?: string }) => Promise<void> }
+    audio.cue('fileOpen')
+    openShareSlip({ era, lang: result.lang, text, url }, {
+      copy: copyText,
+      ...(typeof nav.share === 'function'
+        ? {
+            native: async () => {
+              try {
+                await nav.share!({ text, url })
+                return 'shared' as const
+              } catch (err) {
+                // the player closed the sheet, or the browser refused
+                return (err as { name?: string } | null)?.name === 'AbortError' ? 'cancelled' as const : 'failed' as const
+              }
+            },
+          }
+        : {}),
+    })
+  }
+
+  /** Takes the share link's path and its chapter and mode picks out of the address bar. */
+  function cleanShareUrl(): void {
+    try {
+      const next = new URL(env.url.href)
+      if (sharedCode !== null) next.pathname = '/'
+      next.searchParams.delete('chapter')
+      next.searchParams.delete('mode')
+      history.replaceState(history.state, '', `${next.pathname}${next.search}${next.hash}`)
+    } catch {
+      /* a sandboxed page may refuse; the picks still apply */
     }
-    const ok = await copyText(text)
-    const mobile = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)
-    toast(t(ok ? 'copied' : 'copyFailed', lang), mobile ? { href: `whatsapp://send?text=${encodeURIComponent(text)}`, label: t('shareWhatsApp', lang) } : undefined)
   }
 }
 
@@ -1011,19 +1051,3 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-let toastTimer = 0
-
-/** A toast belongs to the screen it was raised on. */
-function clearToast(): void {
-  window.clearTimeout(toastTimer)
-  document.querySelectorAll('.toast').forEach((el) => el.remove())
-}
-
-function toast(message: string, link?: { href: string; label: string }): void {
-  clearToast()
-  const el = h('div', { class: link ? 'toast toast--link' : 'toast', role: 'status', lang: getLang() },
-    h('span', { class: 'toast__text' }, message),
-    link ? h('a', { class: 'toast__link', href: link.href }, link.label) : null)
-  document.body.appendChild(el)
-  toastTimer = window.setTimeout(() => el.remove(), link ? 8000 : 2600)
-}

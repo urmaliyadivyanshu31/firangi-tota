@@ -97,6 +97,13 @@ const en = {
   copyFailed: 'Could not copy, the text is on the screen',
   shareWhatsApp: 'Send on WhatsApp',
   dailyChapter: 'Play chapter',
+  // the share slip: a period post card with the ways to send it
+  sharePostcard: 'Post card',
+  shareSendBy: 'Send it by',
+  shareX: 'Post on X',
+  shareCopy: 'Copy link',
+  shareMore: 'Other apps',
+  shareClose: 'Close',
 
   // Credits
   creditsInspired: 'Inspired by {title} by atomiquest',
@@ -195,6 +202,12 @@ const hi: Strings = {
   copyFailed: 'कॉपी नहीं हुआ, टेक्स्ट स्क्रीन पर है',
   shareWhatsApp: 'WhatsApp पर भेजें',
   dailyChapter: 'अध्याय खेलें',
+  sharePostcard: 'पोस्ट कार्ड',
+  shareSendBy: 'भेजिए',
+  shareX: 'X पर पोस्ट करें',
+  shareCopy: 'लिंक कॉपी करें',
+  shareMore: 'दूसरे ऐप',
+  shareClose: 'बंद करें',
 
   creditsInspired: 'atomiquest के {title} से प्रेरित',
   creditsCode: 'कोड: MIT लाइसेंस',
@@ -217,6 +230,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'kindForged', 
   'theirSide', 'playAgain', 'home', 'share', 'creditsInspired', 'creditsCode',
   'tooSlow', 'copied', 'copyFailed', 'shareWhatsApp', 'dailyChapter',
+  'sharePostcard', 'shareSendBy', 'shareX', 'shareCopy', 'shareMore', 'shareClose',
   'forgerLabel', 'chaptersLabel', 'homeCredits', 'caughtStamp', 'survivedStamp', 'verdictPassed', 'verdictRejected', 'receipts',
   'langShort', 'premise', 'dailyScore', 'dailyTomorrow', 'dailyNext', 'shareGrid', 'dayLabel',
   'dayTitle', 'skip', 'blankFact', 'sheetPetitionHead', 'sheetRadioHead',
