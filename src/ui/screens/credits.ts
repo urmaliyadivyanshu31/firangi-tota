@@ -21,6 +21,7 @@ export function renderCredits(root: HTMLElement, on: { back(): void }): void {
       h('li', null, t('creditsFonts', lang)),
       h('li', { class: 'credits__source' }, srcBefore, h('a', { href: REPO, target: '_blank', rel: 'noopener noreferrer' }, REPO.replace(/^https:\/\//, '')), srcAfter)),
     h('p', null, t('creditsAssets', lang)),
+    h('p', null, t('creditsSongs', lang)),
     ...voiceChoices().map((id) => VOICES[id].credit).filter(Boolean).map((c) => h('p', { class: 'credits__voice' }, c)),
     creditsDoc(creditsMd),
   ]

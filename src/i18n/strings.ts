@@ -26,6 +26,14 @@ const en = {
   soundOn: 'Sound on',
   soundOff: 'Sound off',
   sound: 'Sound',
+  music: 'Music',
+  roomSound: 'Room sound',
+  musicNow: 'Now playing',
+  musicPrev: 'Previous song',
+  musicNext: 'Next song',
+  musicFold: 'Put the music away',
+  musicFailed: 'The music could not load · room sound is back',
+  musicTap: 'Tap the picture to start',
   credits: 'Credits',
 
   // Setup
@@ -114,6 +122,7 @@ const en = {
   creditsFonts: 'Fonts: Mukta, Tiro Devanagari Hindi, Old Standard TT and Kalam (SIL Open Font License), Special Elite (Apache 2.0).',
   creditsSource: 'Source code, open on GitHub: {link}',
   creditsAssets: 'Every font, sound and picture is listed with its source and licence in CREDITS.md, in the game’s source code.',
+  creditsSongs: 'Music mode plays the songs from the labels’ own uploads, in YouTube’s player. They are not hosted here, and every right stays with their owners.',
 }
 
 export type Strings = Record<keyof typeof en, string>
@@ -138,6 +147,14 @@ const hi: Strings = {
   soundOn: 'आवाज़ चालू',
   soundOff: 'आवाज़ बंद',
   sound: 'आवाज़',
+  music: 'संगीत',
+  roomSound: 'कमरे की आवाज़',
+  musicNow: 'अभी बज रहा है',
+  musicPrev: 'पिछला गाना',
+  musicNext: 'अगला गाना',
+  musicFold: 'संगीत बंद करें',
+  musicFailed: 'संगीत नहीं चल पाया · कमरे की आवाज़ लौट आई',
+  musicTap: 'शुरू करने के लिए तस्वीर छुएँ',
   credits: 'क्रेडिट',
 
   setupQuestion: 'आप कितने दिन टिक पाएँगे?',
@@ -219,6 +236,7 @@ const hi: Strings = {
   creditsFonts: 'फ़ॉन्ट: Mukta, Tiro Devanagari Hindi, Old Standard TT और Kalam (SIL Open Font License), Special Elite (Apache 2.0)।',
   creditsSource: 'सोर्स कोड, GitHub पर खुला: {link}',
   creditsAssets: 'हर फ़ॉन्ट, आवाज़ और तस्वीर अपने स्रोत और लाइसेंस के साथ गेम के सोर्स कोड में CREDITS.md में दर्ज है।',
+  creditsSongs: 'संगीत वाले गाने उनकी कंपनियों के अपने अपलोड से, YouTube के प्लेयर में बजते हैं। वे यहाँ रखे नहीं गए हैं, और उनके सारे हक़ उनके मालिकों के हैं।',
 }
 
 export const strings: Record<Lang, Strings> = { en, hi }
@@ -227,6 +245,7 @@ export const strings: Record<Lang, Strings> = { en, hi }
 export const DISPLAY_KEYS: (keyof Strings)[] = [
   'appName', 'langSelf', 'langChange', 'continue', 'dailyTitle', 'dailyPlay',
   'dailyDone', 'bestSurvived', 'bestDays', 'soundOn', 'soundOff', 'credits', 'setupQuestion',
+  'music', 'roomSound', 'musicNow', 'musicPrev', 'musicNext', 'musicFold', 'musicFailed', 'musicTap',
   'modeEasy', 'modeMedium', 'modeHard', 'modeDays', 'modeDaysUnit', 'modeSeconds', 
   'back', 'introYou', 'next', 'begin', 'dayOf', 'asli',
   'tota', 'asliHint', 'totaHint', 'caseFile', 'rulebook', 'newTag', 'closePanel',

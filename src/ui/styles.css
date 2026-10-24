@@ -206,9 +206,22 @@ a { color: inherit; }
 .plaque::before, .plaque::after { content: ''; position: absolute; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fbe7a8, #8c6420); pointer-events: none; }
 .plaque::before { left: 4px; }
 .plaque::after { right: 4px; }
-.plaque--horn { justify-content: center; width: 60px; min-height: 51px; transition: transform .08s; }
-.plaque--horn:active { transform: translateY(1px); }
+.plaque--sound { padding: 0 3px; min-height: 51px; }
+.plaque__btn { display: grid; place-items: center; min-height: 51px; transition: transform .08s; }
+.plaque__btn:active { transform: translateY(1px); }
+.plaque__btn--horn { width: 54px; }
+.plaque__btn--disc { width: 50px; }
+.plaque__bar { width: 1px; align-self: stretch; margin: 11px 0; background: rgba(236, 208, 138, .35); }
 .horn { width: 34px; height: 30px; overflow: visible; }
+/* the record: a black shellac 78 with a red label; ada: the brass arm swings onto it for Music, and
+   it turns slowly (one turn in 2.4 s, unhurried for a 78) while a song really plays */
+.disc { width: 36px; height: 36px; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .55)); }
+.disc__record { transform-box: view-box; transform-origin: 19px 21px; }
+.disc__arm { transform-box: view-box; transform-origin: 35.2px 5.2px; transform: rotate(-34deg); transition: transform .5s var(--ease-out); }
+.plaque__btn--disc[aria-pressed='true'] .disc__arm { transform: none; }
+.plaque__btn--disc[aria-pressed='false'] .disc__record { opacity: .82; }
+.plaque__btn--disc.is-spinning .disc__record { animation: disc-turn 2.4s linear infinite; }
+@keyframes disc-turn { to { transform: rotate(360deg); } }
 .langswitch { padding: 0 9px; }
 .langswitch__opt {
   position: relative; min-height: 48px; min-width: 48px; padding: 0 11px;
@@ -995,7 +1008,9 @@ a { color: inherit; }
   .hud { padding-left: 3px; padding-right: 3px; }
   .hud__row--where { gap: 4px; }
   .hud__title { font-size: 15px; }
-  .plaque--horn { width: 50px; }
+  .plaque--sound { padding: 0 1px; }
+  .plaque__btn--horn { width: 46px; }
+  .plaque__btn--disc { width: 44px; }
   .langswitch { padding: 0 5px; }
   .langswitch__opt { padding: 0 6px; }
   .langswitch__bar { margin: 10px 2px; }
@@ -1089,5 +1104,77 @@ a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
+  .plaque__btn--disc.is-spinning .disc__record, .gramo.is-playing .gramo__crown::after { animation: none; }
   .agarbatti__smoke, .agarbatti__ember::after { display: none; }
+}
+
+/* ---------- Music mode: the songs in YouTube's own player, set in a walnut radio cabinet ---------- */
+
+/* Docked top right under the controls (wide screens), or as a strip under the top bar (phones). The
+   player is never smaller than 200x200 px and never covered, as YouTube asks. */
+.gramo {
+  position: fixed; z-index: 4; right: max(14px, env(safe-area-inset-right)); top: calc(max(10px, env(safe-area-inset-top)) + 64px);
+  animation: gramo-in .45s var(--ease-out) both;
+}
+.gramo[hidden] { display: none; }
+.gramo[data-screen='day'] { top: calc(max(14px, env(safe-area-inset-top)) + 70px); }
+@keyframes gramo-in { from { opacity: 0; transform: translateY(-10px) scale(.97); } }
+.gramo__cabinet {
+  position: relative; display: flex; flex-direction: column; gap: 9px; width: 292px; padding: 22px 12px 12px; border-radius: 16px 16px 8px 8px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .22), rgba(0, 0, 0, 0) 12%, rgba(0, 0, 0, 0) 88%, rgba(0, 0, 0, .25)),
+    repeating-linear-gradient(94deg, rgba(255, 220, 170, .05) 0 2px, rgba(0, 0, 0, .06) 2px 5px, rgba(255, 220, 170, 0) 5px 9px),
+    linear-gradient(180deg, #6a3f22, #3e2213 70%, #2e180c);
+  border: 1.5px solid #b48a3c;
+  box-shadow: inset 0 1px 0 rgba(255, 228, 160, .3), inset 0 0 0 4px rgba(0, 0, 0, .18), 0 3px 0 #24150a, 0 10px 24px rgba(0, 0, 0, .5);
+}
+/* a carved crown with a small brass record that turns while a song plays */
+.gramo__crown { position: absolute; left: 50%; top: -9px; width: 64px; height: 22px; margin-left: -32px; border-radius: 32px 32px 4px 4px; background: linear-gradient(180deg, #7a4a28, #4a2a16); border: 1.5px solid #b48a3c; border-bottom: 0; }
+.gramo__crown::after {
+  content: ''; position: absolute; left: 50%; top: 3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+  background: radial-gradient(circle, #f3e7cc 0 1px, #a8231a 1.2px 4px, #e9c870 4.3px 4.8px, #1a1410 5px 7px, #3a302a 7.2px), conic-gradient(#000, #000);
+  box-shadow: 0 0 0 1px #000;
+}
+.gramo.is-playing .gramo__crown::after { animation: disc-turn 2.4s linear infinite; }
+.gramo__screen {
+  display: grid; place-items: center; height: 200px; border-radius: 6px; overflow: hidden;
+  background: #0b0806; box-shadow: 0 0 0 2px #1d120a, 0 0 0 3.5px #b48a3c, inset 0 2px 8px rgba(0, 0, 0, .8);
+}
+.gramo__player { display: block; width: 100%; height: 200px; min-width: 200px; min-height: 200px; border: 0; background: #0b0806; }
+.gramo__side { display: flex; flex-direction: column; gap: 8px; }
+.gramo__card {
+  flex: 1; min-width: 0; padding: 7px 10px 8px; border-radius: 4px; color: var(--ink);
+  background: #f3e7cc var(--grain); box-shadow: inset 0 1px 3px rgba(60, 35, 15, .45), 0 0 0 1px #8a6a2a;
+}
+.gramo__now { font: 600 10.5px/1.3 var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--maroon); }
+.gramo:lang(hi) .gramo__now { letter-spacing: 0; text-transform: none; font-size: 12.5px; }
+.gramo__song { font: 400 17px/1.25 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gramo:lang(hi) .gramo__song { font-family: var(--display-hi); font-size: 18px; }
+.gramo__film { font: 400 12.5px/1.35 var(--ui); color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gramo__note { margin-top: 3px; font: 600 12.5px/1.3 var(--ui); color: var(--vermilion-deep); }
+.gramo__knobs { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.gramo__via { margin-top: 2px; font: italic 400 11.5px/1.3 var(--ui); color: var(--ink-faint); }
+.gramo__knob {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #4a2c0c;
+  background: radial-gradient(circle at 38% 32%, #fbe7a8, #cf9d41 55%, #7a5317);
+  box-shadow: inset 0 -2px 2px rgba(0, 0, 0, .3), 0 2px 0 #24150a, 0 3px 5px rgba(0, 0, 0, .4);
+  transition: transform .08s;
+}
+.gramo__knob:active { transform: translateY(1px) rotate(-12deg); }
+.gramo__knob--fold { color: #5a1a10; }
+
+/* phones: a strip under the controls (or the top bar): the player square on the left, the card and
+   the knobs beside it */
+@media (max-width: 699px) {
+  .gramo { left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); top: calc(max(10px, env(safe-area-inset-top)) + 58px); }
+  .gramo[data-screen='day'] { top: calc(max(8px, env(safe-area-inset-top)) + 96px); }
+  .gramo__cabinet { flex-direction: row; width: auto; padding: 8px; gap: 8px; border-radius: 12px; }
+  .gramo__crown { display: none; }
+  .gramo__screen { flex: 0 0 200px; width: 200px; }
+  .gramo__side { flex: 1; min-width: 0; }
+  .gramo__card { padding: 6px 8px; }
+  .gramo__knobs { gap: 4px; }
+  .gramo__song { white-space: normal; font-size: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .gramo__film { white-space: normal; }
+  .gramo__knobs { justify-content: space-between; }
+  .gramo__knob { width: 42px; height: 42px; }
 }

@@ -61,7 +61,7 @@ describe('vercel.json', () => {
     expect(config.trailingSlash).toBe(false)
   })
 
-  it('sends a Content-Security-Policy that allows this origin plus Google Analytics only, and never eval', () => {
+  it('sends a Content-Security-Policy that allows this origin plus Google Analytics and the YouTube player only, and never eval', () => {
     const GA = ['https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://*.googletagmanager.com']
     expect(global['content-security-policy']).toBeTruthy()
     expect(global['content-security-policy']).not.toMatch(/unsafe-eval/)
@@ -71,7 +71,10 @@ describe('vercel.json', () => {
     }
     expect(directives['default-src']).toEqual(["'self'"])
     // no inline script (the SW registers from a file, Google's tag is set up from our bundle)
-    expect(directives['script-src']).toEqual(["'self'", 'https://www.googletagmanager.com'])
+    // YouTube's IFrame API, fetched only when Music mode is first picked (src/audio/youtube.ts)
+    expect(directives['script-src']).toEqual(["'self'", 'https://www.googletagmanager.com', 'https://www.youtube.com'])
+    // the only frame is Music mode's player, from YouTube's privacy-enhanced host
+    expect(directives['frame-src']).toEqual(['https://www.youtube-nocookie.com'])
     expect(directives['connect-src']).toEqual(["'self'", ...GA]) // read-aloud is same-origin (/api/voice)
     expect(directives['media-src']).toEqual(["'self'"])
     expect(directives['font-src']).toEqual(["'self'"]) // the fonts are self-hosted

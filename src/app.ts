@@ -26,13 +26,15 @@ import {
   STAGE_LOST_EVENT, loadStage, mountFallback,
   type DayTitle, type EraDressing, type Fallback, type FlashKind, type IntroSpec, type QualityTier, type RevealSpec, type ScreenRect, type SheetSpec, type Stage, type StageCueName, type StampKind,
 } from './scene/index'
-import { controlCluster, setSoundToggle } from './ui/controls'
+import { controlCluster, setMusicToggle, setSoundToggle, type MusicState } from './ui/controls'
+import type { Gramophone } from './ui/gramophone'
+import type { YTApi } from './audio/youtube'
 import { h } from './ui/h'
 import { buildSheet, dayTitleFor } from './ui/message'
 import { buildReveal, kindLine, messageSources } from './ui/reveal'
 import { renderCredits } from './ui/screens/credits'
 import { renderDailyEnd } from './ui/screens/daily'
-import { renderDay, setReadable, setSound, setStamping, setTimer, setTossing, setVoiceState } from './ui/screens/day'
+import { renderDay, setMusic, setReadable, setSound, setStamping, setTimer, setTossing, setVoiceState } from './ui/screens/day'
 import { renderIntro, setIntroSettled } from './ui/screens/intro'
 import { renderMain, suggestedEra, type Best } from './ui/screens/main'
 import { closeShareSlip, openShareSlip } from './ui/share-slip'
@@ -44,6 +46,8 @@ export interface AppEnv {
   url: URL
   /** Read-aloud. Defaults to the voice module when the build sets VITE_VOICE=on; tests pass a stub. */
   voice?: Voice
+  /** YouTube's IFrame API for Music mode (default: src/audio/youtube.ts, loaded on first use); tests pass a stub. */
+  youtube?: () => Promise<YTApi | null>
 }
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
@@ -131,6 +135,12 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   // sound starts off; the player's first tap on the speaker turns it on, and that choice is kept
   // for the next visit (owner 10-24)
   let muted = store.get<unknown>('muted', true) !== false
+  // Music (songs in YouTube's own player, src/ui/gramophone.ts) or the room's own sound; the room
+  // by default, and the choice is kept for the next visit
+  let soundMode: 'music' | 'room' = store.get<unknown>('soundMode', 'room') === 'music' ? 'music' : 'room'
+  let musicPlaying = false
+  let gramophone: Gramophone | null = null
+  let gramophoneLoad: Promise<Gramophone | null> | null = null
 
   // A friend's share link picks their chapter and mode: /s/<code> when the offline copy answers
   // it, or the link page's ?chapter=…&mode=… (server/share.ts). Neither is remembered.
@@ -204,11 +214,16 @@ export function startApp(root: AppRoot, env: AppEnv): void {
 
   // Sound unlocks on the first gesture anywhere (iOS needs it inside the gesture), and again on
   // later gestures in case the system suspended it.
-  const unlock = () => audio.unlock()
+  const unlock = () => {
+    audio.unlock()
+    // a Music mode kept from the last visit starts on the first gesture (never on page load)
+    if (soundMode === 'music' && !muted && !gramophone?.isOpen()) applyMusic()
+  }
   for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, unlock, { capture: true, passive: true })
   document.addEventListener('visibilitychange', () => {
     // a hidden tab makes no sound: the audio context sleeps and wakes (unless muted) on return
     audio.setHidden(document.hidden === true)
+    gramophone?.setHidden(document.hidden === true)
     syncPause()
     // back on the tab, the verdict gets a fresh moment before the paper goes
     if (document.hidden !== true) extendHold()
@@ -264,6 +279,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
   }
 
   document.body.appendChild(controls)
+  // the songs dip under the read-aloud voice and the caught alarm
+  audio.onDuck((on) => gramophone?.duck(on))
   // the address bar drops the share link's path and picks once they are read
   if (sharedCode !== null || params.has('chapter') || params.has('mode')) cleanShareUrl()
   // the daily puzzle is off the main page for now; ?daily (or a shared daily result) still opens it
@@ -474,10 +491,18 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       bottom = below.length ? H - Math.min(...below.map((r) => r.top)) + 6 : 0
     }
     const dossier = wide ? rect('.dossier') : null
-    el.style.setProperty('--ft-hud-top', `${Math.ceil(hud.bottom + 6)}px`)
+    let top = hud.bottom + 6
+    let right = wide ? Math.max(0, W - hud.right) : side
+    // Music's cabinet is never over the paper: the shot fits below its strip (phones) or left of it
+    const gramo = gramophone?.isOpen() ? rectOf(gramophone.el) : null
+    if (gramo) {
+      if (gramo.width > W * 0.6) top = Math.max(top, gramo.bottom + 6)
+      else right = Math.max(right, W - gramo.left + 12)
+    }
+    el.style.setProperty('--ft-hud-top', `${Math.ceil(top)}px`)
     el.style.setProperty('--ft-hud-bottom', `${Math.ceil(bottom)}px`)
     el.style.setProperty('--ft-hud-left', `${Math.ceil(dossier ? dossier.right + 12 : side)}px`)
-    el.style.setProperty('--ft-hud-right', `${Math.ceil(wide ? Math.max(0, W - hud.right) : side)}px`)
+    el.style.setProperty('--ft-hud-right', `${Math.ceil(right)}px`)
   }
 
   /** Shows an era's desk. A desk with a paper or the caught dimming on it is rebuilt clean. */
@@ -610,13 +635,94 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     muted = !muted
     store.set('muted', muted)
     audio.setMuted(muted)
+    applyMusic() // sound off silences the songs too; back on, they play again
     return !muted
+  }
+
+  // ------------------------------------------------------------------ music mode
+
+  function musicState(): MusicState {
+    return { on: soundMode === 'music', playing: musicPlaying }
+  }
+
+  /** Every record and horn button on screen (the dock and the day's top bar) shows the current state. */
+  function syncSoundButtons(): void {
+    const lang = getLang()
+    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-action="music"]')) setMusicToggle(b, musicState(), lang)
+    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-action="sound"]')) setSoundToggle(b, !muted, lang)
+  }
+
+  function setSoundMode(m: 'music' | 'room'): void {
+    soundMode = m
+    store.set('soundMode', m)
+    syncSoundButtons()
+  }
+
+  /** The cabinet is made the first time Music is picked: its code and YouTube load only then. */
+  function ensureGramophone(): Promise<Gramophone | null> {
+    if (!gramophoneLoad) {
+      const automation = typeof navigator !== 'undefined' && navigator.webdriver === true
+      gramophoneLoad = import('./ui/gramophone').then(async (mod) => {
+        const loadApi = env.youtube ?? (async () => (await import('./audio/youtube')).loadYouTubeApi())
+        gramophone = mod.createGramophone({
+          parent: document.body,
+          lang: getLang,
+          loadApi,
+          automation,
+          allowFrame: params.has('yt'),
+          onRoom: (on) => {
+            audio.setRoom(on)
+            // the cabinet opened or folded: the day's shot makes room for it, or takes the room back
+            requestAnimationFrame(() => { if (alive() && screen === 'day') syncHudInsets() })
+          },
+          onPlaying: (p) => {
+            musicPlaying = p
+            syncSoundButtons()
+          },
+          onFold: () => setSoundMode('room'),
+          onFail: () => setSoundMode('room'),
+        })
+        gramophone.setScreen(screen)
+        gramophone.setHidden(document.hidden === true)
+        return gramophone
+      }).catch(() => {
+        gramophoneLoad = null // offline before the chunk was cached: the room carries on
+        setSoundMode('room')
+        return null
+      })
+    }
+    return gramophoneLoad
+  }
+
+  /** Opens or folds the cabinet to match the mode and the sound switch. */
+  function applyMusic(): void {
+    if (soundMode === 'music' && !muted) {
+      void ensureGramophone().then((g) => {
+        if (g && soundMode === 'music' && !muted) g.open(play?.era.id ?? selected)
+      })
+    } else gramophone?.close()
+  }
+
+  /** The record button: Music or the room. Picking Music with the sound off turns the sound on too. */
+  function toggleMusic(): void {
+    const next = soundMode === 'music' ? 'room' : 'music'
+    if (next === 'music' && muted) {
+      muted = false
+      store.set('muted', false)
+      audio.setMuted(false)
+    }
+    setSoundMode(next)
+    applyMusic()
+    audio.cue('toggleClick')
   }
 
   /** Sound and language, top right; during a day they live in the top bar instead. */
   function drawControls(): void {
     controls.hidden = screen === 'day'
-    controls.replaceChildren(controlCluster({ soundOn: !muted, lang: getLang() }, {
+    gramophone?.setScreen(screen)
+    gramophone?.relabel()
+    controls.replaceChildren(controlCluster({ soundOn: !muted, music: musicState(), lang: getLang() }, {
+      music: toggleMusic,
       sound: () => {
         const btn = controls.querySelector<HTMLButtonElement>('[data-action="sound"]')
         const on = toggleSound()
@@ -900,6 +1006,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
     const p = play
     if (!p) return
     screen = 'day'
+    gramophone?.setScreen('day')
+    gramophone?.relabel()
     const lang = getLang()
     // drawing the day again closes a source card that was open over the verdict
     if (sourceOpen) {
@@ -916,6 +1024,7 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       readable,
       revealed,
       soundOn: !muted,
+      music: musicState(),
       ...(voice ? { voice: voiceState, voiceStyle, voices: voiceList(lang) } : {}),
       ...(p.kind === 'daily' ? { daily: p.daily.number, allRules: true } : {}),
       ...(revealed && paper ? { onPaper: paperFor(p, paper) } : {}),
@@ -938,6 +1047,10 @@ export function startApp(root: AppRoot, env: AppEnv): void {
       sound: () => {
         setSound(ui, toggleSound(), getLang())
         audio.cue('toggleClick')
+      },
+      music: () => {
+        toggleMusic()
+        setMusic(ui, musicState(), getLang())
       },
       lang: () => {
         setLang(getLang() === 'en' ? 'hi' : 'en')

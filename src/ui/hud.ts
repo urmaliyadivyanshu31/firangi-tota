@@ -1,7 +1,7 @@
 import type { Era, Lang } from '../content/types'
 import { t, tf } from '../i18n/strings'
 import { h, svg } from './h'
-import { langSwitch, setSoundToggle, soundToggle } from './controls'
+import { langSwitch, setMusicToggle, setSoundToggle, soundPlaque, type MusicState } from './controls'
 import { eraLabel } from './message'
 import { homeIcon } from './ornament'
 
@@ -21,11 +21,14 @@ export interface HudProps {
   /** Whole seconds left, shown beside the stick. */
   secs: number
   soundOn: boolean
+  /** Music mode and whether a song is playing (no record button without it). */
+  music?: MusicState
 }
 
 export interface HudHandlers {
   home?(): void
   sound(): void
+  music?(): void
   lang(): void
 }
 
@@ -59,6 +62,12 @@ export function setTimer(root: HTMLElement, frac: number, secs?: number): void {
 export function setSound(root: HTMLElement, on: boolean, lang: Lang): void {
   const b = root.querySelector<HTMLButtonElement>('.hud [data-action="sound"]')
   if (b) setSoundToggle(b, on, lang)
+}
+
+/** Press or release the record, and start or stop it turning, in place. */
+export function setMusic(root: HTMLElement, m: MusicState, lang: Lang): void {
+  const b = root.querySelector<HTMLButtonElement>('.hud [data-action="music"]')
+  if (b) setMusicToggle(b, m, lang)
 }
 
 const SMOKE = `<svg class="agarbatti__smoke" viewBox="0 0 24 64" aria-hidden="true" focusable="false">
@@ -96,7 +105,7 @@ export function hud(p: HudProps, on: HudHandlers): HTMLElement {
         h('span', { class: 'hud__title' }, where.title),
         where.place ? h('span', { class: 'hud__place' }, where.place) : null),
       h('div', { class: 'hud__tools' },
-        soundToggle(p.soundOn, lang, () => on.sound()),
+        soundPlaque({ soundOn: p.soundOn, music: p.music, lang }, { sound: () => on.sound(), music: on.music ? () => on.music?.() : undefined }),
         langSwitch(lang, () => on.lang()))),
     h('div', { class: 'hud__row hud__row--clock' },
       h('p', { class: 'hud__day' },

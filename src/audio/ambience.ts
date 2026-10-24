@@ -131,7 +131,8 @@ export function burstKinds(id: EraId): number {
 }
 
 export interface AmbienceHandle {
-  stop(): void
+  /** Fades out (over `fade` seconds, quickly by default) and stops. */
+  stop(fade?: number): void
   /** The agarbatti's clock is ticking: the room's clock keeps quiet for `ms`. */
   hushClock(ms: number): void
 }
@@ -291,14 +292,14 @@ export function startAmbience(
   if (on.bursts) nextBurst(true)
 
   return {
-    stop(): void {
+    stop(fade = FADE_OUT): void {
       if (stopped) return
       stopped = true
       timers.forEach(clearTimeout)
       const now = ctx.currentTime
       bus.gain.cancelScheduledValues(now)
       bus.gain.setValueAtTime(bus.gain.value, now)
-      bus.gain.linearRampToValueAtTime(0.0001, now + FADE_OUT)
+      bus.gain.linearRampToValueAtTime(0.0001, now + fade)
       const kill = (): void => {
         for (const l of layers) l.stop()
         for (const s of loops) {
@@ -306,7 +307,7 @@ export function startAmbience(
         }
         try { bus.disconnect() } catch { /* already disconnected */ }
       }
-      setTimeout(kill, FADE_OUT * 1000 + 60) // after the fade
+      setTimeout(kill, fade * 1000 + 60) // after the fade
     },
     hushClock(ms: number): void {
       clockQuietUntil = Math.max(clockQuietUntil, Date.now() + ms)

@@ -18,7 +18,8 @@ vi.mock('../../src/audio/voice', () => ({
   voice: { onState: (cb: (s: string, r: unknown) => void) => { amb.voiceCb = cb; return () => undefined }, play: vi.fn(), stop: vi.fn() },
 }))
 
-const { audio, createAudioEngine, DUCK_LEVEL } = await import('../../src/audio/engine')
+const { audio, createAudioEngine, DUCK_LEVEL, ROOM_CROSSFADE_S, ALARM_DUCK_MS } = await import('../../src/audio/engine')
+const synth = await import('../../src/audio/synth')
 
 const param = (v = 1) => ({ value: v, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn(), setTargetAtTime: vi.fn(), cancelScheduledValues: vi.fn() })
 const gains: Array<{ gain: ReturnType<typeof param> }> = []
@@ -115,5 +116,61 @@ describe('the room', () => {
     a.cue('clockTick')
     a.cue('tensionTick', { level: 0.5 })
     expect(h.hushClock).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('Music mode: the room gives way to the songs', () => {
+  it('crossfades the room out over 2.5 s and keeps it quiet across era changes, then brings it back', () => {
+    expect(ROOM_CROSSFADE_S).toBe(2.5)
+    const a = createAudioEngine()
+    a.unlock()
+    a.ambience('delhi-1857')
+    const room = amb.starts[0]!
+    a.setRoom(false)
+    expect(room.stop).toHaveBeenCalledWith(2.5)
+    a.ambience('lahore-1929') // the next page's room stays quiet while the songs play
+    expect(amb.starts).toHaveLength(1)
+    a.setRoom(false) // no change
+    expect(room.stop).toHaveBeenCalledTimes(1)
+    a.setRoom(true)
+    expect(amb.starts).toHaveLength(2)
+    expect(amb.starts[1]!.id).toBe('lahore-1929')
+  })
+
+  it('still plays every game cue while the room is off', () => {
+    const spy = vi.spyOn(synth, 'playCue')
+    const a = createAudioEngine()
+    a.unlock()
+    a.setMuted(false)
+    a.ambience('bombay-1942')
+    a.setRoom(false)
+    for (const c of ['stampAsli', 'stampTota', 'typeKey', 'bugleAlarm', 'paperCrumple', 'cardTurn'] as const) a.cue(c)
+    expect(spy.mock.calls.map((x) => x[2])).toEqual(['stampAsli', 'stampTota', 'typeKey', 'bugleAlarm', 'paperCrumple', 'cardTurn'])
+    spy.mockRestore()
+  })
+
+  it('tells the music to dip under the voice and under the caught alarm, and to come back after', () => {
+    vi.useFakeTimers()
+    try {
+      const a = createAudioEngine()
+      const heard: boolean[] = []
+      a.onDuck((on) => heard.push(on))
+      a.unlock()
+      a.duckAmbience(true)
+      a.duckAmbience(false)
+      expect(heard).toEqual([true, false])
+      a.cue('stampAsli') // an ordinary cue does not dip the music
+      expect(heard).toEqual([true, false])
+      a.cue('airRaidWail')
+      expect(heard).toEqual([true, false, true])
+      vi.advanceTimersByTime(ALARM_DUCK_MS - 500)
+      a.cue('knockDoor') // each beat of the sequence keeps it down
+      vi.advanceTimersByTime(ALARM_DUCK_MS - 500)
+      expect(heard).toEqual([true, false, true])
+      vi.advanceTimersByTime(600)
+      expect(heard).toEqual([true, false, true, false])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

@@ -23,6 +23,19 @@ const DUCK_UP_S = 1.2
 /** The agarbatti's clock and tension ticks: the room's own clock stays quiet this long after each. */
 const CLOCK_HUSH_MS = 2500
 
+/** Music mode's crossfade: the room fades out (and back in) over this long. */
+export const ROOM_CROSSFADE_S = 2.5
+
+/**
+ * The caught sequence's beats (src/scene/caught.ts). Music mode's songs dip under them, from the
+ * first alarm until a moment after the last beat.
+ */
+export const ALARM_CUES: ReadonlySet<Cue> = new Set<Cue>([
+  'bugleAlarm', 'kettleDrum', 'whistleShort', 'whistleLong', 'bootsRunning', 'airRaidWail', 'phoneBell',
+  'knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark',
+])
+export const ALARM_DUCK_MS = 3000
+
 type Ctor = new () => AudioContext
 
 function contextCtor(): Ctor | null {
@@ -40,6 +53,16 @@ export interface AudioEngine {
   duckAmbience(on: boolean): void
   /** The tab was hidden (the context sleeps) or shown again (it wakes, unless muted). */
   setHidden(hidden: boolean): void
+  /**
+   * The room's ambience on or off. Off while Music mode's songs play: the room fades out over
+   * ROOM_CROSSFADE_S and stays quiet across era changes; back on, it fades in again.
+   */
+  setRoom(on: boolean): void
+  /**
+   * Hears when something should sit over the music: the read-aloud voice, or the caught
+   * sequence's alarm. Called with true when it starts and false when it is over.
+   */
+  onDuck(fn: (on: boolean) => void): void
 }
 
 export function createAudioEngine(): AudioEngine {
@@ -52,6 +75,20 @@ export function createAudioEngine(): AudioEngine {
   let hidden = false
   let wanted: EraId | null = null
   let current: AmbienceHandle | null = null
+  let roomOn = true
+  // what the music hears: the voice's duck, or the alarm's
+  let alarmUntil = 0
+  let alarmTimer: ReturnType<typeof setTimeout> | undefined
+  let musicDucked = false
+  const duckers: Array<(on: boolean) => void> = []
+  function syncMusicDuck(): void {
+    const on = ducked || Date.now() < alarmUntil
+    if (on === musicDucked) return
+    musicDucked = on
+    for (const fn of duckers) {
+      try { fn(on) } catch { /* a listener never breaks the sound */ }
+    }
+  }
   let sampler: Sampler | null = null
   const beds = new Map<string, Promise<AudioBuffer | null>>()
 
@@ -87,11 +124,11 @@ export function createAudioEngine(): AudioEngine {
     return p
   }
 
-  function restartAmbience(): void {
-    current?.stop()
+  function restartAmbience(fade?: number): void {
+    current?.stop(fade)
     current = null
     const c = ctx
-    if (c && ambBus && wanted) {
+    if (c && ambBus && wanted && roomOn) {
       // a room sound never starts while the context sleeps or the voice is reading
       current = startAmbience(c, ambBus, wanted, loadBed, { canBurst: () => c.state === 'running' && !ducked })
     }
@@ -145,6 +182,12 @@ export function createAudioEngine(): AudioEngine {
       if (!m) syncRunning() // unmuting on a visible tab wakes a context that slept while hidden
     },
     cue(c: Cue, o?: { level?: number }): void {
+      if (ALARM_CUES.has(c)) {
+        alarmUntil = Date.now() + ALARM_DUCK_MS
+        clearTimeout(alarmTimer)
+        alarmTimer = setTimeout(syncMusicDuck, ALARM_DUCK_MS + 20)
+        syncMusicDuck()
+      }
       if (!ctx || !master || muted) return
       // the agarbatti's clock is ticking: one clock in the room is enough
       if (c === 'clockTick' || c === 'tensionTick') current?.hushClock(CLOCK_HUSH_MS)
@@ -158,7 +201,7 @@ export function createAudioEngine(): AudioEngine {
     },
     ambience(id: EraId | null): void {
       // the same room carries on (the chapter begins in the room its page was showing)
-      if (id === wanted && (current || !ctx)) return
+      if (id === wanted && (current || !ctx || !roomOn)) return
       wanted = id
       restartAmbience()
     },
@@ -166,6 +209,20 @@ export function createAudioEngine(): AudioEngine {
       if (on === ducked) return
       ducked = on
       applyDuck()
+      syncMusicDuck()
+    },
+    setRoom(on: boolean): void {
+      if (on === roomOn) return
+      roomOn = on
+      if (on) {
+        if (!current) restartAmbience() // fades in on its own
+      } else {
+        current?.stop(ROOM_CROSSFADE_S)
+        current = null
+      }
+    },
+    onDuck(fn: (on: boolean) => void): void {
+      duckers.push(fn)
     },
     setHidden(h: boolean): void {
       if (h === hidden) return

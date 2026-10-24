@@ -17,6 +17,25 @@ import type { IntroSpec, RevealSpec, ScreenRect, SheetSpec, Stage, StageCueName 
 // ---------------------------------------------------------------- mocks: content, stage, audio
 
 const m = vi.hoisted(() => {
+  // Music mode's YouTube player, stubbed: never a real network call
+  const duckers: Array<(on: boolean) => void> = []
+  const players: FakePlayerT[] = []
+  interface FakePlayerT {
+    el: HTMLIFrameElement
+    events: { onReady?(e: unknown): void; onStateChange?(e: { data: number }): void; onError?(e: { data: number }): void }
+    playVideo: ReturnType<typeof vi.fn>; pauseVideo: ReturnType<typeof vi.fn>; loadVideoById: ReturnType<typeof vi.fn>
+    setVolume: ReturnType<typeof vi.fn>; destroy: ReturnType<typeof vi.fn>
+  }
+  class FakePlayer implements FakePlayerT {
+    el: HTMLIFrameElement
+    events: FakePlayerT['events']
+    playVideo = vi.fn(); pauseVideo = vi.fn(); loadVideoById = vi.fn(); setVolume = vi.fn(); destroy = vi.fn()
+    constructor(el: HTMLIFrameElement, opts: { events: FakePlayerT['events'] }) {
+      this.el = el
+      this.events = opts.events
+      players.push(this)
+    }
+  }
   // A stand-in for the stage (src/scene/types.ts Stage), checked against it below.
   const fakeStage = () => ({
     setEra: vi.fn(),
@@ -57,7 +76,12 @@ const m = vi.hoisted(() => {
       clearIntro: vi.fn(() => Promise.resolve()),
     },
     mountFallback: vi.fn(),
-    audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn(), setHidden: vi.fn() },
+    audio: {
+      unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn(), setHidden: vi.fn(), setRoom: vi.fn(),
+      onDuck: vi.fn((fn: (on: boolean) => void) => { duckers.push(fn) }),
+    },
+    duckers,
+    yt: { players, load: vi.fn((): Promise<unknown> => Promise.resolve({ Player: FakePlayer })) },
   }
 })
 
@@ -114,7 +138,7 @@ function boot(search = '', now = NOW, voice?: Voice): { ui: HTMLElement; stage: 
   document.body.innerHTML = '<div id="stage"></div><div id="ui"></div>'
   const stage = document.getElementById('stage')!
   const ui = document.getElementById('ui')!
-  startApp({ stage, ui }, { now: () => now, random: mulberry32(99), url: new URL(`https://firangitota.com/${search}`), ...(voice ? { voice } : {}) })
+  startApp({ stage, ui }, { now: () => now, random: mulberry32(99), url: new URL(`https://firangitota.com/${search}`), ...(voice ? { voice } : {}), youtube: m.yt.load as never })
   return { ui, stage }
 }
 
@@ -202,6 +226,8 @@ beforeEach(() => {
   m.createStage.mockImplementation(() => m.stage)
   m.loadStage.mockImplementation(() => Promise.resolve({ createStage: m.createStage }))
   m.mountFallback.mockImplementation(() => m.fallback)
+  m.yt.players.length = 0
+  m.duckers.length = 0
 })
 
 afterEach(() => {
@@ -1700,5 +1726,199 @@ describe('the verdict on the paper: placing the buttons', () => {
     expect(lastReveal().lang).toBe('hi')
     expect(mirror(ui)).toContain(lastReveal().back.verdictLine)
     expect($(ui, '.screen--day.is-auto')).not.toBeNull()
+  })
+})
+
+describe('Music mode: the gramophone record beside the horn', () => {
+  const gramo = () => document.querySelector<HTMLElement>('.gramo')
+  const frameEl = () => document.querySelector<HTMLIFrameElement>('.gramo__player')
+  const player = () => m.yt.players[m.yt.players.length - 1]!
+  /** Picks Music on the main page and waits for the cabinet and its (stubbed) player. */
+  async function pickMusic(): Promise<void> {
+    dock('[data-action="music"]')!.click()
+    await vi.waitFor(() => expect(m.yt.players.length).toBeGreaterThan(0))
+  }
+
+  it('starts in Room mode, labelled for both modes', () => {
+    boot('?lang=en')
+    const rec = dock('[data-action="music"]')!
+    expect(rec.getAttribute('aria-pressed')).toBe('false')
+    expect(rec.getAttribute('aria-label')).toBe('Music')
+    expect(rec.title).toBe('Room sound')
+    expect(gramo()).toBeNull() // nothing of Music loads until it is picked
+    expect(m.yt.load).not.toHaveBeenCalled()
+  })
+
+  it('one tap on the record turns the sound on and plays the era’s song in the cabinet, with the room faded out', async () => {
+    const { ui } = boot('?lang=en')
+    click(ui, '[data-era="lahore-1929"]')
+    await pickMusic()
+    expect(m.audio.setMuted).toHaveBeenLastCalledWith(false)
+    expect(localStorage.getItem('ft:muted')).toBe('false')
+    expect(localStorage.getItem('ft:soundMode')).toBe('"music"')
+    const rec = dock('[data-action="music"]')!
+    expect(rec.getAttribute('aria-pressed')).toBe('true')
+    expect(rec.title).toBe('Music')
+    expect(dock('[data-action="sound"]')!.getAttribute('aria-pressed')).toBe('true')
+    expect(gramo()!.hidden).toBe(false)
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(false)
+    // YouTube's own player from its privacy-enhanced host, starting on 1929's song
+    expect(frameEl()!.src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/Ha_P2DW9VR4\?/)
+    expect(frameEl()!.src).toContain('enablejsapi=1')
+    expect(player().el).toBe(frameEl())
+    expect(gramo()!.textContent).toContain('Mera Rang De Basanti Chola')
+    player().events.onReady!({})
+    expect(player().setVolume).toHaveBeenLastCalledWith(65)
+    expect(player().playVideo).toHaveBeenCalled()
+    expect(m.audio.cue).toHaveBeenCalledWith('toggleClick')
+  })
+
+  it('turns the record while a song really plays, and stops it when it pauses', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    expect(dock('[data-action="music"]')!.classList.contains('is-spinning')).toBe(false)
+    player().events.onStateChange!({ data: 1 })
+    expect(dock('[data-action="music"]')!.classList.contains('is-spinning')).toBe(true)
+    player().events.onStateChange!({ data: 2 })
+    expect(dock('[data-action="music"]')!.classList.contains('is-spinning')).toBe(false)
+  })
+
+  it('goes back to the room from the record or from the cabinet: the song pauses and the room fades back', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    dock('[data-action="music"]')!.click()
+    expect(player().pauseVideo).toHaveBeenCalled()
+    expect(gramo()!.hidden).toBe(true)
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
+    expect(localStorage.getItem('ft:soundMode')).toBe('"room"')
+    // again, and this time put away from the cabinet's own knob
+    dock('[data-action="music"]')!.click()
+    await vi.waitFor(() => expect(gramo()!.hidden).toBe(false))
+    expect(m.yt.players).toHaveLength(1) // the same player carries on
+    document.querySelector<HTMLElement>('[data-action="music-fold"]')!.click()
+    expect(gramo()!.hidden).toBe(true)
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('false')
+    expect(localStorage.getItem('ft:soundMode')).toBe('"room"')
+  })
+
+  it('steps through the playlist with the brass knobs', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    const song = () => gramo()!.querySelector('.gramo__song')!.textContent
+    const first = song()
+    document.querySelector<HTMLElement>('[data-action="music-next"]')!.click()
+    expect(player().loadVideoById).toHaveBeenCalledTimes(1)
+    expect(song()).not.toBe(first)
+    document.querySelector<HTMLElement>('[data-action="music-prev"]')!.click()
+    expect(song()).toBe(first)
+    // a song that ends leads on to the next
+    player().events.onStateChange!({ data: 0 })
+    expect(player().loadVideoById).toHaveBeenCalledTimes(3)
+  })
+
+  it('dips the songs under the read-aloud voice and the caught alarm, then brings them back', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    for (const fn of m.duckers) fn(true)
+    expect(player().setVolume).toHaveBeenLastCalledWith(40)
+    for (const fn of m.duckers) fn(false)
+    expect(player().setVolume).toHaveBeenLastCalledWith(65)
+  })
+
+  it('sound off silences the songs too, and sound on brings them back', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    player().events.onStateChange!({ data: 1 })
+    dock('[data-action="sound"]')!.click()
+    expect(player().pauseVideo).toHaveBeenCalled()
+    expect(gramo()!.hidden).toBe(true)
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('true') // still Music, just quiet
+    dock('[data-action="sound"]')!.click()
+    await vi.waitFor(() => expect(gramo()!.hidden).toBe(false))
+    expect(player().playVideo).toHaveBeenCalledTimes(2)
+  })
+
+  it('pauses on a hidden tab and plays on when it comes back', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    player().events.onStateChange!({ data: 1 })
+    setHidden(true)
+    expect(player().pauseVideo).toHaveBeenCalledTimes(1)
+    setHidden(false)
+    expect(player().playVideo).toHaveBeenCalledTimes(2)
+  })
+
+  it('remembers Music for the next visit, and starts it on the first tap, not on page load', async () => {
+    localStorage.setItem('ft:muted', 'false')
+    localStorage.setItem('ft:soundMode', '"music"')
+    boot('?lang=en')
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('true')
+    await flush()
+    expect(gramo()).toBeNull()
+    expect(m.yt.load).not.toHaveBeenCalled()
+    document.body.dispatchEvent(new Event('pointerup', { bubbles: true }))
+    await vi.waitFor(() => expect(m.yt.players).toHaveLength(1))
+    expect(gramo()!.hidden).toBe(false)
+  })
+
+  it('falls back to the room quietly, with a note on the cabinet, when YouTube cannot load', async () => {
+    m.yt.load.mockImplementationOnce(() => Promise.resolve(null))
+    boot('?lang=en')
+    dock('[data-action="music"]')!.click()
+    await vi.waitFor(() => expect(gramo()?.querySelector<HTMLElement>('.gramo__note')?.hidden).toBe(false))
+    expect(gramo()!.querySelector('.gramo__note')!.textContent).toBe('The music could not load · room sound is back')
+    expect(frameEl()).toBeNull()
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('false')
+    expect(localStorage.getItem('ft:soundMode')).toBe('"room"')
+  })
+
+  it('skips a song that will not play here, and gives way to the room if none will', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    player().events.onError!({ data: 150 })
+    expect(player().loadVideoById).toHaveBeenCalledTimes(1)
+    for (let i = 0; i < 20; i++) player().events.onError?.({ data: 150 })
+    expect(dock('[data-action="music"]')!.getAttribute('aria-pressed')).toBe('false')
+    expect(m.audio.setRoom).toHaveBeenLastCalledWith(true)
+  })
+
+  it('never talks to YouTube under automation: the cabinet keeps the address aside', async () => {
+    Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => true })
+    try {
+      boot('?lang=en')
+      dock('[data-action="music"]')!.click()
+      await vi.waitFor(() => expect(frameEl()).not.toBeNull())
+      await flush()
+      expect(m.yt.load).not.toHaveBeenCalled()
+      expect(frameEl()!.getAttribute('src')).toBe('about:blank')
+      expect(frameEl()!.dataset.src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]{11}\?/)
+    } finally {
+      Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => false })
+    }
+  })
+
+  it('switches from the day’s top bar too, and relabels the cabinet in Hindi', async () => {
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    click(ui, '.hud [data-action="music"]')
+    await vi.waitFor(() => expect(m.yt.players).toHaveLength(1))
+    expect($(ui, '.hud [data-action="music"]')!.getAttribute('aria-pressed')).toBe('true')
+    expect(gramo()!.dataset.screen).toBe('day')
+    expect(gramo()!.textContent).toContain('Aarambh Hai Prachand') // 1857's song
+    click(ui, '.hud [data-action="lang"] [data-lang="hi"]')
+    expect($(ui, '.hud [data-action="music"]')!.getAttribute('aria-label')).toBe('संगीत')
+    expect(gramo()!.textContent).toContain('आरंभ है प्रचंड')
+    expect(gramo()!.querySelector('[data-action="music-next"]')!.getAttribute('aria-label')).toBe('अगला गाना')
+    click(ui, '.hud [data-action="music"]')
+    expect($(ui, '.hud [data-action="music"]')!.title).toBe('कमरे की आवाज़')
+    expect(gramo()!.hidden).toBe(true)
   })
 })

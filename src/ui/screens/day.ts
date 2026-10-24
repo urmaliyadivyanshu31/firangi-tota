@@ -5,7 +5,8 @@ import { t, tf } from '../../i18n/strings'
 import type { VoiceState } from '../../audio/voice'
 import type { ScreenRect, SheetSpec } from '../../scene/index'
 import { announce, h, mount, svg, type Child } from '../h'
-import { hud, setSound, setTimer, type ModeKind } from '../hud'
+import { hud, setMusic, setSound, setTimer, type ModeKind } from '../hud'
+import type { MusicState } from '../controls'
 import { isShort, isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
@@ -17,7 +18,7 @@ import { formatSource, sourceList } from '../reveal'
 // rulebook (pinned on the left in landscape, sheets behind two tabs in portrait), the two stamps,
 // and after the stamp, the result card.
 
-export { setSound, setTimer }
+export { setMusic, setSound, setTimer }
 
 export type Verdict = 'asli' | 'tota'
 export type Tab = 'file' | 'rules'
@@ -37,6 +38,8 @@ export interface DayProps {
   /** The verdict is in: it is on the paper's back; the DOM shows Next (or the end's buttons). */
   revealed: boolean
   soundOn: boolean
+  /** Music mode, for the record button beside the horn. */
+  music?: MusicState
   /** Read-aloud is available (the era voices are loaded), and what it is doing now. */
   voice?: VoiceState
   /** The voices on offer (the dastango, and a guest once enabled) and the one that reads. */
@@ -89,6 +92,7 @@ export interface DayHandlers {
   /** The source (or receipts) card opened or closed over the paper. */
   pop?(open: boolean): void
   sound(): void
+  music?(): void
   lang(): void
   /** Leave for home. When given, a home button shows in the top bar. */
   quit?(): void
@@ -242,9 +246,10 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   const modeKind: ModeKind = p.daily !== undefined ? 'daily' : state.difficulty
   const modeLabel = p.daily !== undefined ? `${t('dailyTitle', lang)} #${p.daily}` : t(MODE_LABEL[state.difficulty], lang)
   const quit = on.quit
-  const top = hud({ era, lang, day: state.day, days: state.days, mode: { kind: modeKind, label: modeLabel }, timerFrac: p.timerFrac, secs: p.secs, soundOn: p.soundOn }, {
+  const top = hud({ era, lang, day: state.day, days: state.days, mode: { kind: modeKind, label: modeLabel }, timerFrac: p.timerFrac, secs: p.secs, soundOn: p.soundOn, ...(p.music ? { music: p.music } : {}) }, {
     ...(quit ? { home: () => quit() } : {}),
     sound: () => on.sound(),
+    ...(on.music ? { music: () => on.music?.() } : {}),
     lang: () => on.lang(),
   })
 
