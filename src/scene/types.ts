@@ -260,12 +260,14 @@ export interface Stage {
   /** Where the paper is on screen (CSS px), to place a Next button below it. */
   getPaperRect(): ScreenRect | null
   /**
-   * The read paper is done with: two hands in the persona's sleeves come in, screw it up into a
-   * ball in three squeezes, and one flicks it into the era's basket while the camera draws back to
-   * watch it land (about 2.9 s, landing at 2.4 s; skip() lands it at once). Under reduced motion it
-   * fades out instead, with no hands. The next day's title takes over from there.
+   * The read paper is done with: two hands in the persona's sleeves come down over it, screw it up
+   * into a ball between the palms in three squeezes, and one carries it out over the front of the
+   * desk and drops it into the era's basket while the camera draws back to watch it land (about
+   * 3 s, landing at 2.5 s; skip() lands it at once). Under reduced motion it fades out instead,
+   * with no hands. `now` (the player skipped it): the paper is in the basket at once, the camera
+   * stays where it is, and only the soft landing is heard. The next day's title takes over from there.
    */
-  toss(): Promise<void>
+  toss(now?: boolean): Promise<void>
 
   /**
    * After Begin: the YOU dossier card and the Tota's police notice slide onto the desk and the

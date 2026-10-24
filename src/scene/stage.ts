@@ -290,6 +290,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   let binned: BinBall[] = []
   let inBin = false
   let airborne = false
+  // where the hand lets the ball go (world), for the basket shot to take in
+  let tossAlso: THREE.Vector3[] = []
   // after Begin: the two intro cards on the desk (rebuilt at rest with the world)
   let introSpec: IntroSpec | null = null
   let introCards: IntroCards | null = null
@@ -709,8 +711,10 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   /** The era's basket; a room without one gets an unseen basket in front of the desk. */
   const basketOf = (w: World): NonNullable<DressingHooks['basket']> => w.hooks.basket ?? { mouth: [0.4, -0.47, 0.52], r: 0.12, depth: 0.28 }
   /**
-   * The toss shot: drawn back from the paper until its spot on the desk and the whole basket fit,
-   * seen from the front and above, so the throw lands in plain sight.
+   * The drop shot: drawn back and round to the left until the hand letting the ball go, the near
+   * right corner of the paper's spot it came from and the whole basket fit, seen from the front,
+   * lower than the desk shot, so the fall into the basket reads and the arm (which comes from the
+   * right) never stands between the camera and the basket.
    */
   const tossPose: PoseFn = (aspect) => {
     const w = world
@@ -718,15 +722,16 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const bk = basketOf(w)
     const m = new THREE.Vector3(...bk.mouth)
     const r = sheetRest(w)
-    // the basket whole, and the near half of the paper's spot on the desk it came from
-    const pts = rectOnDesk(r.pos.clone().add(new THREE.Vector3(0, 0, w.sheet.h() / 4)), SHEET_W, w.sheet.h() / 2, r.yaw)
+    // the basket whole, the hand over it, and the near right corner of the paper's spot
+    const pts = rectOnDesk(r.pos.clone().add(new THREE.Vector3(SHEET_W * 0.3, 0, w.sheet.h() * 0.4)), SHEET_W * 0.4, w.sheet.h() * 0.2, r.yaw)
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2
       pts.push(new THREE.Vector3(m.x + Math.cos(a) * bk.r, m.y, m.z + Math.sin(a) * bk.r))
     }
     pts.push(new THREE.Vector3(m.x, m.y - bk.depth, m.z + (bk.foot ?? bk.r)))
+    pts.push(...tossAlso)
     const portrait = aspect < 0.9
-    const dir = new THREE.Vector3(portrait ? 0.1 : 0.2, portrait ? 1.1 : 1.0, 1).normalize()
+    const dir = new THREE.Vector3(portrait ? -0.2 : -0.28, portrait ? 0.95 : 0.82, 1).normalize()
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.06 : 0.1) })
   }
   /**
@@ -750,17 +755,18 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     return { pos: new THREE.Vector3(m.x + Math.cos(a) * d, y, m.z + Math.sin(a) * d), quat, s: 0.92 + ((n * 0.37) % 1) * 0.16 }
   }
   /**
-   * The crumple shot: drawn back a little from the paper and leaning over it, so both hands, from
-   * the cuffs to the fingertips, and the paper lifted between them are in view.
+   * The crumple shot: from the front, lower than the desk shot, so the thumbs are on top and the
+   * paper is between the palms; the hands sit low in the frame with the desk behind them, so the
+   * forearms leave it soon at the bottom rather than running up from its corners.
    */
   const crumplePose: PoseFn = (aspect) => {
     const w = world
     if (!w) return deskPose(aspect)
     const r = sheetRest(w)
     const portrait = aspect < 0.9
-    const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT * 0.7, r.pos.z + 0.035)
-    const pts = rectOnDesk(c, portrait ? 0.31 : 0.46, portrait ? 0.28 : 0.3, r.yaw)
-    const dir = new THREE.Vector3(0, 1, portrait ? 0.62 : 0.85).normalize()
+    const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT * 0.7, r.pos.z - 0.07)
+    const pts = rectOnDesk(c, portrait ? 0.3 : 0.42, 0.26, r.yaw)
+    const dir = new THREE.Vector3(0, portrait ? 0.82 : 0.72, 1).normalize()
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.02 : 0.05) })
   }
   /** Closer on the paper as it balls up between the hands. */
@@ -769,9 +775,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     if (!w) return deskPose(aspect)
     const r = sheetRest(w)
     const portrait = aspect < 0.9
-    const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT, r.pos.z + 0.03)
-    const pts = rectOnDesk(c, portrait ? 0.25 : 0.4, portrait ? 0.24 : 0.27, r.yaw)
-    const dir = new THREE.Vector3(0, 1, portrait ? 0.66 : 0.9).normalize()
+    const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT, r.pos.z - 0.055)
+    const pts = rectOnDesk(c, portrait ? 0.26 : 0.36, 0.21, r.yaw)
+    const dir = new THREE.Vector3(0, portrait ? 0.78 : 0.7, 1).normalize()
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.02 : 0.05) })
   }
   rig.override('desk', deskPose)
@@ -1416,8 +1422,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
     if (reduced) {
       // no hands and no arc: the paper fades from the desk (the crinkle and the soft landing still
-      // tell it went in the basket), and is a ball there when the room is next seen
-      cue('crumple')
+      // tell it went in the basket), and is a ball there when the room is next seen; skipped, only
+      // the landing is heard
+      if (!skipping) cue('crumple')
       await tweens.run(TOSS.fade, (k) => w.sheet.setFade(1 - k), ease.out)
       if (gen !== worldGen) return
       g.visible = false
@@ -1455,7 +1462,11 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         cue,
         alive: () => gen === worldGen && !lost && !disposed,
         skipping: () => skipping,
-        camTo: (shot, ms) => rig.goTo(shot === 'hands' ? crumplePose : shot === 'ball' ? crumpleClosePose : tossPose, ms, ease.inOut),
+        deskFront: DESK.d / 2 - kit.rig.position.z,
+        camTo: (shot, ms, also) => {
+          if (shot === 'basket') tossAlso = also ?? []
+          return rig.goTo(shot === 'hands' ? crumplePose : shot === 'ball' ? crumpleClosePose : tossPose, ms, ease.inOut)
+        },
         rockBasket: (along) => rockBasket(bk.obj, along, 0.03),
         landed: land,
       })
@@ -1886,10 +1897,13 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       if (!w || !src || w.sheet.flip() < 0.999 || !w.sheet.group.visible) return null
       return screenRect([[src.u0, src.v0], [src.u1, src.v0], [src.u1, src.v1], [src.u0, src.v1]].map(([u = 0, v = 0]) => w.sheet.backPointAt(u, v)))
     },
-    toss() {
-      if (lost) return fallback ? fallback.toss() : Promise.resolve()
+    toss(now = false) {
+      if (lost) return fallback ? fallback.toss(now) : Promise.resolve()
       if (disposed || !world) return Promise.resolve()
-      return run(() => runToss())
+      const job = run(() => runToss())
+      // skipped: it runs with instant tweens and sees skipping() from its first line
+      if (now) stage.skip()
+      return job
     },
     getPaperRect() {
       if (lost) return fallback?.getPaperRect() ?? null

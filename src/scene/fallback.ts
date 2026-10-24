@@ -39,10 +39,11 @@ export interface Fallback {
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
   /**
-   * Two drawn hands screw the read card up into a ball and flick it into the basket drawn on the
-   * floor, on the 3D stage's beats (or it fades, under reduced motion).
+   * Two drawn hands screw the read card up into a ball and drop it into the basket drawn on the
+   * floor, on the 3D stage's beats (or it fades, under reduced motion). `now`: it is in the basket
+   * at once, with only the landing heard.
    */
-  toss(): Promise<void>
+  toss(now?: boolean): Promise<void>
   /** After Begin: the YOU and Tota cards fade up on the desk (see Stage.intro); skip() finishes it. */
   intro(s: IntroSpec): Promise<void>
   clearIntro(): Promise<void>
@@ -349,7 +350,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
       binned = 0
       compose()
     },
-    toss() {
+    toss(now = false) {
       tossing?.finish()
       const box = paperBox
       if (!g || disposed || !sheet || !box) return Promise.resolve()
@@ -382,6 +383,8 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
           },
         }
         tossing = t
+        // skipped: straight into the basket, with only the landing heard
+        if (now) return t.finish()
         compose()
         // the still has lost the card: put it back on this same frame, so it never blinks out
         tossFrame(t.t0)

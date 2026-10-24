@@ -2,8 +2,8 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { BALL_R, ballGeometry, crumpleAt, crumpleHalfWidth, createBinBalls, planCrumple } from '../../src/scene/crumple'
-import { createHands, mirrorPose, type HandPose } from '../../src/scene/hands'
-import { TOSS, TOSS_LANDS_MS, holdPose, palmUpPose } from '../../src/scene/toss'
+import { HAND_SCALE, createHands, mirrorPose, type HandPose } from '../../src/scene/hands'
+import { BALL_IN_HAND, TOSS, TOSS_LANDS_MS, carryPose, dropFrom, gripPose } from '../../src/scene/toss'
 import type { EraId } from '../../src/content/types'
 
 const W = 0.21
@@ -126,10 +126,18 @@ describe('the balls in the basket', () => {
 })
 
 describe('the hands', () => {
-  const pose = (curl: number): HandPose => ({ pos: new THREE.Vector3(0.1, 0.05, 0.08), quat: new THREE.Quaternion(), curl, thumb: 0.3 })
+  const pose = (curl: number, thumb = 0.3): HandPose => ({ pos: new THREE.Vector3(0.1, 0.05, 0.08), quat: new THREE.Quaternion(), curl, thumb })
+  const palm = (p: HandPose) => new THREE.Vector3(0, 0, -1).applyQuaternion(p.quat)
+  /** A point of the posed skin, in the hand's own frame (the GPU's skinning, done on the CPU). */
+  const skinned = (hands: ReturnType<typeof createHands>, i: number) => {
+    const skin = hands.right.root.getObjectByName('skin') as THREE.SkinnedMesh
+    hands.right.root.updateMatrixWorld(true)
+    skin.skeleton.update()
+    return skin.getVertexPosition(i, new THREE.Vector3())
+  }
 
   it('the left hand is the right one mirrored', () => {
-    const r = holdPose(0.1, new THREE.Vector3(0, 0.05, 0), 0.5, 0.2, 0.5)
+    const r = gripPose(0.1, new THREE.Vector3(0, 0.05, 0), 0.5, 0.2, 0.5)
     const l = mirrorPose(r)
     expect(l.pos.x).toBeCloseTo(-r.pos.x, 9)
     expect(l.pos.y).toBeCloseTo(r.pos.y, 9)
@@ -140,15 +148,50 @@ describe('the hands', () => {
     expect(fl.z).toBeCloseTo(fr.z, 6)
   })
 
-  it('holding the paper, the palm is pressed to its side and faces the other hand', () => {
+  it('crumpling, the palms face each other and a little down, never up; the thumb is on top', () => {
     const c = new THREE.Vector3(0, 0.06, 0)
-    const p = holdPose(0.06, c, 1, 0, 0)
-    const palmNormal = new THREE.Vector3(0, 0, -1).applyQuaternion(p.quat)
-    expect(palmNormal.x).toBeLessThan(-0.7) // the right palm faces left, toward the ball
-    expect(p.pos.x).toBeGreaterThan(0.06)
-    // palm up with the ball in it
-    const up = palmUpPose(new THREE.Vector3(0.02, 0.06, 0.01))
-    expect(new THREE.Vector3(0, 0, -1).applyQuaternion(up.quat).y).toBeGreaterThan(0.85)
+    for (const k of [0, 0.2, 0.42, 0.76, 1]) {
+      for (const twist of [-0.3, 0, 0.3]) {
+        const p = gripPose(0.05 + 0.05 * (1 - k), c, k, twist, 0.5)
+        const n = palm(p)
+        expect(n.x).toBeLessThan(-0.6) // the right palm faces left, toward the paper and the other hand
+        expect(n.y).toBeLessThan(0.15) // never palm up
+        // the thumb's side of the hand (its -x) is up: the thumb lies along the top
+        expect(new THREE.Vector3(-1, 0, 0).applyQuaternion(p.quat).y).toBeGreaterThan(0.35)
+        // the fingers point away from the player, round the paper's sides, not at the other hand
+        expect(new THREE.Vector3(0, 1, 0).applyQuaternion(p.quat).z).toBeLessThan(-0.6)
+      }
+    }
+    // the palm is at the paper's edge, and squeezing presses it in
+    expect(gripPose(0.06, c, 1, 0, 1).pos.x).toBeLessThan(gripPose(0.06, c, 1, 0, 0).pos.x)
+  })
+
+  it('carrying, the back of the hand is up and the ball sits under the palm', () => {
+    const b = new THREE.Vector3(0.1, 0.09, 0.2)
+    const p = carryPose(b, new THREE.Vector3(-0.3, 0, -1).normalize())
+    expect(new THREE.Vector3(0, 0, 1).applyQuaternion(p.quat).y).toBeGreaterThan(0.8) // the back up
+    expect(palm(p).y).toBeLessThan(-0.8) // the palm down over the ball, never turned up
+    const ball = BALL_IN_HAND.clone().applyQuaternion(p.quat).add(p.pos)
+    expect(ball.distanceTo(b)).toBeLessThan(1e-9)
+    expect(p.pos.y).toBeGreaterThan(b.y) // the hand is over it
+    // letting go, the fingers open and the hand stays the same way up: no flip
+    const open = carryPose(b, new THREE.Vector3(-0.3, 0, -1).normalize(), 1)
+    expect(open.curl).toBeLessThan(p.curl - 0.3)
+    expect(palm(open).y).toBeLessThan(-0.7)
+  })
+
+  it('the drop: let go clear of the desk, gently, it falls into the basket in about a third of a second', () => {
+    const end = new THREE.Vector3(0.34, -0.68, 0.47)
+    const d = dropFrom(end, new THREE.Vector3(0, 0.07, 0), 0.28)
+    expect(d.at.z).toBeGreaterThan(0.28 + BALL_R) // in front of the desk's edge
+    expect(d.at.y).toBeLessThan(0.02)
+    expect(d.secs).toBeGreaterThan(0.25)
+    expect(d.secs).toBeLessThan(0.45)
+    expect(Math.hypot(d.v.x, d.v.z)).toBeLessThan(0.6) // a drop, not a throw
+    expect(d.v.y).toBeLessThanOrEqual(0) // let go, not flicked up
+    const t = d.secs
+    const at = new THREE.Vector3(d.at.x + d.v.x * t, d.at.y + d.v.y * t - 0.5 * 9.8 * t * t, d.at.z + d.v.z * t)
+    expect(at.distanceTo(end)).toBeLessThan(1e-6)
   })
 
   for (const era of ['delhi-1857', 'lahore-1929', 'bombay-1942', 'delhi-1947'] as EraId[]) {
@@ -165,22 +208,65 @@ describe('the hands', () => {
     })
   }
 
-  it('curling the fingers moves the fingertips toward the palm; the sleeve turns toward the elbow', () => {
+  it('a hand is one seamless skin on a skeleton, shared by both hands, lighter on low', () => {
+    const low = createHands({ tier: 'low', era: 'delhi-1857' })
+    const high = createHands({ tier: 'high', era: 'delhi-1857' })
+    const skinOf = (h: typeof low, side: 'left' | 'right') => h[side].root.getObjectByName('skin') as THREE.SkinnedMesh
+    expect(skinOf(low, 'right').isSkinnedMesh).toBe(true)
+    expect(skinOf(low, 'left').geometry).toBe(skinOf(low, 'right').geometry)
+    expect(skinOf(low, 'right').skeleton).not.toBe(skinOf(low, 'left').skeleton)
+    const g = skinOf(high, 'right').geometry
+    expect(skinOf(low, 'right').geometry.getAttribute('position').count).toBeLessThan(g.getAttribute('position').count)
+    expect(g.getAttribute('position').count).toBeLessThan(12000)
+    // every point is tied to its bones with weights that add up to one
+    const w = g.getAttribute('skinWeight')
+    for (let i = 0; i < w.count; i += 37) expect(w.getX(i) + w.getY(i) + w.getZ(i) + w.getW(i)).toBeCloseTo(1, 5)
+    low.dispose()
+    high.dispose()
+  })
+
+  it('adult proportions: the middle finger is the longest, the thumb comes off the side near the wrist', () => {
+    const hands = createHands({ tier: 'low', era: 'delhi-1857' })
+    const skin = hands.right.root.getObjectByName('skin') as THREE.SkinnedMesh
+    hands.right.set(pose(0, 0))
+    const n = skin.geometry.getAttribute('position').count
+    let tip = new THREE.Vector3(0, -1, 0)
+    let thumbTip = new THREE.Vector3(1, 0, 0)
+    for (let i = 0; i < n; i++) {
+      const p = skinned(hands, i)
+      if (p.y > tip.y) tip = p
+      if (p.x < thumbTip.x) thumbTip = p
+    }
+    // the wrist to the middle fingertip about 16 to 19 cm, the tip in line with the middle of the hand
+    expect(tip.y * HAND_SCALE).toBeGreaterThan(0.155)
+    expect(tip.y * HAND_SCALE).toBeLessThan(0.185)
+    expect(Math.abs(tip.x)).toBeLessThan(0.02)
+    // the thumb is out on its own side, its tip well short of the fingertips
+    expect(thumbTip.x).toBeLessThan(-0.05)
+    expect(thumbTip.y).toBeLessThan(tip.y * 0.6)
+    hands.dispose()
+  })
+
+  it('curling the fingers moves the fingertips toward the palm; the forearm turns toward the elbow', () => {
     const hands = createHands({ tier: 'low', era: 'delhi-1947' })
-    const skin = hands.right.root.getObjectByName('skin') as THREE.Mesh
+    const skin = hands.right.root.getObjectByName('skin') as THREE.SkinnedMesh
     const sleeve = hands.right.root.getObjectByName('sleeve') as THREE.Mesh
-    const p = skin.geometry.getAttribute('position')
-    hands.right.set(pose(0))
-    // the point furthest along the hand: a fingertip
+    const bind = skin.geometry.getAttribute('position')
+    // the point furthest along the hand as meshed: a fingertip
     let tip = 0
-    for (let i = 0; i < p.count; i++) if (p.getY(i) > p.getY(tip)) tip = i
-    const open = { y: p.getY(tip), z: p.getZ(tip) }
-    hands.right.set(pose(0.5))
-    expect(p.getZ(tip)).toBeLessThan(open.z - 0.03) // folded toward the palm side
-    expect(p.getY(tip)).toBeLessThan(open.y - 0.04)
-    hands.right.aim(new THREE.Vector3(0.1, 0.05, 0.6))
-    const along = new THREE.Vector3(0, 1, 0).applyQuaternion(sleeve.quaternion)
-    expect(along.y).toBeLessThan(-0.5) // back up the forearm, away from the fingers
+    for (let i = 0; i < bind.count; i++) if (bind.getY(i) > bind.getY(tip)) tip = i
+    hands.right.set(pose(0))
+    const open = skinned(hands, tip)
+    hands.right.set(pose(0.6))
+    const shut = skinned(hands, tip)
+    expect(shut.z).toBeLessThan(open.z - 0.03) // folded toward the palm side
+    expect(shut.y).toBeLessThan(open.y - 0.04)
+    const elbow = new THREE.Vector3(0.1, -0.2, 0.3)
+    hands.right.aim(elbow)
+    hands.right.root.updateMatrixWorld(true)
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(sleeve.getWorldQuaternion(new THREE.Quaternion()))
+    const toElbow = elbow.clone().sub(sleeve.getWorldPosition(new THREE.Vector3())).normalize()
+    expect(up.dot(toElbow)).toBeGreaterThan(0.6) // up the sleeve is toward the elbow
     hands.dispose()
   })
 
@@ -204,6 +290,7 @@ describe('the hands', () => {
 
 describe('the beats', () => {
   it('land the ball 2.2 to 2.6 s after the hold ends, with two or three squeezes of about a second in all', () => {
+    expect(TOSS.fly).toBeGreaterThan(250) // about as long as a real drop of half a metre
     expect(TOSS_LANDS_MS).toBeGreaterThanOrEqual(2200)
     expect(TOSS_LANDS_MS).toBeLessThanOrEqual(2600)
     const crumple = TOSS.squeezes.reduce((a, b) => a + b, 0)

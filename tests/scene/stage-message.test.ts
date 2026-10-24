@@ -472,7 +472,7 @@ describe('toss: the read paper is screwed up and goes in the basket', () => {
     return hi - lo
   }
 
-  it('the hands come in, three squeezes screw the paper into a ball, one hand flicks it in: each beat sounds, the basket rocks, the ball ends inside', async () => {
+  it('the hands come in, three squeezes screw the paper into a ball, one hand drops it in: each beat sounds, the basket rocks, the ball ends inside', async () => {
     const cues: StageCueName[] = []
     const { dressing, basket, hook, box } = withBasket()
     const { stage } = await readPaper(dressing, { cues })
@@ -566,6 +566,34 @@ describe('toss: the read paper is screwed up and goes in the basket', () => {
     expect(await state(p)).toBe('done')
     expect(cues.at(-1)).toBe('tossLand')
     stage.dispose()
+  })
+
+  it('skipped before it begins (the Skip chip or Enter), it is in the basket at once, only its landing heard, no hands', async () => {
+    for (const reduced of [false, true]) {
+      const cues: StageCueName[] = []
+      const { dressing, hook, box } = withBasket()
+      const { stage } = await readPaper(dressing, { cues, reduced })
+      cues.length = 0
+      let shown = false
+      const hands = box.scene!.getObjectByName('hands')
+      const p = stage.toss(true)
+      if (hands) hands.onBeforeRender = () => (shown = true)
+      expect(await state(p, 50)).toBe('done')
+      expect(cues).toEqual(['tossLand'])
+      expect(stage.getPaperRect()).toBeNull()
+      expect(named(box.scene, 'message-sheet').visible).toBe(false)
+      if (!reduced) {
+        expect(named(box.scene, 'hands').visible).toBe(false)
+        const at = named(box.scene, 'paper-ball').getWorldPosition(new THREE.Vector3())
+        expect(Math.hypot(at.x - hook.mouth[0], at.z - hook.mouth[2])).toBeLessThan(hook.r)
+        expect(at.y).toBeLessThan(hook.mouth[1])
+      }
+      expect(shown).toBe(false)
+      // the stage is not left skipping: the next day's title plays out as usual
+      const title = stage.dayTitle({ big: 'Day 2', small: 'Monday, 18 May 1857' })
+      expect(await state(title, 200)).toBe('pending')
+      stage.dispose()
+    }
   })
 
   it('under reduced motion the paper fades from the desk, with a crinkle and the landing, and no hands or flight', async () => {

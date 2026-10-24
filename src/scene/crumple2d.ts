@@ -1,7 +1,7 @@
-// The toss on the flat desk: two drawn hands in the persona's sleeves screw the card up into a
-// paper ball (the card's own picture squashed into a jagged, creased outline) and the right hand
-// flicks it into the basket drawn on the floor. The same beats as the 3D stage (toss-beats.ts).
-// No three.js here.
+// The toss on the flat desk: two drawn hands in the persona's sleeves, on their sides with the
+// thumbs on top, screw the card up into a paper ball (the card's own picture squashed into a
+// jagged, creased outline); the right hand turns over it, carries it to the basket drawn on the
+// floor and lets it drop in. The same beats as the 3D stage (toss-beats.ts). No three.js here.
 import type { EraId } from '../content/types'
 import { css, mix, type Palette } from './palette'
 import { TOSS, TOSS_AT, crumpleAtTime } from './toss-beats'
@@ -143,20 +143,22 @@ export function drawCrumpled(g: CanvasRenderingContext2D, card: CanvasImageSourc
 
 /** The sleeves of each chapter's persona, drawn flat. */
 const SLEEVE2D: Record<EraId, { cloth: number; band?: number; thread?: number; cuff?: number; rolled?: boolean }> = {
-  'delhi-1857': { cloth: 0xefe8da, band: 0xc89b46, thread: 0x7b2531 },
-  'lahore-1929': { cloth: 0xe5dbc5, thread: 0xab9e84 },
-  'bombay-1942': { cloth: 0xd8caa8, rolled: true },
-  'delhi-1947': { cloth: 0x30364a, cuff: 0xf2efe7 },
+  'delhi-1857': { cloth: 0xe2d9c7, band: 0xc89b46, thread: 0x7b2531 },
+  'lahore-1929': { cloth: 0xd8cbb0, thread: 0xa39478 },
+  'bombay-1942': { cloth: 0xcfc09c, rolled: true },
+  'delhi-1947': { cloth: 0x30364a, cuff: 0xf0ece3 },
 }
-const SKIN2D = { back: 0x6c4632, palm: 0x9a7059, nail: 0xc39a86, line: 'rgba(36,18,8,0.55)' }
+const SKIN2D = { back: 0x70482f, side: 0x86593d, nail: 0xb98e78, line: 'rgba(36,18,8,0.55)', crease: 'rgba(36,18,8,0.32)' }
 
 /**
- * One hand from above, its wrist at (x, y), the fingers pointing along `angle` (0 = straight up the
- * screen), its forearm and sleeve running back off the bottom of the screen. `side` 1 is the right
- * hand, -1 the left (mirrored). `curl` 0..1 folds the fingers over (they shorten as they curl).
- * `palm` shows the palm side instead of the back (the hand holding the ball up).
+ * One hand seen from above, its wrist at (x, y), the fingers pointing along `angle` (0 = straight
+ * up the screen), its forearm and sleeve running back toward the bottom of the screen into the
+ * shade. `side` 1 is the right hand, -1 the left (mirrored). `curl` 0..1 closes the fingers.
+ * `turn` 0 shows the back of the hand (it is over something, palm down); 1 shows it on its side,
+ * the palm facing the other hand, the thumb on top and the fingers curling in under what it holds.
+ * The palm itself is never shown.
  */
-export function drawHand2D(g: CanvasRenderingContext2D, x: number, y: number, len: number, angle: number, side: 1 | -1, curl: number, era: EraId, palm = false): void {
+export function drawHand2D(g: CanvasRenderingContext2D, x: number, y: number, len: number, angle: number, side: 1 | -1, curl: number, era: EraId, turn = 0): void {
   const sl = SLEEVE2D[era]
   const L = len
   g.save()
@@ -165,7 +167,7 @@ export function drawHand2D(g: CanvasRenderingContext2D, x: number, y: number, le
   g.scale(side, 1)
   g.lineJoin = 'round'
   g.lineCap = 'round'
-  // the forearm in its sleeve, back to the bottom of the screen (and well past it)
+  // the forearm in its sleeve, back toward the bottom of the screen, falling into the shade
   const arm = (y0: number, y1: number, w0: number, w1: number, fill: string | CanvasGradient) => {
     g.beginPath()
     g.moveTo(-w0, y0)
@@ -182,89 +184,115 @@ export function drawHand2D(g: CanvasRenderingContext2D, x: number, y: number, le
   const shadeDown = (hex: number, y0: number, y1: number) => {
     const grd = g.createLinearGradient(0, y0, 0, y1)
     grd.addColorStop(0, css(hex))
-    grd.addColorStop(1, css(mix(hex, 0x000000, 0.7)))
+    grd.addColorStop(1, css(mix(hex, 0x000000, 0.85)))
     return grd
   }
+  const far = 1.2 * L
   if (sl.rolled) {
     arm(0.02 * L, 0.42 * L, 0.15 * L, 0.17 * L, css(SKIN2D.back))
-    arm(0.4 * L, 3 * L, 0.19 * L, 0.23 * L, shadeDown(sl.cloth, 0.4 * L, 1.3 * L))
+    arm(0.4 * L, far, 0.19 * L, 0.21 * L, shadeDown(sl.cloth, 0.4 * L, far))
     // the roll of khadi
     g.beginPath()
-    g.ellipse(0, 0.42 * L, 0.215 * L, 0.06 * L, 0, 0, Math.PI * 2)
+    g.ellipse(0, 0.42 * L, 0.205 * L, 0.06 * L, 0, 0, Math.PI * 2)
     g.fillStyle = css(mix(sl.cloth, 0xffffff, 0.08))
     g.fill()
     g.strokeStyle = 'rgba(60,44,24,0.45)'
     g.stroke()
   } else if (sl.cuff !== undefined) {
-    arm(0.12 * L, 3 * L, 0.2 * L, 0.24 * L, shadeDown(sl.cloth, 0.12 * L, 1.3 * L))
+    arm(0.12 * L, far, 0.19 * L, 0.22 * L, shadeDown(sl.cloth, 0.12 * L, far))
     // the white shirt cuff and its button
-    arm(0.0, 0.14 * L, 0.165 * L, 0.17 * L, css(sl.cuff))
+    arm(0.0, 0.14 * L, 0.16 * L, 0.165 * L, css(sl.cuff))
     g.beginPath()
-    g.arc(0.12 * L, 0.07 * L, 0.018 * L, 0, Math.PI * 2)
+    g.arc(0.115 * L, 0.07 * L, 0.018 * L, 0, Math.PI * 2)
     g.fillStyle = '#d8cdb8'
     g.fill()
   } else {
-    arm(0.0, 3 * L, 0.185 * L, 0.23 * L, shadeDown(sl.cloth, 0, 1.3 * L))
-    if (sl.band !== undefined) arm(0.0, 0.06 * L, 0.19 * L, 0.192 * L, css(sl.band))
+    arm(0.0, far, 0.175 * L, 0.21 * L, shadeDown(sl.cloth, 0, far))
+    if (sl.band !== undefined) arm(0.0, 0.06 * L, 0.18 * L, 0.182 * L, css(sl.band))
     if (sl.thread !== undefined) {
       g.strokeStyle = css(sl.thread, 0.9)
       g.lineWidth = Math.max(1, 0.012 * L)
       g.beginPath()
-      g.moveTo(-0.19 * L, 0.075 * L)
-      g.lineTo(0.19 * L, 0.075 * L)
+      g.moveTo(-0.18 * L, 0.075 * L)
+      g.lineTo(0.18 * L, 0.075 * L)
       g.stroke()
     }
   }
-  const skin = css(palm ? SKIN2D.palm : SKIN2D.back)
-  g.fillStyle = skin
-  g.strokeStyle = SKIN2D.line
+  // on its side the hand is seen edge on: narrower, and its outer edge (the little finger's) lit
+  const sq = 1 - 0.42 * turn
+  const skin = css(mix(SKIN2D.back, SKIN2D.side, turn * 0.6))
   g.lineWidth = Math.max(1, 0.012 * L)
-  // the thumb, on the inner side
-  const finger = (fx: number, fy: number, a: number, l: number, w: number) => {
-    g.save()
-    g.translate(fx, fy)
-    g.rotate(a)
-    g.beginPath()
-    g.moveTo(-w / 2, 0)
-    g.lineTo(-w / 2, -l + w / 2)
-    g.arc(0, -l + w / 2, w / 2, Math.PI, 0)
-    g.lineTo(w / 2, 0)
-    g.closePath()
-    g.fill()
-    g.stroke()
-    if (!palm && curl < 0.55) {
-      // the nail
+  /**
+   * A finger from (fx, fy) along `a` (0 = up the hand), bending in toward the palm side by `bend`
+   * at its middle joint: one smooth stroke, outlined, with its nail.
+   */
+  const finger = (fx: number, fy: number, a: number, l: number, w: number, bend: number, nail: boolean) => {
+    const dx = Math.sin(a)
+    const dy = -Math.cos(a)
+    const x1 = fx + dx * l * 0.55
+    const y1 = fy + dy * l * 0.55
+    const ex = Math.sin(a - bend)
+    const ey = -Math.cos(a - bend)
+    const l2 = Math.max(0, l * 0.45 - w * 0.45)
+    const x2 = x1 + ex * l2
+    const y2 = y1 + ey * l2
+    const path = () => {
       g.beginPath()
-      g.ellipse(0, -l + w * 0.62, w * 0.28, w * 0.36, 0, 0, Math.PI * 2)
+      g.moveTo(fx, fy)
+      g.lineTo(x1, y1)
+      g.lineTo(x2, y2)
+    }
+    path()
+    g.strokeStyle = SKIN2D.line
+    g.lineWidth = w + Math.max(1.6, 0.022 * L)
+    g.stroke()
+    path()
+    g.strokeStyle = skin
+    g.lineWidth = w
+    g.stroke()
+    // a crease at the bend
+    g.strokeStyle = SKIN2D.crease
+    g.lineWidth = Math.max(1, 0.01 * L)
+    g.beginPath()
+    g.moveTo(x1 - dy * w * 0.28, y1 + dx * w * 0.28)
+    g.lineTo(x1 + dy * w * 0.28, y1 - dx * w * 0.28)
+    g.stroke()
+    if (nail) {
+      g.beginPath()
+      g.ellipse(x2 - ex * w * 0.05, y2 - ey * w * 0.05, w * 0.22, w * 0.3, a - bend, 0, Math.PI * 2)
       g.fillStyle = css(SKIN2D.nail)
       g.fill()
-      g.fillStyle = skin
     }
-    g.restore()
   }
-  finger(-0.16 * L, -0.16 * L, -0.75 + 0.5 * curl, 0.32 * L * (1 - 0.3 * curl), 0.115 * L)
+  // the fingers: shorter as they close over (seen from above), bending in toward the palm on its side
+  const fold = 1 - 0.55 * curl * (1 - turn)
+  const bend = curl * 1.25 * turn
+  const fingers: [number, number, number][] = [[0.14, 0.33, 0.07], [0.047, 0.41, 0.02], [-0.047, 0.44, -0.02], [-0.14, 0.4, -0.06]]
+  // little finger first, so the index (nearest the paper) lies over the others
+  for (const [fx, fl, fa] of fingers) finger(fx * L * sq, -0.47 * L, fa * (1 - curl), fl * L * fold, 0.1 * L * (1 - 0.15 * turn), bend, curl * (1 - turn) < 0.55)
   // the back of the hand
+  g.fillStyle = skin
+  g.strokeStyle = SKIN2D.line
   g.beginPath()
-  g.moveTo(-0.15 * L, 0.02 * L)
-  g.quadraticCurveTo(-0.23 * L, -0.28 * L, -0.2 * L, -0.5 * L)
-  g.lineTo(0.2 * L, -0.48 * L)
-  g.quadraticCurveTo(0.22 * L, -0.2 * L, 0.15 * L, 0.02 * L)
+  g.moveTo(-0.15 * L * sq, 0.02 * L)
+  g.quadraticCurveTo(-0.23 * L * sq, -0.28 * L, -0.2 * L * sq, -0.5 * L)
+  g.lineTo(0.2 * L * sq, -0.48 * L)
+  g.quadraticCurveTo(0.22 * L * sq, -0.2 * L, 0.15 * L * sq, 0.02 * L)
   g.closePath()
   g.fill()
   g.stroke()
-  // four fingers, fanned a little, shortening as they fold over
-  const fold = 1 - 0.58 * curl
-  const fingers: [number, number, number][] = [[-0.14, 0.4, -0.06], [-0.047, 0.44, -0.02], [0.047, 0.41, 0.02], [0.14, 0.33, 0.07]]
-  for (const [fx, fl, fa] of fingers) finger(fx * L, -0.47 * L, fa * (1 - curl), fl * L * fold, 0.1 * L)
-  if (!palm) {
-    // the knuckles
-    g.strokeStyle = 'rgba(36,18,8,0.3)'
-    for (const [fx] of fingers) {
-      g.beginPath()
-      g.arc(fx * L, -0.47 * L, 0.03 * L, Math.PI * 1.1, Math.PI * 1.9)
-      g.stroke()
-    }
+  // the knuckles
+  g.strokeStyle = SKIN2D.crease
+  for (const [fx] of fingers) {
+    g.beginPath()
+    g.arc(fx * L * sq, -0.47 * L, 0.03 * L, Math.PI * 1.1, Math.PI * 1.9)
+    g.stroke()
   }
+  // the thumb, from the inner side near the wrist: out to the side over the back of the hand, or
+  // on its side, lying along the top and forward over what the hand holds
+  const tx = -0.17 * L * sq
+  const ta = -0.7 + 0.45 * curl * (1 - turn) + turn * (0.55 - 0.25 * curl)
+  finger(tx, -0.14 * L, ta, 0.34 * L * (1 - 0.15 * curl), 0.12 * L, turn * curl * 0.5, true)
   g.restore()
 }
 
@@ -281,44 +309,46 @@ export interface Toss2D {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k
 const inOut = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2)
+const span = (e: number, at: number, ms: number) => Math.min(1, Math.max(0, (e - at) / ms))
 
-/** Where the ball is (and how big) during the toss, after the crumple: rolled, cocked, flicked, flown. */
+/**
+ * Where the ball is (and how big) after the crumple: lifted under the right hand, carried to just
+ * above the basket, pushed a little toward it, then dropping in (smaller as it falls away).
+ */
 function ballAt(t: Toss2D, e: number, H: number): { x: number; y: number; s: number; rot: number } {
   const f = t.from
   const cx = f.x + f.w / 2
   const cy = f.y + f.h / 2 - H * 0.03
-  const b1 = { x: cx + f.w * 0.06, y: cy + f.w * 0.04 }
-  const b2 = { x: b1.x - f.w * 0.08, y: b1.y + f.w * 0.1 }
-  const b3 = { x: b1.x + f.w * 0.22, y: b1.y - f.w * 0.2 }
-  if (e < TOSS_AT.roll) return { x: cx, y: cy, s: 1, rot: 0 }
-  if (e < TOSS_AT.windup) {
-    const k = inOut((e - TOSS_AT.roll) / TOSS.roll)
+  const b1 = { x: cx + f.w * 0.04, y: cy - f.w * 0.05 }
+  // let go a little above the basket's mouth, on the desk's side of it (smaller, being further off)
+  const rel = { x: t.basket.x - t.basket.r * 0.25, y: t.basket.y - t.basket.r * 1.7 }
+  const far = Math.min(1, (t.basket.r * 1.15) / Math.max(1, ballRadius(f.w)))
+  const aim = { x: rel.x - t.basket.r * 0.15, y: rel.y - t.basket.r * 0.12 }
+  if (e < TOSS_AT.take) return { x: cx, y: cy, s: 1, rot: 0 }
+  if (e < TOSS_AT.carry) {
+    const k = inOut(span(e, TOSS_AT.take, TOSS.take))
     return { x: lerp(cx, b1.x, k), y: lerp(cy, b1.y, k), s: 1, rot: 0 }
   }
-  if (e < TOSS_AT.flick) {
-    const k = inOut((e - TOSS_AT.windup) / TOSS.windup)
-    return { x: lerp(b1.x, b2.x, k), y: lerp(b1.y, b2.y, k), s: 1, rot: 0 }
+  if (e < TOSS_AT.swing) {
+    // up and over toward the basket
+    const k = inOut(span(e, TOSS_AT.carry, TOSS.carry))
+    const lift = Math.sin(k * Math.PI) * H * 0.05
+    return { x: lerp(b1.x, aim.x, k), y: lerp(b1.y, aim.y, k) - lift, s: lerp(1, far, k), rot: 0 }
   }
   if (e < TOSS_AT.release) {
-    const k = Math.pow((e - TOSS_AT.flick) / TOSS.flick, 3)
-    return { x: lerp(b2.x, b3.x, k), y: lerp(b2.y, b3.y, k), s: 1, rot: 0 }
+    const k = Math.pow(span(e, TOSS_AT.swing, TOSS.swing), 2)
+    return { x: lerp(aim.x, rel.x, k), y: lerp(aim.y, rel.y, k), s: far, rot: 0 }
   }
-  // the arc: up over the desk's edge and down into the basket, turning as it goes, smaller with distance
-  const k = Math.min(1, (e - TOSS_AT.release) / TOSS.fly)
-  const bx = t.basket.x
-  const by = t.basket.y + t.basket.r * 0.12
-  const c1 = { x: lerp(b3.x, bx, 0.3), y: b3.y - H * 0.12 }
-  const c2 = { x: bx, y: by - H * 0.24 }
-  const u = 1 - k
-  const x = u * u * u * b3.x + 3 * u * u * k * c1.x + 3 * u * k * k * c2.x + k * k * k * bx
-  const y = u * u * u * b3.y + 3 * u * u * k * c1.y + 3 * u * k * k * c2.y + k * k * k * by
+  // it drops: falling faster as it goes, a little on toward the basket's middle, turning
+  const k = span(e, TOSS_AT.release, TOSS.fly)
   const end = (t.basket.r * 0.42) / Math.max(1, ballRadius(f.w))
-  return { x, y, s: lerp(1, end, Math.pow(k, 0.8)), rot: k * Math.PI * 3 }
+  return { x: lerp(rel.x, t.basket.x, k), y: lerp(rel.y, t.basket.y + t.basket.r * 0.1, k * k), s: lerp(far, end, k), rot: k * 1.6 }
 }
 
 /**
- * One frame of the toss at `e` ms: the hands, the paper being screwed up, the ball in flight. The
- * caller draws the still under it and the basket's front over the ball once it drops in.
+ * One frame of the toss at `e` ms: the hands, the paper being screwed up, the ball carried and
+ * dropping. The caller draws the still under it and the basket's front over the ball once it drops
+ * in.
  */
 export function drawToss2D(g: CanvasRenderingContext2D, W: number, H: number, t: Toss2D, e: number, p: Palette): void {
   const f = t.from
@@ -330,55 +360,56 @@ export function drawToss2D(g: CanvasRenderingContext2D, W: number, H: number, t:
   const lift = smooth((e - TOSS_AT.squeezes[0]!) / 300) * H * 0.03
   const cy = cy0 - lift
   const hw = halfWidth2D(f, k)
-  // the hands come in from the bottom of the screen
-  const reach = inOut(Math.min(1, Math.max(0, (e - TOSS_AT.reach) / TOSS.reach)))
+  // the hands come in from the bottom of the screen, on their sides, and take the card by its edges
+  const reach = inOut(span(e, TOSS_AT.reach, TOSS.reach))
   const offY = H - cy + L * 0.6
-  const grip = (side: 1 | -1) => ({
-    x: cx + side * (hw + L * 0.1 - press * L * 0.015),
-    y: cy + L * 0.42 + (1 - reach) * offY,
-    a: side * (-0.55 + 0.25 * k),
+  const grip = (s: 1 | -1) => ({
+    x: cx + s * (hw + L * 0.08 - press * L * 0.015),
+    y: cy + L * 0.36 + (1 - reach) * offY,
+    a: s * (-0.12 + 0.1 * k) + s * twist * 0.25,
   })
-  const curl = 0.2 + 0.45 * k + 0.1 * press
+  const curl = 0.2 + 0.4 * k + 0.12 * press
   const ball = ballAt(t, e, H)
-  const inHands = e < TOSS_AT.release
   // the left hand lets go and goes back down
-  const leftOut = smooth((e - TOSS_AT.roll) / TOSS.roll)
-  // the right hand: holding, then under the ball, then the flick, then gone
-  const rightOut = smooth((e - TOSS_AT.release) / (TOSS.fly * 0.3))
-  if (inHands || e < TOSS_AT.release + TOSS.fly) {
-    if (e < TOSS_AT.roll) {
-      drawCrumpled(g, t.card, f, cx, cy, k, twist, t.plan, p)
-    } else if (e < TOSS_AT.land) {
-      g.save()
-      g.translate(ball.x, ball.y)
-      g.rotate(ball.rot)
-      g.scale(ball.s, ball.s)
-      drawCrumpled(g, t.card, f, 0, 0, 1, 0, t.plan, p)
-      g.restore()
-    }
+  const leftOut = smooth((e - TOSS_AT.take) / TOSS.take)
+  // the right hand: holding on its side, then turned over the ball (its back up), carrying it, then letting go
+  const turnOver = smooth((e - TOSS_AT.take) / TOSS.take)
+  const rightOut = smooth((e - TOSS_AT.release) / (TOSS.fly * 0.8))
+  const drawBall = () => {
+    g.save()
+    g.translate(ball.x, ball.y)
+    g.rotate(ball.rot)
+    g.scale(ball.s, ball.s)
+    drawCrumpled(g, t.card, f, 0, 0, 1, 0, t.plan, p)
+    g.restore()
   }
-  if (e < TOSS_AT.roll + TOSS.roll) {
+  if (e < TOSS_AT.take) drawCrumpled(g, t.card, f, cx, cy, k, twist, t.plan, p)
+  else if (e < TOSS_AT.land) drawBall()
+  if (e < TOSS_AT.carry) {
     const l = grip(-1)
-    drawHand2D(g, l.x, l.y + leftOut * offY, L, l.a, -1, curl * (1 - leftOut * 0.7), t.era)
+    drawHand2D(g, l.x - leftOut * L * 0.15, l.y + leftOut * offY, L, l.a - leftOut * 0.3, -1, curl * (1 - leftOut * 0.7), t.era, 1 - leftOut * 0.5)
   }
-  if (e < TOSS_AT.release + TOSS.fly * 0.3) {
-    if (e < TOSS_AT.roll) {
+  if (e < TOSS_AT.release + TOSS.fly * 0.8) {
+    if (e < TOSS_AT.take) {
       const r = grip(1)
-      drawHand2D(g, r.x, r.y, L, r.a, 1, curl, t.era)
+      drawHand2D(g, r.x, r.y, L, r.a, 1, curl, t.era, 1)
     } else {
-      // palm up under the ball, cupped round it; after the flick it drops away
-      const turn = smooth((e - TOSS_AT.roll) / TOSS.roll)
+      // over the ball, the back of the hand up, its fingers round it; after the drop it goes back down
       const r = grip(1)
-      const hx = lerp(r.x, ball.x + L * 0.04, turn)
-      const hy = lerp(r.y, ball.y + L * 0.5, turn) + rightOut * offY
-      const after = e >= TOSS_AT.release
-      drawHand2D(g, after ? hx + rightOut * L * 0.2 : hx, hy, L, lerp(r.a, after ? 0.25 : -0.1, turn), 1, after ? 0.2 : 0.55, t.era, turn > 0.5)
+      const open = smooth((e - TOSS_AT.swing - TOSS.swing * 0.35) / (TOSS.swing * 0.65))
+      const held = e < TOSS_AT.release
+      const bx = held ? ball.x : ballAt(t, TOSS_AT.release - 1, H).x
+      const by = held ? ball.y : ballAt(t, TOSS_AT.release - 1, H).y
+      const s = held ? ball.s : ballAt(t, TOSS_AT.release - 1, H).s
+      const hx = lerp(r.x, bx + L * 0.03, turnOver) + rightOut * L * 0.3
+      const hy = lerp(r.y, by + L * 0.42 * s, turnOver) + rightOut * offY * 0.6
+      drawHand2D(g, hx, hy, L * lerp(1, s, turnOver), lerp(r.a, -0.35, turnOver), 1, lerp(curl, 0.62, turnOver) * (1 - 0.8 * open), t.era, 1 - turnOver)
     }
   }
 }
 
-/** The ball is in the flight's last stretch: the basket's front is drawn over it from here. */
-export const dropping = (e: number) => e >= TOSS_AT.release + TOSS.fly * 0.7
+/** The ball is in the drop's last stretch: the basket's front is drawn over it from here. */
+export const dropping = (e: number) => e >= TOSS_AT.release + TOSS.fly * 0.55
 
 /** The read papers in the basket, as screwed-up balls whose tops show over the rim. */
 export function drawBasketBalls(g: CanvasRenderingContext2D, b: { x: number; y: number; r: number }, ry: number, n: number, p: Palette): void {

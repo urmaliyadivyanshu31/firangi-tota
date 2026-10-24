@@ -1,11 +1,13 @@
-// After a right stamp: two hands come in, screw the read paper up into a ball in two or three
-// squeezes, and one hand flicks it into the basket while the other withdraws. The stage hands in
-// its tweens, the camera moves and the props; this file is only the choreography, in the frame of
-// the paper as it lay on the desk (+x to the right, +y up, +z toward the player).
+// After a right stamp: two hands come down over the read paper, palms facing, thumbs on top and
+// fingers curled under its sides, and screw it up between the palms in three squeezes, wringing
+// it. The left hand lets go; the right, its back up and its fingers round the ball, carries it
+// out over the front of the desk and lets it drop into the basket. The stage hands in its tweens,
+// the camera moves and the props; this file is only the choreography, in the frame of the paper
+// as it lay on the desk (+x to the right, +y up, +z toward the player).
 import * as THREE from 'three'
 import { BALL_R, type BinBall, type PaperBall } from './crumple'
-import { basisQuat, mirrorPose, type HandPose, type Hands } from './hands'
-import { SQUEEZE_K, SQUEEZE_TWIST, TOSS } from './toss-beats'
+import { HAND_SCALE, basisQuat, mirrorPose, type HandPose, type Hands } from './hands'
+import { SQUEEZE_K, SQUEEZE_TWIST, TOSS, squeezeAt } from './toss-beats'
 import { ease, type Tweens } from './tween'
 import type { StageCueName } from './types'
 
@@ -13,6 +15,8 @@ export { TOSS, TOSS_LANDS_MS } from './toss-beats'
 
 /** How high the hands lift the paper off the desk while they crush it (m). */
 export const CRUMPLE_LIFT = 0.072
+/** Gravity (m/s²): the world is in metres, so the drop takes as long as a real one. */
+const GRAVITY = 9.8
 
 export interface TossPlay {
   tw: Tweens
@@ -27,16 +31,19 @@ export interface TossPlay {
   rest: BinBall
   /** The basket's mouth (world). */
   mouth: THREE.Vector3
+  /** The desk's front edge, as z in the paper's frame: the ball is let go clear of it. */
+  deskFront: number
   cue(name: StageCueName): void
   /** False once the world was rebuilt or the stage stopped. */
   alive(): boolean
-  /** True while skip() is landing it at once: then no crinkles or flick are heard. */
+  /** True while skip() is landing it at once: then no crinkles or drop are heard. */
   skipping(): boolean
   /**
    * The camera's moves: back over the paper and the hands as they come in, in closer on the ball
-   * as it is screwed up, then back to the basket for the throw.
+   * as it is screwed up, then round to take in the basket and, in `also` (world), where the hand
+   * lets the ball go.
    */
-  camTo(shot: 'hands' | 'ball' | 'basket', ms: number): Promise<void>
+  camTo(shot: 'hands' | 'ball' | 'basket', ms: number, also?: THREE.Vector3[]): Promise<void>
   /** The basket rocks on its foot; `along` is the way the ball was going (world). */
   rockBasket(along: THREE.Vector3): void
   /** The ball has landed (it is in the basket from now on, whatever happens next). */
@@ -45,67 +52,75 @@ export interface TossPlay {
 
 const v1 = new THREE.Vector3()
 const v2 = new THREE.Vector3()
+const v3 = new THREE.Vector3()
+const v4 = new THREE.Vector3()
 const q1 = new THREE.Quaternion()
 const elbowTmp = new THREE.Vector3()
-const PICK_BACK = new THREE.Vector3(0.78, 0.62, 0)
 const X_AXIS = new THREE.Vector3(1, 0, 0)
-const v1Pose: HandPose = { pos: new THREE.Vector3(), quat: new THREE.Quaternion(), curl: 0, thumb: 0 }
-const PALM_C = new THREE.Vector3(0, 0.048, -0.0158) // the middle of the palm's skin, in the hand's frame
+const newPose = (): HandPose => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), curl: 0, thumb: 0 })
+const v1Pose = newPose()
+/** The middle of the palm's skin, in the hand's frame. */
+export const PALM_C = new THREE.Vector3(0.002, 0.05, -0.0135).multiplyScalar(HAND_SCALE)
+/** Where a ball held under the palm sits, in the hand's frame: under the palm's top, the fingers round it. */
+export const BALL_IN_HAND = new THREE.Vector3(0.003, 0.066, -0.0135).multiplyScalar(HAND_SCALE).add(new THREE.Vector3(0, 0, -BALL_R * 0.92))
 const smooth01 = (k: number) => {
   const t = Math.min(1, Math.max(0, k))
   return t * t * (3 - 2 * t)
 }
 
 /**
- * The right hand holding the paper at crumple k: its palm pressed to the paper's side at `hw`, at
- * the height and depth of `c`, turned by `twist` about the line between the hands. Picking up, the
- * palm faces down and in; it turns to face the other hand as the squeezing starts, and the fingers
- * close round the ball toward the end.
+ * The right hand holding the paper at crumple k: its palm against the paper's side at `hw`, at the
+ * height and depth of `c`, facing the other hand and a little down, the thumb on top and the
+ * fingers curled under. Taking the flat sheet the palm is more over it; as the squeezing goes on
+ * it turns to face the other hand and the fingers close round the ball. `twist` turns the wrist
+ * about the line between the hands (the wring); `press` is how hard it squeezes.
  */
-export function holdPose(hw: number, c: THREE.Vector3, k: number, twist: number, press: number, out: HandPose = { pos: new THREE.Vector3(), quat: new THREE.Quaternion(), curl: 0, thumb: 0 }): HandPose {
-  const pick = 1 - smooth01(k / 0.3)
-  const pitch = 0.34 + 0.4 * k
-  const fingers = v1.set(-0.12 - 0.22 * k, -Math.sin(pitch), -Math.cos(pitch))
-  const back = v2.set(1, 0.2 * k, 0).lerp(PICK_BACK, pick)
-  basisQuat(fingers, back, out.quat)
+export function gripPose(hw: number, c: THREE.Vector3, k: number, twist: number, press: number, out: HandPose = newPose()): HandPose {
+  const pick = 1 - smooth01(k / 0.35)
+  const facing = v1.set(-1, -0.34 + 0.16 * k, 0.04).lerp(v3.set(-0.86, -0.52, 0.04), pick).normalize()
+  const fingers = v2.set(-0.24 + 0.1 * k, -0.42 - 0.16 * k, -1).lerp(v4.set(-0.28, -0.3, -1), pick)
+  basisQuat(fingers, facing.negate(), out.quat)
   if (twist) out.quat.premultiply(q1.setFromAxisAngle(X_AXIS, twist))
   // the palm's middle on the paper's edge (on the desk, it stays clear of the wood)
-  const target = new THREE.Vector3(hw + 0.001, Math.max(c.y, 0.026 + 0.016 * pick), c.z + 0.004)
-  out.pos.copy(target).sub(PALM_C.clone().applyQuaternion(out.quat))
-  out.curl = 0.2 + 0.4 * k + 0.12 * press
-  out.thumb = 0.25 + 0.45 * k + 0.1 * press
-  return out
-}
-
-/** The right hand palm up with the ball in it, ready to toss (the ball's centre is `b`). */
-export function palmUpPose(b: THREE.Vector3, out: HandPose = { pos: new THREE.Vector3(), quat: new THREE.Quaternion(), curl: 0, thumb: 0 }, curl = 0.42): HandPose {
-  basisQuat(v1.set(-0.38, 0.18, -0.9), v2.set(0.15, -1, 0.05), out.quat)
-  out.pos.copy(b).sub(new THREE.Vector3(0, 0.05, -0.0158 - BALL_R * 0.92).applyQuaternion(out.quat))
-  out.curl = curl
-  out.thumb = 0.32
+  const target = v1.set(hw + 0.003 - 0.004 * press, Math.max(c.y + 0.004 + 0.012 * (1 - k), 0.03 + 0.012 * pick), c.z + 0.008)
+  out.pos.copy(target).sub(v2.copy(PALM_C).applyQuaternion(out.quat))
+  out.curl = 0.2 + 0.05 * pick + 0.36 * k + 0.12 * press
+  // the thumbs lie along the top on their own side, never across into the other hand
+  out.thumb = 0.3 + 0.12 * k + 0.06 * press
+  out.spread = 1 - 0.4 * k
   return out
 }
 
 /**
- * The player's elbows, in the paper's frame: just off the near edge of the desk, a hand's width
- * above it. The forearms lie back toward them, so they leave the frame at its bottom edge, and a
- * hand comes in from there and goes back there.
+ * The right hand carrying the ball (its centre at `b`), the back of the hand up and the fingers
+ * round it, pointing along `ahead` and a little down. `open` (0..1) lets go: the fingers open out.
  */
-export const ELBOW = { x: 0.2, y: 0.1, z: 0.46 } as const
-const elbowLocal = (side: 1 | -1, out: THREE.Vector3) => out.set(ELBOW.x * side, ELBOW.y, ELBOW.z)
-
-/** The elbow in the world, for a sleeve to aim at. */
-function elbowAt(play: TossPlay, side: 1 | -1, out: THREE.Vector3): THREE.Vector3 {
-  return play.rig.localToWorld(elbowLocal(side, out))
+export function carryPose(b: THREE.Vector3, ahead: THREE.Vector3, open = 0, out: HandPose = newPose()): HandPose {
+  const fingers = v1.copy(ahead).setY(0).normalize()
+  fingers.y = -0.4 - 0.25 * open
+  basisQuat(fingers, v2.set(-0.15, 1, 0.08), out.quat)
+  out.pos.copy(b).sub(v3.copy(BALL_IN_HAND).applyQuaternion(out.quat))
+  out.curl = 0.6 - 0.46 * open
+  out.thumb = 0.55 - 0.38 * open
+  out.spread = 0.85 + 0.45 * open
+  return out
 }
 
-/** Both hands posed, and each sleeve turned back along its forearm toward the body. */
-function place(play: TossPlay, right: HandPose, left: HandPose): void {
+/**
+ * The player's elbows, in the paper's frame: out to the sides, level with the desk and toward the
+ * player, as when both hands squeeze something hard. The forearms run out to the sides of the shot
+ * rather than down to its corners, and the sleeves leave it soon.
+ */
+export const ELBOW = { x: 0.34, y: -0.05, z: 0.22 } as const
+const elbowLocal = (side: 1 | -1, out: THREE.Vector3) => out.set(ELBOW.x * side, ELBOW.y, ELBOW.z)
+
+/** Both hands posed, and each forearm turned back toward its elbow (rig frame). */
+function place(play: TossPlay, right: HandPose, left: HandPose, elbowR?: THREE.Vector3): void {
   play.hands.right.set(right)
   play.hands.left.set(left)
   play.rig.updateWorldMatrix(true, false)
-  play.hands.right.aim(elbowAt(play, 1, elbowTmp))
-  play.hands.left.aim(elbowAt(play, -1, elbowTmp))
+  play.hands.right.aim(play.rig.localToWorld(elbowTmp.copy(elbowR ?? elbowLocal(1, elbowTmp))))
+  play.hands.left.aim(play.rig.localToWorld(elbowLocal(-1, elbowTmp)))
 }
 
 const lerpPose = (a: HandPose, b: HandPose, k: number, out: HandPose): HandPose => {
@@ -113,11 +128,19 @@ const lerpPose = (a: HandPose, b: HandPose, k: number, out: HandPose): HandPose 
   out.quat.slerpQuaternions(a.quat, b.quat, k)
   out.curl = a.curl + (b.curl - a.curl) * k
   out.thumb = a.thumb + (b.thumb - a.thumb) * k
+  out.spread = (a.spread ?? 1) + ((b.spread ?? 1) - (a.spread ?? 1)) * k
   return out
 }
-const copyPose = (p: HandPose): HandPose => ({ pos: p.pos.clone(), quat: p.quat.clone(), curl: p.curl, thumb: p.thumb })
-/** A hand drawn back toward `to` (rig frame), opening as it goes. */
-const withdrawn = (from: HandPose, to: THREE.Vector3): HandPose => ({ pos: from.pos.clone().lerp(to, 0.8), quat: from.quat.clone(), curl: 0.18, thumb: 0.2 })
+const copyPose = (p: HandPose): HandPose => ({ pos: p.pos.clone(), quat: p.quat.clone(), curl: p.curl, thumb: p.thumb, spread: p.spread ?? 1 })
+/** A hand drawn back toward `to` (rig frame) and down, opening as it goes. */
+const withdrawn = (from: HandPose, to: THREE.Vector3): HandPose => {
+  const p = copyPose(from)
+  p.pos.lerp(to, 0.85).y -= 0.05
+  p.curl = 0.16
+  p.thumb = 0.2
+  p.spread = 1.1
+  return p
+}
 
 /** A point on the cubic Bézier a → c1 → c2 → b at t. */
 function cubic(a: THREE.Vector3, c1: THREE.Vector3, c2: THREE.Vector3, b: THREE.Vector3, t: number, out: THREE.Vector3): THREE.Vector3 {
@@ -130,7 +153,26 @@ function cubic(a: THREE.Vector3, c1: THREE.Vector3, c2: THREE.Vector3, b: THREE.
 }
 
 /**
- * The whole toss: the hands in, the crumple, the flick, the flight and the landing. Every beat is a
+ * The drop: where the hand lets the ball go (rig frame), with how fast and how long it then falls
+ * to `end`. It is let go a hand's breadth short of the basket on the desk's side, in front of the
+ * desk's edge and a little below its top, moving gently toward the basket.
+ */
+export function dropFrom(end: THREE.Vector3, from: THREE.Vector3, deskFront: number): { at: THREE.Vector3; v: THREE.Vector3; secs: number } {
+  const at = new THREE.Vector3(end.x, -0.08, end.z)
+  const toward = new THREE.Vector3(end.x - from.x, 0, end.z - from.z)
+  if (toward.lengthSq() < 1e-6) toward.set(0, 0, 1)
+  toward.normalize()
+  // falling about 0.6 m it is in the air a third of a second: let go 0.28 m/s short of the basket
+  const vy = -0.1
+  const secs = (vy + Math.sqrt(vy * vy + 2 * GRAVITY * Math.max(0.05, at.y - end.y))) / GRAVITY
+  at.addScaledVector(toward, -0.28 * secs)
+  at.z = Math.max(at.z, deskFront + BALL_R + 0.04)
+  const v = new THREE.Vector3((end.x - at.x) / secs, vy, (end.z - at.z) / secs)
+  return { at, v, secs }
+}
+
+/**
+ * The whole toss: the hands in, the crumple, the carry, the drop and the landing. Every beat is a
  * tween, so skip() (instant tweens) lands it at once; it checks alive() after each, so a rebuilt or
  * stopped stage is left alone. The hands are hidden again when it ends, however it ends.
  */
@@ -143,30 +185,42 @@ export async function crumpleAndToss(play: TossPlay): Promise<void> {
     if (!play.skipping()) play.cue(name)
   }
   const c = new THREE.Vector3(0, play.flatY, 0)
-  ball.group.position.copy(c)
   ball.group.quaternion.identity()
+  if (play.skipping()) {
+    // skipped before it began: the paper is a ball in the basket at once, the camera stays put,
+    // and only the soft landing is heard
+    rig.updateWorldMatrix(true, false)
+    ball.setCrumple(1)
+    ball.group.position.copy(toRig(play.rest.pos.clone()))
+    ball.group.visible = true
+    rig.updateWorldMatrix(true, true)
+    ball.group.getWorldQuaternion(play.rest.quat)
+    play.landed()
+    play.cue('tossLand')
+    return
+  }
+  ball.group.position.copy(c)
   ball.setCrumple(0)
   ball.group.visible = true
   hands.group.visible = true
-  const R = holdPose(ball.halfWidth(), c, 0, 0, 0)
-  const L = mirrorPose(holdPose(ball.halfWidth(), c, 0, 0, 0))
+  const R = gripPose(ball.halfWidth(), c, 0, 0, 0)
+  const L = mirrorPose(gripPose(ball.halfWidth(), c, 0, 0, 0))
   const right = copyPose(R)
   const left = copyPose(L)
   try {
-    // 1. the hands come in from the bottom of the frame and take the paper by its sides
+    // 1. the hands come down over the paper from the near edge of the desk and take it by its sides
     void play.camTo('hands', TOSS.camIn)
     await tw.wait(TOSS.lead)
     if (!play.alive()) return
     const startR = copyPose(R)
-    startR.pos.lerp(elbow(1), 0.6)
-    startR.curl = 0.1
-    const startL = copyPose(L)
-    startL.pos.lerp(elbow(-1), 0.6)
-    startL.curl = 0.1
+    startR.pos.lerp(elbow(1), 0.55).y += 0.05
+    startR.curl = 0.12
+    startR.spread = 1.2
+    const startL = mirrorPose(startR)
     place(play, startR, startL)
     await tw.run(TOSS.reach, (k) => place(play, lerpPose(startR, R, k, right), lerpPose(startL, L, k, left)), ease.inOutSine)
     if (!play.alive()) return
-    // 2. two squeezes and a last one: the paper lifts, crushes in from the sides and is wrung
+    // 2. three squeezes: the paper lifts, crushes in between the palms as the fingers clench, and is wrung
     let k0 = 0
     let tw0 = 0
     for (let s = 0; s < SQUEEZE_K.length; s++) {
@@ -179,96 +233,108 @@ export async function crumpleAndToss(play: TossPlay): Promise<void> {
       if (s === 1) void play.camTo('ball', TOSS.camPush)
       sound('crumple')
       await tw.run(ms, (t) => {
-        // press in fast (the first six tenths), then wring as the grip eases
-        const p = Math.min(1, t / 0.6)
-        const pe = 1 - Math.pow(1 - p, 3)
-        const w = smooth01((t - 0.35) / 0.65)
-        const k = k0 + (k1 - k0) * pe
-        const twist = tw0 + (tw1 - tw0) * w
-        c.y = y0 + (y1 - y0) * pe
+        const sq = squeezeAt(t)
+        const k = k0 + (k1 - k0) * sq.k
+        const twist = tw0 + (tw1 - tw0) * sq.wring
+        c.y = y0 + (y1 - y0) * sq.k
         ball.group.position.copy(c)
         ball.setCrumple(k, twist * 0.8)
-        const press = t < 0.6 ? Math.sin(p * Math.PI * 0.5) : 1 - (t - 0.6) / 0.4 * 0.7
-        holdPose(ball.halfWidth(), c, k, -twist, press, right)
-        mirrorPose(holdPose(ball.halfWidth(), c, k, twist, press, v1Pose), left)
+        gripPose(ball.halfWidth(), c, k, -twist, sq.press, right)
+        mirrorPose(gripPose(ball.halfWidth(), c, k, twist, sq.press, v1Pose), left)
         place(play, right, left)
       }, ease.linear)
       if (!play.alive()) return
       k0 = k1
       tw0 = tw1
     }
-    // 3. the toss: the left hand lets go and withdraws; the right rolls the ball onto its palm,
-    //    cocks it and flicks it at the basket, and the camera draws back to watch it land
+    // 3. the left hand lets go and draws back; the right turns over the ball, its back up, and lifts it
+    rig.updateWorldMatrix(true, false)
+    const end = toRig(play.rest.pos.clone())
+    const drop = dropFrom(end, c, play.deskFront)
     const heldR = copyPose(right)
     const heldL = copyPose(left)
     const outL = withdrawn(heldL, elbow(-1))
-    outL.pos.x -= 0.04
+    outL.pos.x -= 0.05
     const b0 = c.clone()
-    const b1 = c.clone().add(new THREE.Vector3(0.018, -0.01, 0.012))
-    const up = palmUpPose(b1)
+    const b1 = c.clone().add(new THREE.Vector3(0.012, 0.022, 0.008))
+    // the fingers carry on the line of the forearm
+    const ahead = b1.clone().sub(elbow(1)).setY(0).normalize()
+    const over = carryPose(b1, ahead)
     const twist0 = tw0
-    await tw.run(TOSS.roll, (t) => {
+    // the camera draws back and round to take in the basket and where the ball will be let go
+    rig.updateWorldMatrix(true, false)
+    const cam = play.camTo('basket', TOSS.take + TOSS.carry + TOSS.swing, [rig.localToWorld(drop.at.clone()), rig.localToWorld(drop.at.clone().add(new THREE.Vector3(0, 0.09, -0.03)))])
+    await tw.run(TOSS.take, (t) => {
       const e = ease.inOut(t)
       ball.group.position.lerpVectors(b0, b1, e)
       ball.setCrumple(1, twist0 * 0.8 * (1 - e))
-      lerpPose(heldR, up, e, right)
+      lerpPose(heldR, over, e, right)
       lerpPose(heldL, outL, ease.in(t), left)
       place(play, right, left)
     }, ease.linear)
     if (!play.alive()) return
     hands.left.root.visible = false
-    const b2 = b1.clone().add(new THREE.Vector3(-0.026, -0.022, 0.03))
-    await tw.run(TOSS.windup, (t) => {
-      ball.group.position.lerpVectors(b1, b2, t)
-      palmUpPose(ball.group.position, right)
-      place(play, right, left)
+    // 4. it carries the ball up over the front edge of the desk and down toward the basket, the
+    //    elbow swinging out to the side
+    const swingBy = drop.v.clone().multiplyScalar((TOSS.swing / 1000) * 0.5)
+    const aim = drop.at.clone().sub(swingBy)
+    const c1 = b1.clone().add(new THREE.Vector3(0.05, 0.05, 0.1))
+    const c2 = aim.clone().add(new THREE.Vector3(-0.02, 0.18, -0.05))
+    const elbowFrom = elbow(1)
+    const elbowTo = drop.at.clone().add(new THREE.Vector3(0.24, -0.03, 0.14))
+    const elbowR = new THREE.Vector3()
+    const p = new THREE.Vector3()
+    await tw.run(TOSS.carry, (t) => {
+      cubic(b1, c1, c2, aim, t, p)
+      ball.group.position.copy(p)
+      elbowR.lerpVectors(elbowFrom, elbowTo, t)
+      carryPose(p, ahead.copy(p).sub(elbowR).setY(0).normalize(), 0, right)
+      place(play, right, left, elbowR)
     }, ease.inOut)
     if (!play.alive()) return
-    const b3 = b1.clone().add(new THREE.Vector3(0.07, 0.055, 0.02))
-    const cam = play.camTo('basket', TOSS.camOut)
-    await tw.run(TOSS.flick, (t) => {
-      ball.group.position.lerpVectors(b2, b3, t)
-      palmUpPose(ball.group.position, right, 0.42 - 0.3 * t)
-      right.quat.multiply(q1.setFromAxisAngle(X_AXIS, -0.5 * t))
-      place(play, right, left)
-    }, ease.in)
+    // a small push toward the basket, and the fingers open: it drops
+    await tw.run(TOSS.swing, (t) => {
+      p.copy(aim).addScaledVector(swingBy, 2 * t * t)
+      ball.group.position.copy(p)
+      carryPose(p, ahead, smooth01((t - 0.35) / 0.65), right)
+      // the fingers dip a little as it leaves them
+      right.quat.multiply(q1.setFromAxisAngle(X_AXIS, -0.22 * t))
+      place(play, right, left, elbowTo)
+    }, ease.linear)
     if (!play.alive()) return
-    // 4. it leaves the hand: up over the desk's edge and down into the basket, tumbling
+    // 5. it falls into the basket, turning a little, while the hand follows through and goes
     sound('toss')
-    rig.updateWorldMatrix(true, false)
-    const p0 = b3.clone()
-    const mouth = toRig(play.mouth.clone())
-    const end = toRig(play.rest.pos.clone())
-    const toward = mouth.clone().sub(p0).setY(0).normalize()
-    const c1 = p0.clone().addScaledVector(toward, 0.12).add(new THREE.Vector3(0, 0.1, 0))
-    const c2 = mouth.clone().add(new THREE.Vector3(0, 0.24, 0))
-    const spinAxis = new THREE.Vector3(0, 1, 0).cross(toward).normalize()
+    const at = ball.group.position.clone()
+    const spinAxis = new THREE.Vector3(drop.v.z, 0, -drop.v.x).normalize()
     const qa = ball.group.quaternion.clone()
     const spin = new THREE.Quaternion()
-    const flung = copyPose(right)
-    const away = withdrawn(flung, elbow(1))
-    away.pos.lerp(elbow(1), 1).y -= 0.04
-    const flight = tw.run(TOSS.fly, (t) => {
-      cubic(p0, c1, c2, end, t, ball.group.position)
-      ball.group.quaternion.copy(qa).premultiply(spin.setFromAxisAngle(spinAxis, Math.PI * 2.4 * t))
+    const let_ = copyPose(right)
+    let_.curl = 0.12
+    let_.thumb = 0.16
+    const away = withdrawn(let_, elbowTo)
+    away.pos.y -= 0.03
+    const secs = drop.secs
+    const flight = tw.run(secs * 1000, (t) => {
+      const s = t * secs
+      ball.group.position.set(at.x + drop.v.x * s, at.y + drop.v.y * s - 0.5 * GRAVITY * s * s, at.z + drop.v.z * s)
+      ball.group.quaternion.copy(qa).premultiply(spin.setFromAxisAngle(spinAxis, 2.2 * t))
     }, ease.linear)
-    // the throwing hand follows through, then goes back out of the frame
-    void tw.run(TOSS.fly * 0.3, (t) => {
+    void tw.run(TOSS.fly * 0.85, (t) => {
       if (!play.alive()) return
-      lerpPose(flung, away, ease.in(t), right)
-      place(play, right, left)
+      lerpPose(let_, away, ease.inOut(t), right)
+      place(play, right, left, elbowTo)
     }, ease.linear).then(() => {
       hands.right.root.visible = false
     })
     await flight
     if (!play.alive()) return
-    // 5. it drops in: a soft thud in the basket, which rocks a little; the ball bounces and lies still
+    // 6. it drops in: a soft thud in the basket, which rocks a little; the ball bounces and lies still
     ball.group.position.copy(end)
     rig.updateWorldMatrix(true, false)
     ball.group.getWorldQuaternion(play.rest.quat)
     play.landed()
     play.cue('tossLand')
-    play.rockBasket(toward.clone().transformDirection(rig.matrixWorld))
+    play.rockBasket(v1.set(drop.v.x, 0, drop.v.z).normalize().transformDirection(rig.matrixWorld))
     await tw.run(TOSS.settle, (t) => ball.group.position.copy(end).add(v2.set(0, 0.012 * Math.sin(t * Math.PI) * (1 - t), 0)), ease.out)
     ball.group.position.copy(end)
     await Promise.all([cam, tw.wait(TOSS.hold)])

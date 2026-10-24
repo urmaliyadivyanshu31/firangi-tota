@@ -222,7 +222,7 @@ describe('mountFallback: the message on paper', () => {
     }
     afterEach(() => vi.unstubAllGlobals())
 
-    it('drawn hands screw the card up on the 3D beats: three crinkles, the flick, the landing, then a held breath', async () => {
+    it('drawn hands screw the card up on the 3D beats: three crinkles, the drop, the landing, then a held breath', async () => {
       const { fb, f, cues } = await readCard()
       expect(fb.getPaperRect()).not.toBeNull()
       let done = false
@@ -234,9 +234,9 @@ describe('mountFallback: the message on paper', () => {
       pump(TOSS_AT.squeezes[0]! + 16)
       expect(cues).toEqual(['crumple'])
       expect(f.calls.filter((c) => c === 'drawImage').length).toBeGreaterThan(drawn + 10) // the card, frame by frame
-      pump(TOSS_AT.roll - TOSS_AT.squeezes[0]!)
+      pump(TOSS_AT.take - TOSS_AT.squeezes[0]!)
       expect(cues).toEqual(['crumple', 'crumple', 'crumple'])
-      pump(TOSS_AT.release - TOSS_AT.roll)
+      pump(TOSS_AT.release - TOSS_AT.take)
       expect(cues).toEqual(['crumple', 'crumple', 'crumple', 'toss'])
       pump(TOSS_AT.land - TOSS_AT.release)
       expect(cues).toEqual(['crumple', 'crumple', 'crumple', 'toss', 'tossLand'])
@@ -252,7 +252,7 @@ describe('mountFallback: the message on paper', () => {
       const { fb, f } = await readCard()
       void fb.toss()
       const before = f.calls.length
-      pump(TOSS_AT.roll - 40)
+      pump(TOSS_AT.take - 40)
       const during = f.calls.slice(before)
       // the hands are drawn shapes (rotated, mirrored for the left), the ball is clipped to its outline
       expect(during.filter((c) => c === 'rotate').length).toBeGreaterThan(20)
@@ -273,6 +273,21 @@ describe('mountFallback: the message on paper', () => {
       const q = b.fb.toss()
       b.fb.dispose()
       await expect(q).resolves.toBeUndefined()
+    })
+
+    it('skipped from the start (the Skip chip or Enter), it is in the basket at once with only the landing heard', async () => {
+      for (const reduced of [false, true]) {
+        const { fb, cues } = await readCard({ reduced })
+        let done = false
+        void fb.toss(true).then(() => (done = true))
+        await Promise.resolve()
+        expect(done).toBe(true)
+        expect(cues).toEqual(['tossLand'])
+        expect(fb.getPaperRect()).toBeNull()
+        pump(TOSS_AT.end) // nothing is left running
+        expect(cues).toEqual(['tossLand'])
+        fb.dispose()
+      }
     })
 
     it('under reduced motion the card fades where it lies, with a crinkle and the landing, then is gone', async () => {
