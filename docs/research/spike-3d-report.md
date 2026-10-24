@@ -5,8 +5,8 @@ Date: 24 Oct 2026. Throwaway code. All of it was written from scratch for this s
 **Verdict.** A procedural Three.js desk scene in the reference's style is cheap enough for budget phones if the quality tiers do their job. On the CPU side the scene costs about 1 ms of JavaScript per frame, even with 6× CPU throttling. The real cost on cheap phones will be GPU fill rate, and that depends almost entirely on canvas pixel count, shadows and MSAA. The tier system targets exactly those three, and the adapter test shows it stepping down correctly. Real-phone numbers are still missing. The preview has an on-device bench (`?bench`) so the owner can collect them in about 30 seconds per phone.
 
 - Preview: **https://firangi-tota-spike.vercel.app** (public production alias of the new throwaway Vercel project `firangi-tota-spike`, scope `oxdivs-projects`. The per-deployment URL sits behind Vercel login, so share only this alias.)
-- Source: `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/spike-3d/` (Vite 8.3.4, TypeScript 6.0.3, three 0.186.1, playwright-core 1.63.0, all pinned and at least two weeks old)
-- Bench scripts: `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/bench/measure.mjs`, raw data in `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/bench/results.json`
+- Source: a throwaway spike project outside this repository, not kept (Vite 8.3.4, TypeScript 6.0.3, three 0.186.1, playwright-core 1.63.0, all pinned and at least two weeks old)
+- Bench scripts and raw data: a `measure.mjs` script and its `results.json`, kept with the throwaway spike, not in this repository
 
 ## How to test on a real phone
 
@@ -157,17 +157,9 @@ Adapter: it skips the first 1 s and 0.75 s after every switch (shader compiles a
 
 ## Screenshots
 
-All are in `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/`:
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/low-1x-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/mid-1x-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/high-1x-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/low-6x-360x800@3.png`, `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/mid-6x-360x800@3.png`, `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/high-6x-360x800@3.png` (taken during the 6× runs, before the last low-tier light tweak; they look the same as the 1× shots, as expected)
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/high-landscape-1280x720@2.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/mid-stamped-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/mid-reading-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/low-reading-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/fallback-2d-360x800@3.png`
-- `/private/tmp/claude-501/-Users-divyanshu/dd041c6f-607d-4a63-af9e-67184921eb4d/scratchpad/research/spike-3d-shots/mid-debug-hud-360x800@3.png`
+Taken during the spike at 360×800 (3× scale) and 1280×720 (2×), and kept out of the repository:
+each tier at 1× and 6× CPU throttling, a landscape shot, the stamped and reading views, the 2D
+fallback and the debug overlay. The game's own screenshots are made by the scripts in `dev/`.
 
 ## Honest look: does it read as a warm 1857 Delhi desk?
 
