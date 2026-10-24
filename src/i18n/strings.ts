@@ -34,6 +34,11 @@ const en = {
   musicFold: 'Put the music away',
   musicFailed: 'The music could not load · room sound is back',
   musicTap: 'Tap the picture to start',
+  musicVolume: 'Volume',
+  musicSmall: 'Make the player small',
+  musicLarge: 'Make the player large',
+  musicPlay: 'Play',
+  musicPause: 'Pause',
   credits: 'Credits',
 
   // Setup
@@ -155,6 +160,11 @@ const hi: Strings = {
   musicFold: 'संगीत बंद करें',
   musicFailed: 'संगीत नहीं चल पाया · कमरे की आवाज़ लौट आई',
   musicTap: 'शुरू करने के लिए तस्वीर छुएँ',
+  musicVolume: 'आवाज़',
+  musicSmall: 'प्लेयर छोटा करें',
+  musicLarge: 'प्लेयर बड़ा करें',
+  musicPlay: 'चलाएँ',
+  musicPause: 'रोकें',
   credits: 'क्रेडिट',
 
   setupQuestion: 'आप कितने दिन टिक पाएँगे?',
@@ -246,6 +256,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'appName', 'langSelf', 'langChange', 'continue', 'dailyTitle', 'dailyPlay',
   'dailyDone', 'bestSurvived', 'bestDays', 'soundOn', 'soundOff', 'credits', 'setupQuestion',
   'music', 'roomSound', 'musicNow', 'musicPrev', 'musicNext', 'musicFold', 'musicFailed', 'musicTap',
+  'musicVolume', 'musicSmall', 'musicLarge', 'musicPlay', 'musicPause',
   'modeEasy', 'modeMedium', 'modeHard', 'modeDays', 'modeDaysUnit', 'modeSeconds', 
   'back', 'introYou', 'next', 'begin', 'dayOf', 'asli',
   'tota', 'asliHint', 'totaHint', 'caseFile', 'rulebook', 'newTag', 'closePanel',

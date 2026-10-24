@@ -1824,8 +1824,104 @@ describe('Music mode: the gramophone record beside the horn', () => {
     await pickMusic()
     player().events.onReady!({})
     for (const fn of m.duckers) fn(true)
-    expect(player().setVolume).toHaveBeenLastCalledWith(40)
+    expect(player().setVolume).toHaveBeenLastCalledWith(39) // 60% of the default 65
     for (const fn of m.duckers) fn(false)
+    expect(player().setVolume).toHaveBeenLastCalledWith(65)
+  })
+
+  it('folds to a small frame that keeps playing, and back, remembered for the next visit', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    player().events.onStateChange!({ data: 1 })
+    const frame = frameEl()
+    expect(gramo()!.dataset.size).toBe('full')
+    const small = document.querySelector<HTMLElement>('[data-action="music-small"]')!
+    expect(small.getAttribute('aria-label')).toBe('Make the player small')
+    small.click()
+    expect(gramo()!.dataset.size).toBe('mini')
+    expect(localStorage.getItem('ft:playerSize')).toBe('"mini"')
+    // the same player page carries on: never reloaded, never paused
+    expect(frameEl()).toBe(frame)
+    expect(m.yt.players).toHaveLength(1)
+    expect(player().pauseVideo).not.toHaveBeenCalled()
+    expect(gramo()!.hidden).toBe(false)
+    expect(gramo()!.querySelector('.gramo__ticker')!.textContent).toContain('Aarambh Hai Prachand · Gulaal · 2009')
+    // its play knob pauses and plays
+    const play = document.querySelector<HTMLElement>('[data-action="music-play"]')!
+    expect(play.getAttribute('aria-label')).toBe('Pause')
+    play.click()
+    expect(player().pauseVideo).toHaveBeenCalledTimes(1)
+    expect(play.getAttribute('aria-label')).toBe('Play')
+    play.click()
+    expect(player().playVideo).toHaveBeenCalledTimes(2)
+    document.querySelector<HTMLElement>('[data-action="music-large"]')!.click()
+    expect(gramo()!.dataset.size).toBe('full')
+    expect(localStorage.getItem('ft:playerSize')).toBe('"full"')
+    // folding still puts the music away and pauses it
+    document.querySelector<HTMLElement>('[data-action="music-fold"]')!.click()
+    expect(gramo()!.hidden).toBe(true)
+    expect(player().pauseVideo).toHaveBeenCalledTimes(2)
+  })
+
+  it('opens small when it was left small', async () => {
+    localStorage.setItem('ft:playerSize', '"mini"')
+    boot('?lang=en')
+    await pickMusic()
+    expect(gramo()!.dataset.size).toBe('mini')
+  })
+
+  it('turns the brass volume knob with the keys and the wheel, keeps it, and dips relative to it', async () => {
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    expect(player().setVolume).toHaveBeenLastCalledWith(65)
+    const vol = document.querySelector<HTMLElement>('[data-action="music-volume"]')!
+    expect(vol.getAttribute('role')).toBe('slider')
+    expect(vol.getAttribute('aria-label')).toBe('Volume')
+    expect(vol.getAttribute('aria-valuenow')).toBe('65')
+    const key = (k: string) => vol.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+    key('ArrowUp')
+    expect(vol.getAttribute('aria-valuenow')).toBe('70')
+    expect(player().setVolume).toHaveBeenLastCalledWith(70)
+    expect(localStorage.getItem('ft:musicVolume')).toBe('70')
+    key('PageDown')
+    expect(vol.getAttribute('aria-valuenow')).toBe('60')
+    key('End')
+    expect(vol.getAttribute('aria-valuenow')).toBe('100')
+    key('ArrowRight')
+    expect(vol.getAttribute('aria-valuenow')).toBe('100') // never past the end
+    key('Home')
+    expect(vol.getAttribute('aria-valuenow')).toBe('0')
+    expect(player().setVolume).toHaveBeenLastCalledWith(0)
+    vol.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }))
+    vol.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }))
+    expect(vol.getAttribute('aria-valuenow')).toBe('10')
+    key('PageUp'); key('PageUp')
+    expect(localStorage.getItem('ft:musicVolume')).toBe('30')
+    // under the voice it dips to 60% of the chosen volume, and comes back to it
+    for (const fn of m.duckers) fn(true)
+    expect(player().setVolume).toHaveBeenLastCalledWith(18)
+    key('PageUp') // turned while dipped: it stays dipped, at the new level's share
+    expect(player().setVolume).toHaveBeenLastCalledWith(24)
+    for (const fn of m.duckers) fn(false)
+    expect(player().setVolume).toHaveBeenLastCalledWith(40)
+  })
+
+  it('starts at the kept volume, and the default when what was kept is nonsense', async () => {
+    localStorage.setItem('ft:musicVolume', '30')
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
+    expect(player().setVolume).toHaveBeenLastCalledWith(30)
+    expect(document.querySelector('[data-action="music-volume"]')!.getAttribute('aria-valuenow')).toBe('30')
+  })
+
+  it('ignores a kept volume that is not a number', async () => {
+    localStorage.setItem('ft:musicVolume', '"loud"')
+    boot('?lang=en')
+    await pickMusic()
+    player().events.onReady!({})
     expect(player().setVolume).toHaveBeenLastCalledWith(65)
   })
 

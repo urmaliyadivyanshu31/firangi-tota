@@ -681,6 +681,8 @@ export function startApp(root: AppRoot, env: AppEnv): void {
           },
           onFold: () => setSoundMode('room'),
           onFail: () => setSoundMode('room'),
+          // the cabinet went small or large: the day's shot takes the room it gave back, or gives it
+          onResize: () => requestAnimationFrame(() => { if (alive() && screen === 'day') syncHudInsets() }),
         })
         gramophone.setScreen(screen)
         gramophone.setHidden(document.hidden === true)

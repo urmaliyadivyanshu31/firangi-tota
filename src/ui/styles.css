@@ -1161,6 +1161,82 @@ a { color: inherit; }
 }
 .gramo__knob:active { transform: translateY(1px) rotate(-12deg); }
 .gramo__knob--fold { color: #5a1a10; }
+.gramo__knob:focus-visible, .gramo__vol:focus-visible { outline: 2px solid #f3e7cc; outline-offset: 2px; }
+/* the play knob, the "large" knob and the title plate belong to the small frame only */
+.gramo__knob--play, .gramo__knob--large, .gramo__ticker { display: none; }
+.gramo__knobs { gap: 8px; }
+
+/* the volume: a ridged brass knob in a dial ring that glows amber up to the level, like a valve
+   radio's; it turns through 270 degrees, seven o'clock to five o'clock */
+.gramo__vol {
+  --vol: .65;
+  position: relative; flex: 0 0 auto; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  background: conic-gradient(from 225deg, #ffcf6a 0 calc(var(--vol) * 270deg), #1d120a calc(var(--vol) * 270deg) 270deg, transparent 270deg);
+  box-shadow: 0 0 0 1px rgba(180, 138, 60, .7), inset 0 0 0 1px rgba(0, 0, 0, .4);
+}
+.gramo__vol::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: #2e180c; }
+.gramo__vol.is-turning { cursor: grabbing; }
+.gramo__vol-knob {
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(60, 30, 5, .28) 0 5deg, rgba(255, 240, 200, .14) 5deg 10deg),
+    radial-gradient(circle at 38% 32%, #fbe7a8, #cf9d41 55%, #7a5317);
+  box-shadow: inset 0 -2px 2px rgba(0, 0, 0, .3), 0 2px 0 #24150a, 0 3px 5px rgba(0, 0, 0, .45);
+}
+.gramo__vol-knob::before {
+  content: ''; position: absolute; inset: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fbeab4, #d7a84c 60%, #9a6c22); box-shadow: 0 0 0 1px rgba(90, 55, 15, .5);
+}
+.gramo__vol-knob::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: linear-gradient(#3a1e08, #3a1e08) center 3px / 3px 10px no-repeat;
+  transform: rotate(calc(-135deg + var(--vol) * 270deg));
+}
+
+/* the small frame (wider screens): the 200x200 picture over a slim brass bar with the title
+   running past, play, next, the volume and the way back to the full cabinet */
+.gramo__ticker {
+  position: relative; height: 24px; padding: 0 14px; border-radius: 3px; overflow: hidden;
+  background: linear-gradient(180deg, #f0d48a, #c99a45 55%, #9a7330);
+  box-shadow: inset 0 1px 0 rgba(255, 245, 210, .7), inset 0 -1px 0 rgba(60, 35, 10, .5), 0 0 0 1px #5a3a14;
+}
+/* two small screws hold the plate */
+.gramo__ticker::before, .gramo__ticker::after {
+  content: ''; position: absolute; z-index: 1; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%;
+  background: linear-gradient(135deg, transparent 42%, rgba(40, 20, 5, .8) 42% 58%, transparent 58%), radial-gradient(circle at 35% 30%, #fff1c4, #9a7330);
+}
+.gramo__ticker::before { left: 4px; }
+.gramo__ticker::after { right: 4px; }
+.gramo__ticker-run {
+  display: inline-flex; white-space: nowrap; font: 600 12px/24px var(--ui); color: #3a1e08;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, .55);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+  animation: gramo-ticker var(--ticker-s, 14s) linear infinite;
+}
+.gramo__ticker-run > span { padding-right: 2.5em; }
+.gramo:lang(hi) .gramo__ticker-run { font: 400 14px/24px var(--display-hi); }
+@keyframes gramo-ticker { to { transform: translateX(-50%); } }
+@keyframes gramo-settle { from { opacity: .4; transform: scale(.94); } }
+.gramo.is-resized { animation: gramo-settle .3s var(--ease-out) both; transform-origin: top right; }
+
+@media (min-width: 700px) {
+  .gramo[data-size='mini'] .gramo__cabinet { width: 216px; padding: 15px 8px 8px; gap: 7px; border-radius: 12px 12px 8px 8px; }
+  .gramo[data-size='mini'] .gramo__crown { width: 48px; margin-left: -24px; height: 18px; top: -8px; }
+  .gramo[data-size='mini'] .gramo__crown::after { top: 2px; width: 13px; height: 13px; margin-left: -6.5px; transform: scale(.82); }
+  .gramo[data-size='mini'] .gramo__card,
+  .gramo[data-size='mini'] .gramo__knob--prev,
+  .gramo[data-size='mini'] .gramo__knob--small,
+  .gramo[data-size='mini'] .gramo__knob--fold { display: none; }
+  .gramo[data-size='mini'] .gramo__ticker { display: block; }
+  .gramo[data-size='mini'] .gramo__knob--play,
+  .gramo[data-size='mini'] .gramo__knob--large { display: grid; }
+  .gramo[data-size='mini'] .gramo__side { gap: 7px; }
+  .gramo[data-size='mini'] .gramo__knobs { justify-content: space-between; gap: 0; padding: 0 4px; }
+  .gramo[data-size='mini'] .gramo__knob { width: 38px; height: 38px; }
+  .gramo[data-size='mini'] .gramo__vol { width: 46px; height: 46px; }
+  .gramo[data-size='mini'] .gramo__vol-knob { width: 33px; height: 33px; }
+}
 
 /* phones: a strip under the controls (or the top bar): the player square on the left, the card and
    the knobs beside it */
@@ -1175,6 +1251,17 @@ a { color: inherit; }
   .gramo__knobs { gap: 4px; }
   .gramo__song { white-space: normal; font-size: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .gramo__film { white-space: normal; }
-  .gramo__knobs { justify-content: space-between; }
-  .gramo__knob { width: 42px; height: 42px; }
+  /* four in a row: previous, next, the volume, put away; they share the width a narrow phone leaves */
+  .gramo__knobs { display: grid; grid-template-columns: 1fr 1fr 1.15fr 1fr; justify-items: center; gap: 2px; }
+  .gramo__knob--small { display: none; }
+  .gramo__knob { width: 100%; max-width: 40px; height: auto; aspect-ratio: 1; }
+  .gramo__vol { width: 100%; max-width: 46px; height: auto; aspect-ratio: 1; }
+  .gramo__vol-knob { width: 72%; height: auto; aspect-ratio: 1; }
+}
+
+/* reduced motion: the title plate holds still, the title cut short with an ellipsis */
+@media (prefers-reduced-motion: reduce) {
+  .gramo__ticker-run { animation: none; display: block; overflow: hidden; text-overflow: ellipsis; }
+  .gramo__ticker-run > span + span { display: none; }
+  .gramo.is-resized { animation: none; }
 }
