@@ -9,6 +9,8 @@ import type { Message } from '../../types.js'
 // Undated messages may land on any day from 5 to 18 August, so they never name Mountbatten's
 // title for "today" or the building's name, both of which change on 15 August, and they never
 // report a dated event as "today".
+// The pool grows with the mode (owner 10-24): messages with minMode 'medium' join Medium and Hard runs,
+// 'hard' ones Hard runs only. Medium runs are days 1-10 (5-14 Aug), Hard runs all 14.
 
 const HEAD = { en: 'Head Clerk, Cipher Office', hi: 'हेड क्लर्क, साइफ़र दफ़्तर' }
 const CLERK = { en: 'Cipher clerk', hi: 'साइफ़र क्लर्क' }
@@ -36,6 +38,7 @@ const GAZETTE = { en: 'Gazette of India Extraordinary', hi: 'गज़ट ऑफ
 const WYLIE = { en: 'Sir F. Wylie, Governor, Lucknow', hi: 'सर एफ़. वाइली, गवर्नर, लखनऊ' }
 const VISCOUNT = { en: 'Viscount Mountbatten of Burma', hi: 'बर्मा के वाइकाउंट माउंटबेटन' }
 const TRAVANCORE = { en: 'Maharaja of Travancore, Trivandrum', hi: 'त्रावणकोर के महाराजा, त्रिवेंद्रम' }
+const LISTOWEL = { en: 'Earl of Listowel, London', hi: 'अर्ल ऑफ़ लिस्टोवेल, लंदन' }
 
 export const messages: Message[] = [
   // ───────────── Day 1, Tue 5 Aug: ten days left ─────────────
@@ -1861,6 +1864,963 @@ export const messages: Message[] = [
           hi: 'कलकत्ता पश्चिमी बंगाल, यानी भारत में रहा; फ़ैसला 17 अगस्त तक बंद रहा।',
         },
         sources: [{ id: 'menon-1957', loc: 'ch. XVII (award outcome)' }, { id: 'mansergh-xii', loc: 'No. 489' }],
+      },
+    ],
+  },
+
+  // ═════════════ Easy and up: one more undated pair, caught from the case file ═════════════
+  {
+    id: 'promise-real',
+    tier: 1,
+    real: true,
+    pair: 'promise',
+    from: { en: 'Sir Cyril Radcliffe', hi: 'सर सिरिल रैडक्लिफ़' },
+    to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
+    text: {
+      en: "THE VICEROY'S HOUSE, NEW DELHI, 23 July 1947. I do not think that I could manage the 10th: but I think that I can promise the 12th…",
+      hi: 'वायसराय हाउस, नई दिल्ली, 23 जुलाई 1947। मुझे नहीं लगता कि मैं 10 तारीख़ तक कर पाऊँगा, पर लगता है कि 12 का वादा कर सकता हूँ…',
+    },
+    checks: { en: ['NEW DELHI', '23 July 1947', 'promise the 12th'], hi: ['नई दिल्ली', '23 जुलाई 1947', '12 का वादा'] },
+    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 209' }] },
+    why: {
+      text: {
+        en: 'His letter of 23 July; the awards are indeed dated 12 August.',
+        hi: '23 जुलाई की उनकी चिट्ठी; फ़ैसलों पर सच में 12 अगस्त की तारीख़ है।',
+      },
+      sources: [{ id: 'mansergh-xii', loc: 'No. 209; No. 488, Appendix I' }],
+    },
+  },
+  {
+    id: 'promise-june',
+    tier: 1,
+    real: false,
+    pair: 'promise',
+    from: { en: 'Sir Cyril Radcliffe', hi: 'सर सिरिल रैडक्लिफ़' },
+    to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
+    text: {
+      en: "THE VICEROY'S HOUSE, NEW DELHI, 23 June 1947. I do not think that I could manage the 10th: but I think that I can promise the 12th…",
+      hi: 'वायसराय हाउस, नई दिल्ली, 23 जून 1947। मुझे नहीं लगता कि मैं 10 तारीख़ तक कर पाऊँगा, पर लगता है कि 12 का वादा कर सकता हूँ…',
+    },
+    checks: { en: ['NEW DELHI', '23 June 1947', 'promise the 12th'], hi: ['नई दिल्ली', '23 जून 1947', '12 का वादा'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: {
+          en: 'He landed only on 8 July; on 23 June he was not in India.',
+          hi: 'वे 8 जुलाई को ही आए; 23 जून को वे भारत में नहीं थे।',
+        },
+        factId: 'radcliffe',
+        sources: [{ id: 'mansergh-xii', loc: 'Introduction; No. 209 (dated 23 July 1947)' }],
+      },
+    ],
+  },
+
+  // ═════════════ Medium and Hard (minMode 'medium'): the days lived, 8 to 14 August ═════════════
+  // Day 4, Fri 8 Aug: Gandhiji at Patna
+  {
+    id: 'm4-patna-fast',
+    tier: 1,
+    real: true,
+    pair: 'patna-fast',
+    onDay: 4,
+    minMode: 'medium',
+    from: { en: 'Telegraph Office, Patna', hi: 'तार घर, पटना' },
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. PATNA. At his prayer meeting today, Gandhiji said the 15th should be marked by fasting, spinning and prayer.',
+      hi: 'IMMEDIATE. पटना। आज प्रार्थना सभा में गांधीजी ने कहा कि 15 तारीख़ उपवास, चरखा कातने और प्रार्थना से मनाई जाए।',
+    },
+    checks: { en: ['PATNA', 'fasting, spinning and prayer'], hi: ['पटना', 'उपवास, चरखा कातने और प्रार्थना'] },
+    why: {
+      text: {
+        en: 'At Patna on 8 August he asked for fasting, spinning and prayer.',
+        hi: '8 अगस्त को पटना में उन्होंने उपवास, कताई और प्रार्थना को कहा।',
+      },
+      sources: [{ id: 'cwmg-89', loc: 'Speech at prayer meeting, Patna, 8 August 1947; Chronology, p. 528' }],
+    },
+  },
+  {
+    id: 'm4-patna-feasts',
+    tier: 1,
+    real: false,
+    pair: 'patna-fast',
+    onDay: 4,
+    minMode: 'medium',
+    from: { en: 'Telegraph Office, Patna', hi: 'तार घर, पटना' },
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. PATNA. At his prayer meeting today, Gandhiji said the 15th should be marked by lamps, fireworks and feasts.',
+      hi: 'IMMEDIATE. पटना। आज प्रार्थना सभा में गांधीजी ने कहा कि 15 तारीख़ दीयों, आतिशबाज़ी और दावतों से मनाई जाए।',
+    },
+    checks: { en: ['PATNA', 'lamps, fireworks and feasts'], hi: ['पटना', 'दीयों, आतिशबाज़ी और दावतों'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'He asked for a fast, not feasts, and fasted himself on the 15th.',
+          hi: 'उन्होंने दावत नहीं, उपवास को कहा, और 15 को ख़ुद उपवास रखा।',
+        },
+        factId: 'gandhi',
+        sources: [{ id: 'cwmg-89', loc: 'Speech at prayer meeting, Patna, 8 August 1947' }],
+      },
+    ],
+  },
+
+  // Day 5, Sat 9 Aug: how the award will be announced
+  {
+    id: 'm5-gazette',
+    tier: 2,
+    real: true,
+    pair: 'gazette-form',
+    onDay: 5,
+    minMode: 'medium',
+    from: { en: "Viceroy's Staff Meeting", hi: 'वायसराय की स्टाफ़ मीटिंग' },
+    to: CIPHER,
+    text: {
+      en: "Decided today: when the award comes, it appears as a Gazette Extraordinary, not as a communiqué from this House, to show the Commission's independence.",
+      hi: 'आज तय हुआ: फ़ैसला जब आएगा, गज़ट के ख़ास अंक में छपेगा, इस हाउस के प्रेस नोट की तरह नहीं, ताकि कमीशन की आज़ादी दिखे।',
+    },
+    checks: { en: ['Gazette Extraordinary', 'not as a communiqué'], hi: ['गज़ट के ख़ास अंक', 'प्रेस नोट की तरह नहीं'] },
+    why: {
+      text: {
+        en: "Campbell-Johnson, 9 August: a Gazette Extraordinary, to underline the Commission's independence.",
+        hi: 'कैंपबेल-जॉनसन, 9 अगस्त: कमीशन की आज़ादी दिखाने के लिए गज़ट का ख़ास अंक।',
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 9 August 1947' }],
+    },
+  },
+  {
+    id: 'm5-communique',
+    tier: 2,
+    real: false,
+    pair: 'gazette-form',
+    onDay: 5,
+    minMode: 'medium',
+    from: { en: "Viceroy's Staff Meeting", hi: 'वायसराय की स्टाफ़ मीटिंग' },
+    to: CIPHER,
+    text: {
+      en: 'Decided today: when the award comes, it appears as a communiqué from this House, not as a Gazette Extraordinary, to save time.',
+      hi: 'आज तय हुआ: फ़ैसला जब आएगा, इस हाउस के प्रेस नोट की तरह छपेगा, गज़ट के ख़ास अंक में नहीं, ताकि समय बचे।',
+    },
+    checks: { en: ['communiqué from this House', 'not as a Gazette Extraordinary'], hi: ['इस हाउस के प्रेस नोट', 'गज़ट के ख़ास अंक में नहीं'] },
+    tells: [
+      {
+        kind: 'form',
+        explain: {
+          en: "A Gazette Extraordinary was chosen, not a communiqué from Viceroy's House.",
+          hi: 'गज़ट का ख़ास अंक चुना गया, वायसराय हाउस का प्रेस नोट नहीं।',
+        },
+        factId: 'gazette-form',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 9 August 1947' }],
+      },
+    ],
+  },
+
+  // Day 7, Mon 11 Aug: a knighthood at the farewell party
+  {
+    id: 'm7-abell-knighted',
+    tier: 2,
+    real: true,
+    pair: 'knighted',
+    onDay: 7,
+    minMode: 'medium',
+    from: PRESS_VH,
+    to: CIPHER,
+    text: {
+      en: 'For the file: tonight the Viceroy knighted Mr George Abell, his Private Secretary. He is now Sir George Abell.',
+      hi: 'फ़ाइल के लिए: आज रात वायसराय ने अपने निजी सचिव मिस्टर जॉर्ज एबेल को नाइट बनाया। अब वे सर जॉर्ज एबेल हैं।',
+    },
+    checks: { en: ['knighted', 'Mr George Abell', 'Sir George Abell'], hi: ['नाइट बनाया', 'मिस्टर जॉर्ज एबेल', 'सर जॉर्ज एबेल'] },
+    why: {
+      text: {
+        en: 'Campbell-Johnson, 11 August: Mountbatten conferred a knighthood on George Abell.',
+        hi: 'कैंपबेल-जॉनसन, 11 अगस्त: माउंटबेटन ने जॉर्ज एबेल को नाइट की उपाधि दी।',
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 11 August 1947' }],
+    },
+  },
+  {
+    id: 'm7-radcliffe-knighted',
+    tier: 2,
+    real: false,
+    pair: 'knighted',
+    onDay: 7,
+    minMode: 'medium',
+    from: PRESS_VH,
+    to: CIPHER,
+    text: {
+      en: 'For the file: tonight the Viceroy knighted Mr Cyril Radcliffe, chairman of both Commissions. He is now Sir Cyril Radcliffe.',
+      hi: 'फ़ाइल के लिए: आज रात वायसराय ने दोनों कमीशनों के अध्यक्ष मिस्टर सिरिल रैडक्लिफ़ को नाइट बनाया। अब वे सर सिरिल रैडक्लिफ़ हैं।',
+    },
+    checks: { en: ['knighted', 'Mr Cyril Radcliffe', 'Sir Cyril Radcliffe'], hi: ['नाइट बनाया', 'मिस्टर सिरिल रैडक्लिफ़', 'सर सिरिल रैडक्लिफ़'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: 'He was already Sir Cyril when he landed; tonight it was Abell.',
+          hi: 'वे आते समय से ही सर सिरिल थे; आज रात नाइट एबेल बने।',
+        },
+        factId: 'radcliffe',
+        sources: [
+          { id: 'mansergh-xii', loc: 'No. 209 (Sir C. Radcliffe, 23 July 1947)' },
+          { id: 'campbell-johnson-1951', loc: 'entry for 11 August 1947' },
+        ],
+      },
+    ],
+  },
+
+  // Day 9, Wed 13 Aug: the Viceroy wires from Karachi
+  {
+    id: 'm9-cash-karachi',
+    tier: 2,
+    real: true,
+    pair: 'cash-balances',
+    onDay: 9,
+    minMode: 'medium',
+    from: VISCOUNT,
+    to: LISTOWEL,
+    text: {
+      en: 'MOST IMMEDIATE, KARACHI, 13 August, 8.30 pm; received 5.45 pm. I fear it is quite out of the question for you to decide the allocation of cash balances…',
+      hi: 'MOST IMMEDIATE, कराची, 13 अगस्त, रात 8.30; मिला शाम 5.45। मुझे डर है कि नकद रकम का बँटवारा आप तय करें, यह बिल्कुल नहीं हो सकता…',
+    },
+    checks: { en: ['KARACHI', 'received 5.45 pm', 'cash balances'], hi: ['कराची', 'मिला शाम 5.45', 'नकद रकम'] },
+    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 462' }] },
+    why: {
+      text: {
+        en: 'Sent from Karachi; London, 4½ hours behind, logged it at 5.45.',
+        hi: 'कराची से भेजा; लंदन 4½ घंटे पीछे है, वहाँ 5.45 पर दर्ज हुआ।',
+      },
+      sources: [{ id: 'mansergh-xii', loc: 'No. 462 (header)' }, { id: 'campbell-johnson-1951', loc: 'entry for 13 August 1947, Karachi' }],
+    },
+  },
+  {
+    id: 'm9-cash-lahore',
+    tier: 2,
+    real: false,
+    pair: 'cash-balances',
+    onDay: 9,
+    minMode: 'medium',
+    from: VISCOUNT,
+    to: LISTOWEL,
+    text: {
+      en: 'MOST IMMEDIATE, LAHORE, 13 August, 8.30 pm; received 5.45 pm. I fear it is quite out of the question for you to decide the allocation of cash balances…',
+      hi: 'MOST IMMEDIATE, लाहौर, 13 अगस्त, रात 8.30; मिला शाम 5.45। मुझे डर है कि नकद रकम का बँटवारा आप तय करें, यह बिल्कुल नहीं हो सकता…',
+    },
+    checks: { en: ['LAHORE', 'received 5.45 pm', 'cash balances'], hi: ['लाहौर', 'मिला शाम 5.45', 'नकद रकम'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'On the 13th he was in Karachi, not Lahore.', hi: '13 को वे कराची में थे, लाहौर में नहीं।' },
+        factId: 'karachi-trip',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 13 August 1947, Karachi' }, { id: 'mansergh-xii', loc: 'No. 462' }],
+      },
+    ],
+  },
+
+  // Day 10, Thu 14 Aug: tomorrow's programme; Beliaghata
+  {
+    id: 'm10-programme',
+    tier: 1,
+    real: true,
+    pair: 'programme',
+    onDay: 10,
+    minMode: 'medium',
+    from: PSV,
+    to: { en: 'Staff desks', hi: 'स्टाफ़ की मेज़ें' },
+    text: {
+      en: 'Programme for tomorrow: the swearing-in, Durbar Hall, 8.30 am; the flag at the Council House; the Princes Park flag in the evening.',
+      hi: 'कल का कार्यक्रम: शपथ, दरबार हॉल, सुबह 8.30; काउंसिल हाउस पर झंडा; शाम को प्रिंसेस पार्क में झंडा।',
+    },
+    checks: { en: ['Durbar Hall, 8.30 am', 'Princes Park flag', 'in the evening'], hi: ['दरबार हॉल, सुबह 8.30', 'प्रिंसेस पार्क में झंडा', 'शाम को'] },
+    why: {
+      text: {
+        en: 'On the 15th: oath at 8.30, Council House flag, Princes Park at evening.',
+        hi: '15 को: 8.30 पर शपथ, काउंसिल हाउस पर झंडा, शाम को प्रिंसेस पार्क।',
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+    },
+  },
+  {
+    id: 'm10-programme-dawn',
+    tier: 1,
+    real: false,
+    pair: 'programme',
+    onDay: 10,
+    minMode: 'medium',
+    from: PSV,
+    to: { en: 'Staff desks', hi: 'स्टाफ़ की मेज़ें' },
+    text: {
+      en: 'Programme for tomorrow: the swearing-in, Durbar Hall, 8.30 am; the flag at the Council House; the Princes Park flag at dawn.',
+      hi: 'कल का कार्यक्रम: शपथ, दरबार हॉल, सुबह 8.30; काउंसिल हाउस पर झंडा; भोर में प्रिंसेस पार्क में झंडा।',
+    },
+    checks: { en: ['Durbar Hall, 8.30 am', 'Princes Park flag', 'at dawn'], hi: ['दरबार हॉल, सुबह 8.30', 'प्रिंसेस पार्क में झंडा', 'भोर में'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: 'The Princes Park flag went up in the evening, not at dawn.', hi: 'प्रिंसेस पार्क का झंडा शाम को फहरा, भोर में नहीं।' },
+        factId: 'delhi-programme',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+      },
+    ],
+  },
+  {
+    id: 'm10-hydari',
+    tier: 1,
+    real: true,
+    pair: 'hydari',
+    onDay: 10,
+    minMode: 'medium',
+    from: TEL_CALCUTTA,
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. CALCUTTA. Gandhiji and Mr Suhrawardy have lived together at Hydari Mansion, Beliaghata, since yesterday evening.',
+      hi: 'IMMEDIATE. कलकत्ता। गांधीजी और मिस्टर सुहरावर्दी कल शाम से बेलियाघाटा के हैदरी मेंशन में साथ रह रहे हैं।',
+    },
+    checks: { en: ['Mr Suhrawardy', 'Hydari Mansion', 'since yesterday evening'], hi: ['मिस्टर सुहरावर्दी', 'हैदरी मेंशन', 'कल शाम से'] },
+    why: {
+      text: {
+        en: 'They moved into Hydari Mansion on the evening of 13 August.',
+        hi: 'वे 13 अगस्त की शाम हैदरी मेंशन में आए।',
+      },
+      sources: [{ id: 'cwmg-89', loc: 'Chronology, p. 528 (13 August 1947); Introduction' }],
+    },
+  },
+  {
+    id: 'm10-hydari-eleventh',
+    tier: 1,
+    real: false,
+    pair: 'hydari',
+    onDay: 10,
+    minMode: 'medium',
+    from: TEL_CALCUTTA,
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. CALCUTTA. Gandhiji and Mr Suhrawardy have lived together at Hydari Mansion, Beliaghata, since the evening of the 11th.',
+      hi: 'IMMEDIATE. कलकत्ता। गांधीजी और मिस्टर सुहरावर्दी 11 तारीख़ की शाम से बेलियाघाटा के हैदरी मेंशन में साथ रह रहे हैं।',
+    },
+    checks: { en: ['Mr Suhrawardy', 'Hydari Mansion', 'evening of the 11th'], hi: ['मिस्टर सुहरावर्दी', 'हैदरी मेंशन', '11 तारीख़ की शाम से'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: {
+          en: 'They moved in on the 13th; on the 11th Gandhiji only proposed it.',
+          hi: 'वे 13 को आए; 11 को गांधीजी ने बस यह सुझाया था।',
+        },
+        factId: 'beliaghata',
+        sources: [{ id: 'cwmg-89', loc: 'Chronology, p. 528 (11 and 13 August 1947)' }],
+      },
+    ],
+  },
+
+  // Medium, undated (the days before the window, or true on any day of it)
+  {
+    id: 'm-sittings-lahore',
+    tier: 1,
+    real: true,
+    pair: 'sittings',
+    minMode: 'medium',
+    from: BC,
+    to: CIPHER,
+    text: {
+      en: 'For the file: the Punjab Commission sat in public at Lahore from 21 to 31 July. Sir Cyril did not attend, but read the record daily.',
+      hi: 'फ़ाइल के लिए: पंजाब कमीशन ने 21 से 31 जुलाई तक लाहौर में खुली सुनवाई की। सर सिरिल ख़ुद नहीं आए, पर रोज़ का रिकॉर्ड पढ़ते रहे।',
+    },
+    checks: { en: ['Punjab Commission', 'at Lahore', '21 to 31 July'], hi: ['पंजाब कमीशन', 'लाहौर में', '21 से 31 जुलाई'] },
+    why: {
+      text: {
+        en: 'His own award: Lahore, 21 to 31 July; he studied the record daily.',
+        hi: 'उनका अपना फ़ैसला: लाहौर, 21 से 31 जुलाई; वे रोज़ रिकॉर्ड पढ़ते थे।',
+      },
+      sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 5' }],
+    },
+  },
+  {
+    id: 'm-sittings-simla',
+    tier: 1,
+    real: false,
+    pair: 'sittings',
+    minMode: 'medium',
+    from: BC,
+    to: CIPHER,
+    text: {
+      en: 'For the file: the Punjab Commission sat in public at Simla from 21 to 31 July. Sir Cyril did not attend, but read the record daily.',
+      hi: 'फ़ाइल के लिए: पंजाब कमीशन ने 21 से 31 जुलाई तक शिमला में खुली सुनवाई की। सर सिरिल ख़ुद नहीं आए, पर रोज़ का रिकॉर्ड पढ़ते रहे।',
+    },
+    checks: { en: ['Punjab Commission', 'at Simla', '21 to 31 July'], hi: ['पंजाब कमीशन', 'शिमला में', '21 से 31 जुलाई'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: {
+          en: 'Lahore held the public sittings; the judges went to Simla only afterwards.',
+          hi: 'खुली सुनवाई लाहौर में हुई; जज उसके बाद ही शिमला गए।',
+        },
+        factId: 'sittings',
+        sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, paras 5–6' }],
+      },
+    ],
+  },
+  {
+    id: 'm-typewriters',
+    tier: 2,
+    real: true,
+    pair: 'typewriters',
+    minMode: 'medium',
+    from: { en: 'Partition minutes, Calcutta', hi: 'बँटवारे की बैठक, कलकत्ता' },
+    to: CIPHER,
+    text: {
+      en: 'Calcutta, 30 July: typewriters, for example, to be divided pro rata, based on the genuine requirements of the two new Governments.',
+      hi: 'कलकत्ता, 30 जुलाई: मिसाल के लिए, टाइपराइटर दोनों नई सरकारों की असली ज़रूरत के हिसाब से, हिस्से के मुताबिक़ बँटेंगे।',
+    },
+    checks: { en: ['30 July', 'typewriters', 'pro rata'], hi: ['30 जुलाई', 'टाइपराइटर', 'हिस्से के मुताबिक़'] },
+    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 287' }] },
+    why: {
+      text: {
+        en: "Real: the Viceroy's Calcutta meeting minuted a 'deadlock in connection with typewriters'.",
+        hi: "सच: वायसराय की कलकत्ता बैठक में 'टाइपराइटरों पर अड़चन' दर्ज हुई।",
+      },
+      sources: [{ id: 'mansergh-xii', loc: 'No. 287' }],
+    },
+  },
+  {
+    id: 'm-typewriters-august',
+    tier: 2,
+    real: false,
+    pair: 'typewriters',
+    minMode: 'medium',
+    from: { en: 'Partition minutes, Calcutta', hi: 'बँटवारे की बैठक, कलकत्ता' },
+    to: CIPHER,
+    text: {
+      en: 'Calcutta, 30 August: typewriters, for example, to be divided pro rata, based on the genuine requirements of the two new Governments.',
+      hi: 'कलकत्ता, 30 अगस्त: मिसाल के लिए, टाइपराइटर दोनों नई सरकारों की असली ज़रूरत के हिसाब से, हिस्से के मुताबिक़ बँटेंगे।',
+    },
+    checks: { en: ['30 August', 'typewriters', 'pro rata'], hi: ['30 अगस्त', 'टाइपराइटर', 'हिस्से के मुताबिक़'] },
+    tells: [
+      {
+        kind: 'date',
+        explain: { en: '30 August has not come yet; the meeting was on 30 July.', hi: '30 अगस्त अभी आया ही नहीं; बैठक 30 जुलाई को हुई।' },
+        sources: [{ id: 'mansergh-xii', loc: 'No. 287' }],
+      },
+    ],
+  },
+  {
+    id: 'm-flag-wheel',
+    tier: 2,
+    real: true,
+    pair: 'flag-wheel',
+    minMode: 'medium',
+    from: CA_OFFICE,
+    to: { en: 'Cipher Office file', hi: 'साइफ़र दफ़्तर की फ़ाइल' },
+    text: {
+      en: "For the file: the flag adopted on 22 July has, in the centre of the white band, a Wheel in navy blue, Asoka's Chakra from Sarnath.",
+      hi: 'फ़ाइल के लिए: 22 जुलाई को मंज़ूर हुए झंडे की सफ़ेद पट्टी के बीच में गहरे नीले रंग का चक्र है, सारनाथ वाला अशोक चक्र।',
+    },
+    checks: { en: ['22 July', 'navy blue', "Asoka's Chakra"], hi: ['22 जुलाई', 'गहरे नीले', 'अशोक चक्र'] },
+    why: {
+      text: {
+        en: "The 22 July resolution: a navy-blue Wheel, as on Asoka's Sarnath capital.",
+        hi: '22 जुलाई का प्रस्ताव: गहरे नीले रंग का चक्र, सारनाथ के अशोक स्तंभ जैसा।',
+      },
+      sources: [{ id: 'cad-22jul1947' }],
+    },
+  },
+  {
+    id: 'm-flag-spindle',
+    tier: 2,
+    real: false,
+    pair: 'flag-wheel',
+    minMode: 'medium',
+    from: CA_OFFICE,
+    to: { en: 'Cipher Office file', hi: 'साइफ़र दफ़्तर की फ़ाइल' },
+    text: {
+      en: 'For the file: the flag adopted on 22 July has, in the centre of the white band, the full charkha in navy blue, spindle and all.',
+      hi: 'फ़ाइल के लिए: 22 जुलाई को मंज़ूर हुए झंडे की सफ़ेद पट्टी के बीच में गहरे नीले रंग का पूरा चरखा है, तकुए समेत।',
+    },
+    checks: { en: ['22 July', 'navy blue', 'spindle and all'], hi: ['22 जुलाई', 'गहरे नीले', 'तकुए समेत'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: "Only the wheel stayed, as Asoka's Chakra; the charkha's spindle went.",
+          hi: 'सिर्फ़ चक्र रहा, अशोक चक्र बनकर; चरखे का तकुआ हट गया।',
+        },
+        factId: 'tricolour',
+        sources: [{ id: 'cad-22jul1947', loc: 'the resolution; Nehru on the wheel and the spindle' }],
+      },
+    ],
+  },
+
+  // ═════════════ Hard only (minMode 'hard'): deeper, still well known ═════════════
+  // Day 3, Thu 7 Aug: the astrology minute (real, and the root of a famous myth)
+  {
+    id: 'h3-astrology-minute',
+    tier: 3,
+    real: true,
+    onDay: 3,
+    minMode: 'hard',
+    from: { en: "Viceroy's Staff Meeting", hi: 'वायसराय की स्टाफ़ मीटिंग' },
+    to: CIPHER,
+    text: {
+      en: 'Minutes, Item 1, Astrology: Mr Pakwasa refuses on astrological grounds to go down on the 13th. The Press Attaché becomes honorary Astrologer.',
+      hi: 'मिनट्स, विषय 1, ज्योतिष: मिस्टर पकवासा ज्योतिष के कारण 13 तारीख़ को रवाना होने से मना करते हैं। प्रेस अताशे अब ऑनरेरी ज्योतिषी हैं।',
+    },
+    checks: { en: ['Item 1, Astrology', 'astrological grounds', 'honorary Astrologer'], hi: ['ज्योतिष के कारण', '13 तारीख़', 'ऑनरेरी ज्योतिषी'] },
+    why: {
+      text: {
+        en: "Real: minuted on 7 August, about a governor's journey, not freedom's hour.",
+        hi: 'सच: 7 अगस्त के मिनट्स, एक गवर्नर के सफ़र के बारे में, आज़ादी के समय के नहीं।',
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 7 August 1947' }],
+    },
+  },
+
+  // Day 8, Tue 12 Aug: calling on Radcliffe
+  {
+    id: 'h8-changing-for-dinner',
+    tier: 2,
+    real: true,
+    pair: 'changing-for-dinner',
+    onDay: 8,
+    minMode: 'hard',
+    from: PRESS_VH,
+    to: CIPHER,
+    text: {
+      en: "For the file: Christie and I called on Sir Cyril at the Comptroller's House this evening. He was changing for dinner; Punjab and Bengal are ready.",
+      hi: 'फ़ाइल के लिए: क्रिस्टी और मैं आज शाम कंट्रोलर्स हाउस में सर सिरिल से मिले। वे खाने के लिए कपड़े बदल रहे थे; पंजाब और बंगाल तैयार हैं।',
+    },
+    checks: { en: ['Christie and I', "Comptroller's House", 'changing for dinner'], hi: ['क्रिस्टी और मैं', 'कंट्रोलर्स हाउस', 'कपड़े बदल रहे थे'] },
+    why: {
+      text: {
+        en: "Campbell-Johnson, 12 August: Radcliffe, at the Comptroller's House, was 'changing for dinner'.",
+        hi: "कैंपबेल-जॉनसन, 12 अगस्त: कंट्रोलर्स हाउस में रैडक्लिफ़ 'खाने के लिए कपड़े बदल रहे थे'।",
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 12 August 1947' }],
+    },
+  },
+  {
+    id: 'h8-simla-lodge',
+    tier: 2,
+    real: false,
+    pair: 'changing-for-dinner',
+    onDay: 8,
+    minMode: 'hard',
+    from: PRESS_VH,
+    to: CIPHER,
+    text: {
+      en: 'For the file: Christie and I called on Sir Cyril at Viceregal Lodge, Simla, this evening. He was changing for dinner; Punjab and Bengal are ready.',
+      hi: 'फ़ाइल के लिए: क्रिस्टी और मैं आज शाम वायसरीगल लॉज, शिमला में सर सिरिल से मिले। वे खाने के लिए कपड़े बदल रहे थे; पंजाब और बंगाल तैयार हैं।',
+    },
+    checks: { en: ['Christie and I', 'Viceregal Lodge, Simla', 'changing for dinner'], hi: ['क्रिस्टी और मैं', 'वायसरीगल लॉज, शिमला', 'कपड़े बदल रहे थे'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: {
+          en: "On the 12th he was at the Comptroller's House in Delhi, not Simla.",
+          hi: '12 को वे दिल्ली के कंट्रोलर्स हाउस में थे, शिमला में नहीं।',
+        },
+        factId: 'radcliffe-house',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 12 August 1947' }],
+      },
+    ],
+  },
+
+  // Day 9, Wed 13 Aug: the Raj's last full day, and a title for a prince
+  {
+    id: 'h9-nizam-title',
+    tier: 3,
+    real: true,
+    onDay: 9,
+    minMode: 'hard',
+    from: VISCOUNT,
+    to: LISTOWEL,
+    text: {
+      en: 'MOST IMMEDIATE. No. 3384-S. …an immediate submission to His Majesty recommending that second son of His Exalted Highness Nizam of Hyderabad be granted title of His Highness.',
+      hi: 'MOST IMMEDIATE. नंबर 3384-S. …तुरंत राजा से सिफ़ारिश की जाए कि हैदराबाद के निज़ाम के दूसरे बेटे को हिज़ हाइनेस की उपाधि मिले।',
+    },
+    checks: { en: ['MOST IMMEDIATE', 'second son', 'His Highness'], hi: ['MOST IMMEDIATE', 'दूसरे बेटे', 'हिज़ हाइनेस'] },
+    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 463' }] },
+    why: {
+      text: {
+        en: 'Real, 13 August; Patel had no objection, and the King approved next day.',
+        hi: 'सच, 13 अगस्त; पटेल को एतराज़ नहीं था, और राजा ने अगले दिन मंज़ूरी दी।',
+      },
+      sources: [{ id: 'mansergh-xii', loc: 'No. 463 and note' }],
+    },
+  },
+
+  // Day 11, Fri 15 Aug: freedom day, seen up close
+  {
+    id: 'h11-songs',
+    tier: 3,
+    real: true,
+    pair: 'songs',
+    onDay: 11,
+    minMode: 'hard',
+    from: CAI,
+    to: RECORD,
+    text: {
+      en: "From last night's sitting: Shrimati Sucheta Kripalani sang the first lines of Sare Jahan se Achcha and the first verse of Jana Gana Mana.",
+      hi: 'कल रात की बैठक से: श्रीमती सुचेता कृपलानी ने सारे जहाँ से अच्छा की पहली पंक्तियाँ और जन गण मन का पहला छंद गाया।',
+    },
+    checks: { en: ['Sucheta Kripalani', 'Sare Jahan se Achcha', 'first verse of Jana Gana Mana'], hi: ['सुचेता कृपलानी', 'सारे जहाँ से अच्छा', 'जन गण मन का पहला छंद'] },
+    document: { sources: [{ id: 'cad-14aug1947' }] },
+    why: {
+      text: {
+        en: 'In the record, word for word; Jana Gana Mana was not yet the anthem.',
+        hi: 'रिकॉर्ड में यही लिखा है; जन गण मन तब राष्ट्रगान नहीं था।',
+      },
+      sources: [{ id: 'cad-14aug1947' }, { id: 'cad-24jan1950' }],
+    },
+  },
+  {
+    id: 'h11-songs-anthem',
+    tier: 3,
+    real: false,
+    pair: 'songs',
+    onDay: 11,
+    minMode: 'hard',
+    from: CAI,
+    to: RECORD,
+    text: {
+      en: "From last night's sitting: Shrimati Sucheta Kripalani sang the first lines of Sare Jahan se Achcha and the national anthem, Jana Gana Mana.",
+      hi: 'कल रात की बैठक से: श्रीमती सुचेता कृपलानी ने सारे जहाँ से अच्छा की पहली पंक्तियाँ और राष्ट्रगान, जन गण मन, गाया।',
+    },
+    checks: { en: ['Sucheta Kripalani', 'Sare Jahan se Achcha', 'the national anthem'], hi: ['सुचेता कृपलानी', 'सारे जहाँ से अच्छा', 'राष्ट्रगान'] },
+    tells: [
+      {
+        kind: 'anachronism',
+        explain: {
+          en: 'Jana Gana Mana became the national anthem only on 24 January 1950.',
+          hi: 'जन गण मन 24 जनवरी 1950 को ही राष्ट्रगान बना।',
+        },
+        sources: [{ id: 'cad-24jan1950' }, { id: 'cad-14aug1947' }],
+      },
+    ],
+  },
+  {
+    id: 'h11-oath-kania',
+    tier: 2,
+    real: true,
+    pair: 'oath',
+    onDay: 11,
+    minMode: 'hard',
+    from: PRESS_GH,
+    to: CIPHER,
+    text: {
+      en: 'For the file: at 8.30 this morning, in the Durbar Hall, Chief Justice Kania gave the oath to the new Governor-General.',
+      hi: 'फ़ाइल के लिए: आज सुबह 8.30 बजे दरबार हॉल में चीफ़ जस्टिस कानिया ने नए गवर्नर-जनरल को शपथ दिलाई।',
+    },
+    checks: { en: ['8.30 this morning', 'Durbar Hall', 'Chief Justice Kania'], hi: ['सुबह 8.30', 'दरबार हॉल', 'चीफ़ जस्टिस कानिया'] },
+    why: {
+      text: {
+        en: "Campbell-Johnson was there: 'an Indian Chief Justice, Dr. Kania' gave the oath.",
+        hi: "कैंपबेल-जॉनसन वहाँ थे: 'एक भारतीय चीफ़ जस्टिस, डॉक्टर कानिया' ने शपथ दिलाई।",
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+    },
+  },
+  {
+    id: 'h11-oath-spens',
+    tier: 2,
+    real: false,
+    pair: 'oath',
+    onDay: 11,
+    minMode: 'hard',
+    from: PRESS_GH,
+    to: CIPHER,
+    text: {
+      en: 'For the file: at 8.30 this morning, in the Durbar Hall, Chief Justice Sir Patrick Spens gave the oath to the new Governor-General.',
+      hi: 'फ़ाइल के लिए: आज सुबह 8.30 बजे दरबार हॉल में चीफ़ जस्टिस सर पैट्रिक स्पेंस ने नए गवर्नर-जनरल को शपथ दिलाई।',
+    },
+    checks: { en: ['8.30 this morning', 'Durbar Hall', 'Sir Patrick Spens'], hi: ['सुबह 8.30', 'दरबार हॉल', 'सर पैट्रिक स्पेंस'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: 'Kania gave the oath; Spens had left the bench for the Arbitral Tribunal.',
+          hi: 'शपथ कानिया ने दिलाई; स्पेंस अदालत छोड़कर बँटवारे की पंच अदालत के अध्यक्ष बन चुके थे।',
+        },
+        factId: 'oath',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }, { id: 'mansergh-xii', loc: 'Introduction (the Arbitral Tribunal)' }],
+      },
+    ],
+  },
+  {
+    id: 'h11-rainbow',
+    tier: 1,
+    real: true,
+    pair: 'rainbow',
+    onDay: 11,
+    minMode: 'hard',
+    from: { en: 'Arrangements office, Princes Park', hi: 'इंतज़ाम दफ़्तर, प्रिंसेस पार्क' },
+    to: GOVT_HOUSE,
+    text: {
+      en: 'IMMEDIATE. Princes Park: some 300,000 came, ten times the 30,000 planned. Light rain fell as the flag went up, and a rainbow appeared.',
+      hi: 'IMMEDIATE. प्रिंसेस पार्क: करीब तीन लाख लोग आए, तय 30,000 से दस गुना। झंडा चढ़ते ही हल्की बारिश हुई, और इंद्रधनुष निकला।',
+    },
+    checks: { en: ['some 300,000', 'the 30,000 planned', 'a rainbow'], hi: ['करीब तीन लाख', 'तय 30,000', 'इंद्रधनुष'] },
+    why: {
+      text: {
+        en: "Campbell-Johnson: planned for 30,000, 'nearer three hundred thousand'; then a rainbow.",
+        hi: "कैंपबेल-जॉनसन: इंतज़ाम 30,000 का, आए 'करीब तीन लाख'; फिर इंद्रधनुष।",
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+    },
+  },
+  {
+    id: 'h11-rainbow-planned',
+    tier: 1,
+    real: false,
+    pair: 'rainbow',
+    onDay: 11,
+    minMode: 'hard',
+    from: { en: 'Arrangements office, Princes Park', hi: 'इंतज़ाम दफ़्तर, प्रिंसेस पार्क' },
+    to: GOVT_HOUSE,
+    text: {
+      en: 'IMMEDIATE. Princes Park: some 30,000 came, just as planned. Light rain fell as the flag went up, and a rainbow appeared.',
+      hi: 'IMMEDIATE. प्रिंसेस पार्क: करीब 30,000 लोग आए, जितने तय थे। झंडा चढ़ते ही हल्की बारिश हुई, और इंद्रधनुष निकला।',
+    },
+    checks: { en: ['some 30,000', 'just as planned', 'a rainbow'], hi: ['करीब 30,000', 'जितने तय थे', 'इंद्रधनुष'] },
+    tells: [
+      {
+        kind: 'number',
+        explain: { en: 'Nearly 300,000 came, ten times the 30,000 planned.', hi: 'करीब तीन लाख आए, तय 30,000 से दस गुना।' },
+        factId: 'princes-park',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+      },
+    ],
+  },
+  {
+    id: 'h11-truman',
+    tier: 3,
+    real: true,
+    onDay: 11,
+    minMode: 'hard',
+    from: { en: 'Constituent Assembly, morning sitting', hi: 'संविधान सभा, सुबह की बैठक' },
+    to: RECORD,
+    text: {
+      en: "Morning sitting: Dr Prasad read the messages from abroad but forgot President Truman's, until the American Ambassador protested in a loud whisper.",
+      hi: 'सुबह की बैठक: डॉक्टर प्रसाद ने विदेशों के संदेश पढ़े, पर राष्ट्रपति ट्रूमैन का भूल गए, जब तक अमेरिकी राजदूत ने ज़ोर से फुसफुसाकर टोका नहीं।',
+    },
+    checks: { en: ['Dr Prasad', "President Truman's", 'loud whisper'], hi: ['डॉक्टर प्रसाद', 'ट्रूमैन', 'फुसफुसाकर'] },
+    why: {
+      text: {
+        en: "True: Campbell-Johnson records the lapse, mended after Dr Grady's loud whisper.",
+        hi: 'सच: कैंपबेल-जॉनसन ने यह भूल लिखी, जो डॉक्टर ग्रेडी के टोकने पर सुधरी।',
+      },
+      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+    },
+  },
+
+  // Day 13, Sun 17 Aug: Bombay in the rain
+  {
+    id: 'h13-georgic',
+    tier: 2,
+    real: true,
+    pair: 'georgic',
+    onDay: 13,
+    minMode: 'hard',
+    from: { en: 'Telegraph Office, Bombay', hi: 'तार घर, बंबई' },
+    to: GOVT_HOUSE,
+    text: {
+      en: 'IMMEDIATE. BOMBAY. In rain on the quay, the Governor-General saw off the first British troops to leave India: the Norfolks, on the troopship Georgic.',
+      hi: 'IMMEDIATE. बंबई। गवर्नर-जनरल ने बारिश में घाट पर भारत छोड़ने वाले पहले ब्रिटिश फ़ौजियों को विदा किया: नॉरफ़ॉक के जवान, जॉर्जिक जहाज़ पर।',
+    },
+    checks: { en: ['first British troops', 'the Norfolks', 'troopship Georgic'], hi: ['पहले ब्रिटिश फ़ौजियों', 'नॉरफ़ॉक', 'जॉर्जिक जहाज़'] },
+    why: {
+      text: {
+        en: 'Campbell-Johnson, 17 August: detachments of the Norfolks, on the Georgic, in rain.',
+        hi: 'कैंपबेल-जॉनसन, 17 अगस्त: नॉरफ़ॉक के दस्ते, जॉर्जिक जहाज़ पर, बारिश में।',
+      },
+      sources: [
+        { id: 'campbell-johnson-1951', loc: 'entry for 17 August 1947, Bombay' },
+        { id: 'mansergh-xii', loc: 'No. 113, para 6' },
+      ],
+    },
+  },
+  {
+    id: 'h13-empress',
+    tier: 2,
+    real: false,
+    pair: 'georgic',
+    onDay: 13,
+    minMode: 'hard',
+    from: { en: 'Telegraph Office, Bombay', hi: 'तार घर, बंबई' },
+    to: GOVT_HOUSE,
+    text: {
+      en: 'IMMEDIATE. BOMBAY. In rain on the quay, the Governor-General saw off the first British troops to leave India: the Norfolks, on the Empress of Scotland.',
+      hi: 'IMMEDIATE. बंबई। गवर्नर-जनरल ने बारिश में घाट पर भारत छोड़ने वाले पहले ब्रिटिश फ़ौजियों को विदा किया: नॉरफ़ॉक के जवान, एम्प्रेस ऑफ़ स्कॉटलैंड जहाज़ पर।',
+    },
+    checks: { en: ['first British troops', 'the Norfolks', 'Empress of Scotland'], hi: ['पहले ब्रिटिश फ़ौजियों', 'नॉरफ़ॉक', 'एम्प्रेस ऑफ़ स्कॉटलैंड'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: 'The Norfolks sailed on the Georgic; the Empress of Scotland took ex-Governors next day.',
+          hi: 'नॉरफ़ॉक जॉर्जिक से गए; एम्प्रेस ऑफ़ स्कॉटलैंड अगले दिन पुराने गवर्नरों को ले गया।',
+        },
+        factId: 'bombay',
+        sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 17 August 1947, Bombay' }],
+      },
+    ],
+  },
+
+  // Day 14, Mon 18 Aug: Id in Calcutta
+  {
+    id: 'h14-id-calcutta',
+    tier: 1,
+    real: true,
+    pair: 'id-greetings',
+    onDay: 14,
+    minMode: 'hard',
+    from: TEL_CALCUTTA,
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. CALCUTTA. At his prayer meeting today, Gandhiji began by wishing Id Mubarak to all the Muslims present.',
+      hi: 'IMMEDIATE. कलकत्ता। आज प्रार्थना सभा में गांधीजी ने सबसे पहले वहाँ मौजूद सब मुसलमानों को ईद मुबारक कहा।',
+    },
+    checks: { en: ['CALCUTTA', 'Id Mubarak'], hi: ['कलकत्ता', 'ईद मुबारक'] },
+    why: {
+      text: {
+        en: "18 August, Calcutta: 'My first duty is to wish Id Mubarak…'",
+        hi: "18 अगस्त, कलकत्ता: 'मेरा पहला फ़र्ज़ ईद मुबारक कहना है…'",
+      },
+      sources: [{ id: 'cwmg-89', loc: 'Speech at prayer meeting, Calcutta, 18 August 1947; Chronology, p. 528' }],
+    },
+  },
+  {
+    id: 'h14-id-delhi',
+    tier: 1,
+    real: false,
+    pair: 'id-greetings',
+    onDay: 14,
+    minMode: 'hard',
+    from: TEL_DELHI,
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. DELHI. At his prayer meeting today, Gandhiji began by wishing Id Mubarak to all the Muslims present.',
+      hi: 'IMMEDIATE. दिल्ली। आज प्रार्थना सभा में गांधीजी ने सबसे पहले वहाँ मौजूद सब मुसलमानों को ईद मुबारक कहा।',
+    },
+    checks: { en: ['DELHI', 'Id Mubarak'], hi: ['दिल्ली', 'ईद मुबारक'] },
+    tells: [
+      {
+        kind: 'place',
+        explain: { en: 'He was in Calcutta, living at Beliaghata, not in Delhi.', hi: 'वे कलकत्ता में थे, बेलियाघाटा में रहते हुए, दिल्ली में नहीं।' },
+        factId: 'beliaghata',
+        sources: [{ id: 'cwmg-89', loc: 'Chronology, p. 528 (13–18 August 1947)' }],
+      },
+    ],
+  },
+
+  // Hard, undated
+  {
+    id: 'h-judges-real',
+    tier: 2,
+    real: true,
+    pair: 'punjab-judges',
+    minMode: 'hard',
+    from: BC,
+    to: CIPHER,
+    text: {
+      en: 'For the file: the Punjab Commission is Justices Din Muhammad, Muhammad Munir, Mehr Chand Mahajan and Teja Singh, with Sir Cyril in the chair.',
+      hi: 'फ़ाइल के लिए: पंजाब कमीशन में जस्टिस दीन मुहम्मद, मुहम्मद मुनीर, मेहर चंद महाजन और तेजा सिंह हैं, अध्यक्ष सर सिरिल हैं।',
+    },
+    checks: { en: ['Punjab Commission', 'Mehr Chand Mahajan', 'Teja Singh'], hi: ['पंजाब कमीशन', 'मेहर चंद महाजन', 'तेजा सिंह'] },
+    why: {
+      text: { en: 'Exactly as the Punjab award of 12 August names them.', hi: '12 अगस्त के पंजाब फ़ैसले में यही नाम हैं।' },
+      sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 2' }],
+    },
+  },
+  {
+    id: 'h-judges-biswas',
+    tier: 2,
+    real: false,
+    pair: 'punjab-judges',
+    minMode: 'hard',
+    from: BC,
+    to: CIPHER,
+    text: {
+      en: 'For the file: the Punjab Commission is Justices Din Muhammad, Muhammad Munir, Mehr Chand Mahajan and C.C. Biswas, with Sir Cyril in the chair.',
+      hi: 'फ़ाइल के लिए: पंजाब कमीशन में जस्टिस दीन मुहम्मद, मुहम्मद मुनीर, मेहर चंद महाजन और सी.सी. बिस्वास हैं, अध्यक्ष सर सिरिल हैं।',
+    },
+    checks: { en: ['Punjab Commission', 'Mehr Chand Mahajan', 'C.C. Biswas'], hi: ['पंजाब कमीशन', 'मेहर चंद महाजन', 'सी.सी. बिस्वास'] },
+    tells: [
+      {
+        kind: 'name',
+        explain: {
+          en: 'Justice Biswas sat for Bengal; the fourth Punjab judge was Teja Singh.',
+          hi: 'जस्टिस बिस्वास बंगाल कमीशन में थे; पंजाब के चौथे जज तेजा सिंह थे।',
+        },
+        factId: 'punjab-judges',
+        sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 2; Appendix II, para 2' }],
+      },
+    ],
+  },
+  {
+    id: 'h-clock-real',
+    tier: 2,
+    real: true,
+    pair: 'karachi-clock',
+    minMode: 'hard',
+    from: HEAD,
+    to: CLERK,
+    text: {
+      en: "Note for the desk: Karachi keeps Delhi's clock, so its telegram times need no change. Only London's run behind.",
+      hi: 'मेज़ के लिए नोट: कराची में दिल्ली वाली ही घड़ी चलती है, इसलिए उसके तारों का समय बदलना नहीं पड़ता। सिर्फ़ लंदन का समय पीछे है।',
+    },
+    checks: { en: ["Karachi keeps Delhi's clock", 'need no change'], hi: ['दिल्ली वाली ही घड़ी', 'बदलना नहीं पड़ता'] },
+    why: {
+      text: {
+        en: 'In 1947 both ran 5½ hours ahead of GMT; Pakistan changed in 1951.',
+        hi: '1947 में दोनों जगह GMT से 5½ घंटे आगे का समय था; पाकिस्तान ने 1951 में बदला।',
+      },
+      sources: [{ id: 'iana-tz', loc: 'Zones Asia/Karachi and Asia/Kolkata' }],
+    },
+  },
+  {
+    id: 'h-clock-half-hour',
+    tier: 2,
+    real: false,
+    pair: 'karachi-clock',
+    minMode: 'hard',
+    from: HEAD,
+    to: CLERK,
+    text: {
+      en: 'Note for the desk: Karachi runs half an hour behind Delhi, so add thirty minutes to its telegram times.',
+      hi: 'मेज़ के लिए नोट: कराची दिल्ली से आधा घंटा पीछे है, इसलिए उसके तारों के समय में तीस मिनट जोड़ें।',
+    },
+    checks: { en: ['half an hour behind Delhi', 'add thirty minutes'], hi: ['आधा घंटा पीछे', 'तीस मिनट जोड़ें'] },
+    tells: [
+      {
+        kind: 'number',
+        explain: {
+          en: 'Same clock in 1947; Pakistan moved half an hour back only in 1951.',
+          hi: '1947 में घड़ी एक ही थी; पाकिस्तान 1951 में ही आधा घंटा पीछे हुआ।',
+        },
+        factId: 'karachi-time',
+        sources: [{ id: 'iana-tz', loc: 'Zone Asia/Karachi: +5:30 until 30 September 1951' }],
+      },
+    ],
+  },
+  {
+    id: 'h-lease-fake',
+    tier: 3,
+    real: false,
+    minMode: 'hard',
+    from: { en: 'Correspondent, Bombay', hi: 'संवाददाता, बंबई' },
+    to: CIPHER,
+    text: {
+      en: 'IMMEDIATE. A secret Transfer of Power Agreement grants India freedom on a 99-year lease, after which the Crown may take it back.',
+      hi: 'IMMEDIATE. एक गुप्त ट्रांसफ़र ऑफ़ पावर एग्रीमेंट के तहत भारत को आज़ादी 99 साल की लीज़ पर मिली है, जिसके बाद राजा इसे वापस ले सकते हैं।',
+    },
+    checks: { en: ['Transfer of Power Agreement', '99-year lease', 'take it back'], hi: ['ट्रांसफ़र ऑफ़ पावर एग्रीमेंट', '99 साल की लीज़', 'वापस ले सकते हैं'] },
+    tells: [
+      {
+        kind: 'knowledge',
+        explain: {
+          en: 'No such lease: the Act ends British rule outright; lease letters are modern fakes.',
+          hi: 'ऐसी कोई लीज़ नहीं: क़ानून ब्रिटिश राज पूरी तरह ख़त्म करता है; लीज़ वाली चिट्ठियाँ आज की जालसाज़ी हैं।',
+        },
+        sources: [{ id: 'menon-1957', loc: 'ch. XVII (the Indian Independence Act)' }, { id: 'boom-lease-2026' }],
       },
     ],
   },

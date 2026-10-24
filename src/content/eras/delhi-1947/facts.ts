@@ -1,6 +1,8 @@
 import type { Fact } from '../../types.js'
 
 // The case file. hardHidden lines are blank in Hard: a history buff knows them.
+// It grows with the mode (owner 10-24): lines with minMode 'medium' join in Medium and Hard, 'hard' in
+// Hard only. Easy keeps the ten lines without a minMode.
 // Each line backs at least one forgery's slip (see messages.ts). In story order: the days of freedom
 // (para 1), who is where (para 2), the secret on every desk, Radcliffe's awards (para 3). Each story
 // says its value and nothing more; the checkable words sit in [[ ]].
@@ -55,6 +57,54 @@ export const facts: Fact[] = [
     hardHidden: true,
   },
   {
+    id: 'delhi-programme',
+    minMode: 'medium',
+    para: 1,
+    label: { en: 'Delhi, 15 August', hi: 'दिल्ली, 15 अगस्त' },
+    value: { en: 'Oath 8.30 am; Princes Park evening', hi: 'शपथ सुबह 8.30; शाम प्रिंसेस पार्क' },
+    story: {
+      en: 'On the 15th the oath is at [[8.30 am]], and the flag goes up in [[Princes Park]] in the [[evening]].',
+      hi: '15 तारीख़ को शपथ [[सुबह 8.30]] बजे होती है, और [[शाम]] को [[प्रिंसेस पार्क]] में झंडा फहराया जाता है।',
+    },
+    sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+  },
+  {
+    id: 'oath',
+    minMode: 'hard',
+    para: 1,
+    label: { en: 'The oath', hi: 'शपथ' },
+    value: { en: 'Durbar Hall; Justice Kania', hi: 'दरबार हॉल; जस्टिस कानिया' },
+    story: {
+      en: 'In the [[Durbar Hall]], the oath is given by [[Justice Kania]].',
+      hi: '[[दरबार हॉल]] में शपथ [[जस्टिस कानिया]] दिलाते हैं।',
+    },
+    sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+  },
+  {
+    id: 'princes-park',
+    minMode: 'hard',
+    para: 1,
+    label: { en: 'Princes Park crowd', hi: 'प्रिंसेस पार्क की भीड़' },
+    value: { en: '30,000 planned; nearly 300,000 came', hi: '30,000 का इंतज़ाम; करीब तीन लाख आए' },
+    story: {
+      en: 'Princes Park was planned for [[30,000]], but [[nearly 300,000]] came.',
+      hi: 'प्रिंसेस पार्क में [[30,000]] लोगों का इंतज़ाम था, पर [[करीब तीन लाख]] आए।',
+    },
+    sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
+  },
+  {
+    id: 'tricolour',
+    minMode: 'medium',
+    para: 1,
+    label: { en: 'The new flag', hi: 'नया झंडा' },
+    value: { en: "Asoka's wheel, navy blue", hi: 'अशोक का चक्र, गहरा नीला' },
+    story: {
+      en: "At its centre the flag carries [[Asoka's wheel]], in [[navy blue]].",
+      hi: 'झंडे के बीच में [[अशोक का चक्र]] है, [[गहरे नीले]] रंग में।',
+    },
+    sources: [{ id: 'cad-22jul1947' }],
+  },
+  {
     id: 'jinnah',
     para: 2,
     label: { en: 'Mr Jinnah', hi: 'मिस्टर जिन्ना' },
@@ -66,6 +116,33 @@ export const facts: Fact[] = [
     sources: [{ id: 'menon-1957', loc: 'ch. XVIII' }],
   },
   {
+    id: 'karachi-trip',
+    minMode: 'medium',
+    para: 2,
+    label: { en: 'Viceroy to Karachi', hi: 'वायसराय कराची में' },
+    value: { en: 'Karachi 13th; back in Delhi 14th', hi: '13 को कराची; 14 को दिल्ली वापस' },
+    story: {
+      en: 'The Viceroy flies to [[Karachi]] on the [[13th]] and is back in [[Delhi]] on the [[14th]].',
+      hi: 'वायसराय [[13]] को [[कराची]] जाते हैं, और [[14]] को [[दिल्ली]] लौट आते हैं।',
+    },
+    sources: [
+      { id: 'campbell-johnson-1951', loc: 'entries for 13 and 14–15 August 1947' },
+      { id: 'capd-1947', loc: 'No. 4, Thursday 14 August 1947' },
+    ],
+  },
+  {
+    id: 'karachi-time',
+    minMode: 'hard',
+    para: 2,
+    label: { en: 'Karachi clocks', hi: 'कराची की घड़ी' },
+    value: { en: 'Same time as Delhi', hi: 'दिल्ली वाला ही समय' },
+    story: {
+      en: 'Karachi keeps the [[same time]] as [[Delhi]].',
+      hi: 'कराची में भी [[दिल्ली वाला ही समय]] चलता है।',
+    },
+    sources: [{ id: 'iana-tz', loc: 'Zone Asia/Karachi: +5:30 until 30 September 1951' }],
+  },
+  {
     id: 'gandhi',
     para: 2,
     label: { en: 'Gandhiji', hi: 'गांधीजी' },
@@ -75,6 +152,18 @@ export const facts: Fact[] = [
       hi: 'गांधीजी [[9 अगस्त]] से [[कलकत्ता]] में हैं, और [[15]] को [[उपवास]] रखते हैं।',
     },
     sources: [{ id: 'cwmg-89', loc: 'Introduction; documents for 9–15 August 1947' }],
+  },
+  {
+    id: 'beliaghata',
+    minMode: 'medium',
+    para: 2,
+    label: { en: "Gandhiji's house", hi: 'गांधीजी का घर' },
+    value: { en: 'Beliaghata, with Suhrawardy, from 13th', hi: '13 से बेलियाघाटा, सुहरावर्दी के साथ' },
+    story: {
+      en: 'From the [[13th]], Gandhiji lives in [[Beliaghata]] with [[Suhrawardy]].',
+      hi: '[[13]] से गांधीजी [[बेलियाघाटा]] में [[सुहरावर्दी]] के साथ रहते हैं।',
+    },
+    sources: [{ id: 'cwmg-89', loc: 'Chronology, p. 528 (11 and 13 August 1947); Introduction' }],
   },
   {
     id: 'states',
@@ -99,6 +188,21 @@ export const facts: Fact[] = [
     sources: [{ id: 'menon-1957', loc: 'ch. XVIII' }],
   },
   {
+    id: 'bombay',
+    minMode: 'hard',
+    para: 2,
+    label: { en: 'First troops home', hi: 'पहले फ़ौजी घर' },
+    value: { en: 'Bombay 17th; Norfolks on the Georgic', hi: '17 को बंबई; नॉरफ़ॉक जवान, जहाज़ जॉर्जिक' },
+    story: {
+      en: 'On the [[17th]] in [[Bombay]], the [[Norfolks]] sail home on the troopship [[Georgic]].',
+      hi: '[[17]] को [[बंबई]] से [[नॉरफ़ॉक]] के जवान [[जॉर्जिक]] जहाज़ से घर लौटते हैं।',
+    },
+    sources: [
+      { id: 'campbell-johnson-1951', loc: 'entry for 17 August 1947, Bombay' },
+      { id: 'mansergh-xii', loc: 'No. 113, para 6 (first contingent on the Georgic, 17 August)' },
+    ],
+  },
+  {
     id: 'radcliffe',
     para: 3,
     label: { en: 'Sir Cyril Radcliffe', hi: 'सर सिरिल रैडक्लिफ़' },
@@ -111,6 +215,54 @@ export const facts: Fact[] = [
       { id: 'mansergh-xii', loc: 'Introduction' },
       { id: 'chester-2002' },
     ],
+  },
+  {
+    id: 'radcliffe-house',
+    minMode: 'hard',
+    para: 3,
+    label: { en: "Radcliffe's desk", hi: 'रैडक्लिफ़ की मेज़' },
+    value: { en: "Comptroller's House, Viceregal estate", hi: 'कंट्रोलर्स हाउस, वायसराय का अहाता' },
+    story: {
+      en: "He works alone at the [[Comptroller's House]], on the [[Viceregal estate]].",
+      hi: 'वे [[कंट्रोलर्स हाउस]] में अकेले काम करते हैं, [[वायसराय के अहाते]] में।',
+    },
+    sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 12 August 1947' }],
+  },
+  {
+    id: 'sittings',
+    minMode: 'medium',
+    para: 3,
+    label: { en: 'Public sittings', hi: 'खुली सुनवाई' },
+    value: { en: 'Calcutta 16–24 July; Lahore 21–31 July', hi: 'कलकत्ता 16–24 जुलाई; लाहौर 21–31 जुलाई' },
+    story: {
+      en: 'The commissions sat in public in [[Calcutta]] from [[16 to 24 July]], and in [[Lahore]] from [[21 to 31 July]].',
+      hi: 'कमीशनों की खुली सुनवाई [[कलकत्ता]] में [[16 से 24 जुलाई]] और [[लाहौर]] में [[21 से 31 जुलाई]] तक हुई।',
+    },
+    sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 5; Appendix II, para 5' }],
+  },
+  {
+    id: 'punjab-judges',
+    minMode: 'hard',
+    para: 3,
+    label: { en: 'Punjab judges', hi: 'पंजाब के जज' },
+    value: { en: 'Mahajan, Teja Singh, Din Muhammad, Munir', hi: 'महाजन, तेजा सिंह, दीन मुहम्मद, मुनीर' },
+    story: {
+      en: 'On the Punjab commission sit [[Mahajan]], [[Teja Singh]], [[Din Muhammad]] and [[Munir]].',
+      hi: 'पंजाब कमीशन में [[महाजन]], [[तेजा सिंह]], [[दीन मुहम्मद]] और [[मुनीर]] बैठते हैं।',
+    },
+    sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 2' }],
+  },
+  {
+    id: 'gazette-form',
+    minMode: 'medium',
+    para: 3,
+    label: { en: 'Award notice', hi: 'फ़ैसले का ऐलान' },
+    value: { en: 'Gazette Extraordinary, not a communiqué', hi: 'गज़ट का ख़ास अंक, प्रेस नोट नहीं' },
+    story: {
+      en: 'The award will appear as a [[Gazette Extraordinary]], [[not a communiqué]].',
+      hi: 'फ़ैसला [[गज़ट के ख़ास अंक]] में छपेगा, [[प्रेस नोट में नहीं]]।',
+    },
+    sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 9 August 1947' }],
   },
   {
     // Signed on the 12th, Sylhet's dated the 13th (see d4-abell-signed, d8-awards-all-three).
