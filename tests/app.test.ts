@@ -5,7 +5,8 @@ import type { EraId, Message } from '../src/content/types'
 import { TOSS_GRACE_MS, TOSS_HOLD_MS, TOSS_RESUME_MS, type Difficulty } from '../src/game/config'
 import { dailyFrom } from '../src/game/daily'
 import { mulberry32 } from '../src/game/rng'
-import { chapterShareText, shareText } from '../src/game/share'
+import { chapterPost, chapterStory, dailyFact, dailyPost } from '../src/game/share'
+import { closeShareSlip } from '../src/ui/share-slip'
 import { createChapter } from '../src/game/state'
 import { forgetLang, setLang } from '../src/i18n/lang'
 import { strings } from '../src/i18n/strings'
@@ -42,6 +43,7 @@ const m = vi.hoisted(() => {
     loadStage: vi.fn(),
     fallback: {
       setEra: vi.fn(), dispose: vi.fn(), redrawMessage: vi.fn(), flash: vi.fn(), skip: vi.fn(),
+      caught: vi.fn(() => Promise.resolve()),
       showMessage: vi.fn((_s: SheetSpec) => Promise.resolve()),
       dayTitle: vi.fn((_t: { big: string; small: string }) => Promise.resolve()),
       stamp: vi.fn((_k: string) => Promise.resolve()),
@@ -196,7 +198,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   Object.defineProperty(document, 'hidden', { configurable: true, get: () => false })
   for (const k of ['share', 'clipboard', 'userAgent']) delete nav[k]
-  document.querySelectorAll('.toast').forEach((t) => t.remove())
+  closeShareSlip()
 })
 
 // ---------------------------------------------------------------- tests
@@ -373,7 +375,7 @@ describe('a chapter', () => {
     expect(m.audio.setHidden).toHaveBeenLastCalledWith(false)
   })
 
-  it('surviving every day ends on the paper: the best run kept, the survived cue, a share line', async () => {
+  it('surviving every day ends on the paper: the best run kept, the survived cue, a share slip', async () => {
     const share = vi.fn(() => Promise.resolve())
     nav.share = share
     const { ui } = boot('?lang=en&seed=8')
@@ -390,10 +392,23 @@ describe('a chapter', () => {
     expect(localStorage.getItem('ft:best:delhi-1857:easy')).toBe('7')
     click(ui, '[data-action="share"]')
     await flush()
-    expect(share).toHaveBeenCalledWith({ text: chapterShareText({ eraTitle: 'Title 1857', mode: 'Easy', survived: 7, days: 7 }) })
-    expect(chapterShareText({ eraTitle: 'Delhi 1857', mode: 'Hard', survived: 14, days: 14 })).toBe('Firangi Tota · Delhi 1857 · Hard · survived 14/14\nfirangitota.com')
+    // the slip: the post with its best catch, the /s/ link on this origin, and the ways to send it
+    const url = 'https://firangitota.com/s/1857-e7s-en'
+    const p = $(document.body, '.share-slip')!
+    const post = chapterPost({ result: { era: 'delhi-1857', mode: 'easy', outcome: 'survived', days: 7, lang: 'en' }, ...chapterStory({ era: 'delhi-1857', difficulty: 'easy', day: 7, days: 7, queue: q, phase: 'survived' }, 'survived', 'en') })
+    expect(post).toMatch(/^🦜 I held out all 7 days in Bahadur Shah Zafar's darbar, Delhi 1857\nMy best catch: Tell \d+: the place is wrong\n/)
+    expect(p.querySelector('.share-slip__msg')!.textContent).toBe(post)
+    expect(p.querySelector('.share-slip__link')!.textContent).toBe('firangitota.com/s/1857-e7s-en')
+    expect(new URL(p.querySelector<HTMLAnchorElement>('[data-share="x"]')!.href).searchParams.get('url')).toBe(url)
+    expect(m.audio.cue).toHaveBeenCalledWith('fileOpen')
+    p.querySelector<HTMLElement>('[data-share="native"]')!.click()
+    await flush()
+    expect(share).toHaveBeenCalledWith({ text: post, url })
+    expect($(document.body, '.share-slip')).toBeNull() // shared: the slip goes
 
+    click(ui, '[data-action="share"]')
     click(ui, '[data-action="home"]')
+    expect($(document.body, '.share-slip')).toBeNull() // the slip belongs to its screen
     expect($(ui, '[data-era="delhi-1857"]')!.textContent).toContain('Survived Easy')
   })
 
@@ -601,7 +616,7 @@ describe('the toss: after a right stamp the paper goes in the basket and the nex
 })
 
 describe('the daily puzzle', () => {
-  it('plays 5 messages without pencil marks and with every rule, then shows a share grid that matches shareText', async () => {
+  it('plays 5 messages without pencil marks and with every rule, then shows a share grid and shares the score', async () => {
     const share = vi.fn(() => Promise.resolve())
     nav.share = share
     const { ui } = boot('?lang=en&daily')
@@ -626,7 +641,6 @@ describe('the daily puzzle', () => {
     }
     const results = d.messages.map((x) => x.real)
     expect(results).toContain(false)
-    const expected = shareText({ daily: d.number, eraTitle: era.title.en, results })
     // the daily card, not the chapter's caught card: the score, the grid, tomorrow and the countdown
     expect($(ui, '.screen--daily-end')).not.toBeNull()
     expect($(ui, '.daily-end__title')!.textContent).toBe(`Aaj ka Taar #${d.number} · ${results.filter(Boolean).length}/5`)
@@ -638,7 +652,13 @@ describe('the daily puzzle', () => {
     expect(JSON.parse(localStorage.getItem(`ft:daily:${d.isoDate}`)!).results).toEqual(results)
     click(ui, '[data-action="share"]')
     await flush()
-    expect(share).toHaveBeenCalledWith({ text: expected })
+    const right = results.filter(Boolean).length
+    const post = dailyPost({ result: { era: d.era, mode: 'daily', outcome: 'caught', days: right, lang: 'en' }, number: d.number, eraTitle: era.title.en, results, fact: dailyFact(d.messages, results, 'en') })
+    expect(post).toContain(results.map((r) => (r ? '✅' : '❌')).join(''))
+    expect(document.querySelector('.share-slip__msg')!.textContent).toBe(post)
+    document.querySelector<HTMLElement>('[data-share="native"]')!.click()
+    await flush()
+    expect(share).toHaveBeenCalledWith({ text: post, url: `https://firangitota.com/s/${era.year}-d${right}c-en` })
   })
 
   it('replaying the same IST date shows the stored result, not a new run', async () => {
@@ -732,38 +752,76 @@ describe('the main page', () => {
 })
 
 describe('sharing without navigator.share', () => {
-  it('copies to the clipboard, says Copied, and adds a WhatsApp link on mobile', async () => {
+  it('offers WhatsApp, X and copy link, and copies the /s/ link', async () => {
     const writeText = vi.fn(() => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
-    Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0 (Linux; Android 10; K) Mobile Safari/537.36' })
     const { ui } = boot('?lang=en&seed=5')
     await toDay1(ui)
-    click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+    const q = queueFor('delhi-1857', 'easy', 5)
+    click(ui, `[data-stamp="${wrong(q[0]!)}"]`)
     await flush()
     click(ui, '[data-action="share"]')
     await flush()
-    const line = chapterShareText({ eraTitle: 'Title 1857', mode: 'Easy', survived: 0, days: 7 })
-    expect(writeText).toHaveBeenCalledWith(line)
-    const toast = document.querySelector<HTMLElement>('.toast')!
-    expect(toast.textContent).toContain(strings.en.copied)
-    expect(toast.querySelector('a')!.getAttribute('href')).toBe(`whatsapp://send?text=${encodeURIComponent(line)}`)
-    click(ui, '[data-action="home"]')
-    expect(document.querySelector('.toast')).toBeNull() // a toast belongs to its screen
+    const slip = document.querySelector<HTMLElement>('.share-slip')!
+    expect(slip.querySelector('[data-share="native"]')).toBeNull()
+    const url = 'https://firangitota.com/s/1857-e0c-en'
+    const post = slip.querySelector('.share-slip__msg')!.textContent!
+    expect(post.split('\n')[0]).toBe(q[0]!.real
+      ? "🦜 I called a real message fake on day 1 in Bahadur Shah Zafar's darbar, Delhi 1857"
+      : "🦜 The Firangi Tota fooled me on day 1 in Bahadur Shah Zafar's darbar, Delhi 1857")
+    expect(slip.querySelector<HTMLAnchorElement>('[data-share="whatsapp"]')!.getAttribute('href')).toBe(`https://wa.me/?text=${encodeURIComponent(`${post}\n${url}`)}`)
+    slip.querySelector<HTMLElement>('[data-share="copy"]')!.click()
+    await flush()
+    expect(writeText).toHaveBeenCalledWith(url)
+    expect(slip.querySelector('[data-share="copy"]')!.textContent).toBe(strings.en.copied)
   })
 
-  it('leaves out the WhatsApp link on desktop', async () => {
-    const writeText = vi.fn(() => Promise.resolve())
-    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
-    Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' })
-    const { ui } = boot('?lang=en&seed=5')
-    await toDay1(ui)
-    click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+  it('shares in the language on screen, with the link in that language', async () => {
+    const { ui } = boot('?lang=hi&seed=5')
+    await toDay1(ui, 'lahore-1929', 'hard')
+    click(ui, `[data-stamp="${wrong(queueFor('lahore-1929', 'hard', 5)[0]!)}"]`)
     await flush()
     click(ui, '[data-action="share"]')
     await flush()
-    const toast = document.querySelector<HTMLElement>('.toast')!
-    expect(toast.textContent).toContain(strings.en.copied)
-    expect(toast.querySelector('a')).toBeNull()
+    const slip = document.querySelector<HTMLElement>('.share-slip')!
+    expect(slip.closest('.share-layer')!.getAttribute('lang')).toBe('hi')
+    expect(slip.querySelector('.share-slip__msg')!.textContent).toMatch(/^🦜 लाहौर 1929 में भगत सिंह के साथियों का पोस्ट बॉक्स बनकर पहले दिन /)
+    expect(slip.querySelector('.share-slip__link')!.textContent).toBe('firangitota.com/s/1929-h0c-hi')
+  })
+})
+
+describe('arriving from a share link', () => {
+  it('the link page\u2019s ?chapter and ?mode pick the friend\u2019s chapter and mode, without remembering them', () => {
+    localStorage.setItem('ft:difficulty', JSON.stringify('medium'))
+    const replace = vi.spyOn(history, 'replaceState')
+    const { ui } = boot('?lang=en&chapter=bombay-1942&mode=hard')
+    expect($(ui, '[data-era="bombay-1942"]')!.className).toContain('is-on')
+    expect($(ui, '[data-mode="hard"]')!.className).toContain('is-on')
+    expect(m.audio.ambience).toHaveBeenLastCalledWith('bombay-1942')
+    expect(JSON.parse(localStorage.getItem('ft:difficulty')!)).toBe('medium')
+    expect(replace).toHaveBeenCalledWith(null, '', '/?lang=en')
+    replace.mockRestore()
+  })
+
+  it('the offline copy answering /s/<code> picks the same, and a daily code opens the daily puzzle', async () => {
+    const replace = vi.spyOn(history, 'replaceState')
+    let { ui } = boot('s/1947-h3c-hi')
+    expect($(ui, '[data-era="delhi-1947"]')!.className).toContain('is-on')
+    expect($(ui, '[data-mode="hard"]')!.className).toContain('is-on')
+    expect(replace).toHaveBeenCalledWith(null, '', '/')
+    ;({ ui } = boot('s/1857-d4c-en?lang=en'))
+    await flush()
+    expect(text(ui)).toContain('Day 1 of 5')
+    // a code that does not parse changes nothing
+    ;({ ui } = boot('s/1858-e7s-en?lang=en'))
+    expect($(ui, '.screen--main')).not.toBeNull()
+    replace.mockRestore()
+  })
+
+  it('ignores picks that are not a chapter or a mode', () => {
+    const { ui } = boot('?lang=en&chapter=<script>&mode=impossible')
+    expect($(ui, '.screen--main')).not.toBeNull()
+    expect(ui.querySelector('[data-mode].is-on')!.getAttribute('data-mode')).toBe('easy')
   })
 })
 
@@ -792,7 +850,7 @@ describe('the 3D stage (Ruling R10)', () => {
     m.createStage.mockImplementation(() => null)
     const { ui, stage } = boot('?lang=en&seed=3')
     await toDay1(ui)
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', expect.objectContaining({ onCue: expect.any(Function) }))
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', { onCue: expect.any(Function) })
     const msg = queueFor('delhi-1857', 'easy', 3)[0]!
     click(ui, `[data-stamp="${right(msg)}"]`)
     await flush()
@@ -804,7 +862,7 @@ describe('the 3D stage (Ruling R10)', () => {
     const { ui, stage } = boot('?lang=en')
     click(ui, '[data-era="lahore-1929"]')
     await flush()
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'lahore-1929', expect.objectContaining({ onCue: expect.any(Function) }))
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'lahore-1929', { onCue: expect.any(Function) })
   })
 
   it('swaps in the fallback when the WebGL context is lost, keeping the current day', async () => {
@@ -821,7 +879,7 @@ describe('the 3D stage (Ruling R10)', () => {
     stage.dispatchEvent(lost)
     expect(lost.defaultPrevented).toBe(true)
     expect(m.stage.dispose).toHaveBeenCalledTimes(1)
-    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', expect.objectContaining({ onCue: expect.any(Function) }))
+    expect(m.mountFallback).toHaveBeenCalledWith(stage, 'delhi-1857', { onCue: expect.any(Function) })
     expect(text(ui)).toContain('Day 2 of 7')
 
     m.stage.stamp.mockClear()
@@ -906,6 +964,52 @@ describe('the 3D stage (Ruling R10)', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('waits out the caught sequence before the paper turns over, and never hangs on one that does not finish', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      // a sequence that takes its full four seconds and more
+      m.stage.caught.mockImplementation(() => new Promise<void>((r) => setTimeout(r, 4400)))
+      const { ui } = boot('?lang=en&seed=5')
+      click(ui, '[data-era="delhi-1857"]')
+      click(ui, '[data-mode="easy"]')
+      click(ui, '[data-action="begin"]')
+      await vi.advanceTimersByTimeAsync(10)
+      click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+      await vi.advanceTimersByTimeAsync(4300) // past the old 3.5 s guard: still the alarm
+      expect(m.stage.reveal).not.toHaveBeenCalled()
+      expect($(ui, '.screen--day.is-stamping')).not.toBeNull() // a tap on the room skips it
+      await vi.advanceTimersByTimeAsync(200)
+      expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+      // one that never ends: the verdict still comes, after the guard
+      m.stage.caught.mockImplementation(() => new Promise<void>(() => undefined))
+      m.stage.reveal.mockClear()
+      click(ui, '[data-action="again"]')
+      await vi.advanceTimersByTimeAsync(10)
+      click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`) // (the same seed, the same first paper)
+      await vi.advanceTimersByTimeAsync(6000)
+      expect(m.stage.reveal).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(600)
+      expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a desk lost during the caught sequence goes straight on to the verdict on the new one', async () => {
+    m.stage.caught.mockImplementation(() => new Promise<void>(() => undefined))
+    const { ui, stage } = boot('?lang=en&seed=5')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${wrong(queueFor('delhi-1857', 'easy', 5)[0]!)}"]`)
+    await flush()
+    expect(m.stage.caught).toHaveBeenCalledTimes(1)
+    expect(m.stage.reveal).not.toHaveBeenCalled()
+    stage.dispatchEvent(new CustomEvent('ft:stage-lost', { cancelable: true, detail: { era: 'delhi-1857', reason: 'context-lost' } }))
+    await flush()
+    expect(m.fallback.reveal).toHaveBeenCalledTimes(1)
+    expect(m.fallback.reveal.mock.calls[0]![0].outcome).toBe('wrong')
+    expect($(ui, '.paper-result')).not.toBeNull()
   })
 
   it('keeps the stamps asleep through a slow arrival (the 1947 telegram types for ~6 s)', async () => {
@@ -1174,7 +1278,14 @@ describe('the 2D desk mirrors the stage', () => {
     expect(f.stamp).toHaveBeenCalledWith(wrong(msg))
     expect(f.flash).toHaveBeenCalledWith('wrong')
     expect(m.audio.cue).toHaveBeenCalledWith(wrong(msg) === 'asli' ? 'stampAsli' : 'stampTota')
-    expect(m.audio.cue).toHaveBeenCalledWith('caught') // the flat desk has no flash sound of its own
+    // the caught sequence plays on the flat desk too, its beats voiced through the app's onCue
+    expect(f.caught).toHaveBeenCalledTimes(1)
+    const onCue = (m.mountFallback.mock.calls[0] as unknown as [HTMLElement, string, { onCue: (n: StageCueName) => void }])[2].onCue
+    onCue('whistleLong')
+    onCue('knockDoor')
+    expect(m.audio.cue).toHaveBeenCalledWith('whistleLong')
+    expect(m.audio.cue).toHaveBeenCalledWith('knockDoor')
+    expect(m.audio.cue).not.toHaveBeenCalledWith('caught') // no sting at the stamp: the alarm comes after the silence
     expect($(ui, '.paper-result')).not.toBeNull()
   })
 })

@@ -1,9 +1,10 @@
 // Web Audio synthesis: every cue and every procedural ambience layer.
 // Pure scheduling helpers: they take a context and a destination node and never touch globals.
 import type { EraId } from '../content/types'
+import { BUGLE_FIGURES_MS, DRUM_ACCENT_MS, KNOCK_RAPS_MS, PHONE_RINGS_MS, WAIL_RISE_MS, type KnockKind } from '../scene/caught'
 
 export type Cue =
-  | 'arrive' | 'stampAsli' | 'stampTota' | 'tick' | 'correct' | 'caught' | 'survived' | 'page'
+  | 'arrive' | 'stampAsli' | 'stampTota' | 'tick' | 'correct' | 'survived' | 'page'
   // the stage's choreography: the 1947 typewriter, the 1857 seal, the 1929 note, the 1942 envelope,
   // and the day title pressed onto the wall
   | 'typeKey' | 'typeSpace' | 'typeDing' | 'typeReturn' | 'sealCrack' | 'paperUnfold' | 'envelopeFlap' | 'titleSettle'
@@ -14,6 +15,10 @@ export type Cue =
   | 'incense' | 'clockTick' | 'tensionTick'
   // the caught or survived telegram arriving on the teleprinter
   | 'endTelegram'
+  // the caught sequence (src/scene/caught.ts): each era's alarm, the knocks coming closer, then the
+  // alarm cut off and a low swell under the quiet
+  | 'bugleAlarm' | 'kettleDrum' | 'whistleShort' | 'whistleLong' | 'bootsRunning' | 'airRaidWail' | 'phoneBell'
+  | 'knockFar' | 'knockNear' | 'knockDoor' | 'caughtHush' | 'caughtDark'
   // the read paper tossed into the desk's basket: a soft whoosh off the desk, then it lands in the cane
   | 'paperToss' | 'basketLand'
 
@@ -29,6 +34,9 @@ export const SAMPLED_CUES = ['typeKey', 'typeSpace', 'typeDing', 'typeReturn'] a
 export interface Stoppable { stop(): void }
 
 let noiseCache: WeakMap<BaseAudioContext, AudioBuffer> = new WeakMap()
+// the caught sequence's alarm plays through one gain per context, so the dark (or a skip) can cut
+// every sound still ringing at once; a hushed bus is dropped and the next alarm gets a fresh one
+let caughtBuses: WeakMap<BaseAudioContext, GainNode> = new WeakMap()
 
 /** Two seconds of white noise, cached per context. */
 export function noiseBuffer(ctx: BaseAudioContext): AudioBuffer {
@@ -43,7 +51,10 @@ export function noiseBuffer(ctx: BaseAudioContext): AudioBuffer {
 }
 
 /** For tests that swap the context between runs. */
-export function resetSynthCache(): void { noiseCache = new WeakMap() }
+export function resetSynthCache(): void {
+  noiseCache = new WeakMap()
+  caughtBuses = new WeakMap()
+}
 
 function env(ctx: BaseAudioContext, dest: AudioNode, t: number, peak: number, attack: number, decay: number): GainNode {
   const g = ctx.createGain()
@@ -332,13 +343,6 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
       noiseBurst(ctx, dest, t, { type: 'highpass', freq: 4200, q: 0.8, peak: 0.07, attack: 0.001, decay: 0.012 })
       brassTing(ctx, dest, t + 0.012, 1046.5, 0.16)
       break
-    case 'caught':
-      // A low thud with the red flash, then a siren wail that rises and falls (about 1.4 s),
-      // held well under full scale.
-      tone(ctx, dest, t, { type: 'sine', from: 92, to: 40, peak: 0.55, attack: 0.004, decay: 0.38 })
-      noiseBurst(ctx, dest, t, { type: 'lowpass', freq: 380, peak: 0.25, attack: 0.003, decay: 0.16 })
-      siren(ctx, dest, t + 0.05, 1.35, 0.075)
-      break
     case 'typeKey':
       // (until the recorded strikes load) a dry typebar click
       noiseBurst(ctx, dest, t - 0.009, { type: 'bandpass', freq: 2400 + Math.random() * 600, q: 1.2, peak: 0.22, attack: 0.001, decay: 0.025 })
@@ -401,6 +405,43 @@ export function playCue(ctx: BaseAudioContext, dest: AudioNode, cue: Cue, o: Cue
       for (const [f, at] of notes) pluck(ctx, dest, t + at, f, 0.14, 0.8)
       break
     }
+    // the caught sequence: the alarms and knocks go through one bus, so the dark can cut them off
+    case 'bugleAlarm':
+      bugleAlarm(ctx, caughtBus(ctx, dest), t)
+      break
+    case 'kettleDrum':
+      kettleDrum(ctx, caughtBus(ctx, dest), t)
+      break
+    case 'whistleShort':
+      peaWhistle(ctx, caughtBus(ctx, dest), t, 0.26, 0.095)
+      break
+    case 'whistleLong':
+      peaWhistle(ctx, caughtBus(ctx, dest), t, 0.85, 0.095)
+      break
+    case 'bootsRunning':
+      bootsRunning(ctx, caughtBus(ctx, dest), t)
+      break
+    case 'airRaidWail':
+      airRaidWail(ctx, caughtBus(ctx, dest), t)
+      break
+    case 'phoneBell':
+      phoneBell(ctx, caughtBus(ctx, dest), t)
+      break
+    case 'knockFar':
+      knock(ctx, caughtBus(ctx, dest), t, 'far', o.era ?? null)
+      break
+    case 'knockNear':
+      knock(ctx, caughtBus(ctx, dest), t, 'near', o.era ?? null)
+      break
+    case 'knockDoor':
+      knock(ctx, caughtBus(ctx, dest), t, 'door', o.era ?? null)
+      break
+    case 'caughtHush':
+      hushCaught(ctx, t)
+      break
+    case 'caughtDark':
+      caughtDark(ctx, dest, t)
+      break
     case 'paperToss':
       paperWhoosh(ctx, dest, t)
       break
@@ -449,6 +490,254 @@ function basketLand(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
   for (const at of [0.09, 0.24]) {
     noiseBurst(ctx, dest, t + at + Math.random() * 0.02, { type: 'bandpass', freq: 1500 + Math.random() * 500, q: 5, peak: 0.04, attack: 0.002, decay: 0.03 })
   }
+}
+
+// ---------- the caught sequence (src/scene/caught.ts has the score and the hit times)
+
+/** The bus the alarm plays through, made on demand (and afresh after a hush). */
+function caughtBus(ctx: BaseAudioContext, dest: AudioNode): GainNode {
+  let bus = caughtBuses.get(ctx)
+  if (!bus) {
+    bus = ctx.createGain()
+    bus.gain.value = 1
+    bus.connect(dest)
+    caughtBuses.set(ctx, bus)
+  }
+  return bus
+}
+
+/** Cuts the alarm off: everything still sounding on the bus fades out in a sixth of a second. */
+function hushCaught(ctx: BaseAudioContext, t: number): void {
+  const bus = caughtBuses.get(ctx)
+  if (!bus) return
+  caughtBuses.delete(ctx)
+  bus.gain.cancelScheduledValues(t)
+  bus.gain.setValueAtTime(1, t)
+  bus.gain.linearRampToValueAtTime(0.0001, t + 0.16)
+}
+
+/** One bugle note: a sawtooth through a low-pass that opens with the breath, the lip scooping up into pitch. */
+function bugleNote(ctx: BaseAudioContext, dest: AudioNode, t: number, freq: number, len: number, peak: number): void {
+  const osc = ctx.createOscillator()
+  osc.type = 'sawtooth'
+  osc.frequency.setValueAtTime(freq * 0.96, t)
+  osc.frequency.exponentialRampToValueAtTime(freq, t + 0.03)
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.Q.value = 1.4
+  lp.frequency.setValueAtTime(freq * 1.4, t)
+  lp.frequency.exponentialRampToValueAtTime(Math.min(freq * 5, 3600), t + 0.035)
+  lp.frequency.exponentialRampToValueAtTime(freq * 2.6, t + len)
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.linearRampToValueAtTime(peak, t + 0.02)
+  g.gain.linearRampToValueAtTime(peak * 0.7, t + len)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.07)
+  osc.connect(lp)
+  lp.connect(g)
+  g.connect(dest)
+  osc.start(t)
+  osc.stop(t + len + 0.1)
+  // the breath behind the tongue's attack
+  noiseBurst(ctx, dest, t, { type: 'bandpass', freq: freq * 3, q: 1.2, peak: peak * 0.3, attack: 0.004, decay: 0.035 })
+}
+
+/** 1857: a British bugle sounding the alarm across the lines, three quick figures, the last one climbing. */
+function bugleAlarm(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const G4 = 392
+  const C5 = 523.25
+  const E5 = 659.25
+  const G5 = 783.99
+  const figures = [[G4, G4, C5], [G4, G4, C5], [C5, E5, G5]] as const
+  BUGLE_FIGURES_MS.forEach((off, i) => {
+    const at = t + off / 1000
+    const [a, b, c] = figures[i] ?? figures[0]
+    bugleNote(ctx, dest, at, a, 0.085, 0.12)
+    bugleNote(ctx, dest, at + 0.125, b, 0.085, 0.12)
+    bugleNote(ctx, dest, at + 0.25, c, i === 2 ? 0.42 : 0.22, 0.15)
+  })
+}
+
+/** 1857: a kettle drum's roll swelling under the bugle, ending on one accent with its last figure. */
+function kettleDrum(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const end = DRUM_ACCENT_MS / 1000
+  let at = 0
+  for (let i = 0; at < end - 0.04; i++) {
+    const k = at / end
+    const hit = 0.035 + 0.11 * k * k
+    tone(ctx, dest, t + at, { type: 'sine', from: i % 2 ? 100 : 97, to: 86, peak: hit, attack: 0.003, decay: 0.15 })
+    noiseBurst(ctx, dest, t + at, { type: 'bandpass', freq: 380, q: 0.7, peak: hit * 0.45, attack: 0.002, decay: 0.04 })
+    at += 0.066 - 0.016 * k
+  }
+  tone(ctx, dest, t + end, { type: 'sine', from: 112, to: 70, peak: 0.34, attack: 0.004, decay: 0.6 })
+  noiseBurst(ctx, dest, t + end, { type: 'lowpass', freq: 900, peak: 0.18, attack: 0.002, decay: 0.12 })
+}
+
+/** 1929, 1942, 1947: a police pea whistle, a high note trilled by the pea rattling in it, with breath. */
+function peaWhistle(ctx: BaseAudioContext, dest: AudioNode, t: number, len: number, peak: number): void {
+  const osc = ctx.createOscillator()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(2650, t)
+  osc.frequency.linearRampToValueAtTime(2880, t + 0.06)
+  if (len > 0.5) osc.frequency.linearRampToValueAtTime(2960, t + len)
+  // the pea: it shakes the pitch and the level together, about thirty times a second
+  const pea = ctx.createOscillator()
+  pea.type = 'sine'
+  pea.frequency.value = 29 + Math.random() * 5
+  const fm = ctx.createGain()
+  fm.gain.value = 150
+  pea.connect(fm)
+  fm.connect(osc.frequency)
+  const trill = ctx.createGain()
+  trill.gain.value = 0.68
+  const am = ctx.createGain()
+  am.gain.value = 0.32
+  pea.connect(am)
+  am.connect(trill.gain)
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.linearRampToValueAtTime(peak, t + 0.025)
+  g.gain.linearRampToValueAtTime(peak * 0.85, t + len)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.05)
+  osc.connect(trill)
+  trill.connect(g)
+  g.connect(dest)
+  osc.start(t)
+  pea.start(t)
+  osc.stop(t + len + 0.08)
+  pea.stop(t + len + 0.08)
+  noiseBurst(ctx, dest, t, { type: 'bandpass', freq: 3000, q: 0.9, peak: peak * 0.35, attack: 0.02, decay: len })
+}
+
+/** 1929: boots running up the gali, faster and nearer: heels, hobnails, a second man a step behind. */
+function bootsRunning(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const len = 1.1
+  let at = 0
+  for (let i = 0; at < len; i++) {
+    const k = at / len
+    const step = (when: number, p: number) => {
+      tone(ctx, dest, when, { type: 'sine', from: 96, to: 58, peak: p, attack: 0.003, decay: 0.075 })
+      noiseBurst(ctx, dest, when, { type: 'lowpass', freq: 480 + 1500 * k, peak: p * 0.6, attack: 0.002, decay: 0.05 })
+      noiseBurst(ctx, dest, when + 0.012, { type: 'bandpass', freq: 2700, q: 2, peak: p * 0.45 * k, attack: 0.001, decay: 0.014 })
+    }
+    const peak = 0.05 + 0.2 * k
+    step(t + at, peak)
+    if (i % 2 === 0) step(t + at + 0.085, peak * 0.6)
+    at += 0.19 - 0.06 * k
+  }
+}
+
+/** 1942: an air-raid siren winding up, its rotor growling under a wail that climbs, dips and climbs again. */
+function airRaidWail(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  const rise = WAIL_RISE_MS / 1000
+  const len = 2.8 // the dark's hush usually cuts it first
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 1500
+  lp.Q.value = 0.7
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.linearRampToValueAtTime(0.075, t + rise * 0.8)
+  g.gain.setValueAtTime(0.075, t + len - 0.5)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len)
+  lp.connect(g)
+  g.connect(dest)
+  const voices: Array<[OscillatorType, number, number, number]> = [['sawtooth', -6, 0.55, 1], ['triangle', 6, 1, 1], ['sine', 0, 0.45, 0.5]]
+  for (const [type, detune, level, mult] of voices) {
+    const osc = ctx.createOscillator()
+    osc.type = type
+    osc.detune.value = detune
+    osc.frequency.setValueAtTime(150 * mult, t)
+    osc.frequency.exponentialRampToValueAtTime(540 * mult, t + rise)
+    osc.frequency.linearRampToValueAtTime(500 * mult, t + rise + 0.25)
+    osc.frequency.exponentialRampToValueAtTime(610 * mult, t + rise * 2)
+    osc.frequency.linearRampToValueAtTime(590 * mult, t + len)
+    const og = ctx.createGain()
+    og.gain.value = level
+    osc.connect(og)
+    og.connect(lp)
+    osc.start(t)
+    osc.stop(t + len + 0.05)
+  }
+}
+
+/** 1947: the office telephone's double ring, its clapper drumming between two bells. */
+function phoneBell(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  for (const off of PHONE_RINGS_MS) {
+    const at = t + off / 1000
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0.0001, at)
+    g.gain.linearRampToValueAtTime(0.15, at + 0.012)
+    g.gain.setValueAtTime(0.15, at + 0.38)
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5)
+    g.connect(dest)
+    // a square wave swings the clapper: one bell is struck as the other rings down
+    const clapper = ctx.createOscillator()
+    clapper.type = 'square'
+    clapper.frequency.value = 21
+    clapper.start(at)
+    clapper.stop(at + 0.55)
+    for (const [f, side] of [[1180, 1], [1330, -1]] as const) {
+      const bell = ctx.createGain()
+      bell.gain.value = 0.55
+      const swing = ctx.createGain()
+      swing.gain.value = 0.45 * side
+      clapper.connect(swing)
+      swing.connect(bell.gain)
+      bell.connect(g)
+      for (const [ratio, level] of [[1, 0.5], [2.42, 0.12]] as const) {
+        const osc = ctx.createOscillator()
+        osc.type = 'sine'
+        osc.frequency.value = f * ratio
+        const og = ctx.createGain()
+        og.gain.value = level
+        osc.connect(og)
+        og.connect(bell)
+        osc.start(at)
+        osc.stop(at + 0.55)
+      }
+    }
+  }
+}
+
+/** One rap on a wooden door: the panel's boom, the knock itself, and whatever rattles in that era. */
+function rap(ctx: BaseAudioContext, dest: AudioNode, t: number, power: number, era: EraId | null, muffle: number): void {
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = muffle
+  lp.connect(dest)
+  tone(ctx, lp, t, { type: 'sine', from: 118, to: 66, peak: 0.5 * power, attack: 0.003, decay: 0.2 })
+  tone(ctx, lp, t, { type: 'triangle', from: 250, to: 170, peak: 0.2 * power, attack: 0.002, decay: 0.07 })
+  noiseBurst(ctx, lp, t, { type: 'bandpass', freq: 850, q: 0.9, peak: 0.32 * power, attack: 0.001, decay: 0.05 })
+  if (era === 'delhi-1857') {
+    // the haveli door's iron kundi beaten against its plate
+    brassTing(ctx, lp, t + 0.006, 610, 0.05 * power)
+    noiseBurst(ctx, lp, t + 0.004, { type: 'highpass', freq: 2400, q: 0.8, peak: 0.12 * power, attack: 0.001, decay: 0.03 })
+  } else if (era === 'lahore-1929') {
+    // a lathi cracking on the planks
+    noiseBurst(ctx, lp, t, { type: 'bandpass', freq: 1900, q: 2.2, peak: 0.3 * power, attack: 0.0008, decay: 0.022 })
+  } else if (era === 'delhi-1947') {
+    // the frosted glass in the office door shivers in its frame
+    noiseBurst(ctx, lp, t + 0.01, { type: 'highpass', freq: 4200, q: 0.7, peak: 0.05 * power, attack: 0.004, decay: 0.12 })
+    tone(ctx, lp, t + 0.01, { type: 'sine', from: 3300, peak: 0.012 * power, attack: 0.002, decay: 0.15 })
+  } else {
+    // the door shudders on its bolt
+    noiseBurst(ctx, lp, t + 0.02, { type: 'lowpass', freq: 320, peak: 0.12 * power, attack: 0.004, decay: 0.12 })
+  }
+}
+
+/** A knock coming closer: muffled down the lane, louder next door, then full on your own door. */
+function knock(ctx: BaseAudioContext, dest: AudioNode, t: number, kind: KnockKind, era: EraId | null): void {
+  const power = kind === 'far' ? 0.22 : kind === 'near' ? 0.5 : 1
+  const muffle = kind === 'far' ? 420 : kind === 'near' ? 1300 : 6000
+  KNOCK_RAPS_MS[kind].forEach((off, i) => rap(ctx, dest, t + off / 1000, power * (i === 0 ? 0.92 : 1), era, muffle))
+}
+
+/** Under the quiet after the alarm: a low swell sinking away, and the ring of silence in the ears. */
+function caughtDark(ctx: BaseAudioContext, dest: AudioNode, t: number): void {
+  tone(ctx, dest, t, { type: 'sine', from: 64, to: 42, peak: 0.2, attack: 0.28, decay: 1.3 })
+  tone(ctx, dest, t, { type: 'sine', from: 96, to: 63, peak: 0.06, attack: 0.3, decay: 1.0 })
+  tone(ctx, dest, t + 0.1, { type: 'sine', from: 3150, peak: 0.007, attack: 0.35, decay: 1.4 })
 }
 
 // ---------- ambience layers (return a handle that stops them) ----------

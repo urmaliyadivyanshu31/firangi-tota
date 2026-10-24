@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cueForStage, createAudioEngine, type Cue } from '../../src/audio/engine'
 import { SPRITE, SPRITE_FILE } from '../../src/audio/samples'
-import { resetSynthCache } from '../../src/audio/synth'
+import { playCue, resetSynthCache } from '../../src/audio/synth'
 import type { StageCueName } from '../../src/scene/types'
 
 const param = (v = 1) => ({ value: v, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn(), setTargetAtTime: vi.fn(), cancelScheduledValues: vi.fn() })
@@ -34,8 +34,10 @@ class MockCtx {
 
 const g = globalThis as unknown as Record<string, unknown>
 const NEW: Cue[] = [
-  'typeKey', 'typeSpace', 'typeDing', 'typeReturn', 'sealCrack', 'paperUnfold', 'envelopeFlap', 'titleSettle', 'correct', 'caught',
+  'typeKey', 'typeSpace', 'typeDing', 'typeReturn', 'sealCrack', 'paperUnfold', 'envelopeFlap', 'titleSettle', 'correct',
   'fileOpen', 'cardTurn', 'stampPress', 'toggleClick', 'plaqueFlick', 'incense', 'clockTick', 'tensionTick', 'endTelegram',
+  // the caught sequence (caughtHush only fades what is already sounding, so it is checked on its own)
+  'bugleAlarm', 'kettleDrum', 'whistleShort', 'whistleLong', 'bootsRunning', 'airRaidWail', 'phoneBell', 'knockFar', 'knockNear', 'knockDoor', 'caughtDark',
 ]
 
 beforeEach(() => {
@@ -117,6 +119,45 @@ describe('era voices', () => {
     for (const level of [0, 0.5, 1, 7]) expect(() => a.cue('tensionTick', { level })).not.toThrow()
     a.ambience(null)
   })
+
+  it('the knocks on the door sound in every era, the 1857 door with its iron ring the busiest', () => {
+    const a = createAudioEngine()
+    a.unlock()
+    const made1 = (era: Parameters<typeof a.ambience>[0]) => {
+      a.ambience(era)
+      const before = made.nodes.length
+      a.cue('knockDoor')
+      return made.nodes.length - before
+    }
+    const counts = (['delhi-1857', 'lahore-1929', 'bombay-1942', 'delhi-1947'] as const).map(made1)
+    for (const c of counts) expect(c).toBeGreaterThan(0)
+    expect(counts[0]).toBe(Math.max(...counts))
+    a.ambience(null)
+  })
+})
+
+describe('the caught bus', () => {
+  it('carries every alarm sound, so the hush fades them all at once, and the next alarm gets a fresh bus', () => {
+    const ctx = new MockCtx() as unknown as BaseAudioContext
+    const dest = node() as unknown as AudioNode
+    const busesOf = () => made.nodes.filter((n) => n.connect.mock.calls.some(([to]) => to === dest))
+    playCue(ctx, dest, 'whistleShort')
+    playCue(ctx, dest, 'knockFar')
+    expect(busesOf()).toHaveLength(1) // both went through one gain into the destination
+    const bus = busesOf()[0]!
+    playCue(ctx, dest, 'caughtHush')
+    const fade = (bus.gain as ReturnType<typeof param>).linearRampToValueAtTime.mock.calls
+    expect(fade.length).toBe(1)
+    expect(fade[0]![0]).toBeLessThan(0.001)
+    expect(fade[0]![1]).toBeLessThanOrEqual(0.2) // within a fifth of a second
+    playCue(ctx, dest, 'caughtHush') // a second hush with nothing ringing is harmless
+    playCue(ctx, dest, 'bugleAlarm')
+    expect(busesOf()).toHaveLength(2)
+    // the swell under the quiet is not on the bus: the hush beside it must not cut it
+    const before = busesOf().length
+    playCue(ctx, dest, 'caughtDark')
+    expect(made.nodes.filter((n) => n.connect.mock.calls.some(([to]) => to === dest)).length).toBeGreaterThan(before)
+  })
 })
 
 describe('the toss', () => {
@@ -144,12 +185,15 @@ describe('the toss', () => {
 })
 
 describe('cueForStage', () => {
-  it('maps every stage cue to a sound, except the stamp the app voices itself', () => {
+  it('maps every stage cue to a sound, except the stamp the app voices itself and the wrong flash the caught sequence voices', () => {
     const all: StageCueName[] = ['title', 'flip', 'arrive', 'seal', 'unfold', 'flap', 'key', 'space', 'ding', 'return', 'stamp', 'right', 'wrong', 'verdictStamp']
     const out = Object.fromEntries(all.map((n) => [n, cueForStage(n)]))
     expect(out).toEqual({
       title: 'titleSettle', flip: 'page', arrive: 'arrive', seal: 'sealCrack', unfold: 'paperUnfold', flap: 'envelopeFlap',
-      key: 'typeKey', space: 'typeSpace', ding: 'typeDing', return: 'typeReturn', stamp: null, right: 'correct', wrong: 'caught', verdictStamp: 'stampAsli',
+      key: 'typeKey', space: 'typeSpace', ding: 'typeDing', return: 'typeReturn', stamp: null, right: 'correct', wrong: null, verdictStamp: 'stampAsli',
     })
+    // the caught sequence's beats sound as themselves
+    const caught: StageCueName[] = ['bugleAlarm', 'kettleDrum', 'whistleShort', 'whistleLong', 'bootsRunning', 'airRaidWail', 'phoneBell', 'knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark']
+    for (const n of caught) expect(cueForStage(n)).toBe(n)
   })
 })

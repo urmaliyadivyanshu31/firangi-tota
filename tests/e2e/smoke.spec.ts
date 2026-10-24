@@ -129,6 +129,33 @@ test('a tap on the room sends the read paper on at once', async ({ page }) => {
   await readable(page)
 })
 
+test('a wrong stamp plays out over time, then ends the chapter on the paper; a tap skips it', async ({ page }) => {
+  const wrongStamp = async () => {
+    await readable(page)
+    const t0 = Date.now()
+    await page.locator(`[data-stamp="${(await rightStamp(page)) === 'asli' ? 'tota' : 'asli'}"]`).click()
+    await expect(page.locator('.screen--day.is-stamping')).toBeVisible()
+    return t0
+  }
+  await page.goto(START)
+  await begin1857Easy(page)
+  // the stamp, a beat of silence, the alarm, the room answering it and the dark, then the verdict
+  const t0 = await wrongStamp()
+  await expect(page.locator('.paper-result')).toBeVisible({ timeout: 30_000 })
+  const whole = Date.now() - t0
+  expect(whole).toBeGreaterThan(3500)
+  await expect(page.locator('[data-action="again"]')).toBeVisible()
+  expect(await ft(page, (f) => f.revealed)).toBe(true)
+  // again, and this time a tap on the Skip chip during the alarm goes straight to the verdict
+  await page.locator('[data-action="again"]').click()
+  const t1 = await wrongStamp()
+  await page.waitForTimeout(1600) // the stamp has come home and the alarm is sounding
+  await page.locator('[data-action="skip"]').click()
+  await expect(page.locator('.paper-result')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('[data-action="again"]')).toBeVisible()
+  expect(Date.now() - t1).toBeLessThan(whole - 1500) // the rest of the alarm and the dark were skipped
+})
+
 test('plays day 1 on the 2D fallback when WebGL is disabled', async ({ page, browserName, playwright }) => {
   let p = page
   let browser: Browser | null = null
@@ -173,6 +200,49 @@ test('a lost WebGL context mid-day keeps the stamps working', async ({ page }) =
   expect(await ft(page, (f) => f.play?.state.day)).toBe(1)
   await expect(page.locator('[data-stamp="asli"]')).toBeEnabled()
   await stampAndReveal(page)
+})
+
+test('a caught chapter shares a post card whose link previews as a large card and opens the chapter for a friend', async ({ page, request, browser }) => {
+  await page.goto(START)
+  await begin1857Easy(page)
+  await readable(page)
+  await page.locator(`[data-stamp="${(await rightStamp(page)) === 'asli' ? 'tota' : 'asli'}"]`).click()
+  await expect(page.locator('[data-action="share"]')).toBeVisible({ timeout: 30_000 })
+  await page.locator('[data-action="share"]').click()
+  const slip = page.locator('.share-slip')
+  await expect(slip).toBeVisible()
+  for (const k of ['whatsapp', 'x', 'copy']) await expect(slip.locator(`[data-share="${k}"]`)).toBeVisible()
+  await expect(slip.locator('.share-slip__link')).toHaveText(/\/s\/1857-e0c-hi$/)
+  await expect(slip.locator('.share-slip__msg')).toContainText('दिल्ली 1857 में बहादुर शाह ज़फ़र के दरबार में पहले दिन')
+  expect(await noHorizontalScroll(page)).toBe(true)
+  await slip.locator('[data-action="close-share"]').click()
+  await expect(slip).toHaveCount(0)
+
+  // what a link-preview crawler sees: the card tags, an absolute image URL, a 1200x630 JPEG behind it
+  const shared = await request.get('/s/1857-e0c-hi', { headers: { 'User-Agent': 'Twitterbot/1.0' } })
+  expect(shared.status()).toBe(200)
+  const html = await shared.text()
+  expect(html).toContain('<meta name="twitter:card" content="summary_large_image">')
+  const image = html.match(/property="og:image" content="([^"]+)"/)![1]!.replace(/&amp;/g, '&')
+  expect(image).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/api\/og\?c=1857-e0c-hi&v=[0-9a-f]{8}$/)
+  const card = await request.get(image)
+  expect(card.status()).toBe(200)
+  expect(card.headers()['content-type']).toBe('image/jpeg')
+  expect(card.headers()['cache-control']).toContain('immutable')
+  expect((await card.body()).length).toBeLessThan(300 * 1024)
+
+  // a friend who taps it, with no offline copy yet, lands on the main page with the chapter and mode picked
+  const friendCtx = await browser.newContext()
+  const friend = track(await friendCtx.newPage())
+  try {
+    await friend.goto('/s/1857-h3c-en')
+    await expect(friend.locator('.screen--main')).toBeVisible({ timeout: 20_000 })
+    await expect(friend.locator('[data-era="delhi-1857"]')).toHaveClass(/is-on/)
+    await expect(friend.locator('[data-mode="hard"]')).toHaveClass(/is-on/)
+    expect(new URL(friend.url()).pathname + new URL(friend.url()).search).toBe('/')
+  } finally {
+    await friendCtx.close()
+  }
 })
 
 test('plays offline after the first visit (read-aloud excepted)', async ({ page, context }) => {

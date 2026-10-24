@@ -288,3 +288,115 @@ describe('mountFallback: the message on paper', () => {
     fb.dispose()
   })
 })
+
+describe('mountFallback: the caught sequence', () => {
+  let frames: FrameRequestCallback[] = []
+  let now = 0
+  /** `ms` of frames at 60 fps on a clock the desk reads through performance.now(). */
+  async function pump(ms: number) {
+    for (let t = 0; t < ms; t += 16) {
+      now += 16
+      const due = frames
+      frames = []
+      for (const f of due) f(now)
+      await Promise.resolve()
+    }
+  }
+  async function desk(era: EraId, o: { reduced?: boolean } = {}) {
+    frames = []
+    now = 1000
+    const f = fakeCanvas()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+    vi.spyOn(performance, 'now').mockImplementation(() => now)
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => frames.push(cb))
+    vi.stubGlobal('cancelAnimationFrame', () => undefined)
+    if (o.reduced) vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce'), addEventListener() {}, removeEventListener() {} }))
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    const cues: string[] = []
+    const fb = mountFallback(el, era, { onCue: (c) => cues.push(c) })
+    await fb.showMessage({ era, channel: 'radio', lang: 'en', from: 'Usha Mehta', to: 'All listeners', dateLine: 'Friday, 30 October 1942', body: 'This is the Congress Radio.', checks: [], pencil: false })
+    await fb.stamp('tota')
+    return { fb, cues, f }
+  }
+  afterEach(() => vi.unstubAllGlobals())
+  const settled = async (p: Promise<void>) => {
+    let done = false
+    void p.then(() => (done = true))
+    for (let i = 0; i < 10; i++) await Promise.resolve()
+    return done
+  }
+
+  it('plays the era\'s beats through onCue, in time: silence, the alarm, the knocks, the hush and the dark', async () => {
+    const { fb, cues, f } = await desk('delhi-1947')
+    fb.flash('wrong') // still: the red comes with the alarm
+    const p = fb.caught()
+    await pump(200)
+    expect(cues).toEqual([])
+    await pump(150)
+    expect(cues).toEqual(['phoneBell'])
+    const drawn = f.calls.length
+    await pump(3000)
+    expect(f.calls.length).toBeGreaterThan(drawn) // the red pulses and the beam are drawn frame by frame
+    expect(await settled(p)).toBe(false)
+    await pump(1000)
+    expect(await settled(p)).toBe(true)
+    expect(cues).toEqual(['phoneBell', 'whistleLong', 'knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark'])
+    fb.dispose()
+  })
+
+  it('a tap ends it at once with only the hush; the verdict after it turns over as usual', async () => {
+    const { fb, cues } = await desk('lahore-1929')
+    const p = fb.caught()
+    await pump(500)
+    expect(cues).toContain('whistleShort')
+    const heard = cues.length
+    fb.skip()
+    expect(await settled(p)).toBe(true)
+    expect(cues.slice(heard)).toEqual(['caughtHush'])
+    await pump(3000)
+    expect(cues.slice(heard)).toEqual(['caughtHush']) // nothing more after the skip
+    fb.dispose()
+  })
+
+  it('a verdict asked for mid-sequence (the guard ran out) ends it quietly first', async () => {
+    const { fb, cues } = await desk('bombay-1942')
+    const p = fb.caught()
+    await pump(600)
+    void fb.reveal({ outcome: 'timeout', real: true, documentMark: false, highlight: [], note: '', lang: 'en', back: { verdictLine: 'Too slow', tell: 'x', source: 'y' } })
+    expect(await settled(p)).toBe(true)
+    expect(cues[cues.length - 1]).toBe('caughtHush')
+    fb.dispose()
+  })
+
+  it('under reduced motion: the same sounds, and it resolves', async () => {
+    const { fb, cues } = await desk('delhi-1857', { reduced: true })
+    const p = fb.caught()
+    await pump(4500)
+    expect(await settled(p)).toBe(true)
+    expect(cues).toEqual(['kettleDrum', 'bugleAlarm', 'knockFar', 'knockNear', 'knockDoor', 'caughtHush', 'caughtDark'])
+    fb.dispose()
+  })
+
+  it('a tab hidden mid-alarm picks up where it left off, never every beat at once', async () => {
+    const { fb, cues } = await desk('bombay-1942')
+    const p = fb.caught()
+    await pump(400)
+    expect(cues).toEqual(['whistleLong'])
+    now += 10_000 // the tab was hidden: no frames for ten seconds
+    await pump(16)
+    expect(cues).toEqual(['whistleLong'])
+    expect(await settled(p)).toBe(false)
+    await pump(4500)
+    expect(await settled(p)).toBe(true)
+    fb.dispose()
+  })
+
+  it('dispose mid-sequence resolves it', async () => {
+    const { fb } = await desk('delhi-1857')
+    const p = fb.caught()
+    await pump(300)
+    fb.dispose()
+    expect(await settled(p)).toBe(true)
+  })
+})

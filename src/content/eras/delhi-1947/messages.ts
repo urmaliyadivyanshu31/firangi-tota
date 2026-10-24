@@ -369,7 +369,8 @@ export const messages: Message[] = [
     ],
   },
 
-  // ───────────── Day 7, Mon 11 Aug: "You are free" ─────────────
+  // ───────────── Day 7, Mon 11 Aug: Karachi's Assembly sits again ─────────────
+  // (owner 10-24: no praise of the League anywhere, so the speech's famous line is not quoted)
   {
     id: 'd7-you-are-free',
     tier: 2,
@@ -379,17 +380,16 @@ export const messages: Message[] = [
     from: TEL_KARACHI,
     to: CIPHER,
     text: {
-      en: "IMMEDIATE, KARACHI. Mr Jinnah, elected President of Pakistan's Assembly today, told it: '…you are free to go to your temples… to your mosques or to any other place of worship…'",
-      hi: "IMMEDIATE, कराची। आज पाकिस्तान की सभा के अध्यक्ष चुने गए मिस्टर जिन्ना ने सभा से कहा: '…आप अपने मंदिरों में जाने के लिए आज़ाद हैं… अपनी मस्जिदों या किसी भी और इबादतगाह में…'",
+      en: "IMMEDIATE, KARACHI, Monday {date}. Mr Jinnah was elected President of Pakistan's Constituent Assembly today, at its second sitting.",
+      hi: 'IMMEDIATE, कराची, सोमवार {date}। मिस्टर जिन्ना आज पाकिस्तान की संविधान सभा के अध्यक्ष चुने गए, उसकी दूसरी बैठक में।',
     },
-    checks: { en: ['Mr Jinnah', 'elected President', 'temples'], hi: ['मिस्टर जिन्ना', 'अध्यक्ष चुने गए', 'मंदिरों'] },
-    document: { sources: [{ id: 'capd-1947', loc: 'No. 2, Monday 11 August 1947' }] },
+    checks: { en: ['Monday', 'Mr Jinnah', 'elected President'], hi: ['सोमवार', 'मिस्टर जिन्ना', 'अध्यक्ष चुने गए'] },
     why: {
       text: {
-        en: 'Elected President on 11 August; this line is from his first address.',
-        hi: '11 अगस्त को अध्यक्ष चुने गए; यह पंक्ति उनके पहले भाषण की है।',
+        en: 'Elected on Monday 11 August, at the second sitting.',
+        hi: 'सोमवार 11 अगस्त को, दूसरी बैठक में चुने गए।',
       },
-      sources: [{ id: 'capd-1947', loc: 'No. 2' }, { id: 'menon-1957', loc: 'ch. XVIII' }],
+      sources: [{ id: 'capd-1947', loc: 'No. 2, Monday 11 August 1947' }, { id: 'menon-1957', loc: 'ch. XVIII' }],
     },
   },
   {

@@ -169,6 +169,9 @@ export type StageCueName =
   | 'stamp' | 'right' | 'wrong'
   // the verdict on the paper: the stamp that comes down on its back
   | 'verdictStamp'
+  // the caught sequence (see caught.ts): each era's alarm, the knocks coming closer, the hush and the dark
+  | 'bugleAlarm' | 'kettleDrum' | 'whistleShort' | 'whistleLong' | 'bootsRunning' | 'airRaidWail' | 'phoneBell'
+  | 'knockFar' | 'knockNear' | 'knockDoor' | 'caughtHush' | 'caughtDark'
   // the read paper tossed into the desk's basket: it leaves the desk, then it lands
   | 'toss' | 'tossLand'
 
@@ -189,7 +192,12 @@ export interface Stage {
   showPaper(o?: { lean?: boolean }): void
   /** Raise, move, press, shake; resolves when the stamp is back at rest. */
   stamp(kind: StampKind): Promise<void>
-  /** A short dark beat: the light dims and the camera drops. Holds until the next showPaper or setEra. */
+  /**
+   * The caught sequence after a wrong stamp or a burnt-out agarbatti, about 4 s (caught.ts has the
+   * score): a beat of silence, the era's alarm, the room answering it (red pulses on its rhythm, a
+   * beam sweeping through, knocks coming closer), then the dark. Skippable. The dark holds until the
+   * next reveal, showMessage, establish or setEra.
+   */
   caught(): Promise<void>
   setPaused(p: boolean): void
   dispose(): void
@@ -210,7 +218,10 @@ export interface Stage {
   showMessage(s: SheetSpec): Promise<void>
   /** Language or pencil change: redraws the same sheet, no animation. */
   redrawMessage(s: SheetSpec): void
-  /** A room flash after the stamp: green-gold for right, vermilion for wrong. */
+  /**
+   * A room flash after the stamp: green-gold for right. A wrong verdict keeps the room still and
+   * silent here: its red comes with the alarm, in caught().
+   */
   flash(kind: FlashKind): void
   /** Finishes the current animation (title, arrival, camera move, stamp) at once. */
   skip(): void

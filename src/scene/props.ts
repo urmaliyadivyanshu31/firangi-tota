@@ -526,18 +526,22 @@ uniform float uTime;
 uniform float uScale;
 uniform float uHeight;
 uniform vec3 uLight;
+uniform float uKick;
 attribute vec4 aSeed;
 varying float vGlow;
 void main() {
   vec3 p = position;
   float t = uTime;
   p.y = mod(p.y + 0.5 * uHeight + t * (0.004 + aSeed.x * 0.009), uHeight) - 0.5 * uHeight;
+  // a knock on the door: the motes jump and catch the light
+  p.y += uKick * (aSeed.z - 0.35) * 0.05;
+  p.x += uKick * (aSeed.w - 0.5) * 0.03;
   p.x += sin(t * 0.21 + aSeed.y * 6.2832) * 0.035;
   p.z += cos(t * 0.17 + aSeed.z * 6.2832) * 0.035;
   vec4 world = modelMatrix * vec4(p, 1.0);
   float d = distance(world.xyz, uLight);
   float edge = smoothstep(0.5, 0.42, abs(p.y / uHeight));
-  vGlow = edge * (0.5 + 0.5 * sin(t * 1.3 + aSeed.w * 40.0)) / (1.0 + 30.0 * d * d);
+  vGlow = edge * (0.5 + 0.5 * sin(t * 1.3 + aSeed.w * 40.0)) * (1.0 + uKick * 2.2) / (1.0 + 30.0 * d * d);
   vec4 mv = viewMatrix * world;
   gl_Position = projectionMatrix * mv;
   gl_PointSize = max(1.5, (0.0017 + aSeed.x * 0.0021) * uScale / -mv.z);
@@ -558,6 +562,8 @@ export interface Dust {
   points: THREE.Points
   /** `pxPerUnit` = canvas height / (2·tan(fov/2)). */
   update(tMs: number, pxPerUnit: number): void
+  /** Shakes the motes loose for a moment (a knock on the door), 0..1; it settles by itself. */
+  kick(k: number): void
   dispose(): void
 }
 
@@ -590,6 +596,7 @@ export function createDust(o: {
       uHeight: { value: o.size[1] },
       uLight: { value: o.light.clone() },
       uColor: { value: new THREE.Color(o.color).multiplyScalar(1.3) },
+      uKick: { value: 0 },
     },
     vertexShader: DUST_VS,
     fragmentShader: DUST_FS,
@@ -601,12 +608,20 @@ export function createDust(o: {
   points.position.set(...o.center)
   points.frustumCulled = false
   const speed = o.reducedMotion ? 0.25 : 1
+  let kick = 0
+  let lastT = 0
   return {
     points,
     update(tMs, pxPerUnit) {
       const u = mat.uniforms
       if (u.uTime) u.uTime.value = (tMs / 1000) * speed
       if (u.uScale) u.uScale.value = pxPerUnit
+      kick *= Math.exp(-Math.min(100, Math.max(0, tMs - lastT)) / 320)
+      lastT = tMs
+      if (u.uKick) u.uKick.value = kick < 0.002 ? 0 : kick
+    },
+    kick(k) {
+      if (!o.reducedMotion) kick = Math.max(kick, k)
     },
     dispose: () => disposeTree(points),
   }
@@ -846,6 +861,8 @@ export interface Pose {
   pos: THREE.Vector3
   look: THREE.Vector3
   fov: number
+  /** A turn about the view axis, radians (the caught sequence's tilt); none when left out. */
+  roll?: number
 }
 
 /** Wider vertical fov on tall portrait screens, narrower on landscape. */
@@ -921,7 +938,7 @@ export function readShot(paper: THREE.Vector3, aspect: number): Pose {
   return { pos: look.clone().addScaledVector(dir, dist), look, fov }
 }
 
-export type ShotName = 'intro' | 'desk' | 'read' | 'caught' | 'custom'
+export type ShotName = 'intro' | 'desk' | 'read' | 'custom'
 
 /** A shot computed for the current aspect, so it re-fits when the screen turns or resizes. */
 export type PoseFn = (aspect: number) => Pose
@@ -994,13 +1011,6 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
     if (name === 'desk' || name === 'custom') return desk
     if (name === 'read') return readShot(paper, aspect)
     const off = desk.pos.clone().sub(desk.look)
-    if (name === 'caught') {
-      return {
-        pos: desk.look.clone().addScaledVector(off, 0.94).add(new THREE.Vector3(0, -0.07, 0)),
-        look: desk.look.clone().add(new THREE.Vector3(0, -0.09, 0)),
-        fov: desk.fov,
-      }
-    }
     // intro: further back and higher, looking at the wall above the desk
     return {
       pos: desk.look.clone().addScaledVector(off, 1.5).add(new THREE.Vector3(0.16, 0.3, 0)),
@@ -1012,6 +1022,7 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
     dst.pos.copy(src.pos)
     dst.look.copy(src.look)
     dst.fov = src.fov
+    dst.roll = src.roll ?? 0
   }
   copy(cur, poseFor('desk'))
 
@@ -1088,6 +1099,7 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
         cur.pos.lerpVectors(from.pos, target.pos, blend)
         cur.look.lerpVectors(from.look, target.look, blend)
         cur.fov = lerp(from.fov, target.fov, blend)
+        cur.roll = lerp(from.roll ?? 0, target.roll ?? 0, blend)
       } else copy(cur, target)
       camera.position.copy(cur.pos)
       tmpLook.copy(cur.look)
@@ -1123,6 +1135,7 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, tw: Tweens, o: 
         camera.position.addScaledVector(tmpRight, py * 0.02)
       }
       camera.lookAt(tmpLook)
+      if (cur.roll) camera.rotateZ(cur.roll)
       if (Math.abs(camera.fov - cur.fov) > 1e-4) {
         camera.fov = cur.fov
         camera.updateProjectionMatrix()

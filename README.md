@@ -63,7 +63,8 @@ browser, and `npm run check-secrets` (also run in CI) fails if a key shows up in
 
 ## Deploying
 
-The site is a static Vite build on Vercel, plus one function, `api/voice.ts`, for read-aloud.
+The site is a static Vite build on Vercel, plus a function, `api/voice.ts`, for read-aloud, and two
+for share links (`api/s.ts` and `api/og.ts`, see below).
 `vercel.json` runs the function in Mumbai (`bom1`) and sends the security headers (a
 Content-Security-Policy that allows only the site itself, `nosniff`, no framing, a strict referrer
 policy and a Permissions-Policy that turns off the microphone, camera and the like).
@@ -84,6 +85,27 @@ set. To turn it on:
 Every clip has one canonical URL and is cached by the CDN for a year, so each line is generated
 once. Requests spelled any other way get a short-lived redirect to that URL instead of a new clip,
 and a failed or timed-out provider call is never retried.
+
+### Share links
+
+When a chapter (or the daily puzzle) ends, Share opens a post card: the post the player is about to
+send, in the language on screen, and WhatsApp, X, copy link and the phone's own share menu. The post
+carries a link like `https://firangitota.com/s/1857-e7s-en`, whose code holds only the chapter's year,
+the mode, the days, the outcome and the language.
+
+Two more functions serve those links, both in `bom1`, both without keys:
+
+- `api/s.ts` (`vercel.json` rewrites `/s/<code>` to it) answers a tiny page with Open Graph and
+  Twitter `summary_large_image` tags, then sends people on to the game with the friend's chapter and
+  mode picked (`/share-go.js`, a script link-preview crawlers do not run).
+- `api/og.ts` draws the preview card, a 1200×630 JPEG: one period paper per chapter with the year and
+  place, the outcome and the days, the era's own ending stamp and the title lettering. Only words from
+  the code's enums and the game's own content are drawn, as glyph outlines shaped by HarfBuzz, so the
+  Hindi is right. Each card has one canonical URL, versioned by a hash of its drawing and cached for a
+  year; any other spelling gets a redirect.
+
+`npm run dev` and `npm run preview` serve both. `node dev/shoot-share-cards.mjs` fetches every card
+the way a crawler does and saves it under `docs/screens/og/`.
 
 ## Licence
 

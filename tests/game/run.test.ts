@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildRun } from '../../src/game/run'
+import { buildRun, unitOf } from '../../src/game/run'
+import { ERAS } from '../../src/content/registry'
 import { DAYS, EVENT_CHANCE, type Difficulty } from '../../src/game/config'
 import { mulberry32 } from '../../src/game/rng'
 import { fixtureEra, msg } from './fixture'
@@ -44,6 +45,31 @@ describe('buildRun', () => {
     const a = buildRun(era, 'hard', mulberry32(42)).map((m) => m.id)
     const b = buildRun(era, 'hard', mulberry32(42)).map((m) => m.id)
     expect(a).toEqual(b)
+  })
+
+  it('a replay steers away from the last run, keeping every invariant', () => {
+    for (const e of ERAS) {
+      for (const d of DIFFS) {
+        let shared = 0
+        let sharedBlind = 0
+        for (let seed = 1; seed <= 40; seed++) {
+          const first = buildRun(e, d, mulberry32(seed))
+          const units = new Set(first.map(unitOf))
+          const again = buildRun(e, d, mulberry32(seed + 1000), units)
+          const blind = buildRun(e, d, mulberry32(seed + 1000))
+          shared += again.filter((m) => units.has(unitOf(m))).length
+          sharedBlind += blind.filter((m) => units.has(unitOf(m))).length
+          expect(again).toHaveLength(DAYS[d])
+          again.forEach((m, i) => {
+            if (m.onDay !== undefined) expect(i + 1).toBe(m.onDay)
+          })
+          expect(again.filter((m) => m.real).length).toBeGreaterThanOrEqual(2)
+          expect(again.filter((m) => !m.real).length).toBeGreaterThanOrEqual(2)
+        }
+        // at most a third of the overlap a memoryless replay would have
+        expect(shared, `${e.id} ${d}`).toBeLessThanOrEqual(sharedBlind / 3)
+      }
+    }
   })
 
   it('relaxes tier preferences when the pool is small but big enough', () => {

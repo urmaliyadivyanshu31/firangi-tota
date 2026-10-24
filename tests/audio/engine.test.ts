@@ -61,7 +61,7 @@ describe('audio engine', () => {
   it('every cue schedules sound after unlock and stays quiet when muted', () => {
     const a = createAudioEngine()
     a.unlock()
-    const cues = ['arrive', 'stampAsli', 'stampTota', 'tick', 'correct', 'caught', 'survived', 'page'] as const
+    const cues = ['arrive', 'stampAsli', 'stampTota', 'tick', 'correct', 'survived', 'page', 'bugleAlarm', 'knockDoor'] as const
     for (const c of cues) {
       const before = created.oscs.length + created.sources.length
       a.cue(c)
@@ -153,7 +153,7 @@ describe('audio engine', () => {
     expect(() => {
       a.unlock()
       a.setMuted(true)
-      a.cue('caught')
+      a.cue('knockDoor')
       a.ambience('delhi-1947')
       a.ambience(null)
     }).not.toThrow()
