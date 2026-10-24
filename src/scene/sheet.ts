@@ -2001,6 +2001,8 @@ export function sourceLine(ctx: Ctx, text: string, face: string, maxW: number): 
 export interface BackLayout {
   /** The source line on the back, for an accessible link laid over it. */
   source: PageRect
+  /** Clear paper beside the era stamp (or above the source), where a reward may land. */
+  free: PageRect
 }
 
 /**
@@ -2124,13 +2126,21 @@ export function drawSheetBack(
   ctx.stroke()
   ctx.setLineDash([])
   // the stamp, in the free paper between the words and the source
+  const free0 = y + B * 0.6
+  const free1 = srcTop - srcSize * 1.4
+  const size = Math.max(150, Math.min(340, free1 - free0, (R - L) * 0.5))
+  const cy = Math.min(free1 - size * 0.5, Math.max(free0 + size * 0.5, (free0 + free1) / 2))
+  const stampX = L + (R - L) * 0.64
   if (o.stamp && r.back.stamp) {
-    const free0 = y + B * 0.6
-    const free1 = srcTop - srcSize * 1.4
-    const size = Math.max(150, Math.min(340, free1 - free0, (R - L) * 0.5))
-    const cy = Math.min(free1 - size * 0.5, Math.max(free0 + size * 0.5, (free0 + free1) / 2))
-    drawEraStamp(ctx, L + (R - L) * 0.64, cy, size, r.back.stamp, { lang: s.lang, date: s.dateLine, paper: hex(tint), seed: seedFrom(r.back.stamp.text) })
+    drawEraStamp(ctx, stampX, cy, size, r.back.stamp, { lang: s.lang, date: s.dateLine, paper: hex(tint), seed: seedFrom(r.back.stamp.text) })
   }
   ctx.restore()
-  return { source: { u0: L / PAGE_W, u1: (L + srcW) / PAGE_W, v0: (srcTop - srcSize) / H, v1: (lastY + 8) / H } }
+  // a reward lands left of the stamp, in the same band (the stamp's room is kept whether or not it shows)
+  const fx1 = r.back.stamp ? Math.max(L + (R - L) * 0.3, stampX - size * 0.55) : L + (R - L) * 0.45
+  const fy0 = r.back.stamp ? Math.max(free0, cy - size * 0.5) : free0
+  const fy1 = r.back.stamp ? Math.min(free1, cy + size * 0.5) : Math.max(free0 + 1, free1)
+  return {
+    source: { u0: L / PAGE_W, u1: (L + srcW) / PAGE_W, v0: (srcTop - srcSize) / H, v1: (lastY + 8) / H },
+    free: { u0: L / PAGE_W, u1: fx1 / PAGE_W, v0: fy0 / H, v1: Math.max(fy0 + 1, fy1) / H },
+  }
 }

@@ -12,7 +12,7 @@ import { forgetLang, setLang } from '../src/i18n/lang'
 import { strings } from '../src/i18n/strings'
 import type { Voice, VoiceState } from '../src/audio/voice'
 import { VOICES } from '../src/content/voices'
-import type { IntroSpec, RevealSpec, ScreenRect, SheetSpec, Stage, StageCueName } from '../src/scene/index'
+import type { EarnSpec, IntroSpec, PileSpec, RevealSpec, ScreenRect, SheetSpec, Stage, StageCueName } from '../src/scene/index'
 
 // ---------------------------------------------------------------- mocks: content, stage, audio
 
@@ -56,6 +56,9 @@ const m = vi.hoisted(() => {
     toss: vi.fn(() => Promise.resolve()),
     intro: vi.fn((_s: IntroSpec) => Promise.resolve()),
     clearIntro: vi.fn(() => Promise.resolve()),
+    setPile: vi.fn((_p: PileSpec) => undefined),
+    earn: vi.fn((_e: EarnSpec) => Promise.resolve()),
+    getEarnRect: vi.fn((): ScreenRect | null => null),
   })
   return {
     fakeStage,
@@ -74,6 +77,9 @@ const m = vi.hoisted(() => {
       toss: vi.fn(() => Promise.resolve()),
       intro: vi.fn((_s: IntroSpec) => Promise.resolve()),
       clearIntro: vi.fn(() => Promise.resolve()),
+      setPile: vi.fn((_p: PileSpec) => undefined),
+      earn: vi.fn((_e: EarnSpec) => Promise.resolve()),
+      getEarnRect: vi.fn((): ScreenRect | null => null),
     },
     mountFallback: vi.fn(),
     audio: {

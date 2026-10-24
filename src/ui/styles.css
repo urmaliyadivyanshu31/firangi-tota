@@ -1178,3 +1178,47 @@ a { color: inherit; }
   .gramo__knobs { justify-content: space-between; }
   .gramo__knob { width: 42px; height: 42px; }
 }
+
+/* ---------- Rewards: a jackpot's chit, the run's earnings line, the home page's treasure tag ---------- */
+
+/* ada: a jackpot's line is pencilled on a scrap of paper that pops up by the treasure and goes */
+.reward-slip {
+  position: fixed; z-index: 9; left: 50%; top: 40%; margin: 0; padding: 6px 14px 5px;
+  font: 400 19px/1.2 var(--display); color: var(--maroon); white-space: nowrap; pointer-events: none;
+  background: #f1e2bd var(--grain); border: 1px solid rgba(125, 31, 44, .28);
+  clip-path: polygon(0 6%, 9% 0, 26% 4%, 44% 0, 63% 5%, 81% 0, 100% 4%, 98% 52%, 100% 96%, 82% 100%, 61% 95%, 40% 100%, 22% 96%, 4% 100%, 2% 50%);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45));
+  opacity: 0; transform: translate(-50%, -100%) rotate(-2.5deg) scale(.85);
+  transition: opacity .22s ease-out, transform .38s var(--ease-spring);
+}
+.reward-slip:lang(hi) { font-weight: 400; }
+.reward-slip.is-on { opacity: 1; transform: translate(-50%, -100%) rotate(-2.5deg) scale(1); }
+
+/* the run's earnings, one line in ink above the end's buttons */
+.paper-result__earned {
+  margin: 0 0 2px; align-self: center; max-width: 100%; text-align: center;
+  font: 400 17px/1.35 var(--display); color: var(--cream); text-shadow: 0 1px 3px rgba(0, 0, 0, .85);
+}
+
+/* ada: a small wooden treasure box on the home paper; a tap lifts its lid and a tag of counts hangs from it */
+.treasure { position: absolute; z-index: 3; right: 18px; bottom: 16px; }
+.treasure__box {
+  display: grid; place-items: center; width: 52px; height: 46px; padding: 0; border: 0; background: none; cursor: pointer;
+  filter: drop-shadow(0 2px 2px rgba(43, 29, 19, .35));
+}
+.treasure__box svg { width: 44px; height: 38px; overflow: visible; }
+.treasure__lid { transform-origin: 6px 14px; transition: transform .3s var(--ease-spring); }
+.treasure.is-open .treasure__lid { transform: rotate(-24deg); }
+.treasure__box:focus-visible { outline: 2px solid var(--saffron); outline-offset: 3px; border-radius: 6px; }
+.treasure__tag {
+  position: absolute; right: 0; bottom: calc(100% + 6px); min-width: 210px; padding: 10px 12px 8px;
+  color: var(--ink); background: #efe2c1 var(--grain); border: 1px solid var(--paper-edge);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .35); transform-origin: 90% 100%; animation: tag-in .26s var(--ease-out) both;
+}
+.treasure__tag[hidden] { display: none; }
+@keyframes tag-in { from { opacity: 0; transform: translateY(6px) rotate(1.5deg); } }
+.treasure__title { margin: 0 0 6px; font: 400 15px/1.1 var(--display); color: var(--maroon); }
+.treasure__row { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.treasure__item { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 34px; }
+.treasure__item canvas { width: 34px; height: 34px; }
+.treasure__count { font: 600 13px/1 var(--ui); color: var(--ink-soft); }

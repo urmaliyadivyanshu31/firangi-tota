@@ -43,6 +43,11 @@ const MAP: Record<StageCueName, Cue | null> = {
   tossLand: 'ballLand',
   // the hands screwing the paper up, one crinkle per squeeze
   crumple: 'paperCrumple',
+  // a reward landing on the paper after a right stamp
+  coin: 'coinClink',
+  coinJackpot: 'jackpotClink',
+  sweetDown: 'boxSoft',
+  paperDown: 'cardSlide',
 }
 
 /** The sound for a stage cue, or null when the stage moment has no sound of its own. */

@@ -35,6 +35,7 @@ const en = {
   musicFailed: 'The music could not load · room sound is back',
   musicTap: 'Tap the picture to start',
   credits: 'Credits',
+  treasure: 'Treasure',
 
   // Setup
   setupQuestion: 'How long can you hold out?',
@@ -156,6 +157,7 @@ const hi: Strings = {
   musicFailed: 'संगीत नहीं चल पाया · कमरे की आवाज़ लौट आई',
   musicTap: 'शुरू करने के लिए तस्वीर छुएँ',
   credits: 'क्रेडिट',
+  treasure: 'ख़ज़ाना',
 
   setupQuestion: 'आप कितने दिन टिक पाएँगे?',
   modeEasy: 'आसान',
@@ -258,7 +260,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'langShort', 'premise', 'dailyScore', 'dailyTomorrow', 'dailyNext', 'shareGrid', 'dayLabel',
   'dayTitle', 'skip', 'blankFact', 'sheetPetitionHead', 'sheetRadioHead',
   'sheetTelegramHead', 'source', 'sound', 'listen', 'listenStop', 'voiceError',
-  'voiceStyle', 'introTota',
+  'voiceStyle', 'introTota', 'treasure',
 ]
 
 export function t(key: keyof Strings, lang: Lang): string {

@@ -8,7 +8,9 @@ import { MARK_COLORS, TITLE_TONE, drawDayTitle, drawRevealMarks, drawSheet, draw
 import { beamAt, caughtScore, redAt, type CaughtScore, type KnockKind } from './caught'
 import { drawBasketBalls, drawToss2D, dropping, planCrumple2D, type Crumple2D } from './crumple2d'
 import { TOSS, TOSS_AT } from './toss-beats'
-import type { DayTitle, FlashKind, IntroSpec, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StageCueName, StampKind } from './types'
+import type { DayTitle, EarnSpec, FlashKind, IntroSpec, PileSpec, RevealSpec, ScreenRect, SheetSpec, SheetStamp, StageCueName, StampKind } from './types'
+import { eraItems } from '../game/rewards'
+import { LOOKS, drawIcon } from './reward-art'
 
 
 export interface Fallback {
@@ -47,6 +49,11 @@ export interface Fallback {
   /** After Begin: the YOU and Tota cards fade up on the desk (see Stage.intro); skip() finishes it. */
   intro(s: IntroSpec): Promise<void>
   clearIntro(): Promise<void>
+  /** The treasures, drawn small in the desk's front-right corner (see Stage.setPile). */
+  setPile(p: PileSpec): void
+  /** The rewards drop onto the card's back beside its stamp, then join the pile on the toss (see Stage.earn). */
+  earn(e: EarnSpec): Promise<void>
+  getEarnRect(): ScreenRect | null
   dispose(): void
 }
 
@@ -130,6 +137,12 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
   let tossing: { t0: number; from: PaperBox; sprite: HTMLCanvasElement | null; plan: Crumple2D; heard: number; landed: boolean; finish: () => void } | null = null
   let tossRaf = 0
   let binned = 0
+  // the rewards: the pile in the desk's corner, and today's on the card's back (k: how far they have dropped in)
+  let pile: Record<string, number> = {}
+  let earned: { spec: EarnSpec; k: number } | null = null
+  let freeRect: PageRect | null = null
+  let earnRun: { t0: number; landed: boolean; done: () => void } | null = null
+  let earnRaf = 0
   const cue = (name: StageCueName) => {
     try {
       opts.onCue?.(name)
@@ -144,7 +157,11 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     const v = verdict
     if (!v || !sheet) return
     if (v.side === 'back') {
-      sourceRect = drawSheetBack(c, pw, ph, sheet, v.r, { stamp: true }).source
+      const lay = drawSheetBack(c, pw, ph, sheet, v.r, { stamp: true })
+      sourceRect = lay.source
+      freeRect = lay.free
+      // the rewards lying on it (while they drop in, they are drawn over the still instead)
+      if (earned && earned.k >= 1) for (const it of earnedIcons(lay.free, pw, ph)) drawIcon(c, it.id, it.x, it.y, it.s)
       return
     }
     const marks = highlightRects(c, sheet, v.r.highlight, ph / pw)
@@ -172,6 +189,28 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     }
   }
 
+  /** Where each reward on the card sits, in the card's own pixels: the drops one above the other by the stamp. */
+  const earnedIcons = (f: PageRect, pw: number, ph: number): { id: string; x: number; y: number; s: number }[] => {
+    const e = earned
+    if (!e) return []
+    const out: { id: string; x: number; y: number; s: number }[] = []
+    const n = Math.max(1, e.spec.drops.length)
+    const fw = (f.u1 - f.u0) * pw
+    const fh = (f.v1 - f.v0) * ph
+    const s = Math.max(18, Math.min(fw * 0.8, (fh / n) * 0.9, pw * 0.2))
+    e.spec.drops.forEach((d, di) => {
+      const cx = (f.u0 + f.u1) * 0.5 * pw
+      const cy = (f.v0 + (f.v1 - f.v0) * ((di + 0.5) / n)) * ph
+      const qty = Math.min(d.qty, 5)
+      for (let i = 0; i < qty; i++) {
+        const dx = qty > 1 ? (i - (qty - 1) / 2) * s * 0.22 : 0
+        const dy = -i * s * 0.06
+        out.push({ id: d.item, x: cx - s / 2 + dx, y: cy - s / 2 + dy, s })
+      }
+    })
+    return out
+  }
+
   const compose = () => {
     if (!g) return
     W = Math.max(1, el.clientWidth || window.innerWidth || 390)
@@ -185,6 +224,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
     drawDesk(g, W, H, ERA_PALETTES[current], binned)
+    drawPile(g, W, H, current, pile)
     if (intro) {
       const wide = W >= 900 && W > H
       const top = insetPx(el, '--ft-hud-top', 70)
@@ -195,7 +235,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     if (title) drawTitleOver(g, W, H, title, current)
     if (sheet) paperBox = drawPaper(g, W, H, sheet, stamp, el, face)
     if (darkK > 0) night(g, W, H, darkK)
-    if (flashK || caughtRun || tossing) {
+    if (flashK || caughtRun || tossing || earnRun) {
       // keep the still for the flash, caught and toss frames (one canvas, resized only with the screen)
       base ??= document.createElement('canvas')
       if (base.width !== pw || base.height !== ph) {
@@ -320,6 +360,69 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     if (typeof requestAnimationFrame === 'function') tossRaf = requestAnimationFrame(tossFrame)
   }
 
+  /** Ends the drop-in: the rewards are drawn on the card from now on. */
+  const finishEarn = () => {
+    const r = earnRun
+    if (!r) return
+    earnRun = null
+    if (earnRaf) cancelAnimationFrame(earnRaf)
+    earnRaf = 0
+    if (earned) earned.k = 1
+    if (!r.landed && earned) landCue(earned.spec)
+    if (!disposed) compose()
+    r.done()
+  }
+
+  const landCue = (e: EarnSpec) => {
+    const first = e.drops[0]
+    if (!first) return
+    if (e.drops.some((d) => d.jackpot)) return cue('coinJackpot')
+    const k = LOOKS[first.item]?.kind
+    cue(k === 'flat' ? 'paperDown' : k === 'dona' || k === 'packet' || k === 'box' ? 'sweetDown' : 'coin')
+  }
+
+  /** One frame of the drop-in: the still, and the rewards falling onto the card, a little apart. */
+  const earnFrame = (now: number) => {
+    earnRaf = 0
+    const r = earnRun
+    if (!r || !g || disposed) return
+    const e = earned
+    const b = paperBox
+    const f = freeRect
+    const ms = now - r.t0
+    const total = 650
+    if (!e || !b || !f || ms >= total) return finishEarn()
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    if (base) g.drawImage(base, 0, 0)
+    g.setTransform(dpr, 0, 0, dpr, 0, 0)
+    const k = Math.min(1, ms / (total * 0.62))
+    if (!r.landed && k >= 1) {
+      r.landed = true
+      landCue(e.spec)
+    }
+    const fall = (1 - k * k) * b.h * 0.08
+    const settle = k < 1 ? 0 : Math.sin(((ms - total * 0.62) / (total * 0.38)) * Math.PI) * 0.06
+    g.save()
+    g.globalAlpha = Math.min(1, ms / 120)
+    for (const it of earnedIcons(f, b.w, b.h)) {
+      const sc = 1 + (1 - k) * 0.3 - settle
+      const cx = b.x + it.x + it.s / 2
+      const cy = b.y + it.y + it.s / 2 - fall
+      drawIcon(g, it.id, cx - (it.s * sc) / 2, cy - (it.s * sc) / 2, it.s * sc)
+    }
+    g.restore()
+    earnRaf = requestAnimationFrame(earnFrame)
+  }
+
+  /** Today's rewards join the pile (the card is going, or the day is over). */
+  const putAway = () => {
+    const e = earned
+    if (!e) return
+    if (earnRun) finishEarn()
+    earned = null
+    pile = { ...e.spec.after }
+  }
+
   let timer = 0
   const onResize = () => {
     window.clearTimeout(timer)
@@ -348,10 +451,13 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
       title = null
       verdict = null
       binned = 0
+      putAway()
       compose()
     },
     toss(now = false) {
       tossing?.finish()
+      // the rewards go to the pile first, so the card that is screwed up carries none
+      putAway()
       const box = paperBox
       if (!g || disposed || !sheet || !box) return Promise.resolve()
       const sprite = cardPicture(box)
@@ -394,6 +500,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     showMessage(s) {
       finishCaught(true)
       darkK = 0
+      putAway()
       const job = (async () => {
         await fonts(s.lang)
         if (disposed) return
@@ -443,6 +550,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
     },
     async intro(s) {
       skipIntro = false
+      putAway()
       const again = intro !== null
       intro = { spec: s, k: again ? 1 : 0 }
       sheet = null
@@ -536,8 +644,48 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
       stamp = { kind, at: measureSheet(g, sheet).stampAt, rot: kind === 'asli' ? -0.18 : 0.14 }
       compose()
     },
+    setPile(p) {
+      putAway()
+      pile = { ...p.counts }
+      if (!disposed) compose()
+    },
+    earn(e) {
+      putAway()
+      if (disposed || !g || !sheet || verdict?.side !== 'back' || !e.drops.length) {
+        pile = { ...e.after }
+        if (!disposed) compose()
+        return Promise.resolve()
+      }
+      earned = { spec: e, k: 0 }
+      if (e.now || reduced || typeof requestAnimationFrame !== 'function') {
+        earned.k = 1
+        if (!e.now) landCue(e)
+        compose()
+        return Promise.resolve()
+      }
+      return new Promise<void>((done) => {
+        earnRun = { t0: clock(), landed: false, done }
+        compose() // the still without them, kept for the frames
+        earnRaf = requestAnimationFrame(earnFrame)
+      })
+    },
+    getEarnRect() {
+      const b = paperBox
+      const f = freeRect
+      if (!earned || !b || !f || verdict?.side !== 'back') return null
+      const icons = earnedIcons(f, b.w, b.h)
+      if (!icons.length) return null
+      const x0 = Math.min(...icons.map((i) => i.x))
+      const y0 = Math.min(...icons.map((i) => i.y))
+      const x1 = Math.max(...icons.map((i) => i.x + i.s))
+      const y1 = Math.max(...icons.map((i) => i.y + i.s))
+      return { x: b.x + x0, y: b.y + y0, w: x1 - x0, h: y1 - y0 }
+    },
     dispose() {
       disposed = true
+      if (earnRaf) cancelAnimationFrame(earnRaf)
+      earnRun?.done()
+      earnRun = null
       tossing?.finish()
       finishCaught(true)
       window.clearTimeout(timer)
@@ -824,6 +972,37 @@ function drawCaught(g: CanvasRenderingContext2D, W: number, H: number, score: Ca
 }
 
 /** Desk, lamp glow, a sheet of paper and the basket on the floor, framed like the 3D desk shot. */
+/**
+ * The treasures, small, in the desk's front-right corner: each kind earned, coins stacked up to five
+ * with a pencilled count past that.
+ */
+function drawPile(g: CanvasRenderingContext2D, W: number, H: number, era: EraId, counts: Readonly<Record<string, number>>): void {
+  const items = eraItems(era).filter((i) => (counts[i.id] ?? 0) > 0)
+  if (!items.length) return
+  const portrait = H > W
+  const back = H * (portrait ? 0.36 : 0.42)
+  const front = H * (portrait ? 0.6 : 0.78)
+  const s = Math.min(W, H) * (portrait ? 0.075 : 0.06)
+  const y = front - (front - back) * 0.2 - s
+  let x = W * (portrait ? 0.95 : 0.88) - s
+  g.save()
+  for (const it of [...items].reverse()) {
+    const n = Math.floor(counts[it.id] ?? 0)
+    const coin = LOOKS[it.id]?.kind === 'coin'
+    const shown = coin ? Math.min(n, 5) : 1
+    for (let i = 0; i < shown; i++) drawIcon(g, it.id, x, y - i * s * 0.09, s)
+    if (n > shown) {
+      g.font = `600 ${Math.round(s * 0.3)}px "FT Print", Georgia, serif`
+      g.fillStyle = 'rgba(245,232,200,0.9)'
+      g.textAlign = 'center'
+      g.textBaseline = 'top'
+      g.fillText(`×${n}`, x + s / 2, y + s * 0.92)
+    }
+    x -= s * 0.82
+  }
+  g.restore()
+}
+
 function drawDesk(g: CanvasRenderingContext2D, W: number, H: number, p: Palette, binned = 0): void {
   const portrait = H > W
   const wood = WOODS[p.wood]

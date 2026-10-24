@@ -69,10 +69,13 @@ import { MARK_COLORS, MAX_ASPECT, TITLE_TONE, drawRevealMarks, drawSheet, drawSh
 import { fitPose, readInsets, rectOnDesk, rectOnWall, safeBox, type NdcBox } from './shots'
 import { CRUMPLE_LIFT, TOSS, crumpleAndToss } from './toss'
 import { createTweens, ease, lerp } from './tween'
+import { LOOKS } from './reward-art'
+import { createRewardKit, type RewardKit } from './rewards'
 import {
   STAGE_LOST_EVENT,
   type DayTitle,
   type DressingHooks,
+  type EarnSpec,
   type EraDressing,
   type FlashKind,
   type IntroSpec,
@@ -139,8 +142,25 @@ interface World {
   /** The hands and the paper ball for the toss, made the first time a verdict is read here. */
   kit: TossKit | null
   beam: Beam
+  /** The treasures earned, in the desk's free front-right corner, and the loose pieces' parts. */
+  rewards: RewardKit
   update(tMs: number, pxPerUnit: number): void
   dispose(): void
+}
+
+/** A reward lying on today's paper: where it rests and how it is shaped. */
+interface EarnPiece {
+  id: string
+  obj: THREE.Group
+  lid: THREE.Object3D | null
+  rest: THREE.Vector3
+  yaw: number
+  h: number
+  r: number
+  jackpot: boolean
+  /** Which drop it belongs to, and its place within it. */
+  drop: number
+  i: number
 }
 
 interface TossKit {
@@ -298,6 +318,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   let introToken = 0
   let introJobs = 0 // intro choreography in flight
   let introRush = false // Continue was pressed mid-intro: the cards jump home, then leave
+  // the rewards: the pile in the desk's corner (item id to count), and those lying on today's paper
+  let pileCounts: Record<string, number> = {}
+  let earned: { spec: EarnSpec; pieces: EarnPiece[] } | null = null
 
   // the verdict on the paper: what was revealed for which message, and where its source line is
   let revealState: { spec: RevealSpec; token: number; back: BackLayout | null } | null = null
@@ -378,6 +401,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     camera.add(flash.mesh)
     const beam = createBeam(t)
     camera.add(beam.mesh)
+    const rewards = createRewardKit({ era: d.id, tier: t, reduced, scene })
+    scene.add(rewards.group)
     scene.add(paper.group, stamps.group, dust.points, sheet.group, sheet.shadow, envelope.group, title.group, bin.group, camera)
     if (calendar) scene.add(calendar.group)
     const built: World = {
@@ -395,12 +420,15 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       bin,
       kit: null,
       beam,
+      rewards,
       update(tMs, px) {
         dressed.update(tMs)
         stamps.update()
         dust.update(tMs, px)
+        rewards.update(tMs)
       },
       dispose() {
+        rewards.dispose()
         dressed.dispose()
         paper.dispose()
         stamps.dispose()
@@ -488,6 +516,16 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       c.draw(introSpec)
       c.rest(rig.aspect())
     } else dropIntroCards()
+    // the treasures: the pile, and today's rewards still lying on the turned-over paper
+    const e = earned
+    earned = null
+    if (e && msg?.shown && revealState && revealState.token === msgToken && w.sheet.group.visible) {
+      const pieces = layoutEarned(w, e.spec)
+      for (const pc of pieces) restPiece(pc)
+      for (const pc of pieces) w.scene.add(pc.obj)
+      earned = { spec: e.spec, pieces }
+    } else if (e) pileCounts = e.spec.after
+    w.rewards.setCounts(pileCounts)
   }
 
   const dropIntroCards = () => {
@@ -1114,6 +1152,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   }
 
   const runTitle = async (t: DayTitle) => {
+    sweepEarned(true)
     const lang: Lang = isHindi(t.big + t.small) ? 'hi' : 'en'
     await fontsFor(lang, () => {
       const w = world
@@ -1176,6 +1215,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   }
 
   const runMessage = async (s: SheetSpec) => {
+    sweepEarned(true)
     const token = ++msgToken
     await fontsFor(s.lang, () => {
       if (msg && token === msgToken) stage.redrawMessage(msg.spec)
@@ -1410,6 +1450,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   }
 
   const runToss = async () => {
+    // the rewards on the paper are swept onto the pile as the hands come for it
+    sweepEarned(skipping || reduced)
     const w = world
     if (!w || !msg?.shown || lost || disposed) return
     const gen = worldGen
@@ -1485,6 +1527,231 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     }
   }
 
+  // ------------------------------------------------------------ rewards
+
+  /** Clear paper beside the stamp on the back, where rewards land (the back's layout says where). */
+  const freeSpot = () => revealState?.back?.free ?? { u0: 0.1, u1: 0.4, v0: 0.6, v1: 0.82 }
+
+  /**
+   * Where each earned piece comes to rest on the paper's back: the drops one above the other in the
+   * clear paper by the stamp; coins of a handful in a small heap, boxes and packets stacked, donas
+   * side by side.
+   */
+  const layoutEarned = (w: World, spec: EarnSpec): EarnPiece[] => {
+    const f = freeSpot()
+    const out: EarnPiece[] = []
+    const n = Math.max(1, spec.drops.length)
+    const yaw = w.sheet.group.rotation.y
+    const up = new THREE.Vector3(0, 1, 0)
+    spec.drops.forEach((d, di) => {
+      const look = LOOKS[d.item]
+      const u = (f.u0 + f.u1) / 2
+      const v = f.v0 + (f.v1 - f.v0) * ((di + 0.5) / n)
+      const centre = w.sheet.backPointAt(u, v)
+      const qty = Math.min(d.qty, 6)
+      for (let i = 0; i < qty; i++) {
+        const p = w.rewards.piece(d.item)
+        if (!p) continue
+        let dx = 0
+        let dz = 0
+        let dy = 0
+        if (look?.kind === 'coin') {
+          if (i > 0) {
+            const a = i * 2.4 + di
+            dx = Math.cos(a) * p.r * 1.05
+            dz = Math.sin(a) * p.r * 1.05
+          }
+          dy = i * p.h * 1.02
+        } else if (look?.kind === 'dona') dx = (i - (qty - 1) / 2) * p.r * 1.9
+        else {
+          dy = i * p.h
+          dx = (i % 2) * 0.002
+        }
+        const off = new THREE.Vector3(dx, 0, dz).applyAxisAngle(up, yaw)
+        const rest = centre.clone().add(off)
+        rest.y += dy + 0.0004
+        out.push({ id: d.item, obj: p.obj, lid: p.lid, rest, yaw: yaw + ((i * 0.9 + di * 0.4) % 1.2) - 0.3, h: p.h, r: p.r, jackpot: d.jackpot, drop: di, i })
+      }
+    })
+    return out
+  }
+
+  const restPiece = (pc: EarnPiece) => {
+    pc.obj.position.copy(pc.rest)
+    pc.obj.rotation.set(0, pc.yaw, 0)
+    pc.obj.scale.setScalar(1)
+    if (pc.lid) {
+      pc.lid.position.y = pc.h * 0.7
+      pc.lid.rotation.set(0, 0, 0)
+    }
+  }
+
+  /** The sound a piece makes as it lands. */
+  const landCue = (pc: EarnPiece) => {
+    if (pc.jackpot) return pc.i === 0 ? cue('coinJackpot') : undefined
+    const k = LOOKS[pc.id]?.kind
+    if (k === 'flat') return cue('paperDown')
+    if (k === 'dona' || k === 'packet' || k === 'box') return cue('sweetDown')
+    cue('coin')
+  }
+
+  /** A jackpot's burst of warm light where it lands (an additive sprite; no light is added). */
+  const burstAt = (w: World, at: THREE.Vector3) => {
+    const b = w.rewards.burst
+    const m = b.material
+    b.position.copy(at).add(new THREE.Vector3(0, 0.012, 0))
+    b.visible = true
+    const gen = worldGen
+    void tweens
+      .run(reduced ? 420 : 950, (k) => {
+        if (gen !== worldGen) return
+        const s = reduced ? 0.05 : 0.11 * Math.sin(Math.min(1, k * 1.6) * Math.PI * 0.5) * (1 - k * 0.35)
+        b.scale.setScalar(Math.max(0.0001, s))
+        m.opacity = (reduced ? 0.45 : 0.9) * (1 - k)
+      })
+      .then(() => {
+        if (gen === worldGen) b.visible = false
+      })
+  }
+
+  /** One piece's fall onto the paper: spun coins, a rocking paper, a box whose lid lifts. */
+  const dropPiece = async (w: World, pc: EarnPiece, mine: EarnPiece[], delay: number) => {
+    const live = () => earned?.pieces === mine && !disposed && !lost
+    const look = LOOKS[pc.id]
+    const kind = look?.kind
+    const big = pc.jackpot
+    const height = big ? 0.115 : 0.07
+    const start = pc.rest.clone().add(new THREE.Vector3(0.016, height, -0.012))
+    pc.obj.visible = false
+    if (delay > 0) await tweens.wait(delay)
+    if (!live()) return
+    pc.obj.visible = true
+    if (kind === 'flat') {
+      // a paper rocks down like a leaf, side to side, settling flat
+      await tweens.run(big ? 980 : 820, (k) => {
+        if (!live()) return
+        const sway = Math.sin(k * Math.PI * 3) * (1 - k)
+        pc.obj.position.set(lerp(start.x, pc.rest.x, k) + sway * 0.012, lerp(start.y, pc.rest.y, ease.out(k)), lerp(start.z, pc.rest.z, k))
+        pc.obj.rotation.set(sway * 0.12, pc.yaw + (1 - k) * 0.6, sway * 0.42)
+      })
+      if (!live()) return
+      restPiece(pc)
+      landCue(pc)
+      if (big) burstAt(w, pc.rest)
+      return
+    }
+    const spin = kind === 'coin' ? (big ? 3 : 2) : 0
+    const fall = big ? 600 : 470
+    await tweens.run(fall, (k) => {
+      if (!live()) return
+      pc.obj.position.set(lerp(start.x, pc.rest.x, k), pc.rest.y + height * (1 - k * k), lerp(start.z, pc.rest.z, k))
+      // a coin spins end over end and comes down flat
+      pc.obj.rotation.set(spin * Math.PI * 2 * (1 - ease.out(k)) + (spin ? (1 - k) * 0.4 : 0), pc.yaw + (1 - k) * 1.2, 0)
+    })
+    if (!live()) return
+    landCue(pc)
+    if (big && pc.i === 0) burstAt(w, pc.rest)
+    if (kind === 'coin' || kind === 'badge' || kind === 'seal' || kind === 'valve') {
+      // the coin's settle: a short wobble on its rim, dying away
+      await tweens.run(big ? 420 : 330, (k) => {
+        if (!live()) return
+        const tilt = 0.32 * (1 - k) * Math.sin(k * Math.PI * 5)
+        pc.obj.position.set(pc.rest.x, pc.rest.y + 0.003 * Math.abs(Math.sin(k * Math.PI * 1.6)) * (1 - k), pc.rest.z)
+        pc.obj.rotation.set(tilt, pc.yaw, tilt * 0.6)
+      })
+    } else {
+      // a sweet set down: a little squash, and a box's lid lifts to show what is inside
+      await tweens.run(180, (k) => {
+        if (!live()) return
+        pc.obj.position.copy(pc.rest)
+        pc.obj.rotation.set(0, pc.yaw, 0)
+        pc.obj.scale.set(1 + 0.06 * Math.sin(k * Math.PI), 1 - 0.12 * Math.sin(k * Math.PI), 1 + 0.06 * Math.sin(k * Math.PI))
+      })
+      const lid = pc.lid
+      if (lid && live()) {
+        await tweens.run(560, (k) => {
+          if (!live()) return
+          const up = Math.sin(k * Math.PI)
+          lid.position.set(0, pc.h * 0.7 + up * 0.014, -up * 0.006)
+          lid.rotation.set(-up * 0.55, 0, 0)
+        })
+      }
+    }
+    if (live()) restPiece(pc)
+  }
+
+  /** The rewards drop onto the turned-over paper (see Stage.earn). */
+  const runEarn = async (e: EarnSpec) => {
+    sweepEarned(true)
+    const w = world
+    if (!w || !msg?.shown || !w.sheet.group.visible || w.sheet.flip() < 0.5 || !e.drops.length) {
+      pileCounts = e.after
+      w?.rewards.setCounts(pileCounts)
+      return
+    }
+    const pieces = layoutEarned(w, e)
+    earned = { spec: e, pieces }
+    for (const pc of pieces) w.scene.add(pc.obj)
+    if (e.now) {
+      for (const pc of pieces) restPiece(pc)
+      return
+    }
+    if (reduced) {
+      // no spin, no fall: they fade in where they rest
+      const fade = w.rewards.fadeMaterial()
+      for (const pc of pieces) {
+        restPiece(pc)
+        pc.obj.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = fade
+        })
+      }
+      fade.opacity = 0
+      const first = pieces[0]
+      if (first) landCue(first)
+      if (first?.jackpot) burstAt(w, first.rest)
+      await tweens.run(180, (k) => (fade.opacity = k))
+      fade.opacity = 1
+      return
+    }
+    // the drops one after another, the coins of a handful a beat apart
+    await Promise.all(pieces.map((pc) => dropPiece(w, pc, pieces, pc.drop * 380 + pc.i * 75)))
+  }
+
+  /**
+   * The rewards on the paper join the pile: swept across in a short arc, or at once. The pile's
+   * counts change now, so a rebuilt world never loses them.
+   */
+  const sweepEarned = (instant: boolean) => {
+    const e = earned
+    if (!e) return
+    earned = null
+    pileCounts = e.spec.after
+    const w = world
+    const finish = () => {
+      for (const pc of e.pieces) pc.obj.removeFromParent()
+      if (w && world === w) w.rewards.setCounts(pileCounts)
+    }
+    if (!w || instant || reduced || lost) return finish()
+    const gen = worldGen
+    let left = e.pieces.length
+    e.pieces.forEach((pc, i) => {
+      const from = pc.obj.position.clone()
+      const to = w.rewards.slotWorld(pc.id)
+      void tweens
+        .wait(i * 40)
+        .then(() =>
+          tweens.run(420, (k) => {
+            if (gen !== worldGen) return
+            pc.obj.position.set(lerp(from.x, to.x, k), lerp(from.y, to.y, k) + Math.sin(k * Math.PI) * 0.05, lerp(from.z, to.z, k))
+            pc.obj.scale.setScalar(1 - k * 0.15)
+          }, ease.inOut),
+        )
+        .then(() => {
+          if (--left === 0 && gen === worldGen) finish()
+        })
+    })
+  }
+
   // A phone is width-bound: a thin margin, since every pixel of card width is type size. A wide
   // screen keeps the pair to about four fifths of its width, centred between the plaques and the
   // Continue slip (which the app then sets just under the cards).
@@ -1509,6 +1776,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
 
   /** The intro cards slide onto the desk under the camera; again for the same intro, they redraw in place. */
   const runIntro = async (s: IntroSpec) => {
+    sweepEarned(true)
     const token = ++introToken
     const again = !!introCards?.shown() && introSpec?.era === s.era
     introSpec = s
@@ -1734,6 +2002,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       revealState = null
       calDays = null
       binned = []
+      earned = null // its pieces go with the old room
       msgToken++
       introSpec = null
       introToken++
@@ -1790,6 +2059,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     establish() {
       if (disposed || lost || !world) return Promise.resolve()
       liftCaught()
+      sweepEarned(true)
       rig.setSway(2.4)
       rig.setParallaxScale(1)
       if (reduced) {
@@ -1905,6 +2175,31 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       // skipped: it runs with instant tweens and sees skipping() from its first line
       if (now) stage.skip()
       return job
+    },
+    setPile(p) {
+      if (lost) return fallback?.setPile(p)
+      if (disposed) return
+      // rewards still on the paper are put away first, then the pile takes the counts it is given
+      sweepEarned(true)
+      pileCounts = { ...p.counts }
+      world?.rewards.setCounts(pileCounts)
+    },
+    earn(e) {
+      if (lost) return fallback ? fallback.earn(e) : Promise.resolve()
+      if (disposed) return Promise.resolve()
+      return runEarn(e).catch((err: unknown) => {
+        console.warn('[stage] reward failed', err)
+      })
+    },
+    getEarnRect() {
+      if (lost) return fallback?.getEarnRect() ?? null
+      const e = earned
+      if (!e || !e.pieces.length) return null
+      const pts: THREE.Vector3[] = []
+      for (const pc of e.pieces) {
+        pts.push(pc.rest.clone().add(new THREE.Vector3(-pc.r, 0, -pc.r)), pc.rest.clone().add(new THREE.Vector3(pc.r, pc.h, pc.r)))
+      }
+      return screenRect(pts)
     },
     getPaperRect() {
       if (lost) return fallback?.getPaperRect() ?? null

@@ -65,8 +65,8 @@ export interface PaperReveal {
   /** The citations that button opens, and the honest note on what kind of text this was. */
   sources: SourceRef[]
   kind?: string
-  /** The chapter ends here: Play again, Home and Share, with the receipts behind a tap. */
-  end?: { receipts: Receipt[] }
+  /** The chapter ends here: Play again, Home and Share, with the receipts behind a tap; and what the run earned, in one line. */
+  end?: { receipts: Receipt[]; earned?: string }
   /**
    * The next day follows by itself: once the verdict has been read the paper goes in the basket.
    * No Next button; a tap on the room or Space sends it at once, and the Skip chip or Enter skips
@@ -508,6 +508,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     const share = on.share
     const actions = end
       ? [
+          end.earned ? h('p', { class: 'paper-result__earned' }, end.earned) : null,
           share ? h('button', { class: 'btn btn--primary btn--block', type: 'button', 'data-action': 'share', onclick: () => share() }, t('share', lang)) : null,
           h('div', { class: 'row2' },
             h('button', { class: 'btn btn--chit', type: 'button', 'data-action': 'again', onclick: () => again?.() }, t('playAgain', lang)),
