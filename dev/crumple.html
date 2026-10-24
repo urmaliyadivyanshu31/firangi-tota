@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Crumple preview</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b0806; overflow: hidden; }
+      #stage { position: fixed; inset: 0; --ft-hud-top: 64px; --ft-hud-bottom: 24px; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only: the toss after a right stamp (hands, crumple, flick), frame by frame. Not part of the build. -->
+    <div id="stage"></div>
+    <script type="module" src="./crumple.ts"></script>
+  </body>
+</html>

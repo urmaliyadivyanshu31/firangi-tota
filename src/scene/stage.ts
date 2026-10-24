@@ -13,17 +13,18 @@ import { createIntroCards, introPose, type IntroCards, type IntroPlay } from './
 import { introReady } from './intro-card'
 import { bindParallax, createParallaxModel } from './parallax'
 import { mountFallback, type Fallback } from './fallback'
+import { BALL_R, createBinBalls, createPaperBall, type BinBall, type BinBalls, type PaperBall } from './crumple'
+import { createHands, type Hands } from './hands'
 import {
+  BACK_GLOW,
   SHEET_PX,
   SHEET_W,
-  createBinPapers,
+  SHEET_Y,
   createCalendar,
   createEnvelope,
   createFlash,
   createMessageSheet,
   createTitleBoard,
-  type BinPaper,
-  type BinPapers,
   type CalendarLeaves,
   type Envelope,
   type Flash,
@@ -66,6 +67,7 @@ import {
 } from './quality'
 import { MARK_COLORS, MAX_ASPECT, TITLE_TONE, drawRevealMarks, drawSheet, drawSheetBack, highlightRects, loadSheetFonts, measureSheet, stampBox, type BackLayout, type SheetMetrics } from './sheet'
 import { fitPose, readInsets, rectOnDesk, rectOnWall, safeBox, type NdcBox } from './shots'
+import { CRUMPLE_LIFT, TOSS, crumpleAndToss } from './toss'
 import { createTweens, ease, lerp } from './tween'
 import {
   STAGE_LOST_EVENT,
@@ -91,14 +93,8 @@ const SETTLE_MS = 10_000 // a tier that holds steady this long is saved as the d
 const EXPOSURE = 1.0
 const CAUGHT_EXPOSURE = 0.42
 const TITLE_MS = 1600
-/**
- * The toss, in ms: the paper lifts off the desk, flies its arc into the basket, settles, and the
- * shot holds a breath on it. The camera draws back over `cam` from the start. Under reduced motion
- * the paper only fades (`fade`).
- */
-const TOSS = { lift: 260, fly: 740, settle: 140, hold: 380, cam: 1000, fade: 320 } as const
-/** The most read papers the basket shows; later ones go in under them. */
-const BIN_MAX = 7
+/** The most read papers the basket shows as balls (a 14-day chapter tosses 13). */
+const BIN_MAX = 13
 
 function getGL(canvas: HTMLCanvasElement, antialias: boolean): WebGL2RenderingContext | null {
   try {
@@ -138,10 +134,19 @@ interface World {
   title: TitleBoard
   calendar: CalendarLeaves | null
   flash: Flash
-  /** The papers already tossed into the basket. */
-  bin: BinPapers
+  /** The papers already tossed into the basket, as balls. */
+  bin: BinBalls
+  /** The hands and the paper ball for the toss, made the first time a verdict is read here. */
+  kit: TossKit | null
   beam: Beam
   update(tMs: number, pxPerUnit: number): void
+  dispose(): void
+}
+
+interface TossKit {
+  rig: THREE.Group
+  hands: Hands
+  ball: PaperBall
   dispose(): void
 }
 
@@ -280,9 +285,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   let ops = 0 // choreography in flight (title, arrival, stamp); skip() finishes them
   let skipping = false
   let msgToken = 0
-  // the toss: the papers already in the basket, and today's while it lies there in view (it joins
+  // the toss: the balls already in the basket, and today's while it lies there in view (it joins
   // them once the camera has left it); off the desk the sheet casts no contact shadow
-  let binned: BinPaper[] = []
+  let binned: BinBall[] = []
   let inBin = false
   let airborne = false
   // after Begin: the two intro cards on the desk (rebuilt at rest with the world)
@@ -367,13 +372,13 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     title.place(hooks.title ?? defaultTitle())
     const calendar = hooks.calendar ? createCalendar(hooks.calendar, t) : null
     const flash = createFlash()
-    const bin = createBinPapers(t, pal.paper)
+    const bin = createBinBalls(t, pal.paper, BIN_MAX)
     camera.add(flash.mesh)
     const beam = createBeam(t)
     camera.add(beam.mesh)
     scene.add(paper.group, stamps.group, dust.points, sheet.group, sheet.shadow, envelope.group, title.group, bin.group, camera)
     if (calendar) scene.add(calendar.group)
-    return {
+    const built: World = {
       scene,
       paper,
       stamps,
@@ -386,6 +391,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       calendar,
       flash,
       bin,
+      kit: null,
       beam,
       update(tMs, px) {
         dressed.update(tMs)
@@ -402,6 +408,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         title.dispose()
         calendar?.dispose()
         bin.dispose()
+        built.kit?.dispose()
+        built.kit = null
         camera.remove(flash.mesh)
         flash.dispose()
         camera.remove(beam.mesh)
@@ -411,6 +419,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         })
       },
     }
+    return built
   }
 
   const defaultTitle = (): NonNullable<DressingHooks['title']> => ({ pos: [0, 0.5, -0.53], w: 0.46 })
@@ -467,7 +476,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       paintReveal(w, revealState.spec, 1, true, true)
       w.sheet.setFlip(1)
     }
-    // a rebuilt world has no sheet in its basket: today's paper is there as one of the copies
+    // a rebuilt world has no ball of its own in the basket: today's paper is there as one of the copies
     if (inBin) w.sheet.group.visible = false
     inBin = false
     airborne = false
@@ -721,30 +730,49 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.06 : 0.1) })
   }
   /**
-   * Where the n-th tossed paper comes to rest: standing in the basket, leaned back against the
-   * wicker so its top shows over the rim, each turned a little from the last. Papers already in
-   * the basket raise the floor it lands on.
+   * Where the n-th paper ball comes to rest in the basket: the first in the middle of its floor, the
+   * next ones in a ring round it, and when a layer is full the next sits higher, in the gaps.
    */
-  const binPose = (bk: NonNullable<DressingHooks['basket']>, h: number, n: number): BinPaper => {
+  const ballPose = (bk: NonNullable<DressingHooks['basket']>, n: number): BinBall => {
     const m = new THREE.Vector3(...bk.mouth)
-    const floor = m.y - bk.depth + Math.min(n, BIN_MAX) * 0.012
-    const room = m.y - floor
-    // a shallow basket lays the paper over; a deep one stands it up
-    const lean = Math.asin(Math.min(0.94, Math.max(0.38, (room * 1.05) / h)))
-    // each paper faces the room a little differently, its written side up
-    const yaw = (((n * 0.618) % 1) - 0.5) * 0.8
-    const quat = new THREE.Quaternion()
-      .setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw)
-      .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), lean))
-    // its foot stands on the floor, inside the wicker (the corners clear the narrow foot); its top
-    // leans back across the mouth
-    const half = SHEET_W / 2
-    const lift = (h / 2) * Math.sin(lean)
-    const back = (h / 2) * Math.cos(lean)
-    const foot = (bk.foot ?? bk.r) - 0.008
-    const shift = Math.max(0, back - Math.sqrt(Math.max(0, foot * foot - half * half)))
-    const pos = new THREE.Vector3(m.x - Math.sin(yaw) * shift, floor + lift + 0.006, m.z - Math.cos(yaw) * shift)
-    return { pos, quat, h }
+    const floor = m.y - bk.depth
+    const foot = bk.foot ?? bk.r
+    const ring = Math.max(0, foot - BALL_R * 1.08)
+    const perRing = ring > BALL_R * 1.4 ? Math.max(3, Math.min(7, Math.floor((Math.PI * 2 * ring) / (BALL_R * 2.05)))) : 0
+    const per = 1 + perRing
+    const layer = Math.floor(n / per)
+    const i = n % per
+    const a = (i / Math.max(1, perRing)) * Math.PI * 2 + layer * 0.9 + 0.4
+    const d = i === 0 ? (layer ? ring * 0.35 : 0) : ring * (layer ? 0.75 : 1)
+    // never above the rim: a full basket keeps its top layer just inside it
+    const y = Math.min(m.y - BALL_R * 0.6, floor + BALL_R * 0.9 + layer * BALL_R * 1.3)
+    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(n * 1.7, n * 2.3, n * 0.9))
+    return { pos: new THREE.Vector3(m.x + Math.cos(a) * d, y, m.z + Math.sin(a) * d), quat, s: 0.92 + ((n * 0.37) % 1) * 0.16 }
+  }
+  /**
+   * The crumple shot: drawn back a little from the paper and leaning over it, so both hands, from
+   * the cuffs to the fingertips, and the paper lifted between them are in view.
+   */
+  const crumplePose: PoseFn = (aspect) => {
+    const w = world
+    if (!w) return deskPose(aspect)
+    const r = sheetRest(w)
+    const portrait = aspect < 0.9
+    const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT * 0.7, r.pos.z + 0.035)
+    const pts = rectOnDesk(c, portrait ? 0.31 : 0.38, portrait ? 0.28 : 0.26, r.yaw)
+    const dir = new THREE.Vector3(0, 1, portrait ? 0.62 : 0.85).normalize()
+    return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.02 : 0.05) })
+  }
+  /** Closer on the paper as it balls up between the hands. */
+  const crumpleClosePose: PoseFn = (aspect) => {
+    const w = world
+    if (!w) return deskPose(aspect)
+    const r = sheetRest(w)
+    const portrait = aspect < 0.9
+    const c = new THREE.Vector3(SPOTS.paper.x, CRUMPLE_LIFT, r.pos.z + 0.03)
+    const pts = rectOnDesk(c, portrait ? 0.25 : 0.32, portrait ? 0.24 : 0.22, r.yaw)
+    const dir = new THREE.Vector3(0, 1, portrait ? 0.66 : 0.9).normalize()
+    return fitPose({ points: pts, dir, aspect, box: box(portrait ? 0.02 : 0.05) })
   }
   rig.override('desk', deskPose)
 
@@ -1291,14 +1319,16 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     cue('verdictStamp')
     rig.shake(0.007, 0.004)
     await tweens.wait(300)
+    // a right verdict leads on to the toss: make its hands and ball now, while the back is read
+    if (gen === worldGen && r.outcome === 'right') prewarmToss(w)
   }
 
-  /** Today's sheet, lying in the basket, joins the papers there (once the camera has left it). */
+  /** Today's ball, lying in the basket, joins the others there (once the camera has left it). */
   const settleBin = (w: World) => {
     if (!inBin) return
     inBin = false
-    const g = w.sheet.group
-    g.visible = false
+    w.sheet.group.visible = false
+    if (w.kit) w.kit.ball.group.visible = false
     w.sheet.setStamp(null)
     w.sheet.setFlip(0)
     w.sheet.setOverlay(false)
@@ -1306,8 +1336,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     w.bin.set(binned.slice(-BIN_MAX))
   }
 
-  /** The basket rocks on its foot when the paper drops in, and settles. */
-  const rockBasket = (obj: THREE.Object3D | undefined, along: THREE.Vector3) => {
+  /** The basket rocks on its foot when the ball drops in, and settles. */
+  const rockBasket = (obj: THREE.Object3D | undefined, along: THREE.Vector3, amount = 0.045) => {
     if (!obj) return
     const q0 = obj.quaternion.clone()
     const axis = new THREE.Vector3(0, 1, 0).cross(along).normalize()
@@ -1316,11 +1346,60 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     void tweens
       .run(560, (k) => {
         if (gen !== worldGen) return
-        obj.quaternion.copy(q0).premultiply(q.setFromAxisAngle(axis, 0.045 * Math.sin(k * Math.PI * 3) * (1 - k)))
+        obj.quaternion.copy(q0).premultiply(q.setFromAxisAngle(axis, amount * Math.sin(k * Math.PI * 3) * (1 - k)))
       })
       .then(() => {
         if (gen === worldGen) obj.quaternion.copy(q0)
       })
+  }
+
+  /** The hands and the paper ball for this room, made once (and their shaders compiled while the verdict is read). */
+  const kitFor = (w: World): TossKit => {
+    if (w.kit) return w.kit
+    const rig = new THREE.Group()
+    rig.name = 'toss-rig'
+    const hands = createHands({ tier, era: dressing?.id ?? 'delhi-1857' })
+    const ball = createPaperBall(tier, ERA_PALETTES[dressing?.id ?? 'delhi-1857'].paper)
+    rig.add(ball.group, hands.group)
+    w.scene.add(rig)
+    w.kit = {
+      rig,
+      hands,
+      ball,
+      dispose() {
+        w.scene.remove(rig)
+        hands.dispose()
+        ball.dispose()
+      },
+    }
+    return w.kit
+  }
+
+  /** The ball laid over today's sheet: the same size, the same two faces, the same light. */
+  const prepareBall = (w: World, kit: TossKit) => {
+    const g = w.sheet.group
+    g.updateWorldMatrix(true, false)
+    kit.rig.position.copy(g.position)
+    kit.rig.quaternion.copy(g.quaternion)
+    kit.rig.updateMatrixWorld(true)
+    kit.ball.prepare({ w: SHEET_W, h: w.sheet.h(), back: w.sheet.reverse, front: w.sheet.texture, backGlow: BACK_GLOW, frontGlow: w.sheet.glow(), seed: 101 + binned.length * 7919 })
+  }
+
+  /** Builds the toss's hands and ball during the verdict, and compiles their shaders then, not on the toss's first frame. */
+  const prewarmToss = (w: World) => {
+    if (reduced || w.kit || !msg?.shown) return
+    const kit = kitFor(w)
+    try {
+      prepareBall(w, kit)
+      kit.ball.group.visible = true
+      kit.hands.group.visible = true
+      renderer.compile(w.scene, camera)
+    } catch {
+      /* the toss's first frame compiles them instead */
+    } finally {
+      kit.ball.group.visible = false
+      kit.hands.group.visible = false
+    }
   }
 
   const runToss = async () => {
@@ -1329,17 +1408,16 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const gen = worldGen
     const g = w.sheet.group
     const bk = basketOf(w)
-    const h = w.sheet.h()
-    const rest = binPose(bk, h, binned.length)
+    const rest = ballPose(bk, binned.length)
     const land = () => {
       if (msg) msg.shown = false
       binned.push(rest)
       inBin = true
     }
     if (reduced) {
-      // no arc: the paper fades from the desk (the sounds still tell it went in the basket), and
-      // is in the basket when the room is next seen
-      cue('toss')
+      // no hands and no arc: the paper fades from the desk (the crinkle and the soft landing still
+      // tell it went in the basket), and is a ball there when the room is next seen
+      cue('crumple')
       await tweens.run(TOSS.fade, (k) => w.sheet.setFade(1 - k), ease.out)
       if (gen !== worldGen) return
       g.visible = false
@@ -1349,49 +1427,39 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       settleBin(w)
       return
     }
+    const kit = kitFor(w)
+    prepareBall(w, kit)
+    // the flat ball takes the sheet's place on the same frame, so nothing blinks
+    g.visible = false
     airborne = true
     rig.setSway(1)
     rig.setParallaxScale(0.35)
     rig.refresh()
-    const cam = rig.goTo(tossPose, TOSS.cam, ease.inOut)
-    cue('toss')
-    // 1. it lifts off the desk, tipping toward the basket, as if picked up
-    const p0 = g.position.clone()
-    const q0 = g.quaternion.clone()
-    const mouth = new THREE.Vector3(...bk.mouth)
-    const toward = mouth.clone().sub(p0).setY(0).normalize()
-    const across = new THREE.Vector3(0, 1, 0).cross(toward).normalize()
-    const p1 = p0.clone().add(new THREE.Vector3(0, 0.045, 0)).addScaledVector(toward, 0.02)
-    const q1 = new THREE.Quaternion().setFromAxisAngle(across, 0.2).multiply(q0)
-    await tweens.run(TOSS.lift, (k) => {
-      g.position.lerpVectors(p0, p1, k)
-      g.quaternion.slerpQuaternions(q0, q1, k)
-    }, ease.out)
-    if (gen !== worldGen) return
-    // 2. the arc: up and out over the desk's edge, then down into the mouth, turning over once
-    const c1 = p1.clone().addScaledVector(toward, 0.14).add(new THREE.Vector3(0, 0.27, 0))
-    const c2 = mouth.clone().add(new THREE.Vector3(0, 0.36, 0))
-    const end = rest.pos
-    const spin = new THREE.Quaternion()
-    const tmp = new THREE.Vector3()
-    await tweens.run(TOSS.fly, (t) => {
-      if (gen !== worldGen) return
-      g.position.copy(cubic(p1, c1, c2, end, t, tmp))
-      const turn = ease.inOut(t)
-      g.quaternion.slerpQuaternions(q1, rest.quat, turn).premultiply(spin.setFromAxisAngle(across, Math.PI * 2 * turn))
-    }, ease.linear)
-    if (gen !== worldGen) return
-    // 3. it lands: a rustle in the wicker, the basket rocks, the sheet settles
-    g.position.copy(end)
-    g.quaternion.copy(rest.quat)
-    cue('tossLand')
-    rockBasket(bk.obj, toward)
-    land()
-    airborne = false
-    const sink = end.clone()
-    await tweens.run(TOSS.settle, (k) => g.position.copy(sink).add(tmp.set(0, -0.008 * Math.sin(k * Math.PI), 0)), ease.out)
-    g.position.copy(end)
-    await Promise.all([cam, tweens.wait(TOSS.hold)])
+    try {
+      await crumpleAndToss({
+        tw: tweens,
+        rig: kit.rig,
+        ball: kit.ball,
+        hands: kit.hands,
+        camera,
+        flatY: SHEET_Y + 0.0003,
+        rest,
+        mouth: new THREE.Vector3(...bk.mouth),
+        cue,
+        alive: () => gen === worldGen && !lost && !disposed,
+        skipping: () => skipping,
+        camTo: (shot, ms) => rig.goTo(shot === 'hands' ? crumplePose : shot === 'ball' ? crumpleClosePose : tossPose, ms, ease.inOut),
+        rockBasket: (along) => rockBasket(bk.obj, along, 0.03),
+        landed: land,
+      })
+    } finally {
+      airborne = false
+      // a toss cut short (a lost context) still ends with the paper in the basket
+      if (gen === worldGen && msg?.shown) {
+        land()
+        settleBin(w)
+      }
+    }
   }
 
   // A phone is width-bound: a thin margin, since every pixel of card width is type size. A wide

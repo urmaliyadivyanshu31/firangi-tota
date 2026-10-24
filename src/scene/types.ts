@@ -192,8 +192,10 @@ export type StageCueName =
   | 'knockFar' | 'knockNear' | 'knockDoor' | 'caughtHush' | 'caughtDark'
   // after Begin: an intro card slides onto the desk; the paper clip snaps onto the YOU photo
   | 'cardSlide' | 'clipSnap'
-  // the read paper tossed into the desk's basket: it leaves the desk, then it lands
+  // the read paper tossed into the desk's basket: it leaves the hand, then it lands
   | 'toss' | 'tossLand'
+  // the read paper screwed up in the hands: one per squeeze
+  | 'crumple'
 
 export interface StageOptions {
   reducedMotion: boolean
