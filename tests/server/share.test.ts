@@ -2,15 +2,16 @@
 // Share links and their cards: strict codes, canonical redirects, the crawler-facing page, and a
 // card drawn only from enums and our own content, as glyph outlines.
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import type { EraId, Lang } from '../../src/content/types'
 import { ERA_YEAR, parseShareCode, shareCode, type ShareResult } from '../../src/game/share-code'
 import { CARD_H, CARD_W, cardSvg, cardWords, PARROT } from '../../server/og/card'
 import { renderCard } from '../../server/og/render'
-import { createOgMiddleware, createShareMiddleware, shareCodeOf } from '../../server/share-http'
-import { cardRev, gameHref, handleOgImage, handleSharePage, IMAGE_CACHE, imageQuery, originFor, PAGE_CACHE, REDIRECT_CACHE, titleLine } from '../../server/share'
+import { cardFileOf, createOgMiddleware, createShareMiddleware, shareCodeOf } from '../../server/share-http'
+import { allShareResults, CARD_FILE_CACHE, CARD_FILE_RE, cardFile, cardRev, gameHref, handleCardFile, handleOgImage, handleSharePage, IMAGE_CACHE, imageQuery, originFor, PAGE_CACHE, REDIRECT_CACHE, titleLine } from '../../server/share'
 import { SERVER_ERAS } from '../../server/eras'
 
 const ORIGIN = 'https://firangitota.com'
@@ -51,9 +52,12 @@ describe('the share page (/s/<code>)', () => {
     expect(res.headers['Cache-Control']).toBe(PAGE_CACHE)
     const html = String(res.body)
     const meta = metaOf(html)
-    const image = `${ORIGIN}/api/og?${imageQuery(R())}`
+    // the card the build drew, which the CDN answers at once (scripts/og-cards.mjs)
+    const image = `${ORIGIN}/og/${cardFile(R())}`
+    expect(image).toMatch(/^https:\/\/firangitota\.com\/og\/1857-e7s-en\.[0-9a-f]{8}\.jpg$/)
     expect(meta['twitter:card']).toBe('summary_large_image')
     expect(meta['og:image']).toBe(image)
+    expect(meta['og:image:secure_url']).toBe(image)
     expect(meta['twitter:image']).toBe(image)
     expect(meta['og:image:width']).toBe(String(CARD_W))
     expect(meta['og:image:height']).toBe(String(CARD_H))
@@ -122,7 +126,7 @@ describe('the share page (/s/<code>)', () => {
     ;({ res, headers } = fakeRes())
     mw({ method: 'GET', url: '/api/s?code=1857-e7s-en', headers: { host: 'firangi-tota-abc.vercel.app', 'x-forwarded-host': 'evil.com' } } as unknown as IncomingMessage, res as unknown as ServerResponse)
     expect(res.statusCode).toBe(200)
-    expect(metaOf(String(res.body))['og:image']).toMatch(/^https:\/\/firangi-tota-abc\.vercel\.app\/api\/og\?c=1857-e7s-en&v=[0-9a-f]{8}$/)
+    expect(metaOf(String(res.body))['og:image']).toMatch(/^https:\/\/firangi-tota-abc\.vercel\.app\/og\/1857-e7s-en\.[0-9a-f]{8}\.jpg$/)
   })
 })
 
@@ -177,6 +181,98 @@ describe('the card image (/api/og)', () => {
     const { res } = fakeRes()
     await mw({ method: 'DELETE', url: `/api/og?${imageQuery(R())}` } as IncomingMessage, res as unknown as ServerResponse)
     expect(res.statusCode).toBe(405)
+  })
+})
+
+describe('the pre-drawn cards (/og/<code>.<rev>.jpg)', () => {
+  const render = () => vi.fn(async (_svg: string) => new Uint8Array([0xff, 0xd8, 0xff]))
+
+  it('lists every result the game can produce, each once, as the build draws them', () => {
+    const results = allShareResults()
+    expect(results).toHaveLength(4 * 2 * (8 + 11 + 15 + 6)) // as the share-code round trip counts them
+    const codes = new Set(results.map(shareCode))
+    expect(codes.size).toBe(results.length)
+    for (const r of results) expect(parseShareCode(shareCode(r))).toEqual({ result: r, canonical: true })
+    const files = new Set(results.map(cardFile))
+    expect(files.size).toBe(results.length)
+    for (const r of results) {
+      expect(cardFile(r)).toMatch(CARD_FILE_RE)
+      expect(cardFile(r)).toBe(`${shareCode(r)}.${cardRev(r)}.jpg`) // the same hash as /api/og's v=
+    }
+  })
+
+  it('every share page names its own pre-drawn card in og:image, og:image:secure_url and twitter:image', () => {
+    for (const r of allShareResults()) {
+      const meta = metaOf(String(handleSharePage(shareCode(r), ORIGIN).body))
+      const image = `${ORIGIN}/og/${cardFile(r)}`
+      expect(meta['og:image'], shareCode(r)).toBe(image)
+      expect(meta['og:image:secure_url']).toBe(image)
+      expect(meta['twitter:image']).toBe(image)
+    }
+  })
+
+  it('draws a missing file of today’s name on the spot, cached for a year', async () => {
+    const r = render()
+    const res = await handleCardFile(cardFile(R({ lang: 'hi' })), r)
+    expect(res.status).toBe(200)
+    expect(res.headers['Content-Type']).toBe('image/jpeg')
+    expect(res.headers['Cache-Control']).toBe(IMAGE_CACHE)
+    expect(r).toHaveBeenCalledWith(cardSvg(R({ lang: 'hi' })))
+  })
+
+  it('sends an older drawing’s name or another spelling to today’s file, and anything else to the site’s own share image', async () => {
+    const r = render()
+    const today = `/og/${cardFile(R())}`
+    for (const name of ['1857-e7s-en.00000000.jpg', '1857-e7s-en.jpg', '1857-E7S-EN.00000000.jpg', `1857e7sen.${cardRev(R())}.jpg`, `1857-e7s-en.${cardRev(R()).toUpperCase()}.jpg`]) {
+      expect(await handleCardFile(name, r), name).toEqual({ status: 302, headers: { Location: today, 'Cache-Control': REDIRECT_CACHE }, body: '' })
+    }
+    for (const name of ['', 'og.jpg', '1857-e6s-en.00000000.jpg', '1857-e7s-en.00000000.png', '..%2F..%2Fpackage.json', `${'a'.repeat(80)}.jpg`, '1857-e7s-en.a.b.jpg']) {
+      expect(await handleCardFile(name, r), name).toEqual({ status: 302, headers: { Location: '/og.jpg', 'Cache-Control': REDIRECT_CACHE }, body: '' })
+    }
+    expect(r).not.toHaveBeenCalled()
+  })
+
+  it('reads the file name from the path, or from the query the vercel.json rewrite adds', () => {
+    expect(cardFileOf('/og/1857-e7s-en.0a1b2c3d.jpg')).toBe('1857-e7s-en.0a1b2c3d.jpg')
+    expect(cardFileOf('/og/1857-e7s-en.0a1b2c3d.jpg?utm=x')).toBe('1857-e7s-en.0a1b2c3d.jpg')
+    expect(cardFileOf('/api/og?file=1857-e7s-en.0a1b2c3d.jpg')).toBe('1857-e7s-en.0a1b2c3d.jpg')
+    expect(cardFileOf('/og/a/b.jpg')).toBe('')
+    expect(cardFileOf('/api/og?file=a&file=b')).toBe('')
+    expect(cardFileOf(`/api/og?${imageQuery(R())}`)).toBeNull()
+    expect(cardFileOf(undefined)).toBeNull()
+  })
+
+  it('serves a card the build wrote with vercel.json’s headers, and draws one it did not (vite preview)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ft-og-'))
+    try {
+      const stored = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3])
+      writeFileSync(join(dir, cardFile(R())), stored)
+      writeFileSync(join(dir, 'secret.txt'), 'no')
+      const r = render()
+      const mw = createOgMiddleware(r, { cardDir: dir })
+      let { res, headers } = fakeRes()
+      await mw({ method: 'GET', url: `/og/${cardFile(R())}` } as IncomingMessage, res as unknown as ServerResponse)
+      expect(res.statusCode).toBe(200)
+      expect(headers['Cache-Control']).toBe(CARD_FILE_CACHE)
+      expect(headers['Content-Type']).toBe('image/jpeg')
+      expect(Buffer.from(res.body as Uint8Array)).toEqual(stored)
+      expect(r).not.toHaveBeenCalled()
+      // not written by the build: drawn on request, as on Vercel
+      ;({ res, headers } = fakeRes())
+      await mw({ method: 'GET', url: `/api/og?file=${cardFile(R({ lang: 'hi' }))}` } as IncomingMessage, res as unknown as ServerResponse)
+      expect(res.statusCode).toBe(200)
+      expect(headers['Cache-Control']).toBe(IMAGE_CACHE)
+      expect(r).toHaveBeenCalledTimes(1)
+      // only card names are ever read from the folder
+      for (const url of ['/og/secret.txt', '/og/..%2Fsecret.txt', '/api/og?file=../secret.txt']) {
+        ;({ res, headers } = fakeRes())
+        await mw({ method: 'GET', url } as IncomingMessage, res as unknown as ServerResponse)
+        expect(res.statusCode, url).toBe(302)
+        expect(headers.Location).toBe('/og.jpg')
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })
 

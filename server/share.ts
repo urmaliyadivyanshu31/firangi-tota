@@ -1,17 +1,21 @@
 // Share links and their preview cards.
 //
 // GET /s/<code>: a tiny page with Open Graph and Twitter `summary_large_image` tags whose image is
-// /api/og?c=<code>&v=<rev>, then on to the game (/share-go.js, a script link-preview crawlers do
-// not run) with the chapter and mode picked. GET /api/og: the card itself, a 1200 x 630 JPEG.
+// /og/<code>.<rev>.jpg, then on to the game (/share-go.js, a script link-preview crawlers do not
+// run) with the chapter and mode picked. The build draws every card the game can produce into
+// dist/og (scripts/og-cards.mjs), so the CDN answers a crawler at once: WhatsApp and X drop a
+// preview image that is slow to come, and a card drawn on request took two seconds.
+// GET /api/og: a card drawn on request, a 1200 x 630 JPEG, for links shared before the files
+// existed and for a file the build did not write (vercel.json sends a missing /og/ file there).
 //
 // The code holds only enums and small integers (src/game/share-code.ts), and the card is drawn
 // from those and our own content alone: nothing a player typed reaches the page or the image.
 // Anything off gets a 302: a near miss to its canonical spelling, the rest to the plain site (or,
 // for an image, to the site's own share image). Like /api/voice, an image is served only for the
-// exact canonical query, and `v` is a hash of the card's exact drawing, so a design or text change
-// gets a new URL instead of a year-old cached card.
+// exact canonical query, and `rev` is a hash of the card's exact drawing, so a design or text
+// change gets a new URL instead of a year-old cached card.
 import type { Lang } from '../src/content/types.js'
-import { parseShareCode, shareCode, totalFor, type ShareResult } from '../src/game/share-code.js'
+import { ERA_YEAR, parseShareCode, shareCode, totalFor, type ShareMode, type ShareResult } from '../src/game/share-code.js'
 import { ORDINAL_HI } from '../src/game/share.js'
 import { CARD_H, CARD_W, cardSvg } from './og/card.js'
 import { SERVER_ERAS } from './eras.js'
@@ -29,6 +33,10 @@ export const IMAGE_CACHE = 'public, max-age=31536000, s-maxage=31536000, immutab
 export const PAGE_CACHE = 'public, max-age=600, s-maxage=86400'
 /** Redirects follow fixes quickly: the CDN keeps them 5 minutes. */
 export const REDIRECT_CACHE = 'public, max-age=0, s-maxage=300'
+/** The pre-drawn cards' folder, in dist/ and on the site. */
+export const CARD_DIR = 'og'
+/** vercel.json's Cache-Control for the pre-drawn cards (a test keeps the two equal). */
+export const CARD_FILE_CACHE = 'public, max-age=31536000, immutable'
 
 /** Bump when the fonts in server/og/fonts change: the drawing's hash cannot see them. */
 const FONTS_REV = 'og-fonts-1'
@@ -71,6 +79,29 @@ export function cardRev(r: ShareResult): string {
     revs.set(code, v)
   }
   return v
+}
+
+/** A pre-drawn card's file name, "1857-e7s-en.1a2b3c4d.jpg": a new drawing gets a new name. */
+export function cardFile(r: ShareResult): string {
+  return `${shareCode(r)}.${cardRev(r)}.jpg`
+}
+
+// Records over the unions, so a new mode or language fails the typecheck until it is listed here.
+const MODES = Object.keys({ easy: 0, medium: 0, hard: 0, daily: 0 } satisfies Record<ShareMode, 0>) as ShareMode[]
+const LANGS = Object.keys({ en: 0, hi: 0 } satisfies Record<Lang, 0>) as Lang[]
+
+/** Every result the game can produce, each once: the cards the build draws. */
+export function allShareResults(): ShareResult[] {
+  const out: ShareResult[] = []
+  for (const era of Object.keys(ERA_YEAR) as ShareResult['era'][]) {
+    for (const mode of MODES) {
+      for (const lang of LANGS) {
+        const total = totalFor(mode)
+        for (let days = 0; days <= total; days++) out.push({ era, mode, lang, days, outcome: days === total ? 'survived' : 'caught' })
+      }
+    }
+  }
+  return out
 }
 
 /** The canonical image query, without its `?`. */
@@ -127,7 +158,7 @@ export function sharePage(r: ShareResult, origin: string): string {
   const line = titleLine(r)
   const title = `${line} · ${site.name}`
   const pageUrl = `${origin}/s/${shareCode(r)}`
-  const image = `${origin}/api/og?${imageQuery(r)}`
+  const image = `${origin}/${CARD_DIR}/${cardFile(r)}`
   const alt = `${site.alt}: ${line}`
   const go = gameHref(r)
   const meta = (attr: 'name' | 'property', key: string, value: string) => `<meta ${attr}="${key}" content="${esc(value)}">`
@@ -206,11 +237,34 @@ export async function handleOgImage(rawQuery: string, render: Render): Promise<S
   if (!parsed) return redirect(PLAIN_IMAGE)
   const canonical = imageQuery(parsed.result)
   if (rawQuery !== canonical || !QUERY_RE.test(rawQuery)) return redirect(`/api/og?${canonical}`)
+  return serveCard(parsed.result, render)
+}
 
-  const key = canonical
+/** A card file's name as the build writes it: the code, the drawing's hash, `.jpg`. */
+export const CARD_FILE_RE = /^[0-9a-z-]{1,24}\.[0-9a-f]{8}\.jpg$/
+
+/**
+ * GET /og/<name> that no file answered: Vercel serves the build's files first and sends only a miss
+ * here (vercel.json), and so do the dev and preview servers. A name from an older drawing (a page
+ * cached across a deploy) or another spelling of the code is redirected to today's file; today's
+ * own name, which the build should have written, is drawn on the spot. Anything else gets the
+ * site's own share image.
+ */
+export async function handleCardFile(rawName: string, render: Render): Promise<ShareHttpResult> {
+  if (rawName.length > 64) return redirect(PLAIN_IMAGE)
+  const parsed = parseShareCode(/^([^.]+)(?:\.[^.]*)?\.jpg$/i.exec(rawName)?.[1] ?? '')
+  if (!parsed) return redirect(PLAIN_IMAGE)
+  const name = cardFile(parsed.result)
+  if (rawName !== name) return redirect(`/${CARD_DIR}/${name}`)
+  return serveCard(parsed.result, render)
+}
+
+/** A card drawn on request, cached for a year (its URL carries its drawing's hash). */
+async function serveCard(r: ShareResult, render: Render): Promise<ShareHttpResult> {
+  const key = imageQuery(r)
   let job = inflight.get(key)
   if (!job) {
-    job = render(cardSvg(parsed.result))
+    job = render(cardSvg(r))
     inflight.set(key, job)
     const clear = () => { inflight.delete(key) }
     job.then(clear, clear)
@@ -219,7 +273,7 @@ export async function handleOgImage(rawQuery: string, render: Render): Promise<S
   try {
     image = await job
   } catch (err) {
-    console.warn(`[og] render failed c=${shareCode(parsed.result)} ${(err as Error | null)?.name ?? 'error'}`)
+    console.warn(`[og] render failed c=${shareCode(r)} ${(err as Error | null)?.name ?? 'error'}`)
     return redirect(PLAIN_IMAGE, 'no-store')
   }
   return {
