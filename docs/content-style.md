@@ -67,7 +67,23 @@ what happened when, where things are, money, then the threat.
 - `npm test` checks the highlights, the numbers, the names and the length (`storyChecks` in
   `src/content/validate.ts`).
 
-Example: `You serve [[Bahadur Shah Zafar]]; his coins name him [[Siraj-ud-din]], also spelt [[Suraj-u-din]].`
+Example: `You serve the King, [[Bahadur Shah Zafar]]; his coins name him [[Siraj-ud-din]], also spelt [[Suraj-u-din]].`
+
+## Every check is in the file (owner, 24 October)
+
+A player judges a message only by that mode's case file and the rules that have arrived. So every
+pencil mark (`checks`, EN and HI) must be settled there, in every mode the message can come in:
+
+- by one case-file line of that mode whose story holds the mark's numbers and names (or its content
+  words, when it has no names), or by one rule that has arrived by the message's first day;
+- or by the calendar: a weekday or date the era's weekday rule settles, or the paper's own date line
+  for a dated event;
+- or by a `verify` note on the message (`'fact:<id>'`, `'rule:<id>'` or `'calendar'`) where the words
+  cannot match. The note must be honest: that line has to let a player judge the mark.
+
+A forgery's slip is settled by its tell's fact or rule, which must be in that mode's file. If a detail
+is not in the file, rewrite it, add a short sourced fact (with `minMode` where it belongs), move the
+message up a mode, or cut it. `coverage` in `src/content/validate.ts` checks all of this.
 
 ## Display copy
 

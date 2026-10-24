@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fixture from '../../src/content/eras/_fixture'
-import { countSentences, pencilTells, surfaceTells, validateEra } from '../../src/content/validate'
+import { countSentences, coverage, pencilTells, surfaceTells, validateEra } from '../../src/content/validate'
 import type { Era } from '../../src/content/types'
 
 const fresh = (): Era => structuredClone(fixture)
@@ -326,6 +326,116 @@ describe('validateEra', () => {
       const back = fresh()
       back.facts = [back.facts[1]!, back.facts[0]!]
       expect(validateEra(back)).toContain('f1: para 1 after para 2: list the facts in story order')
+    })
+  })
+
+  // Owner 10-24: a player judges a message only by the case file and the rules of the mode he plays,
+  // so every pencil mark must be settled by one of them (or by the calendar).
+  describe('coverage', () => {
+    const missing = (e: Era, id: string, check: string, mode = 'easy') =>
+      coverage(e).some((p) => p.startsWith(`${id}: check "${check}"`) && p.includes(`the ${mode} case file`))
+    const setText = (e: Era, id: string, en: string, hi: string, checks: { en: string[]; hi: string[] }) => {
+      const m = msg(e, id)
+      m.text = { en, hi }
+      m.checks = checks
+      return m
+    }
+    it('accepts the untouched fixture', () => {
+      expect(coverage(fresh())).toEqual([])
+    })
+    it('runs inside validateEra and can be switched off', () => {
+      const e = fresh()
+      setText(e, 'm1', 'On {date} the guards changed at the Agra gate.', '{date} को आगरा फाटक पर पहरा बदला।', { en: ['the Agra gate'], hi: ['आगरा फाटक'] })
+      expect(validateEra(e)).toContain('m1: check "the Agra gate" is not in the easy case file or rules [en]')
+      expect(validateEra(e, { coverage: false }).some((p) => p.includes('case file or rules'))).toBe(false)
+    })
+    it('fact route: a case-file line with the mark\'s names and numbers settles it; another place does not', () => {
+      const e = fresh()
+      expect(missing(e, 'm1', 'the Delhi gate')).toBe(false)
+      setText(e, 'm1', 'On {date} the guards changed at the Agra gate.', '{date} को आगरा फाटक पर पहरा बदला।', { en: ['the Agra gate'], hi: ['आगरा फाटक'] })
+      expect(missing(e, 'm1', 'the Agra gate')).toBe(true)
+      expect(missing(e, 'm1', 'आगरा फाटक')).toBe(true)
+    })
+    it('rule route: a rule settles a mark only once it has arrived', () => {
+      const e = fresh()
+      e.rules.push({ id: 'r2', arrivesOnDay: 1, text: { en: 'Every petition carries a round seal.', hi: 'हर अर्ज़ी पर गोल मुहर होती है।' } })
+      setText(e, 'm1', 'On {date} the guards changed, under a round seal.', '{date} को पहरा बदला, गोल मुहर के साथ।', { en: ['a round seal'], hi: ['गोल मुहर'] })
+      expect(missing(e, 'm1', 'a round seal')).toBe(false)
+      e.rules[1]!.arrivesOnDay = 6
+      expect(missing(e, 'm1', 'a round seal')).toBe(true)
+      // a message that can only come on day 6 or later sees it
+      msg(e, 'm1').onDay = 6
+      expect(missing(e, 'm1', 'a round seal')).toBe(false)
+    })
+    it('calendar route: a weekday the era\'s weekday rule settles, never without that rule', () => {
+      const e = fresh()
+      setText(e, 'm1', 'On Wednesday 13 May the guards changed at the gate.', 'बुधवार 13 मई को फाटक पर पहरा बदला।', { en: ['Wednesday 13 May'], hi: ['बुधवार 13 मई'] })
+      expect(missing(e, 'm1', 'Wednesday 13 May')).toBe(true)
+      e.rules.push({ id: 'weekdays', arrivesOnDay: 1, text: { en: '11 May 1857 is a Monday; count on.', hi: '11 मई 1857 सोमवार है; आगे गिनिए।' } })
+      expect(missing(e, 'm1', 'Wednesday 13 May')).toBe(false)
+      expect(missing(e, 'm1', 'बुधवार 13 मई')).toBe(false)
+    })
+    it('calendar route: a dated event may lean on the paper\'s own date line', () => {
+      const e = fresh()
+      const m = setText(e, 'm1', 'Tuesday 12 May. The guards changed at the gate.', 'मंगलवार 12 मई। फाटक पर पहरा बदला।', { en: ['Tuesday 12 May'], hi: ['मंगलवार 12 मई'] })
+      expect(missing(e, 'm1', 'Tuesday 12 May')).toBe(true)
+      m.onDay = 2 // day 2 is Tuesday 12 May 1857
+      expect(missing(e, 'm1', 'Tuesday 12 May')).toBe(false)
+      m.onDay = 3
+      expect(missing(e, 'm1', 'Tuesday 12 May')).toBe(true)
+    })
+    it('annotation: verify names a fact, rule or the calendar that must exist and be in view', () => {
+      const e = fresh()
+      const m = setText(e, 'm1', 'On {date} the guards changed at the gate.', '{date} को फाटक पर पहरा बदला।', { en: ['the guards changed'], hi: ['पहरा बदला'] })
+      expect(missing(e, 'm1', 'the guards changed')).toBe(true)
+      m.verify = { 'the guards changed': 'fact:f2' }
+      expect(coverage(e)).toEqual([])
+      m.verify = { 'the guards changed': 'fact:nope' }
+      expect(coverage(e)).toContain('m1: verify "the guards changed" names unknown fact "nope"')
+      m.verify = { 'the guards changed': 'rule:r1' }
+      expect(coverage(e)).toEqual([])
+      e.rules[0]!.arrivesOnDay = 4
+      expect(coverage(e).some((p) => p.includes('needs rule "r1", which arrives on day 4, after day 1'))).toBe(true)
+      m.verify = { 'the guards changed': 'calendar' }
+      expect(coverage(e).some((p) => p.includes('needs the weekday rule by day 1'))).toBe(true)
+      e.rules.push({ id: 'weekdays', arrivesOnDay: 1, text: { en: '11 May 1857 is a Monday; count on.', hi: '11 मई 1857 सोमवार है; आगे गिनिए।' } })
+      expect(coverage(e)).toEqual([])
+    })
+    it('a fact hidden by mode settles nothing below its mode', () => {
+      const e = fresh()
+      e.facts[1]!.minMode = 'medium'
+      msg(e, 'm2').minMode = 'medium' // its tell needs f2 too
+      expect(missing(e, 'm1', 'the Delhi gate', 'easy')).toBe(true)
+      expect(missing(e, 'm1', 'the Delhi gate', 'medium')).toBe(false)
+      msg(e, 'm1').minMode = 'medium'
+      expect(coverage(e)).toEqual([])
+      const v = fresh()
+      v.facts[1]!.minMode = 'hard'
+      msg(v, 'm2').minMode = 'hard'
+      setText(v, 'm1', 'On {date} the guards changed at the gate.', '{date} को फाटक पर पहरा बदला।', { en: ['the guards changed'], hi: ['पहरा बदला'] })
+      msg(v, 'm1').verify = { 'the guards changed': 'fact:f2' }
+      expect(coverage(v)).toContain('m1: verify "the guards changed" needs fact "f2", which is not in the easy case file [en]')
+    })
+    it("Hard's blanks settle nothing in Hard", () => {
+      const e = fresh()
+      e.facts[1]!.hardHidden = true
+      expect(missing(e, 'm1', 'the Delhi gate', 'medium')).toBe(false)
+      expect(missing(e, 'm1', 'the Delhi gate', 'hard')).toBe(true)
+      expect(coverage(e)).toContain('m2: no tell whose fact or rule is in the hard case file or rules')
+    })
+    it('a forgery needs a tell the file or rules can catch; its slip is settled by that tell', () => {
+      const e = fresh()
+      expect(missing(e, 'm2', 'court sat in Lahore')).toBe(false)
+      delete msg(e, 'm2').tells![0]!.factId
+      expect(coverage(e)).toContain('m2: no tell whose fact or rule is in the easy case file or rules')
+      expect(missing(e, 'm2', 'court sat in Lahore')).toBe(true)
+    })
+    it("a forgery's mark that its genuine twin also carries must be settled on its own", () => {
+      const e = fresh()
+      msg(e, 'm1').pair = 'p'
+      msg(e, 'm2').pair = 'p'
+      setText(e, 'm1', 'On {date} the court sat in Lahore.', '{date} को दरबार लाहौर में लगा।', { en: ['court sat in Lahore'], hi: ['लाहौर में लगा'] })
+      expect(missing(e, 'm2', 'court sat in Lahore')).toBe(true)
     })
   })
 })

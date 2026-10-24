@@ -290,7 +290,7 @@ const eventMessages: Message[] = [
     ],
   },
 
-  // ── Day 9, Mon 25 May: Eid, and a false alarm ──
+  // ── Day 9, Mon 25 May: a festival day, and a false alarm ──
   {
     id: 'ev-eid-real',
     tier: 1,
@@ -300,10 +300,11 @@ const eventMessages: Message[] = [
     from: COURT_NEWS,
     to: OFFICE,
     text: {
-      en: 'Eid, Monday 25 May. During prayers a camel rider from Ballabhgarh cried that the English were coming. He had mistaken an Eid procession for their army.',
-      hi: 'ईद, सोमवार 25 मई। नमाज़ के वक़्त बल्लभगढ़ से एक ऊँट-सवार चिल्लाया कि अंग्रेज़ आ रहे हैं। उसने ईद के जुलूस को अंग्रेज़ी फ़ौज समझ लिया था।',
+      en: 'Eid, Monday 25 May. A camel rider from Ballabhgarh cried that the English were coming. He had mistaken a festival procession for their army.',
+      hi: 'ईद, सोमवार 25 मई। बल्लभगढ़ से एक ऊँट-सवार चिल्लाया कि अंग्रेज़ आ रहे हैं। उसने त्योहार के जुलूस को अंग्रेज़ी फ़ौज समझ लिया था।',
     },
-    checks: { en: ['Eid, Monday 25 May', 'camel rider from Ballabhgarh', 'mistaken an Eid procession'], hi: ['ईद, सोमवार 25 मई', 'बल्लभगढ़ से एक ऊँट-सवार', 'ईद के जुलूस को अंग्रेज़ी फ़ौज समझ'] },
+    checks: { en: ['Eid, Monday 25 May', 'camel rider from Ballabhgarh', 'mistaken a festival procession'], hi: ['ईद, सोमवार 25 मई', 'बल्लभगढ़ से एक ऊँट-सवार', 'त्योहार के जुलूस को अंग्रेज़ी फ़ौज समझ'] },
+    verify: { 'mistaken a festival procession': 'rule:weekdays' },
     why: {
       text: {
         en: "Jiwan Lal, 25 May: the 'English army' was an Eid procession.",
@@ -321,8 +322,8 @@ const eventMessages: Message[] = [
     from: COURT_NEWS,
     to: OFFICE,
     text: {
-      en: 'Eid was yesterday, Sunday. During prayers a camel rider from Ballabhgarh cried that the English were coming. They are at the gates: let the King flee tonight.',
-      hi: 'ईद कल, रविवार को थी। नमाज़ के वक़्त बल्लभगढ़ से एक ऊँट-सवार चिल्लाया कि अंग्रेज़ आ रहे हैं। वे दरवाज़ों पर हैं: बादशाह आज रात निकल जाएँ।',
+      en: 'Eid was yesterday, Sunday. A camel rider from Ballabhgarh cried that the English were coming. They are at the gates: let the King flee tonight.',
+      hi: 'ईद कल, रविवार को थी। बल्लभगढ़ से एक ऊँट-सवार चिल्लाया कि अंग्रेज़ आ रहे हैं। वे दरवाज़ों पर हैं: बादशाह आज रात निकल जाएँ।',
     },
     checks: { en: ['Eid was yesterday, Sunday', 'camel rider from Ballabhgarh', 'let the King flee tonight'], hi: ['ईद कल, रविवार को थी', 'बल्लभगढ़ से एक ऊँट-सवार', 'बादशाह आज रात निकल जाएँ'] },
     tells: [

@@ -294,7 +294,7 @@ export function checkTokens(check: string, lang: Lang, text = ''): { digits: str
   let names = content.filter((w) => isCapital(w) && !TITLES.has(w.toLowerCase()))
   const at = text.indexOf(check)
   const opens = at === 0 || (at > 0 && /[.!?:;…'‘“"(]\s*$/u.test(text.slice(0, at)))
-  if (opens && names.length + digits.length > 1 && raw[0] === names[0]) names = names.slice(1)
+  if (opens && names.length + digits.length > 1 && raw[0] === names[0] && !CALENDAR.test(names[0]!)) names = names.slice(1)
   const titled = content.some((w) => TITLES.has(w.toLowerCase()) && isCapital(w))
   return { digits, words: (names.length > 0 || digits.length > 0 || titled ? names : content).map(norm) }
 }
