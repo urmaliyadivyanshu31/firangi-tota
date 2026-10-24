@@ -21,7 +21,7 @@ const ft = <T>(page: Page, pick: (f: FtState) => T): Promise<T> =>
 let errors: string[] = []
 function track(page: Page): Page {
   page.on('console', (m) => {
-    if (m.type() === 'error') errors.push(`console.error: ${m.text()}`)
+    if (m.type() === 'error') errors.push(`console.error: ${m.text()}${m.location().url ? ` (${m.location().url})` : ''}`)
   })
   page.on('pageerror', (e) => errors.push(`uncaught: ${e.message}`))
   return page
@@ -162,20 +162,31 @@ test('a lost WebGL context mid-day keeps the stamps working', async ({ page }) =
 test('plays offline after the first visit (read-aloud excepted)', async ({ page, context }) => {
   await page.goto(START)
   await expect(page.locator('.screen--main')).toBeVisible()
-  // the service worker installs (precaching everything) and takes this page
+  // the service worker installs (precaching the shell) and takes this page
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
   await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 30_000 })
   await expect.poll(() => ft(page, (f) => f.desk), { timeout: 30_000 }).not.toBeNull()
-  // the whole game is in the cache (the lazy stage chunk and the audio too), read-aloud never is
-  const cached = await page.evaluate(async () => {
-    const urls: string[] = []
-    for (const name of await caches.keys()) for (const req of await (await caches.open(name)).keys()) urls.push(new URL(req.url).pathname)
-    return urls
+  const cachedUrls = () => page.evaluate(async () => {
+    const out: Record<string, string[]> = {}
+    for (const name of await caches.keys()) out[name] = (await (await caches.open(name)).keys()).map((r) => new URL(r.url).pathname)
+    return out
   })
-  expect(cached).toContain('/index.html')
-  expect(cached.some((u) => /\/assets\/stage-.*\.js$/.test(u))).toBe(true)
-  expect(cached.some((u) => /\/audio\/delhi-1857\.m4a$/.test(u))).toBe(true)
-  expect(cached.some((u) => u.startsWith('/api/'))).toBe(false)
+  // the precache holds the shell (the lazy stage chunk too) and the core fonts, never recorded audio (R34)
+  const before = await cachedUrls()
+  const precache = Object.entries(before).filter(([n]) => n.includes('precache')).flatMap(([, u]) => u)
+  expect(precache).toContain('/index.html')
+  expect(precache.some((u) => /\/assets\/stage-.*\.js$/.test(u))).toBe(true)
+  expect(precache).toContain('/fonts/mukta-400-latin.woff2')
+  expect(precache.some((u) => u.startsWith('/audio/'))).toBe(false)
+  expect(precache.some((u) => /mukta-700/.test(u))).toBe(false)
+  // the first visit plays a day: the first tap starts the room's sound, and the recording and the
+  // day's fonts (the bolder weights, the pencil hand) are cached on that first use
+  await begin1857Easy(page)
+  await readable(page)
+  await stampAndReveal(page)
+  await expect.poll(async () => Object.values(await cachedUrls()).flat().includes('/audio/delhi-1857.m4a'), { timeout: 30_000 }).toBe(true)
+  await expect.poll(async () => Object.values(await cachedUrls()).flat().some((u) => /\/assets\/note-hand-.*\.woff2$/.test(u)), { timeout: 30_000 }).toBe(true)
+  expect(Object.values(await cachedUrls()).flat().some((u) => u.startsWith('/api/'))).toBe(false)
   await context.setOffline(true)
   try {
     await page.reload()
@@ -187,4 +198,24 @@ test('plays offline after the first visit (read-aloud excepted)', async ({ page,
   } finally {
     await context.setOffline(false)
   }
+})
+
+test('plays under the production security headers (vercel.json) with no policy violations', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __csp: string[] }
+    w.__csp = []
+    document.addEventListener('securitypolicyviolation', (e) => w.__csp.push(`${e.violatedDirective} ${e.blockedURI}`))
+  })
+  const res = await page.goto(START)
+  const csp = res!.headers()['content-security-policy'] ?? ''
+  expect(csp).toContain("script-src 'self'")
+  expect(csp).toContain("frame-ancestors 'none'")
+  expect(csp).not.toContain('unsafe-eval')
+  expect(res!.headers()['x-content-type-options']).toBe('nosniff')
+  expect(res!.headers()['permissions-policy']).toContain('microphone=()')
+  await begin1857Easy(page)
+  await readable(page)
+  await stampAndReveal(page)
+  await page.locator('.source-hit').click()
+  expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
 })
