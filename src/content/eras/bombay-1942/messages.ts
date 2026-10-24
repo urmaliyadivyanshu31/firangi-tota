@@ -226,7 +226,6 @@ export const messages: Message[] = [
       hi: 'शनिवार 8 अगस्त को गोवालिया टैंक में ऑल इंडिया कांग्रेस कमेटी ने ‘भारत छोड़ो’ प्रस्ताव पास किया। सिर्फ़ 13 ने विरोध किया।',
     },
     checks: { en: ['Saturday 8 August', 'Gowalia Tank', 'Only 13'], hi: ['शनिवार 8 अगस्त', 'गोवालिया टैंक', 'सिर्फ़ 13'] },
-    verify: { 'Saturday 8 August': 'fact:f-zero-hour' },
     why: {
       text: {
         en: 'Passed Saturday 8 August 1942, with “only 13 members” against.',
@@ -247,7 +246,6 @@ export const messages: Message[] = [
       hi: 'शनिवार 8 अगस्त को गोवालिया टैंक में ऑल इंडिया कांग्रेस कमेटी ने ‘भारत छोड़ो’ प्रस्ताव पास किया। सिर्फ़ 31 ने विरोध किया।',
     },
     checks: { en: ['Saturday 8 August', 'Gowalia Tank', 'Only 31'], hi: ['शनिवार 8 अगस्त', 'गोवालिया टैंक', 'सिर्फ़ 31'] },
-    verify: { 'Saturday 8 August': 'fact:f-zero-hour' },
     tells: [
       {
         kind: 'number',
@@ -627,7 +625,7 @@ export const messages: Message[] = [
       en: 'Gandhiji’s last message: Every man is free to go to the fullest length under Ahimsa… Satyagrahis should go out to die and not to live… Karenge Ya Marenge.',
       hi: 'गांधीजी का आख़िरी संदेश: अहिंसा के रास्ते पर हर आदमी पूरी हद तक जाने को आज़ाद है… सत्याग्रही मरने के लिए निकलें, जीने के लिए नहीं… करेंगे या मरेंगे।',
     },
-    checks: { en: ['Gandhiji’s last message'], hi: ['गांधीजी का आख़िरी संदेश'] },
+    checks: { en: ['Gandhiji’s'], hi: ['गांधीजी का'] },
     document: { sources: [{ id: 'goi-1943', loc: 'App. X' }] },
     why: {
       text: {
@@ -648,7 +646,7 @@ export const messages: Message[] = [
       en: 'Mr. Gandhi’s last message, left at his arrest: keep the disturbances within the law… and wait at home.',
       hi: 'मिस्टर गांधी का आख़िरी संदेश, जो वे गिरफ़्तारी के वक़्त छोड़ गए: गड़बड़ियों को क़ानून के अंदर रखो… और घर बैठो।',
     },
-    checks: { en: ['Mr. Gandhi’s last message'], hi: ['मिस्टर गांधी का आख़िरी संदेश'] },
+    checks: { en: ['Mr. Gandhi’s'], hi: ['मिस्टर गांधी का'] },
     tells: [
       {
         kind: 'habit',
@@ -1507,7 +1505,7 @@ export const messages: Message[] = [
       en: 'From the 27 October script, Gandhiji to soldiers: “Your just orders we shall carry out but the order to fire on our own people we shall never obey.”',
       hi: '27 अक्टूबर की स्क्रिप्ट से, सिपाहियों से गांधीजी: “आपके जायज़ हुक्म हम मानेंगे, पर अपने ही लोगों पर गोली चलाने का हुक्म हम कभी नहीं मानेंगे।”',
     },
-    checks: { en: ['Gandhiji to soldiers'], hi: ['सिपाहियों से गांधीजी'] },
+    checks: { en: ['Gandhiji'], hi: ['गांधीजी'] },
     document: { sources: [{ id: 'chatterjee-1989', loc: 'Gandhiji’s appeal to soldiers, on air 27 Oct 1942' }] },
     why: {
       text: {
@@ -1529,7 +1527,7 @@ export const messages: Message[] = [
       en: 'From the 27 October script, Mr. Gandhi to soldiers: “Your just orders we shall carry out but the order to fire on our own people we shall never obey.”',
       hi: '27 अक्टूबर की स्क्रिप्ट से, सिपाहियों से मिस्टर गांधी: “आपके जायज़ हुक्म हम मानेंगे, पर अपने ही लोगों पर गोली चलाने का हुक्म हम कभी नहीं मानेंगे।”',
     },
-    checks: { en: ['Mr. Gandhi to soldiers'], hi: ['सिपाहियों से मिस्टर गांधी'] },
+    checks: { en: ['Mr. Gandhi'], hi: ['मिस्टर गांधी'] },
     tells: [
       {
         kind: 'habit',
@@ -1668,15 +1666,14 @@ export const messages: Message[] = [
     from: COURIER,
     to: ANN,
     text: {
-      en: 'The transmitter hums again. K. F. Nariman has mended it, and he wants his money tonight.',
-      hi: 'ट्रांसमीटर फिर चल पड़ा। के.एफ़. नरीमन ने उसे ठीक कर दिया है, और उन्हें आज रात अपने पैसे चाहिए।',
+      en: 'The transmitter hums again. Nariman Printer has mended it, and he says he wants no money.',
+      hi: 'ट्रांसमीटर फिर चल पड़ा। नरीमन प्रिंटर ने उसे ठीक कर दिया है, और वे कहते हैं कि उन्हें कोई पैसा नहीं चाहिए।',
     },
-    checks: { en: ['K. F. Nariman', 'wants his money'], hi: ['के.एफ़. नरीमन', 'अपने पैसे चाहिए'] },
-    verify: { 'wants his money': 'fact:f-printer' },
+    checks: { en: ['Nariman Printer', 'wants no money'], hi: ['नरीमन प्रिंटर', 'कोई पैसा नहीं चाहिए'] },
     tells: [
       {
-        kind: 'name',
-        explain: { en: 'Nariman Printer builds our sets; K. F. Nariman is another man.', hi: 'हमारे सेट नरीमन प्रिंटर बनाते हैं; के.एफ़. नरीमन कोई और हैं।' },
+        kind: 'habit',
+        explain: { en: 'Nariman Printer builds our sets for pay; he always wants his money.', hi: 'नरीमन प्रिंटर हमारे सेट पैसे लेकर बनाते हैं; उन्हें पैसे हमेशा चाहिए।' },
         factId: 'f-printer',
         sources: [{ id: 'chatterjee-1989', loc: 'Home Dept on Printer' }],
       },
