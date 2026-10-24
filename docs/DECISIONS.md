@@ -138,3 +138,14 @@ older notes, the newest entry wins. This file is public; it explains why the gam
 - A wrong stamp plays out over a few seconds instead of all at once: the alarm sounds first, then
   the room reacts in time with it (red light, shaking, darkness), with more sounds, before the
   verdict turns over on the paper.
+- The chosen chapter card lifts into warm lamplight with a brass pin; the other three fade back.
+- Playing a chapter again brings different messages in a different order. The game remembers the
+  last two runs of each chapter; dated events still fall on their true days.
+- Nothing in the game praises the Muslim League. Facts about Jinnah and Pakistan in 1947 stay
+  neutral and sourced, and every side still gets its receipts.
+- After Begin, a short illustrated intro shows who you are and who the Tota is (original art).
+- Sharing: WhatsApp, X, copy link and the phone's share menu. The post carries the result and the
+  most interesting forgery of the run, and the link shows a large preview card for that chapter.
+- Background sound: one calm instrumental bed and one gentle natural layer per chapter, quieter,
+  with soft everyday sounds now and then (a page turning, footsteps, a cup), so the room feels
+  lived in. Nothing startling and nothing religious. Music from video sites is an idea for later.

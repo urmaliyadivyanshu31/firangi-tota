@@ -34,12 +34,20 @@ function pickTier(w: [number, number, number], rng: () => number): Tier {
   return 1
 }
 
+/** A message and its pair twin count as one: the player has "seen" a pair once either half came. */
+export const unitOf = (m: Message): string => m.pair ?? `#${m.id}`
+
 /**
  * One message per day. Preferences, in order of how readily they are relaxed:
- * tier first, then real/forged; pair and no-duplicate rules never relax.
+ * not seen in the player's recent runs (`recent`, unit keys), then tier, then real/forged;
+ * pair and no-duplicate rules never relax. Recent units only steer the picks, so a replay
+ * brings different messages in a different order while every dated event keeps its true day.
  */
-export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] {
+export function buildRun(era: Era, d: Difficulty, rng: () => number, recent: ReadonlySet<string> = new Set()): Message[] {
   const days = DAYS[d]
+  const fresh = (m: Message) => !recent.has(unitOf(m))
+  // the undated pool alone can fill the whole run, so a dated event seen last time may give way
+  const poolUnits = new Set(era.messages.filter((m) => m.onDay === undefined).map(unitOf)).size
   const slots: (Message | undefined)[] = new Array(days).fill(undefined)
   const usedIds = new Set<string>()
   const usedPairs = new Set<string>()
@@ -53,7 +61,10 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
     let cands = era.messages.filter((m) => m.onDay === day && earliestDay(era, m) <= day && !usedIds.has(m.id) && !(m.pair && usedPairs.has(m.pair)))
     if (d === 'easy' && day <= 3 && cands.some((m) => m.tier === 1)) cands = cands.filter((m) => m.tier === 1)
     if (cands.length === 0 || rng() >= EVENT_CHANCE) continue
-    const m = cands[Math.floor(rng() * cands.length)]!
+    const unseen = cands.filter(fresh)
+    if (unseen.length === 0 && recent.size > 0 && poolUnits >= days) continue
+    const from = unseen.length > 0 ? unseen : cands
+    const m = from[Math.floor(rng() * from.length)]!
     slots[day - 1] = m
     take(m)
   }
@@ -62,7 +73,7 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
   const free: number[] = []
   slots.forEach((s, i) => { if (!s) free.push(i) })
   const eligible = era.messages.filter((m) => m.onDay === undefined && !(m.pair && usedPairs.has(m.pair)))
-  const units = new Set(eligible.map((m) => m.pair ?? `#${m.id}`)).size
+  const units = new Set(eligible.map(unitOf)).size
   if (units < free.length) {
     throw new Error(`Era "${era.id}" has too few usable messages for a ${d} run: need ${free.length} more, have ${units}`)
   }
@@ -96,18 +107,31 @@ export function buildRun(era: Era, d: Difficulty, rng: () => number): Message[] 
     const tier = wantTier.get(i)!
     const real = wantReal.get(i)!
     const tiers = ([1, 2, 3] as Tier[]).sort((a, b) => Math.abs(a - tier) - Math.abs(b - tier))
+    // a fresh message of a neighbouring tier beats a repeat, except where the tier is a promise:
+    // the first three days are tier 1, and hard's tier-3 days stay tier 3
+    const strict = i + 1 <= 3 || tier === 3
     let pool: Message[] = []
     for (const matchReal of [true, false]) {
-      for (const t of tiers) {
-        pool = era.messages.filter((m) => ok(m) && m.tier === t && (!matchReal || m.real === real))
-        if (pool.length) break
+      if (!strict && recent.size > 0) {
+        for (const t of tiers.filter((x) => Math.abs(x - tier) <= 1)) {
+          pool = era.messages.filter((m) => ok(m) && fresh(m) && m.tier === t && (!matchReal || m.real === real))
+          if (pool.length) break
+        }
+      }
+      if (!pool.length) {
+        for (const t of tiers) {
+          pool = era.messages.filter((m) => ok(m) && m.tier === t && (!matchReal || m.real === real))
+          if (pool.length) break
+        }
       }
       if (pool.length) break
     }
     if (pool.length === 0) {
       throw new Error(`Era "${era.id}" has no message that can appear on day ${i + 1} of a ${d} run (rule-gated tells?)`)
     }
-    const chosen = pool[Math.floor(rng() * pool.length)]!
+    const unseen = pool.filter(fresh)
+    const from = unseen.length > 0 ? unseen : pool
+    const chosen = from[Math.floor(rng() * from.length)]!
     slots[i] = chosen
     take(chosen)
   }
