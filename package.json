@@ -16,7 +16,6 @@
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
-    "@elevenlabs/elevenlabs-js": "2.72.0",
     "three": "0.186.1"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { describe, expect, it, vi } from 'vitest'
-import { createTtsClient, createVoiceMiddleware, queryFromUrl, voiceBackend } from '../../server/http'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createVoiceMiddleware, rawQueryOf, voiceBackend, voiceEnabled } from '../../server/http'
 import { SERVER_ERAS } from '../../server/eras'
 import type { Synth } from '../../server/providers'
 
@@ -30,10 +30,24 @@ const firstUrl = `/api/voice?era=${era.id}&id=${era.messages[0]!.id}&lang=en&day
 const fake = (...parts: string[]) => parts.join('-')
 
 describe('voice http adapter', () => {
-  it('parses a query and turns repeated keys into arrays', () => {
-    expect(queryFromUrl('/api/voice?era=a&id=b&lang=en&day=1')).toEqual({ era: 'a', id: 'b', lang: 'en', day: '1' })
-    expect(queryFromUrl('/?era=a&era=b')).toEqual({ era: ['a', 'b'] })
-    expect(queryFromUrl(undefined)).toEqual({})
+  it('hands handleVoice the raw query string, undecoded and in the order sent', () => {
+    expect(rawQueryOf('/api/voice?era=a&id=b&lang=en&day=1')).toBe('era=a&id=b&lang=en&day=1')
+    expect(rawQueryOf('/?day=1&era=%64elhi')).toBe('day=1&era=%64elhi') // the Vite mount strips the path
+    expect(rawQueryOf('/api/voice??era=a')).toBe('?era=a')
+    expect(rawQueryOf('/api/voice?era=a#x')).toBe('era=a')
+    expect(rawQueryOf('/api/voice')).toBe('')
+    expect(rawQueryOf(undefined)).toBe('')
+  })
+
+  it('a reordered or percent-encoded URL is redirected, never synthesised', async () => {
+    const first = await run('GET', firstUrl)
+    const canon = String(first.headers.Location).slice(1)
+    for (const raw of [canon.split('&').reverse().join('&'), canon.replace('-', '%2D'), canon.replace('-', '%2d'), canon.replace('day=', '%64ay=')]) {
+      const r = await run('GET', `/api/voice?${raw}`)
+      expect(r.res.statusCode).toBe(307)
+      expect(r.headers['Cache-Control']).not.toContain('immutable')
+      expect(r.synthesize).not.toHaveBeenCalled()
+    }
   })
 
   it('refuses repeated keys with 400', async () => {
@@ -76,9 +90,41 @@ describe('provider selection', () => {
     expect(voiceBackend({ VOICE_PROVIDER: 'elevenlabs', ELEVENLABS_API_KEY: fake('test', 'el') }).synth?.provider).toBe('elevenlabs')
   })
 
-  it('makes no ElevenLabs client without a key', () => {
-    expect(createTtsClient(undefined)).toBeNull()
-    expect(createTtsClient('  ')).toBeNull()
-    expect(typeof createTtsClient(fake('test', 'only'))?.textToSpeech.convert).toBe('function')
+})
+
+describe('the Vercel function', () => {
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals() })
+
+  it('is on only with VOICE_ENABLED=on', () => {
+    expect(voiceEnabled({})).toBe(false)
+    expect(voiceEnabled({ VOICE_ENABLED: '' })).toBe(false)
+    expect(voiceEnabled({ VOICE_ENABLED: 'off' })).toBe(false)
+    expect(voiceEnabled({ VOICE_ENABLED: 'true' })).toBe(false)
+    expect(voiceEnabled({ VOICE_ENABLED: 'on' })).toBe(true)
+    expect(voiceEnabled({ VOICE_ENABLED: ' ON ' })).toBe(true)
+  })
+
+  it('answers 404 without VOICE_ENABLED, even with a key set, and never calls a provider', async () => {
+    vi.stubEnv('VOICE_ENABLED', '')
+    vi.stubEnv('FISH_API_KEY', fake('test', 'fish'))
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+    const { default: handler } = await import('../../api/voice')
+    for (const url of [firstUrl, '/api/voice?anything']) {
+      const { res, headers } = fakeRes()
+      await handler({ method: 'GET', url } as IncomingMessage, res as unknown as ServerResponse)
+      expect(res.statusCode).toBe(404)
+      expect(headers['Cache-Control']).toBe('no-store')
+    }
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('serves the API once VOICE_ENABLED=on', async () => {
+    vi.stubEnv('VOICE_ENABLED', 'on')
+    vi.stubEnv('FISH_API_KEY', '')
+    const { default: handler } = await import('../../api/voice')
+    const { res } = fakeRes()
+    await handler({ method: 'GET', url: firstUrl } as IncomingMessage, res as unknown as ServerResponse)
+    expect(res.statusCode).toBe(307)
   })
 })
