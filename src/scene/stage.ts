@@ -650,8 +650,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
   /** The era's basket; a room without one gets an unseen basket in front of the desk. */
   const basketOf = (w: World): NonNullable<DressingHooks['basket']> => w.hooks.basket ?? { mouth: [0.4, -0.47, 0.52], r: 0.12, depth: 0.28 }
   /**
-   * The toss shot: drawn back from the paper until the desk's front, the paper's spot and the
-   * basket's mouth all fit, seen from the front and above, so the throw lands in plain sight.
+   * The toss shot: drawn back from the paper until its spot on the desk and the whole basket fit,
+   * seen from the front and above, so the throw lands in plain sight.
    */
   const tossPose: PoseFn = (aspect) => {
     const w = world

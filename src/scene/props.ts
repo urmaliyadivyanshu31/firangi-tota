@@ -357,6 +357,14 @@ export function createBasket(o: BasketOptions): { group: THREE.Group; hook: NonN
     hoop.position.y = top
     group.add(hoop)
   }
+  // a soft contact shadow on the floor, so it stands rather than floats (it casts none of its own)
+  const blob = new THREE.Mesh(
+    new THREE.PlaneGeometry(rTop * 2.6, rTop * 2.6).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ map: blobTexture(64), transparent: true, depthWrite: false, opacity: 0.7 }),
+  )
+  blob.position.set(0.012, 0.0015, 0.016)
+  blob.renderOrder = 1
+  group.add(blob)
   return {
     group,
     hook: { mouth: [o.at[0], o.at[1] + top, o.at[2]], r: rTop * 0.92, depth: top - y0, foot, obj: group },

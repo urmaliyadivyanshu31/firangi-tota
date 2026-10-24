@@ -51,7 +51,7 @@ const PAD = (() => {
 /** The typewriter in the back right corner, turned a little toward the chair. */
 const TYPEWRITER = { x: 0.29, z: -0.16, yaw: -0.24 }
 /** The wastepaper basket, on the durrie in front of the right pedestal: a read telegram is tossed in. */
-const BASKET: V3 = [0.3, FLOOR_Y, 0.47]
+const BASKET: V3 = [0.3, FLOOR_Y + 0.003, 0.47]
 /** The bulb hangs just below the rim of the shade. */
 const BULB: V3 = [SPOTS.lamp.x, 0.168, SPOTS.lamp.z]
 const FAN_HUB: V3 = [-0.05, 1.75, 0.4]

@@ -20,7 +20,7 @@ const FLOOR_Y = -0.36
 const BACK_Z = -0.52
 const CAMERA: EraDressing['camera'] = { pos: [0, 0.86, 1.04], look: [0, 0.02, -0.04] }
 /** The tokri on the durrie, in front of the desk's right foot. */
-const TOKRI: V3 = [0.46, FLOOR_Y, 0.56]
+const TOKRI: V3 = [0.46, FLOOR_Y + 0.003, 0.56]
 /** The jharokha: opening half-width, sill, spring line, arch centre offset, reveal depth. */
 const WIN = { x: 0.06, hw: 0.2, sill: 0.03, spring: 0.3, e: 0.07, depth: 0.2, border: 0.075, jaali: 0.13 }
 const SANDSTONE = 0x7e4636

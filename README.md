@@ -19,6 +19,9 @@ four chapters, choose how long you want to hold out (Easy 7 days, Medium 10, Har
    ASLI, `→` or `2` for TOTA.
 4. The paper turns over: the verdict, the slip or the reason it is genuine, and the source.
    Real letters, telegrams and broadcasts are marked 📜 Real document.
+5. After a right stamp, once the verdict has been read, the paper is tossed into the basket by the
+   desk and the next day begins by itself. A tap, `Space` or `Enter` sends it at once; opening the
+   source holds it.
 
 One wrong stamp, or letting the agarbatti burn out, ends the chapter. Every fact in the game has a
 source you can open from the paper.
