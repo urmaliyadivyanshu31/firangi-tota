@@ -120,3 +120,11 @@ older notes, the newest entry wins. This file is public; it explains why the gam
   separate language, setup or intro screens. Each era has its own ending stamp and heading.
 - The result is shown on the same paper: the slip is circled in pencil with a margin note, then the
   paper turns over to show the verdict, the consequence, the stamp and the source.
+
+## 2026-10-24: Going public
+
+- The repository is public from the first push (MIT). Old 3D test screenshots were removed from the
+  history first, and the history was scanned for keys and personal data.
+- A Vercel preview goes up first, with the read-aloud voice on. The voice key is an encrypted
+  Vercel environment variable and `/api/voice` is rate limited. firangitota.com and production go
+  live only after the owner checks the preview.
