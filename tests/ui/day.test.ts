@@ -443,6 +443,117 @@ describe('renderDay: case file and rulebook', () => {
     expect(genuine).toContain('f2') // the forged half's line is marked on the genuine half too
   })
 
+  it("shows only the mode's facts: Easy the base, Medium adds its own, Hard all; the daily puzzle reads as Medium", () => {
+    const e = era()
+    e.facts.push(
+      { ...structuredClone(e.facts[1]!), id: 'f3', minMode: 'medium', story: { en: 'The seal is [[round]].', hi: 'मुहर [[गोल]] होती है।' } },
+      { ...structuredClone(e.facts[1]!), id: 'f4', minMode: 'hard', story: { en: 'The ink is [[black]].', hi: 'स्याही [[काली]] है।' } },
+    )
+    const root = mount()
+    const ids = () => [...root.querySelectorAll<HTMLElement>('.story__ink [data-fact]')].map((f) => f.dataset.fact)
+    const said = () => root.querySelector('.story__said')!.textContent
+    renderDay(root, props(e, chapter(e)), handlers())
+    expect(ids()).toEqual(['f1', 'f2'])
+    expect(said()).not.toContain('round')
+    renderDay(root, props(e, chapter(e, { difficulty: 'medium', days: 10 })), handlers())
+    expect(ids()).toEqual(['f1', 'f2', 'f3'])
+    expect(said()).toContain('The seal is round.')
+    expect(said()).not.toContain('black')
+    renderDay(root, props(e, chapter(e, { difficulty: 'hard', days: 14 })), handlers())
+    expect(ids()).toEqual(['f1', 'f2', 'f3', 'f4'])
+    expect(said()).toContain('The ink is black.')
+    renderDay(root, props(e, chapter(e), { daily: 7, allRules: true }), handlers())
+    expect(ids()).toEqual(['f1', 'f2', 'f3'])
+    expect(root.querySelector('.screen--day')!.getAttribute('data-file')).toBe('medium')
+  })
+
+  it('marks per mode: Easy highlights and pencils, Medium highlights only, Hard is plain ink; readers get the same sentences', () => {
+    const e = era()
+    const root = mount()
+    const hl = () => [...root.querySelectorAll('.story__ink .hl')].map((x) => x.textContent)
+    const said = () => [...root.querySelectorAll('.story__said p')].map((p) => p.textContent)
+    const plain = ['The rising began on a Monday.', 'The court sat in Delhi.']
+    // day 2 relates to f2; Medium's day 2 still has the pencil on the paper (pencilOn), not in the file
+    renderDay(root, props(e, chapter(e, { day: 2 })), handlers())
+    expect(hl()).toEqual(['Monday', 'Delhi'])
+    expect(root.querySelectorAll('.fact.is-pencilled')).toHaveLength(1)
+    expect(root.querySelector('.fact__tick')).not.toBeNull()
+    expect(said()).toEqual(plain)
+    const medium = props(e, chapter(e, { day: 2, difficulty: 'medium', days: 10 }))
+    expect(medium.sheet.pencil).toBe(true)
+    renderDay(root, medium, handlers())
+    expect(hl()).toEqual(['Monday', 'Delhi'])
+    expect(root.querySelector('.fact.is-pencilled, .fact__tick')).toBeNull()
+    expect(said()).toEqual(plain)
+    renderDay(root, props(e, chapter(e, { day: 2, difficulty: 'hard', days: 14 })), handlers())
+    expect(root.querySelector('.story__ink .hl, .fact.is-pencilled, .fact__tick')).toBeNull()
+    expect([...root.querySelectorAll('.story__ink [data-fact]')].map((f) => f.textContent)).toEqual(plain)
+    expect(said()).toEqual(plain)
+    expect(root.querySelector('.story')!.classList.contains('story--hard')).toBe(true)
+  })
+
+  it('keeps the blank rules in Hard with no other highlight', () => {
+    const e = era()
+    e.facts[0]!.hardHidden = true
+    const root = mount()
+    renderDay(root, props(e, chapter(e, { difficulty: 'hard', days: 14 })), handlers())
+    expect([...root.querySelectorAll('.story__ink .hl')].map((x) => x.className)).toEqual(['hl is-blank'])
+  })
+
+  it('scrolls the case file inside its card in Medium and Hard, with a cue that goes at the end', () => {
+    stubWidth(true)
+    const e = era()
+    const root = mount()
+    renderDay(root, props(e, chapter(e)), handlers())
+    const card = () => root.querySelector<HTMLElement>('.sheet--file')!
+    const body = () => card().querySelector<HTMLElement>('.sheet__body')!
+    expect(card().classList.contains('sheet--scroll')).toBe(false)
+    expect(body().hasAttribute('tabindex')).toBe(false)
+    expect(root.querySelector('.scroll-cue')).toBeNull()
+    expect(root.querySelector('.sheet--rules.sheet--scroll')).toBeNull()
+
+    for (const difficulty of ['medium', 'hard'] as const) {
+      renderDay(root, props(e, chapter(e, { difficulty, days: 14 })), handlers())
+      expect(root.querySelector('.screen--day')!.getAttribute('data-file')).toBe(difficulty)
+      expect(card().classList.contains('sheet--scroll')).toBe(true)
+      expect(body().getAttribute('tabindex')).toBe('0') // the keyboard's arrows and Page keys scroll it
+      const cue = card().querySelector<HTMLElement>('.scroll-cue')!
+      expect(cue.getAttribute('aria-hidden')).toBe('true')
+      expect(root.querySelector('.sheet--rules .scroll-cue')).toBeNull()
+      // jsdom lays nothing out: give the body a long file, then scroll it to the end
+      const b = body()
+      let top = 0
+      Object.defineProperty(b, 'scrollHeight', { configurable: true, get: () => 900 })
+      Object.defineProperty(b, 'clientHeight', { configurable: true, get: () => 300 })
+      Object.defineProperty(b, 'scrollTop', { configurable: true, get: () => top })
+      expect(card().classList.contains('has-more')).toBe(false) // laid out as all fitting
+      b.dispatchEvent(new Event('scroll'))
+      expect(card().classList.contains('has-more')).toBe(true)
+      const scrollBy = vi.fn()
+      b.scrollBy = scrollBy as unknown as typeof b.scrollBy
+      cue.click()
+      expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ top: 210 }))
+      top = 598
+      b.dispatchEvent(new Event('scroll'))
+      expect(card().classList.contains('has-more')).toBe(false)
+    }
+  })
+
+  it('scrolls the phone drawer the same way', () => {
+    stubWidth(false)
+    const e = era()
+    const root = mount()
+    renderDay(root, props(e, chapter(e, { difficulty: 'hard', days: 14 })), handlers())
+    const card = root.querySelector<HTMLElement>('.sheet--file')!
+    expect(card.classList.contains('sheet--scroll')).toBe(true)
+    const b = card.querySelector<HTMLElement>('.sheet__body')!
+    Object.defineProperty(b, 'scrollHeight', { configurable: true, get: () => 1200 })
+    Object.defineProperty(b, 'clientHeight', { configurable: true, get: () => 500 })
+    root.querySelector<HTMLButtonElement>('button[data-tab="file"]')!.click() // opening re-lays it out
+    expect(card.classList.contains('is-open')).toBe(true)
+    expect(card.classList.contains('has-more')).toBe(true)
+  })
+
   it('hides rules that have not arrived and tags new ones', () => {
     const e = era()
     e.rules = [
