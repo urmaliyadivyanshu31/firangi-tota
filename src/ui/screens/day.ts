@@ -1,9 +1,10 @@
-import type { Era, Lang, Receipt, SourceRef } from '../../content/types'
+import type { Era, Fact, Lang, Receipt, SourceRef } from '../../content/types'
+import { storyParas, storyParts } from '../../content/story'
 import type { ChapterState } from '../../game/state'
 import { t, tf } from '../../i18n/strings'
 import type { VoiceState } from '../../audio/voice'
 import type { ScreenRect, SheetSpec } from '../../scene/index'
-import { announce, h, mount, svg } from '../h'
+import { announce, h, mount, svg, type Child } from '../h'
 import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isShort, isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
@@ -245,14 +246,7 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   // ---- the case file and the rulebook
   // worked out from both halves of a pair, so genuine and forged always pencil the same lines
   const marked = new Set(p.sheet.pencil ? relatedFacts(pairChecks(msg, era, lang, p.sheet.checks), era.facts, lang) : [])
-  const facts = h('dl', { class: 'facts' }, era.facts.map((f) => {
-    const blank = hard && f.hardHidden
-    return h('div', { class: `fact${marked.has(f.id) ? ' is-pencilled' : ''}`, 'data-fact': f.id },
-      h('dt', { class: 'fact__label' }, f.label[lang]),
-      blank
-        ? h('dd', { class: 'fact__value is-blank', 'aria-label': t('blankFact', lang) })
-        : h('dd', { class: 'fact__value' }, h('span', { class: 'fact__ink' }, f.value[lang])))
-  }))
+  const facts = caseFile(era.facts, lang, hard, marked)
 
   const arrived = p.allRules ? era.rules : era.rules.filter((r) => r.arrivesOnDay <= state.day)
   const isNew = (day: number) => !p.allRules && state.day > 1 && day === state.day
@@ -567,6 +561,40 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
     announce(`${t(verdictKey(state), lang)}${stop} ${t(msg.real ? 'wasGenuine' : 'wasForged', lang)}${stop}`)
     nextBtn?.focus({ preventScroll: true })
   }
+}
+
+/**
+ * The case file as a short story: two or three paragraphs of flowing sentences, one per fact, with
+ * the checkable words in a marker swash. The sentences the pencil points to today are underlined in
+ * pencil; in Hard a hidden fact's highlighted words are blank rules. Screen readers get the same
+ * sentences as plain text, a blank read as "blank".
+ */
+function caseFile(facts: Fact[], lang: Lang, hard: boolean, marked: Set<string>): HTMLElement {
+  const paras = storyParas(facts)
+  const hidden = (f: Fact) => hard && f.hardHidden === true
+  const sentence = (f: Fact) => {
+    const pencilled = marked.has(f.id)
+    const cls = ['fact', pencilled ? 'is-pencilled' : '', hidden(f) ? 'is-hidden' : ''].filter(Boolean).join(' ')
+    const nodes: Child[] = storyParts(f.story[lang]).map((part) =>
+      !part.hl ? part.text : hidden(f) ? h('span', { class: 'hl is-blank' }) : h('span', { class: 'hl' }, part.text))
+    if (pencilled) {
+      // the pencil's tick stays on the line of the sentence's first word
+      const first = nodes.shift()
+      const [word, rest] = typeof first === 'string' ? splitFirstWord(first) : [first, '']
+      nodes.unshift(h('span', { class: 'fact__tick' }, word), rest)
+    }
+    return h('span', { class: cls, 'data-fact': f.id }, nodes)
+  }
+  const plain = (f: Fact) => storyParts(f.story[lang]).map((part) => (part.hl && hidden(f) ? t('blankFact', lang) : part.text)).join('')
+  return h('div', { class: 'story' },
+    h('div', { class: 'story__ink', 'aria-hidden': 'true' }, paras.map((list) =>
+      h('p', { class: 'story__para' }, list.flatMap((f, i) => (i > 0 ? [' ', sentence(f)] : [sentence(f)]))))),
+    h('div', { class: 'story__said sr-only' }, paras.map((list) => h('p', null, list.map(plain).join(' ')))))
+}
+
+function splitFirstWord(text: string): [string, string] {
+  const m = /^(\S+)([\s\S]*)$/.exec(text)
+  return m ? [m[1]!, m[2]!] : [text, '']
 }
 
 /** The wooden handle of a rubber stamp, seen from the side. */

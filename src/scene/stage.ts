@@ -1510,7 +1510,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     const sinceImpact = clock - lastImpact
     const score = caughtScore(dressing.id, sinceImpact < 2000 ? Math.max(MIN_SILENCE, SILENCE_MS - sinceImpact) : SILENCE_MS)
     caughtState = true
-    w.beam.setup({ ...beamSource(w), color: score.beam.color, width: score.beam.width })
+    w.beam.setup({ ...beamSource(w), color: score.beam.color, width: score.beam.width, cone: score.beam.shape === 'cone' })
     w.flash.fit(camera)
     const lamps = (k: number, now = false) => {
       for (const l of w.warm) l.setDim(k, now)

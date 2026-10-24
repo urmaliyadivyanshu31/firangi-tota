@@ -264,4 +264,68 @@ describe('validateEra', () => {
       expect(p).toContain('delhi-1857: endings.caught.title too long (15 words, max 14) [hi]')
     })
   })
+
+  describe('case-file stories', () => {
+    // the fixture's f1: value "The rising began on a Monday."; f2: "The court sat in Delhi."
+    const story = (e: Era, en: string, hi = 'विद्रोह [[सोमवार]] को शुरू हुआ।') => {
+      e.facts[0]!.story = { en, hi }
+      return validateEra(e)
+    }
+    it('are required in both languages', () => {
+      const e = fresh()
+      e.facts[0]!.story.hi = ''
+      expect(validateEra(e)).toContain('f1: story missing hi')
+    })
+    it('need a highlight, and well-formed ones', () => {
+      expect(story(fresh(), 'The rising began on a Monday.')).toContain('f1: story needs at least one [[highlight]] [en]')
+      expect(story(fresh(), 'The rising began on a [[Monday]].', 'विद्रोह सोमवार को शुरू हुआ।')).toContain('f1: story needs at least one [[highlight]] [hi]')
+      for (const bad of ['The rising began on a [[Monday.', 'The rising began on a [[[[Monday]]]].', 'The [[]] rising began on a [[Monday]].']) {
+        expect(story(fresh(), bad)).toContain('f1: story has a stray, empty or nested bracket [en]')
+      }
+    })
+    it('are one sentence within the word limit, with Hindi at 1.5x', () => {
+      expect(story(fresh(), 'The rising began on a [[Monday]]. It spread.')).toContain('f1: story must be one sentence (has 2) [en]')
+      const long = (n: number) => Array.from({ length: n }, () => 'very').join(' ')
+      expect(story(fresh(), `${long(20)} on a [[Monday]]`)).toContain('f1: story too long (23 words, max 22) [en]')
+      expect(story(fresh(), `${long(19)} on a [[Monday]]`).some((p) => p.includes('story too long'))).toBe(false)
+      expect(story(fresh(), 'The rising began on a [[Monday]].', `${'बहुत '.repeat(33)}[[सोमवार]]`)).toContain('f1: story too long (34 words, max 33) [hi]')
+      // initials are not sentence ends, in either script
+      expect(story(fresh(), 'The rising began on a [[Monday]], says B.C. Rao.').some((p) => p.includes('one sentence'))).toBe(false)
+      expect(story(fresh(), 'The rising began on a [[Monday]].', 'बी.सी. कहते हैं: विद्रोह [[सोमवार]] को शुरू हुआ।').some((p) => p.includes('one sentence'))).toBe(false)
+    })
+    it("highlight every capitalised word of the value, but not one that is only the value's sentence case", () => {
+      expect(story(fresh(), 'The [[rising]] began on a Monday.')).toContain('f1: story must highlight "Monday" from the value [en]')
+      const e = fresh()
+      e.facts[0]!.value.en = 'Enters at the Delhi Gate'
+      expect(story(e, 'The road enters at the [[Delhi Gate]].').filter((p) => p.includes('must highlight'))).toEqual([])
+      expect(story(e, 'The road comes in at the [[Delhi Gate]].')).toContain('f1: story must highlight "Enters" from the value [en]')
+      e.facts[0]!.value.en = 'Maj-Gen Rees, from 7 Aug'
+      expect(story(e, 'From [[7 August]], [[Major-General Rees]] leads.').filter((p) => p.includes('f1:'))).toEqual([])
+    })
+    it("put every number of the value in a highlight and add none", () => {
+      const e = fresh()
+      e.facts[0]!.value = { en: 'Rs 30 from 18 May', hi: '18 मई से 30 रुपये' }
+      e.facts[0]!.label = { en: 'Pay, 1857', hi: 'तनख़्वाह, 1857' }
+      const ok = '[[30 rupees]] from [[18 May]], in 1857.'
+      const hiOk = '1857 में [[18 मई]] से [[30 रुपये]]।'
+      expect(story(e, ok, hiOk).filter((p) => p.includes('f1:'))).toEqual([])
+      expect(story(e, '30 rupees from [[18 May]].', hiOk)).toContain('f1: story: "30" from the value must sit in a [[highlight]] [en]')
+      expect(story(e, ok, '[[18 मई]] से 30 रुपये, [[30]] नहीं।')).toContain('f1: story: "30" must sit in a [[highlight]] [hi]')
+      expect(story(e, '[[30 rupees]] from [[18 May]], not [[40]].', hiOk)).toContain('f1: story: "40" is not in the fact\'s label or value [en]')
+      expect(story(e, ok, '[[१८ मई]] से [[30 रुपये]]।')).toContain('f1: story uses Devanagari digits; write 0-9 [hi]')
+    })
+    it('name no one the fact and the era do not', () => {
+      expect(story(fresh(), 'The rising began at Meerut on a [[Monday]].')).toContain('f1: story names "Meerut", which the fact and the era\'s intro do not [en]')
+      // the fixture's persona names the Red Fort; "You" opens a sentence
+      expect(story(fresh(), 'You sit at the Red Fort; the rising began on a [[Monday]].').filter((p) => p.includes('names'))).toEqual([])
+    })
+    it('come in 2 or 3 paragraphs, in story order', () => {
+      const e = fresh()
+      e.facts[1]!.para = 1
+      expect(validateEra(e)).toContain('delhi-1857: the case file needs 2 or 3 paragraphs (has 1)')
+      const back = fresh()
+      back.facts = [back.facts[1]!, back.facts[0]!]
+      expect(validateEra(back)).toContain('f1: para 1 after para 2: list the facts in story order')
+    })
+  })
 })

@@ -1,6 +1,7 @@
-import type { Era, L10n, Lang, Message, SourceRef } from './types'
+import type { Era, Fact, L10n, Lang, Message, SourceRef } from './types'
 import { addDays, fillTemplate } from '../game/dates'
 import { earliestDay } from '../game/run'
+import { plainStory, storyParts, strayBrackets } from './story'
 
 const LANGS: Lang[] = ['en', 'hi']
 
@@ -34,6 +35,8 @@ export function countSentences(text: string): number {
     if (marks === '.' || marks.endsWith('.')) {
       if (/\.{2,}$/.test(marks)) continue
       if (marks === '.' && (ABBREVIATIONS.has(stem.toLowerCase()) || /^([A-Za-z]\.)*[A-Za-z]$/.test(stem))) continue
+      // Devanagari initials: बी.सी., एच.एस.आर.ए.
+      if (marks === '.' && /^([ऀ-ॿ]{1,4}\.)+[ऀ-ॿ]{1,4}$/.test(stem)) continue
     }
     n++
     open = false
@@ -58,6 +61,7 @@ export function wordLimits(era: Era): string[] {
   for (const f of era.facts) {
     cap(f.id, 'label', f.label, 3)
     cap(f.id, 'value', f.value, 6)
+    if (f.story) cap(f.id, 'story', { en: plainStory(f.story.en ?? ''), hi: plainStory(f.story.hi ?? '') }, STORY_WORDS)
   }
   for (const r of era.rules) cap(r.id, 'text', r.text, 14)
   for (const m of era.messages) {
@@ -163,6 +167,83 @@ export function pencilTells(era: Era): string[] {
   return out
 }
 
+/** A case-file story sentence: at most this many words in English (Hindi 1.5 times). */
+export const STORY_WORDS = 22
+
+const CALENDAR = /^(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|January|February|March|April|May|June|July|August|September|October|November|December)$/
+/** Capitalised abbreviations a story may spell out ("Rs 30" as "30 rupees", "No. 69" as "number 69"). */
+const NOT_NAMES = new Set(['Rs', 'No'])
+/** Words that may open a story in capitals without being a name. */
+const OPENERS = new Set(['You', 'Your', 'Our', 'We', 'The', 'A', 'An', 'Any', 'In', 'On', 'At', 'From', 'For', 'By', 'To', 'With', 'Since',
+  'After', 'Before', 'Later', 'Ahead', 'Now', 'Here', 'There', 'This', 'That', 'These', 'Those', 'It', 'Its', 'He', 'She', 'They',
+  'His', 'Her', 'Their', 'Each', 'Every', 'Only', 'Count', 'When', 'Then', 'And', 'But', 'So'])
+
+const digitRuns = (text: string): string[] => text.match(/\d+/g) ?? []
+
+/** The words of a text for name checks: hyphenated words in parts, no trailing dots or possessive 's. */
+function nameParts(text: string): string[] {
+  return (text.match(/[\p{L}\p{N}][\p{L}\p{M}\p{N}'’.]*/gu) ?? [])
+    .map((w) => w.replace(/['’]s$/, '').replace(/['’.]+$/, ''))
+    .filter(Boolean)
+}
+
+const isCapital = (w: string): boolean => /^\p{Lu}/u.test(w)
+
+/**
+ * The case file's story sentences. Each is one sentence with at least one [[highlight]]. Every
+ * number of the value sits in a highlight (so Hard's blanks hide all of it), and every number in the
+ * story comes from the fact's label or value. In English every capitalised word of the value sits in
+ * a highlight, and the story names no one the fact and the era's intro do not already name.
+ */
+export function storyChecks(era: Era, f: Fact): string[] {
+  const out: string[] = []
+  for (const lang of LANGS) {
+    const story = f.story?.[lang]
+    if (typeof story !== 'string' || story.trim() === '') continue // reported as missing
+    const at = `${f.id}: story`
+    if (strayBrackets(story)) out.push(`${at} has a stray, empty or nested bracket [${lang}]`)
+    const parts = storyParts(story)
+    const marked = parts.filter((p) => p.hl).map((p) => p.text)
+    if (marked.length === 0) out.push(`${at} needs at least one [[highlight]] [${lang}]`)
+    const plain = plainStory(story)
+    const n = countSentences(plain)
+    if (n > 1) out.push(`${at} must be one sentence (has ${n}) [${lang}]`)
+    if (/[०-९]/.test(story)) out.push(`${at} uses Devanagari digits; write 0-9 [${lang}]`)
+
+    const value = digitRuns(f.value[lang] ?? '')
+    const label = new Set(digitRuns(f.label[lang] ?? ''))
+    const inMarks = new Set(marked.flatMap(digitRuns))
+    for (const d of value) if (!inMarks.has(d)) out.push(`${at}: "${d}" from the value must sit in a [[highlight]] [${lang}]`)
+    for (const d of digitRuns(plain)) if (!value.includes(d) && !label.has(d)) out.push(`${at}: "${d}" is not in the fact's label or value [${lang}]`)
+    for (const p of parts) {
+      if (p.hl) continue
+      for (const d of digitRuns(p.text)) if (!label.has(d)) out.push(`${at}: "${d}" must sit in a [[highlight]] [${lang}]`)
+    }
+  }
+
+  const en = f.story?.en
+  if (typeof en !== 'string' || en.trim() === '') return out
+  const plain = plainStory(en)
+  const said = new Set(nameParts(plain))
+  const marks = storyParts(en).filter((p) => p.hl).flatMap((p) => nameParts(p.text))
+  const valueWords = nameParts(f.value.en ?? '')
+  valueWords.forEach((w, i) => {
+    if (!isCapital(w) || NOT_NAMES.has(w)) return
+    // a value that opens "Two: ..." or "Reaches Delhi" is only in sentence case: the story says "two", "reaches"
+    if (i === 0 && !CALENDAR.test(w) && (OPENERS.has(w) || (!said.has(w) && said.has(w.toLowerCase())))) return
+    const hit = marks.some((m) => m === w || (w.length >= 3 && m.startsWith(w))) // "Aug" in "August"
+    if (!hit) out.push(`${f.id}: story must highlight "${w}" from the value [en]`)
+  })
+  const known = new Set(nameParts([f.label.en, f.value.en, era.title.en, era.place.en, era.persona.en, era.forger.en, ...era.intro.map((p) => p.en)].join(' ')))
+  const abbrev = valueWords.filter((w) => isCapital(w) && w.length >= 3)
+  nameParts(plain).forEach((w, i) => {
+    if (!isCapital(w) || known.has(w) || (i === 0 && OPENERS.has(w))) return
+    if (abbrev.some((a) => w.startsWith(a))) return // "August" for the value's "Aug"
+    out.push(`${f.id}: story names "${w}", which the fact and the era's intro do not [en]`)
+  })
+  return out
+}
+
 export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells?: boolean; pencilTells?: boolean } = {}): string[] {
   const problems: string[] = []
   const add = (id: string, msg: string) => problems.push(id ? `${id}: ${msg}` : msg)
@@ -206,11 +287,18 @@ export function validateEra(era: Era, opts: { wordLimits?: boolean; surfaceTells
   dupes('messages', era.messages.map((m) => m.id))
   dupes('receipts', era.receipts.map((r) => r.id))
 
-  for (const f of era.facts) {
+  era.facts.forEach((f, i) => {
     l10n(f.id, 'label', f.label)
     l10n(f.id, 'value', f.value)
+    l10n(f.id, 'story', f.story)
     refs(f.id, 'fact', f.sources, true)
-  }
+    problems.push(...storyChecks(era, f))
+    if (![1, 2, 3].includes(f.para)) add(f.id, `para ${String(f.para)} must be 1, 2 or 3`)
+    const prev = era.facts[i - 1]
+    if (prev && f.para < prev.para) add(f.id, `para ${f.para} after para ${prev.para}: list the facts in story order`)
+  })
+  const paras = new Set(era.facts.map((f) => f.para)).size
+  if (era.facts.length >= 2 && (paras < 2 || paras > 3)) add(era.id, `the case file needs 2 or 3 paragraphs (has ${paras})`)
 
   for (const r of era.rules) {
     l10n(r.id, 'text', r.text)

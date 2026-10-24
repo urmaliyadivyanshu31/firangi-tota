@@ -774,7 +774,16 @@ function drawCaught(g: CanvasRenderingContext2D, W: number, H: number, score: Ca
       const [r, gr, bl] = score.beam.color.map((x) => Math.round(x * 255))
       const reach = Math.hypot(W, H) * 1.2
       g.globalCompositeOperation = 'lighter'
-      for (const [spread, alpha] of [[1, 0.35], [0.66, 0.35], [0.36, 0.3]] as const) {
+      // a flame or an oil lantern throws no beam: its glow spills in around the window
+      if (score.beam.shape === 'glow') {
+        const grd = g.createRadialGradient(ox, oy, 0, ox, oy, reach * 0.7)
+        grd.addColorStop(0, `rgba(${r},${gr},${bl},${(0.55 * b.amount * score.beam.strength * 1.6).toFixed(3)})`)
+        grd.addColorStop(0.45, `rgba(${r},${gr},${bl},${(0.16 * b.amount * score.beam.strength * 1.6).toFixed(3)})`)
+        grd.addColorStop(1, `rgba(${r},${gr},${bl},0)`)
+        g.fillStyle = grd
+        g.fillRect(0, 0, W, H)
+      }
+      for (const [spread, alpha] of score.beam.shape === 'glow' ? [] : ([[1, 0.35], [0.66, 0.35], [0.36, 0.3]] as const)) {
         const w = score.beam.width * spread
         const grd = g.createRadialGradient(ox, oy, 0, ox, oy, reach)
         grd.addColorStop(0, `rgba(${r},${gr},${bl},${(alpha * b.amount * score.beam.strength * 1.6).toFixed(3)})`)
