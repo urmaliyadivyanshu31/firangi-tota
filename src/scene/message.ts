@@ -765,27 +765,19 @@ uniform float uInk;
 uniform float uWash;
 uniform float uAspect;
 varying vec2 vUv;
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
-}
 void main() {
   vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
   float r = length(p) / (0.5 * length(vec2(uAspect, 1.0)));
   float a;
   vec3 col = uColor;
   if (uInk > 0.5) {
-    // the room washes red for a beat, the edges sink to black-red, and red ink bleeds in
-    float field = r + (noise(vUv * vec2(uAspect, 1.0) * 5.0) - 0.5) * 0.32 + (noise(vUv * 17.0) - 0.5) * 0.08;
-    float front = 1.0 - uSpread * 0.62;
-    float inked = smoothstep(front - 0.03, front + 0.02, field);
-    float rim = smoothstep(front - 0.03, front, field) - smoothstep(front, front + 0.05, field);
-    float vig = smoothstep(0.42, 1.05, r);
-    col = mix(uColor, vec3(0.06, 0.0, 0.0), clamp(vig * 0.85 + rim * 0.4, 0.0, 1.0));
-    a = clamp(uWash * 0.42 + inked * 0.5 + rim * 0.3 + vig * 0.6, 0.0, 0.92) * uAmount;
+    // a red lamp over the room: a soft round vignette that reaches further in as the alarm goes
+    // on, and a wash of red light on each hit. Smooth all the way: no edge, no texture, nothing
+    // that runs or drips
+    float inner = mix(0.6, 0.1, uSpread);
+    float vig = smoothstep(inner, 1.2, r);
+    col = mix(uColor, vec3(0.2, 0.015, 0.01), vig * 0.4);
+    a = clamp(uWash * 0.42 + vig * 0.78, 0.0, 0.85) * uAmount;
   } else {
     // a warm saffron-gold bloom over the room, a little stronger toward the edges
     a = (0.28 + 0.36 * smoothstep(0.2, 1.1, r)) * uAmount;
@@ -795,7 +787,7 @@ void main() {
 
 export interface Flash {
   mesh: THREE.Mesh
-  /** `amount` fades the whole effect; `spread` drives the ink; `wash` the red beat over the room. */
+  /** `amount` fades the whole effect; `spread` how far in the red vignette reaches; `wash` the red beat over the room. */
   set(kind: 'right' | 'wrong', amount: number, spread: number, wash?: number): void
   fit(camera: THREE.PerspectiveCamera): void
   dispose(): void

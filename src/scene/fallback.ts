@@ -55,8 +55,20 @@ export interface FallbackOptions {
 
 /** How hard each rap of a knock shakes the flat desk (px), closer each time. */
 const RAP_PX: Record<KnockKind, number> = { far: 1, near: 3, door: 6 }
-/** How dark the desk stays after the sequence, until the verdict turns over. */
-const CAUGHT_DARK = 0.5
+/** How deep the night falls over the desk after the sequence (it holds until the verdict turns over). */
+const CAUGHT_DARK = 1
+/** The night: multiplied over the still, so the paper sinks into a deep warm brown, never a grey wash. */
+const NIGHT = 'rgb(84,52,36)'
+
+/** Lays the night over what is drawn, `k` of the way (0..1). */
+function night(g: CanvasRenderingContext2D, W: number, H: number, k: number): void {
+  g.save()
+  g.globalCompositeOperation = 'multiply'
+  g.globalAlpha = Math.min(1, k)
+  g.fillStyle = NIGHT
+  g.fillRect(0, 0, W, H)
+  g.restore()
+}
 
 export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions = {}): Fallback {
   const canvas = document.createElement('canvas')
@@ -127,10 +139,7 @@ export function mountFallback(el: HTMLElement, era: EraId, opts: FallbackOptions
       })
       paperBox = out
     }
-    if (darkK > 0) {
-      g.fillStyle = `rgba(0,0,0,${darkK.toFixed(3)})`
-      g.fillRect(0, 0, W, H)
-    }
+    if (darkK > 0) night(g, W, H, darkK)
     if (flashK || caughtRun) {
       // keep the still for the flash frames (one canvas, resized only with the screen)
       base ??= document.createElement('canvas')
@@ -479,11 +488,11 @@ function drawCaught(g: CanvasRenderingContext2D, W: number, H: number, score: Ca
     if (ms > score.dark) amount *= Math.max(0, 1 - (ms - score.dark) / 600)
   }
   if (amount > 0.002) {
-    const inner = R * (1 - 0.62 * spread)
-    const grd = g.createRadialGradient(W / 2, H / 2, Math.max(0, inner - R * 0.1), W / 2, H / 2, R)
-    grd.addColorStop(0, 'rgba(163,23,14,0)')
-    grd.addColorStop(0.35, `rgba(140,18,10,${(0.5 * amount).toFixed(3)})`)
-    grd.addColorStop(1, `rgba(40,4,2,${(0.75 * amount).toFixed(3)})`)
+    // a red lamp's glow: one soft round vignette, reaching further in with each hit
+    const inner = R * (0.9 - 0.65 * spread)
+    const grd = g.createRadialGradient(W / 2, H / 2, inner, W / 2, H / 2, R * 1.2)
+    grd.addColorStop(0, 'rgba(170,22,12,0)')
+    grd.addColorStop(1, `rgba(120,14,8,${(0.7 * amount).toFixed(3)})`)
     g.fillStyle = grd
     g.fillRect(0, 0, W, H)
     if (wash > 0.002) {
@@ -499,12 +508,12 @@ function drawCaught(g: CanvasRenderingContext2D, W: number, H: number, score: Ca
       if (b.rap === 'door' && ms >= b.at && ms - b.at < 300) shade = Math.max(shade, 0.3 * Math.exp(-(ms - b.at) / 110))
     }
   }
-  // the dark closing in at the end
-  if (ms >= score.dark) shade = Math.max(shade, CAUGHT_DARK * Math.min(1, (ms - score.dark) / (reduced ? 300 : 600)))
   if (shade > 0.002) {
     g.fillStyle = `rgba(0,0,0,${shade.toFixed(3)})`
     g.fillRect(0, 0, W, H)
   }
+  // the night closing in at the end
+  if (ms >= score.dark) night(g, W, H, CAUGHT_DARK * Math.min(1, (ms - score.dark) / (reduced ? 300 : 600)))
   g.restore()
 }
 

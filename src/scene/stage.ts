@@ -1282,8 +1282,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
         w.sheet.setGlow(0.2)
         void setExposure(CAUGHT_EXPOSURE, reduced ? 300 : 700)
       }
-      // the red light: pulses on the alarm's rhythm, the ink creeping in from the edges; one slow
-      // tint under reduced motion; gone by the time the paper turns over
+      // the red light: a red lamp's glow pulsing on the alarm's hits, reaching a little further in
+      // each time; one slow tint under reduced motion; gone by the time the paper turns over
       let amount = 0
       let spread = 0
       let wash = 0
@@ -1295,7 +1295,7 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
           wash = amount * 0.6
         } else {
           const red = redAt(score, ms)
-          amount = 0.3 + 0.7 * red.pulse
+          amount = 0.38 + 0.62 * red.pulse
           spread = red.creep
           wash = red.pulse * 0.9
         }

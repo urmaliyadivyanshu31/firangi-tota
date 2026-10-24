@@ -122,7 +122,7 @@ const ALARMS: Record<EraId, { beats: CaughtBeat[]; beam: CaughtBeam }> = {
       { at: 1450, cue: 'whistleLong', pulse: 1 },
       ...knocks(2150, 2600, 3050),
     ],
-    beam: { from: 1100, to: 2800, color: [1, 0.95, 0.82], width: 0.18, strength: 0.48, flicker: 0.02 },
+    beam: { from: 1100, to: 2800, color: [1, 0.86, 0.6], width: 0.2, strength: 0.72, flicker: 0.02 },
   },
 }
 
@@ -149,7 +149,7 @@ export function caughtScore(era: EraId, silence = SILENCE_MS): CaughtScore {
   }
 }
 
-/** The red light at `ms`: how strong the pulse is now (0..1), and how far the red ink has crept in (0..1). */
+/** The red light at `ms`: how strong the pulse is now (0..1), and how far in its glow reaches (0..1). */
 export function redAt(score: CaughtScore, ms: number): { pulse: number; creep: number } {
   let pulse = 0
   let creep = 0
