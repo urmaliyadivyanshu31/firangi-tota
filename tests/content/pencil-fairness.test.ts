@@ -4,14 +4,14 @@ import type { Lang } from '../../src/content/types'
 import { buildRun } from '../../src/game/run'
 import { pencilOn, type Difficulty } from '../../src/game/config'
 import { mulberry32 } from '../../src/game/rng'
-import { relatedFacts } from '../../src/ui/pencil'
+import { pairChecks, relatedFacts } from '../../src/ui/pencil'
 
 // On pencil days (Easy, Medium days 1-3) a player sees how many words are underlined and how many
 // case-file lines are pencilled. Neither count may tell genuine from forged: the best rule of the form
 // "N or more means genuine" (or forged) must stay near a coin toss over many seeded runs.
 
 const SEEDS = 200
-const LIMIT = 0.65
+const LIMIT = 0.62
 
 type Sample = { n: number; real: boolean }
 
@@ -37,7 +37,8 @@ describe('pencil marks do not give the answer away', () => {
             for (const lang of ['en', 'hi'] as Lang[]) {
               const checks = m.checks?.[lang] ?? []
               marks[lang].push({ n: checks.length, real: m.real })
-              lines[lang].push({ n: relatedFacts(checks, era.facts, lang).length, real: m.real })
+              // the case file pencils lines from both halves of a pair, as the day screen does
+              lines[lang].push({ n: relatedFacts(pairChecks(m, era, lang), era.facts, lang).length, real: m.real })
             }
           })
         }

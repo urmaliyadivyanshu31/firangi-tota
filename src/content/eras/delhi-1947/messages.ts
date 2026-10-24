@@ -1193,7 +1193,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE, JUNAGADH, Tuesday {date}. Reference your telegram of yesterday: Junagadh has joined Pakistan, as announced on 15 August.',
       hi: 'IMMEDIATE, जूनागढ़, मंगलवार {date}। कल के आपके तार के जवाब में: जूनागढ़ पाकिस्तान में शामिल हो गया है, जैसा 15 अगस्त को ऐलान हुआ था।',
     },
-    checks: { en: ['IMMEDIATE, JUNAGADH', 'telegram of yesterday', 'announced on 15 August'], hi: ['IMMEDIATE, जूनागढ़', 'कल के आपके तार', '15 अगस्त को ऐलान'] },
+    checks: { en: ['IMMEDIATE, JUNAGADH', 'Tuesday', 'announced on 15 August'], hi: ['IMMEDIATE, जूनागढ़', 'मंगलवार', '15 अगस्त को ऐलान'] },
     tells: [
       {
         kind: 'weekday',

@@ -91,8 +91,10 @@ export function tellText(msg: Message, lang: Lang): string {
  * What the verdict circles. A genuine message: every checked detail (they all check out). A
  * forgery: only its slip, i.e. its checks that its pair twin does not share (a check the twin's
  * check contains is shared). The pencil marks are equal in number on both halves of a pair, so
- * circling them all would ring correct details on the forgery too. Without a twin, or when nothing
- * differs, it falls back to every check.
+ * circling them all would ring correct details on the forgery too. When both halves check the same
+ * words in the same order (a wrong weekday filled in at run time, so the slip itself cannot be a
+ * check), the first check is the one beside it, by convention, and only that is circled; the same
+ * words in another order mean the order is the slip, and all are circled. Without a twin, every check.
  */
 export function revealHighlight(msg: Message, era: Era, lang: Lang): string[] {
   const checks = (msg.checks?.[lang] ?? []).filter((c) => c.trim() !== '')
@@ -101,7 +103,15 @@ export function revealHighlight(msg: Message, era: Era, lang: Lang): string[] {
   if (twins.length === 0) return checks
   const shared = twins.flatMap((o) => o.checks?.[lang] ?? []).filter((c) => c.trim() !== '')
   const slip = checks.filter((c) => !shared.some((t) => t.includes(c)))
-  return slip.length > 0 ? slip : checks
+  if (slip.length > 0) return slip
+  // the twin's very words in another order: the order is the slip (two songs swapped), circle them all
+  const key = (list: string[]) => list.join('\u0000')
+  const sorted = key([...checks].sort())
+  const swapped = twins.some((o) => {
+    const theirs = (o.checks?.[lang] ?? []).filter((c) => c.trim() !== '')
+    return key(theirs) !== key(checks) && key([...theirs].sort()) === sorted
+  })
+  return swapped ? checks : checks.slice(0, 1)
 }
 
 /**
