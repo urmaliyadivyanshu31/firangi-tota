@@ -136,7 +136,7 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
     'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-orientation': 'vertical' }, volKnob)
   // the small frame's brass plate: the song's title running past, twice so the loop never shows a seam
   const tickerText = h('span', { class: 'gramo__ticker-run' })
-  const ticker = h('div', { class: 'gramo__ticker', 'aria-hidden': 'true' }, tickerText)
+  const ticker = h('div', { class: 'gramo__ticker', 'aria-hidden': 'true' }, h('div', { class: 'gramo__ticker-window' }, tickerText))
   const screen = h('div', { class: 'gramo__screen' })
   const el = h('aside', { class: 'gramo', hidden: true, 'data-screen': 'main', 'data-size': size },
     h('div', { class: 'gramo__cabinet' },
@@ -182,6 +182,8 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
   function showNote(key: 'musicFailed' | 'musicTap' | null): void {
     note.hidden = key === null
     note.textContent = key ? t(key, d.lang()) : ''
+    // the small frame has no card: it shows the note alone while there is one
+    el.classList.toggle('has-note', key !== null)
   }
 
   function setPlaying(p: boolean): void {

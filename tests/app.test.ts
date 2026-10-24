@@ -1871,6 +1871,16 @@ describe('Music mode: the gramophone record beside the horn', () => {
     expect(gramo()!.dataset.size).toBe('mini')
   })
 
+  it('shows the failure note on the small frame too', async () => {
+    localStorage.setItem('ft:playerSize', '"mini"')
+    m.yt.load.mockImplementationOnce(() => Promise.resolve(null))
+    boot('?lang=en')
+    dock('[data-action="music"]')!.click()
+    await vi.waitFor(() => expect(gramo()?.classList.contains('has-note')).toBe(true))
+    expect(gramo()!.dataset.size).toBe('mini')
+    expect(gramo()!.querySelector('.gramo__note')!.textContent).toBe('The music could not load · room sound is back')
+  })
+
   it('turns the brass volume knob with the keys and the wheel, keeps it, and dips relative to it', async () => {
     boot('?lang=en')
     await pickMusic()

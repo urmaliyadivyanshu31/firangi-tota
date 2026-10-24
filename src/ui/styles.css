@@ -1207,11 +1207,15 @@ a { color: inherit; }
 }
 .gramo__ticker::before { left: 4px; }
 .gramo__ticker::after { right: 4px; }
+/* the window the title runs through, softened at both ends */
+.gramo__ticker-window {
+  overflow: hidden; height: 100%;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 8px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 8px), transparent);
+}
 .gramo__ticker-run {
   display: inline-flex; white-space: nowrap; font: 600 12px/24px var(--ui); color: #3a1e08;
   text-shadow: 0 1px 0 rgba(255, 240, 200, .55);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
   animation: gramo-ticker var(--ticker-s, 14s) linear infinite;
 }
 .gramo__ticker-run > span { padding-right: 2.5em; }
@@ -1229,6 +1233,9 @@ a { color: inherit; }
   .gramo[data-size='mini'] .gramo__knob--small,
   .gramo[data-size='mini'] .gramo__knob--fold { display: none; }
   .gramo[data-size='mini'] .gramo__ticker { display: block; }
+  .gramo[data-size='mini'].has-note .gramo__card { display: block; padding: 5px 8px; }
+  .gramo[data-size='mini'] .gramo__card > :not(.gramo__note) { display: none; }
+  .gramo[data-size='mini'] .gramo__note { margin-top: 0; }
   .gramo[data-size='mini'] .gramo__knob--play,
   .gramo[data-size='mini'] .gramo__knob--large { display: grid; }
   .gramo[data-size='mini'] .gramo__side { gap: 7px; }
