@@ -133,6 +133,56 @@ describe('mountFallback: the message on paper', () => {
     vi.useRealTimers()
   })
 
+  it('a fresh desk takes the paper, its verdict and skip() back to back: the back shows at once (a lost context)', async () => {
+    vi.useFakeTimers()
+    try {
+      const f = fakeCanvas()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+      const el = document.createElement('div')
+      document.body.appendChild(el)
+      const fb = mountFallback(el, 'bombay-1942')
+      void fb.showMessage(sheet()) // not awaited: the fonts are still loading
+      const done = fb.reveal({
+        outcome: 'right', real: true, documentMark: true, highlight: [], note: '',
+        back: { verdictLine: 'Right — genuine', tell: 'Congress Radio called on 42.34 metres.', source: 'Usha Mehta (1969), p. 12' },
+        lang: 'en',
+      })
+      fb.skip()
+      await vi.advanceTimersByTimeAsync(10) // well under the 1.5 s turn
+      await done
+      expect(f.texts.map((t) => t.text).join(' ')).toContain('Right — genuine')
+      expect(fb.getSourceRect()).not.toBeNull()
+      fb.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('skip() during the turn shows the back at once', async () => {
+    vi.useFakeTimers()
+    try {
+      const f = fakeCanvas()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => f.ctx) as unknown as HTMLCanvasElement['getContext'])
+      const el = document.createElement('div')
+      document.body.appendChild(el)
+      const fb = mountFallback(el, 'bombay-1942')
+      await fb.showMessage(sheet())
+      const done = fb.reveal({
+        outcome: 'right', real: true, documentMark: false, highlight: [], note: 'checks out',
+        back: { verdictLine: 'Right — genuine', tell: 'Congress Radio called on 42.34 metres.', source: 'Usha Mehta (1969), p. 12' },
+        lang: 'en',
+      })
+      await vi.advanceTimersByTimeAsync(10)
+      expect(fb.getSourceRect()).toBeNull() // still the front, with its marks
+      fb.skip()
+      await done
+      expect(fb.getSourceRect()).not.toBeNull()
+      fb.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('copes without a 2D context', async () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => null) as unknown as HTMLCanvasElement['getContext'])
     const fb = mountFallback(document.createElement('div'), 'delhi-1947')

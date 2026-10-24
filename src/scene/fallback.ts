@@ -18,8 +18,13 @@ export interface Fallback {
   dayTitle(t: DayTitle): Promise<void>
   /** The stamp's imprint on the paper. */
   stamp(kind: StampKind): Promise<void>
-  /** The verdict on the same paper: the pencil marks and note, then its back (see Stage.reveal). */
+  /**
+   * The verdict on the same paper: the pencil marks and note, then its back (see Stage.reveal).
+   * Waits for a showMessage still loading its fonts, so the two can be called back to back.
+   */
   reveal(r: RevealSpec): Promise<void>
+  /** Finishes a reveal in progress (or one just asked for): its back shows at once. */
+  skip(): void
   getSourceRect(): ScreenRect | null
   getPaperRect(): ScreenRect | null
   dispose(): void
@@ -58,6 +63,10 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
   let flashK: { kind: FlashKind; t0: number } | null = null
   let raf = 0
   let disposed = false
+  // the last showMessage, which a reveal waits for; skip() lands the reveal on its back at once
+  let shown: Promise<void> = Promise.resolve()
+  let skipReveal = false
+  let finishWait: (() => void) | null = null
   // the composed still (desk, title, paper), kept so a flash only repaints an overlay on top
   let base: HTMLCanvasElement | null = null
   let W = 390
@@ -147,28 +156,45 @@ export function mountFallback(el: HTMLElement, era: EraId): Fallback {
       verdict = null
       compose()
     },
-    async showMessage(s) {
-      await fonts(s.lang)
-      if (disposed) return
-      title = null
-      sheet = s
-      stamp = null
-      verdict = null
-      compose()
+    showMessage(s) {
+      const job = (async () => {
+        await fonts(s.lang)
+        if (disposed) return
+        title = null
+        sheet = s
+        stamp = null
+        verdict = null
+        compose()
+      })()
+      shown = job
+      return job
     },
     async reveal(r) {
+      skipReveal = false
+      await shown
       if (!sheet) return
       await fonts(r.lang)
       if (disposed || !sheet) return
       const again = verdict !== null
       sheet = { ...sheet, documentMark: r.documentMark, revealed: true }
-      verdict = { r, side: again || reduced ? 'back' : 'front' }
+      verdict = { r, side: again || reduced || skipReveal ? 'back' : 'front' }
       compose()
       if (verdict.side === 'back') return
-      await new Promise<void>((done) => setTimeout(done, 1500))
+      await new Promise<void>((done) => {
+        const timer = setTimeout(done, 1500)
+        finishWait = () => {
+          clearTimeout(timer)
+          done()
+        }
+      })
+      finishWait = null
       if (disposed || !verdict || verdict.r !== r) return
       verdict = { r, side: 'back' }
       compose()
+    },
+    skip() {
+      skipReveal = true
+      finishWait?.()
     },
     getSourceRect() {
       const b = paperBox

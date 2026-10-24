@@ -40,7 +40,7 @@ const m = vi.hoisted(() => {
     createStage: vi.fn(),
     loadStage: vi.fn(),
     fallback: {
-      setEra: vi.fn(), dispose: vi.fn(), redrawMessage: vi.fn(), flash: vi.fn(),
+      setEra: vi.fn(), dispose: vi.fn(), redrawMessage: vi.fn(), flash: vi.fn(), skip: vi.fn(),
       showMessage: vi.fn((_s: SheetSpec) => Promise.resolve()),
       dayTitle: vi.fn((_t: { big: string; small: string }) => Promise.resolve()),
       stamp: vi.fn((_k: string) => Promise.resolve()),
@@ -49,7 +49,7 @@ const m = vi.hoisted(() => {
       getPaperRect: vi.fn((): ScreenRect | null => null),
     },
     mountFallback: vi.fn(),
-    audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn() },
+    audio: { unlock: vi.fn(), setMuted: vi.fn(), cue: vi.fn(), ambience: vi.fn(), setHidden: vi.fn() },
   }
 })
 
@@ -336,6 +336,14 @@ describe('a chapter', () => {
     expect($(ui, '[data-action="next"]')).not.toBeNull()
   })
 
+  it('puts the sound to sleep while the tab is hidden and wakes it on return', () => {
+    boot('?lang=en')
+    setHidden(true)
+    expect(m.audio.setHidden).toHaveBeenLastCalledWith(true)
+    setHidden(false)
+    expect(m.audio.setHidden).toHaveBeenLastCalledWith(false)
+  })
+
   it('surviving every day ends on the paper: the best run kept, the survived cue, a share line', async () => {
     const share = vi.fn(() => Promise.resolve())
     nav.share = share
@@ -615,6 +623,53 @@ describe('the 3D stage (Ruling R10)', () => {
     await flush()
     expect($(ui, '.paper-result')).not.toBeNull()
     expect(m.stage.stamp).not.toHaveBeenCalled() // the dead stage is no longer used
+  })
+
+  it('keeps the verdict when the context is lost after the stamp: the 2D desk shows the back and the source button follows it', async () => {
+    reduceMotion()
+    m.stage.getSourceRect.mockImplementation(() => ({ x: 30, y: 600, w: 200, h: 24 }))
+    m.fallback.getSourceRect.mockImplementation(() => ({ x: 12, y: 400, w: 150, h: 20 }))
+    const { ui, stage } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const msg = queueFor('delhi-1857', 'easy', 3)[0]!
+    click(ui, `[data-stamp="${right(msg)}"]`)
+    await flush()
+    expect($(ui, '.source-hit')!.style.left).toBe('30px')
+    const spec = lastReveal()
+
+    stage.dispatchEvent(new CustomEvent('ft:stage-lost', { cancelable: true, detail: { era: 'delhi-1857', reason: 'context-lost' } }))
+    await flush()
+    // the paper (revealed: its real-document tag allowed), its verdict, then skip() to the back
+    expect(m.fallback.showMessage).toHaveBeenLastCalledWith(expect.objectContaining({ revealed: true }))
+    expect(m.fallback.reveal).toHaveBeenCalledWith(spec)
+    expect(m.fallback.skip).toHaveBeenCalled()
+    const skips = m.fallback.skip.mock.invocationCallOrder
+    expect(m.fallback.reveal.mock.invocationCallOrder[0]!).toBeLessThan(skips[skips.length - 1]!)
+    // the day is redrawn on the new desk: the verdict and its buttons stay, the source button moves
+    expect($(ui, '.paper-result')).not.toBeNull()
+    expect($(ui, '[data-action="next"]')).not.toBeNull()
+    expect($(ui, '.source-hit')!.style.left).toBe('12px')
+  })
+
+  it('keeps the verdict when the context is lost during the reveal, without waiting for the dead desk', async () => {
+    reduceMotion()
+    m.stage.reveal.mockImplementation(() => new Promise<void>(() => undefined)) // the lost desk never finishes
+    m.fallback.getSourceRect.mockImplementation(() => ({ x: 14, y: 420, w: 150, h: 20 }))
+    const { ui, stage } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
+    await flush()
+    expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+    expect($(ui, '.paper-result')).toBeNull()
+    const spec = lastReveal()
+
+    stage.dispatchEvent(new CustomEvent('ft:stage-lost', { cancelable: true, detail: { era: 'delhi-1857', reason: 'context-lost' } }))
+    await flush()
+    expect(m.fallback.reveal).toHaveBeenCalledWith(spec)
+    expect(m.fallback.skip).toHaveBeenCalled()
+    expect($(ui, '.paper-result')).not.toBeNull()
+    expect($(ui, '.source-hit')!.style.left).toBe('14px')
+    expect($(ui, '[data-action="next"]')).not.toBeNull()
   })
 
   it('never hangs on a stamp animation that does not finish', async () => {
@@ -1004,5 +1059,58 @@ describe('the verdict on the paper: placing the buttons', () => {
     expect(m.stage.redrawMessage).toHaveBeenCalledWith(expect.objectContaining({ lang: 'hi' }))
     expect(lastReveal().lang).toBe('hi')
     expect(m.stage.reveal).toHaveBeenCalledTimes(2)
+  })
+
+  it('switches language during the stamp: the stamps stay asleep, then both sides of the paper land in the new language', async () => {
+    const stamping = deferred()
+    m.stage.stamp.mockImplementation(() => stamping.promise)
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    const msg = queueFor('delhi-1857', 'easy', 3)[0]!
+    click(ui, `[data-stamp="${right(msg)}"]`)
+    await flush()
+    m.stage.redrawMessage.mockClear()
+    click(ui, '.hud [data-lang="hi"]')
+    expect($(ui, '.hud__mode')!.textContent).toBe(strings.hi.modeEasy) // the screen switches at once
+    expect($(ui, '.screen--day.is-stamping')).not.toBeNull()
+    expect(stampBtn(ui, 'asli').disabled && stampBtn(ui, 'tota').disabled).toBe(true)
+    expect($(ui, `[data-stamp="${right(msg)}"]`)!.classList.contains('is-chosen')).toBe(true)
+    expect(m.stage.redrawMessage).not.toHaveBeenCalled() // the paper waits for the stamp to land
+    click(ui, `[data-stamp="${wrong(msg)}"]`) // still one stamp per day
+    expect(m.stage.stamp).toHaveBeenCalledTimes(1)
+
+    stamping.resolve()
+    await flush()
+    // the front first (no real-document tag before the verdict), then the back, both in Hindi
+    expect(m.stage.redrawMessage).toHaveBeenCalledTimes(1)
+    expect(m.stage.redrawMessage.mock.calls[0]![0]).toMatchObject({ lang: 'hi', documentMark: false })
+    expect(m.stage.redrawMessage.mock.calls[0]![0].revealed).toBeUndefined()
+    expect(m.stage.reveal).toHaveBeenCalledTimes(1)
+    expect(lastReveal().lang).toBe('hi')
+    expect($(ui, '.paper-result')).not.toBeNull()
+    expect(mirror(ui)).toContain(lastReveal().back.verdictLine)
+  })
+
+  it('switches language during the reveal: once it settles the front and the back are redrawn in the new language', async () => {
+    const turning = deferred()
+    m.stage.reveal.mockImplementationOnce(() => turning.promise)
+    const { ui } = boot('?lang=en&seed=3')
+    await toDay1(ui)
+    click(ui, `[data-stamp="${right(queueFor('delhi-1857', 'easy', 3)[0]!)}"]`)
+    await flush()
+    expect(lastReveal().lang).toBe('en')
+    m.stage.redrawMessage.mockClear()
+    click(ui, '.hud [data-lang="hi"]')
+    expect(stampBtn(ui, 'asli').disabled && stampBtn(ui, 'tota').disabled).toBe(true)
+    expect(m.stage.redrawMessage).not.toHaveBeenCalled()
+    expect(m.stage.reveal).toHaveBeenCalledTimes(1) // no second reveal on top of the turning paper
+
+    turning.resolve()
+    await flush()
+    expect(m.stage.redrawMessage).toHaveBeenLastCalledWith(expect.objectContaining({ lang: 'hi', revealed: true }))
+    expect(m.stage.reveal).toHaveBeenCalledTimes(2)
+    expect(lastReveal().lang).toBe('hi')
+    expect(mirror(ui)).toContain(lastReveal().back.verdictLine)
+    expect($(ui, '[data-action="next"]')).not.toBeNull()
   })
 })

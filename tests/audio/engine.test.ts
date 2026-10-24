@@ -18,6 +18,7 @@ class MockCtx {
   sampleRate = 8000
   destination = node()
   resume = vi.fn(() => { this.state = 'running'; return Promise.resolve() })
+  suspend = vi.fn(() => { this.state = 'suspended'; return Promise.resolve() })
   close = vi.fn(() => Promise.resolve())
   decodeAudioData = vi.fn(() => Promise.resolve({ duration: 30 } as unknown as AudioBuffer))
   constructor() { created.instances.push(this) }
@@ -117,6 +118,33 @@ describe('audio engine', () => {
     expect(() => a.ambience('lahore-1929')).not.toThrow()
     await new Promise((r) => setTimeout(r, 10))
     expect(() => a.cue('correct')).not.toThrow()
+  })
+
+  it('sleeps while the tab is hidden and wakes on return, unless muted', () => {
+    const a = createAudioEngine()
+    a.setHidden(true) // before unlock: nothing to suspend
+    a.setHidden(false)
+    a.unlock()
+    const c = created.instances[0]!
+    c.resume.mockClear()
+    a.setHidden(true)
+    expect(c.suspend).toHaveBeenCalledTimes(1)
+    expect(c.state).toBe('suspended')
+    a.setHidden(true) // no change, no call
+    expect(c.suspend).toHaveBeenCalledTimes(1)
+    a.unlock() // a stray gesture while hidden does not wake it
+    expect(c.resume).not.toHaveBeenCalled()
+    a.setHidden(false)
+    expect(c.resume).toHaveBeenCalledTimes(1)
+    expect(c.state).toBe('running')
+
+    a.setMuted(true)
+    a.setHidden(true)
+    c.resume.mockClear()
+    a.setHidden(false)
+    expect(c.resume).not.toHaveBeenCalled() // muted: it stays asleep
+    a.setMuted(false)
+    expect(c.resume).toHaveBeenCalledTimes(1) // unmuting on a visible tab wakes it
   })
 
   it('is a safe no-op everywhere when AudioContext is missing', () => {
