@@ -5,6 +5,7 @@ import { startAmbience, type AmbienceHandle } from './ambience'
 import { silentUnderAutomation } from './automation'
 import { createSampler, type SampleName, type Sampler } from './samples'
 import { playCue, type Cue, type CueOptions } from './synth'
+import { voice } from './voice'
 
 export type { Cue } from './synth'
 export { cueForStage } from './stage-cues'
@@ -13,6 +14,14 @@ export { cueForStage } from './stage-cues'
 const SAMPLED: Partial<Record<Cue, SampleName>> = { typeKey: 'key', typeSpace: 'space', typeDing: 'ding', typeReturn: 'return' }
 
 const MASTER_LEVEL = 0.8
+
+/** The ambience under the read-aloud voice: about 8 dB down, in 0.4 s; back up more slowly. */
+export const DUCK_LEVEL = 0.4
+const DUCK_DOWN_S = 0.4
+const DUCK_UP_S = 1.2
+
+/** The agarbatti's clock and tension ticks: the room's own clock stays quiet this long after each. */
+const CLOCK_HUSH_MS = 2500
 
 type Ctor = new () => AudioContext
 
@@ -27,6 +36,8 @@ export interface AudioEngine {
   /** `level` (0..1) is for the tension tick: how close the agarbatti is to burning out. */
   cue(c: Cue, o?: { level?: number }): void
   ambience(id: EraId | null): void
+  /** Lowers the ambience (about 8 dB) while the read-aloud voice speaks, and lifts it after. */
+  duckAmbience(on: boolean): void
   /** The tab was hidden (the context sleeps) or shown again (it wakes, unless muted). */
   setHidden(hidden: boolean): void
 }
@@ -34,6 +45,9 @@ export interface AudioEngine {
 export function createAudioEngine(): AudioEngine {
   let ctx: AudioContext | null = null
   let master: GainNode | null = null
+  // the ambience's own gain, between its layers and the master: the voice ducks it
+  let ambBus: GainNode | null = null
+  let ducked = false
   let muted = false
   let hidden = false
   let wanted: EraId | null = null
@@ -73,7 +87,26 @@ export function createAudioEngine(): AudioEngine {
   function restartAmbience(): void {
     current?.stop()
     current = null
-    if (ctx && master && wanted) current = startAmbience(ctx, master, wanted, loadBed)
+    const c = ctx
+    if (c && ambBus && wanted) {
+      // a room sound never starts while the context sleeps or the voice is reading
+      current = startAmbience(c, ambBus, wanted, loadBed, { canBurst: () => c.state === 'running' && !ducked })
+    }
+  }
+
+  function applyDuck(): void {
+    const c = ctx
+    const g = ambBus?.gain
+    if (!c || !g) return
+    const now = c.currentTime
+    const to = ducked ? DUCK_LEVEL : 1
+    try {
+      g.cancelScheduledValues(now)
+      g.setValueAtTime(g.value, now)
+      g.linearRampToValueAtTime(to, now + (ducked ? DUCK_DOWN_S : DUCK_UP_S))
+    } catch {
+      g.value = to
+    }
   }
 
   return {
@@ -90,6 +123,9 @@ export function createAudioEngine(): AudioEngine {
         void ctx.resume?.()?.catch?.(() => undefined)
         master = ctx.createGain()
         master.connect(ctx.destination)
+        ambBus = ctx.createGain()
+        ambBus.gain.value = ducked ? DUCK_LEVEL : 1
+        ambBus.connect(master)
         applyMute()
         // decode the typewriter sprite now, so the first key of a telegram is already instant
         sampler = createSampler(ctx, master, loadBed)
@@ -97,6 +133,7 @@ export function createAudioEngine(): AudioEngine {
       } catch {
         ctx = null
         master = null
+        ambBus = null
       }
     },
     setMuted(m: boolean): void {
@@ -106,6 +143,8 @@ export function createAudioEngine(): AudioEngine {
     },
     cue(c: Cue, o?: { level?: number }): void {
       if (!ctx || !master || muted) return
+      // the agarbatti's clock is ticking: one clock in the room is enough
+      if (c === 'clockTick' || c === 'tensionTick') current?.hushClock(CLOCK_HUSH_MS)
       try {
         const s = SAMPLED[c]
         if (s && sampler?.play(s)) return
@@ -115,8 +154,15 @@ export function createAudioEngine(): AudioEngine {
       } catch { /* never break the game over a sound */ }
     },
     ambience(id: EraId | null): void {
+      // the same room carries on (the chapter begins in the room its page was showing)
+      if (id === wanted && (current || !ctx)) return
       wanted = id
       restartAmbience()
+    },
+    duckAmbience(on: boolean): void {
+      if (on === ducked) return
+      ducked = on
+      applyDuck()
     },
     setHidden(h: boolean): void {
       if (h === hidden) return
@@ -127,3 +173,7 @@ export function createAudioEngine(): AudioEngine {
 }
 
 export const audio: AudioEngine = createAudioEngine()
+
+// The room goes quiet under the read-aloud voice (from the moment it is asked for, so the duck is
+// down before the first word) and comes back when it ends, stops or fails.
+voice.onState((s) => audio.duckAmbience(s === 'loading' || s === 'playing'))
