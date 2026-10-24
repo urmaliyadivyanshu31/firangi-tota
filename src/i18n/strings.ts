@@ -39,6 +39,9 @@ const en = {
   musicLarge: 'Make the player large',
   musicPlay: 'Play',
   musicPause: 'Pause',
+  musicFocus: 'Focus',
+  musicSongs: 'Songs',
+  musicChoose: 'What plays',
   credits: 'Credits',
   treasure: 'Treasure',
 
@@ -166,6 +169,9 @@ const hi: Strings = {
   musicLarge: 'प्लेयर बड़ा करें',
   musicPlay: 'चलाएँ',
   musicPause: 'रोकें',
+  musicFocus: 'ध्यान',
+  musicSongs: 'गीत',
+  musicChoose: 'क्या बजे',
   credits: 'क्रेडिट',
   treasure: 'ख़ज़ाना',
 
@@ -258,7 +264,7 @@ export const DISPLAY_KEYS: (keyof Strings)[] = [
   'appName', 'langSelf', 'langChange', 'continue', 'dailyTitle', 'dailyPlay',
   'dailyDone', 'bestSurvived', 'bestDays', 'soundOn', 'soundOff', 'credits', 'setupQuestion',
   'music', 'roomSound', 'musicNow', 'musicPrev', 'musicNext', 'musicFold', 'musicFailed', 'musicTap',
-  'musicVolume', 'musicSmall', 'musicLarge', 'musicPlay', 'musicPause',
+  'musicVolume', 'musicSmall', 'musicLarge', 'musicPlay', 'musicPause', 'musicFocus', 'musicSongs', 'musicChoose',
   'modeEasy', 'modeMedium', 'modeHard', 'modeDays', 'modeDaysUnit', 'modeSeconds', 
   'back', 'introYou', 'next', 'begin', 'dayOf', 'asli',
   'tota', 'asliHint', 'totaHint', 'caseFile', 'rulebook', 'newTag', 'closePanel',

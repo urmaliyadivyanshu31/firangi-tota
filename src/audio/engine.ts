@@ -1,7 +1,7 @@
 // The audio engine: one master gain, synthesized cues, era ambience.
 // Everything is a safe no-op until unlock() succeeds, or when Web Audio is missing.
 import type { EraId } from '../content/types'
-import { startAmbience, type AmbienceHandle } from './ambience'
+import { loopWindow, startAmbience, type AmbienceHandle } from './ambience'
 import { silentUnderAutomation } from './automation'
 import { createSampler, type SampleName, type Sampler } from './samples'
 import { playCue, type Cue, type CueOptions } from './synth'
@@ -36,6 +36,26 @@ export const ALARM_CUES: ReadonlySet<Cue> = new Set<Cue>([
 ])
 export const ALARM_DUCK_MS = 3000
 
+/**
+ * The record's Focus tracks (src/content/focus.ts) play on their own music bus into the master, so
+ * the sound switch mutes them; the volume knob sets the bus. They fade in over FOCUS_FADE_IN_S,
+ * dip to FOCUS_DUCK_RATIO under the voice and the alarm (as the songs do), and fade out on a change.
+ */
+export const FOCUS_FADE_IN_S = 4
+export const FOCUS_FADE_OUT_S = 1.5
+export const FOCUS_DUCK_RATIO = 0.6
+/** The bus at full volume: the files sit at -26 LUFS, so at the default volume they play near -30. */
+export const FOCUS_LEVEL = 1.15
+/** A track that has not arrived and decoded by then is given up (the record stops, the room comes back). */
+export const FOCUS_LOAD_GUARD_MS = 20_000
+
+export interface FocusSpec {
+  file: string
+  /** The loop's length in seconds. */
+  seconds: number
+}
+export type FocusState = 'loading' | 'playing' | 'stopped' | 'failed'
+
 type Ctor = new () => AudioContext
 
 function contextCtor(): Ctor | null {
@@ -63,6 +83,12 @@ export interface AudioEngine {
    * sequence's alarm. Called with true when it starts and false when it is over.
    */
   onDuck(fn: (on: boolean) => void): void
+  /** Plays a Focus track (null stops it). Kept until the audio unlocks, and across a hidden tab. */
+  focus(track: FocusSpec | null): void
+  /** The music volume, 0..1: the Focus tracks' bus. */
+  setMusicVolume(v: number): void
+  /** Hears the Focus track's state: loading, playing, stopped, or failed (it could not load). */
+  onFocus(fn: (s: FocusState) => void): void
 }
 
 export function createAudioEngine(): AudioEngine {
@@ -85,12 +111,122 @@ export function createAudioEngine(): AudioEngine {
     const on = ducked || Date.now() < alarmUntil
     if (on === musicDucked) return
     musicDucked = on
+    applyMusicLevel(on ? DUCK_DOWN_S : DUCK_UP_S)
     for (const fn of duckers) {
       try { fn(on) } catch { /* a listener never breaks the sound */ }
     }
   }
   let sampler: Sampler | null = null
   const beds = new Map<string, Promise<AudioBuffer | null>>()
+
+  // ---- the Focus tracks ----
+  let musicBus: GainNode | null = null
+  let musicVolume = 0.65
+  let focusWanted: FocusSpec | null = null
+  let focusNow: { file: string; src: AudioBufferSourceNode; gain: GainNode } | null = null
+  let focusGen = 0
+  let focusState: FocusState = 'stopped'
+  // only the track being played is held decoded (a few minutes of PCM is tens of megabytes)
+  let focusBuf: { file: string; p: Promise<AudioBuffer | null> } | null = null
+  const focusers: Array<(s: FocusState) => void> = []
+  function setFocusState(s: FocusState): void {
+    if (s === focusState) return
+    focusState = s
+    for (const fn of focusers) {
+      try { fn(s) } catch { /* a listener never breaks the sound */ }
+    }
+  }
+  const musicLevel = (): number => musicVolume * FOCUS_LEVEL * (musicDucked ? FOCUS_DUCK_RATIO : 1)
+  function applyMusicLevel(seconds: number): void {
+    const c = ctx
+    const g = musicBus?.gain
+    if (!c || !g) return
+    const to = musicLevel()
+    try {
+      g.cancelScheduledValues(c.currentTime)
+      g.setValueAtTime(g.value, c.currentTime)
+      g.linearRampToValueAtTime(to, c.currentTime + seconds)
+    } catch {
+      g.value = to
+    }
+  }
+  function fetchAudio(file: string): Promise<AudioBuffer | null> {
+    const c = ctx
+    if (!c) return Promise.resolve(null)
+    const env = (import.meta as { env?: { BASE_URL?: string; AUDIO_REV?: string } }).env
+    const base = env?.BASE_URL ?? '/'
+    // the build's audio revision: a changed recording under the same name is never served stale
+    const rev = env?.AUDIO_REV ? `?v=${env.AUDIO_REV}` : ''
+    return fetch(`${base}audio/${file}${rev}`)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('audio missing'))))
+      .then((data) => c.decodeAudioData(data))
+      .catch(() => null)
+  }
+  function loadFocus(file: string): Promise<AudioBuffer | null> {
+    if (focusBuf?.file !== file) {
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const guard = new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), FOCUS_LOAD_GUARD_MS) })
+      const p = Promise.race([fetchAudio(file), guard]).finally(() => clearTimeout(timer))
+      focusBuf = { file, p }
+      // a failed or timed-out load is tried afresh next time
+      void p.then((b) => { if (!b && focusBuf?.p === p) focusBuf = null })
+    }
+    return focusBuf.p
+  }
+  function stopFocusNode(fade: number): void {
+    const n = focusNow
+    focusNow = null
+    const c = ctx
+    if (!n || !c) return
+    try {
+      const g = n.gain.gain
+      g.cancelScheduledValues(c.currentTime)
+      g.setValueAtTime(g.value, c.currentTime)
+      g.linearRampToValueAtTime(0.0001, c.currentTime + fade)
+      n.src.stop(c.currentTime + fade + 0.05)
+    } catch {
+      try { n.src.stop() } catch { /* already stopped */ }
+    }
+  }
+  function syncFocus(): void {
+    const want = focusWanted
+    if (focusNow && want && focusNow.file === want.file) return
+    const gen = ++focusGen
+    stopFocusNode(FOCUS_FADE_OUT_S)
+    if (!want) {
+      setFocusState('stopped')
+      return
+    }
+    const c = ctx
+    const bus = musicBus
+    if (!c || !bus) return // starts on unlock
+    setFocusState('loading')
+    void loadFocus(want.file).then((buf) => {
+      if (gen !== focusGen || focusWanted !== want) return
+      if (!buf) {
+        setFocusState('failed')
+        return
+      }
+      try {
+        const src = c.createBufferSource()
+        src.buffer = buf
+        src.loop = true
+        const [a, b] = loopWindow(buf, want.seconds)
+        src.loopStart = a
+        src.loopEnd = b
+        const g = c.createGain()
+        g.gain.setValueAtTime(0.0001, c.currentTime)
+        g.gain.linearRampToValueAtTime(1, c.currentTime + FOCUS_FADE_IN_S)
+        src.connect(g)
+        g.connect(bus)
+        src.start(c.currentTime, a)
+        focusNow = { file: want.file, src, gain: g }
+        setFocusState('playing')
+      } catch {
+        setFocusState('failed')
+      }
+    })
+  }
 
   function applyMute(): void {
     if (master) master.gain.value = muted || silentUnderAutomation() ? 0 : MASTER_LEVEL
@@ -166,14 +302,19 @@ export function createAudioEngine(): AudioEngine {
         ambBus = ctx.createGain()
         ambBus.gain.value = ducked ? DUCK_LEVEL : 1
         ambBus.connect(master)
+        musicBus = ctx.createGain()
+        musicBus.gain.value = musicLevel()
+        musicBus.connect(master)
         applyMute()
         // decode the typewriter sprite now, so the first key of a telegram is already instant
         sampler = createSampler(ctx, master, loadBed)
         restartAmbience()
+        syncFocus()
       } catch {
         ctx = null
         master = null
         ambBus = null
+        musicBus = null
       }
     },
     setMuted(m: boolean): void {
@@ -223,6 +364,23 @@ export function createAudioEngine(): AudioEngine {
     },
     onDuck(fn: (on: boolean) => void): void {
       duckers.push(fn)
+    },
+    focus(track: FocusSpec | null): void {
+      if (track?.file === focusWanted?.file && (track === null || focusState !== 'failed')) {
+        focusWanted = track
+        return
+      }
+      focusWanted = track
+      syncFocus()
+    },
+    setMusicVolume(v: number): void {
+      const next = Math.max(0, Math.min(1, v))
+      if (next === musicVolume) return
+      musicVolume = next
+      applyMusicLevel(0.08)
+    },
+    onFocus(fn: (s: FocusState) => void): void {
+      focusers.push(fn)
     },
     setHidden(h: boolean): void {
       if (h === hidden) return

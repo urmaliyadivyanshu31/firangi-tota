@@ -1,5 +1,5 @@
-import type { EraId, Lang } from '../content/types'
-import { SONGS, embedUrl, firstSong } from '../content/songs'
+import type { Lang } from '../content/types'
+import { SONGS, embedUrl } from '../content/songs'
 import { t } from '../i18n/strings'
 import { store } from '../game/storage'
 import { YT_STATE, type YTApi, type YTPlayer } from '../audio/youtube'
@@ -52,6 +52,8 @@ export interface GramophoneDeps {
   onRoom(on: boolean): void
   /** A song is (or stopped) actually playing: the record button spins. */
   onPlaying(playing: boolean): void
+  /** The cabinet moved to another song (its knobs, or the song ended): the menu ticks it. */
+  onSong?(index: number): void
   /** The player put the music away from the cabinet: back to Room mode. */
   onFold(): void
   /** YouTube could not load: back to Room mode. */
@@ -61,8 +63,8 @@ export interface GramophoneDeps {
 }
 
 export interface Gramophone {
-  /** Opens the cabinet and plays (from the era's own song the first time). */
-  open(era: EraId | null): void
+  /** Opens the cabinet and plays this song (an index into SONGS). */
+  open(song: number): void
   /** Pauses and folds the cabinet away. */
   close(): void
   isOpen(): boolean
@@ -380,8 +382,9 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
     }
   }
 
-  function step(by: number): void {
+  function step(by: number, fromMenu = false): void {
     index = (index + by + SONGS.length) % SONGS.length
+    if (!fromMenu) d.onSong?.(index)
     relabel()
     setPlaying(false)
     if (player) {
@@ -400,8 +403,13 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
     } catch { fail() }
   }
 
-  function start(era: EraId | null): void {
-    if (index < 0) index = firstSong(era)
+  function start(song: number): void {
+    const want = Math.max(0, Math.min(SONGS.length - 1, Math.floor(song) || 0))
+    if (index < 0) index = want
+    else if (want !== index) {
+      step(want - index, true)
+      if (player) return // step() loads and plays it
+    }
     relabel()
     if (!frame) frame = makeFrame()
     if (d.automation) return
@@ -447,14 +455,14 @@ export function createGramophone(d: GramophoneDeps): Gramophone {
   showVolume()
   return {
     el,
-    open(era) {
+    open(song) {
       if (failed) return // the failure note is still showing: the room is back for now
       if (!open) {
         open = true
         el.hidden = false
         d.onRoom(false)
       }
-      start(era)
+      start(song)
     },
     close,
     isOpen: () => open,
