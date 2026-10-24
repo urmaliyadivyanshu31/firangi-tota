@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { strings } from '../../src/i18n/strings'
-import { buildReveal, shortSource, verdictLine } from '../../src/ui/reveal'
+import { ERAS } from '../../src/content/registry'
+import type { Lang, Message } from '../../src/content/types'
+import { buildReveal, revealHighlight, shortSource, verdictLine } from '../../src/ui/reveal'
 import { era, msgById } from './helpers'
 
 describe('the reveal on the paper', () => {
@@ -68,5 +70,45 @@ describe('the reveal on the paper', () => {
       return buildReveal({ era: e, msg: msgById(e, 'm1'), verdict: 'tota', lang: 'en', end: 'caught' }).back.stamp?.style
     })
     expect(styles).toEqual(['seal', 'police', 'raided', 'telegraph'])
+  })
+
+  it('circles only the slip on a forgery with a twin: the checks its genuine twin does not share', () => {
+    const e = era()
+    const genuine = msgById(e, 'm1')
+    const forged = msgById(e, 'm2')
+    genuine.pair = forged.pair = 'pp'
+    genuine.checks = { en: ['the Kashmiri Gate', 'on 14 May', 'Mirza Mughal'], hi: ['कश्मीरी गेट', '14 मई को', 'मिर्ज़ा मुग़ल'] }
+    forged.checks = { en: ['Kashmiri Gate', 'on 14 May', 'Mirza Moghul'], hi: ['कश्मीरी गेट', '14 मई को', 'मिर्ज़ा मोग़ल'] }
+    for (const lang of ['en', 'hi'] as Lang[]) {
+      const r = buildReveal({ era: e, msg: forged, verdict: 'tota', lang })
+      expect(r.highlight).toEqual([forged.checks[lang][2]]) // only the differing substring
+      expect(buildReveal({ era: e, msg: genuine, verdict: 'asli', lang }).highlight).toEqual(genuine.checks[lang]) // genuine: all
+    }
+    // nothing differs, or no twin: every check
+    forged.checks = { ...genuine.checks }
+    expect(revealHighlight(forged, e, 'en')).toEqual(genuine.checks.en)
+    delete forged.pair
+    forged.checks = { en: ['a', 'b'], hi: ['क', 'ख'] }
+    expect(revealHighlight(forged, e, 'en')).toEqual(['a', 'b'])
+  })
+
+  it('in the real content, a paired forgery circles fewer details than it underlines, and never one its twin shares', () => {
+    let narrowed = 0
+    for (const era of ERAS) {
+      for (const m of era.messages as Message[]) {
+        if (m.real || !m.pair) continue
+        const twins = era.messages.filter((o) => o !== m && o.pair === m.pair)
+        for (const lang of ['en', 'hi'] as Lang[]) {
+          const hl = revealHighlight(m, era, lang)
+          const all = m.checks?.[lang] ?? []
+          expect(hl.length).toBeGreaterThan(0)
+          if (hl.length < all.length) {
+            narrowed++
+            for (const c of hl) expect(twins.some((t) => (t.checks?.[lang] ?? []).some((x) => x.includes(c)))).toBe(false)
+          }
+        }
+      }
+    }
+    expect(narrowed).toBeGreaterThan(100)
   })
 })

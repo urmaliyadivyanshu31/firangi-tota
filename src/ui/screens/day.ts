@@ -8,7 +8,7 @@ import { hud, setSound, setTimer, type ModeKind } from '../hud'
 import { isShort, isWide, onLayoutChange } from '../layout'
 import { micIcon } from '../icons'
 import { chevronIcon, closeIcon, jaali, skipIcon } from '../ornament'
-import { relatedFacts } from '../pencil'
+import { pairChecks, relatedFacts } from '../pencil'
 import { formatSource, sourceList } from '../reveal'
 
 // A day over the live room. The message itself is on the 3D paper; the DOM keeps a visually
@@ -215,7 +215,8 @@ export function renderDay(root: HTMLElement, p: DayProps, on: DayHandlers): void
   })
 
   // ---- the case file and the rulebook
-  const marked = new Set(p.sheet.pencil ? relatedFacts(p.sheet.checks, era.facts, lang) : [])
+  // worked out from both halves of a pair, so genuine and forged always pencil the same lines
+  const marked = new Set(p.sheet.pencil ? relatedFacts(pairChecks(msg, era, lang, p.sheet.checks), era.facts, lang) : [])
   const facts = h('dl', { class: 'facts' }, era.facts.map((f) => {
     const blank = hard && f.hardHidden
     return h('div', { class: `fact${marked.has(f.id) ? ' is-pencilled' : ''}`, 'data-fact': f.id },

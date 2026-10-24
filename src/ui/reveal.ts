@@ -88,6 +88,23 @@ export function tellText(msg: Message, lang: Lang): string {
 }
 
 /**
+ * What the verdict circles. A genuine message: every checked detail (they all check out). A
+ * forgery: only its slip, i.e. its checks that its pair twin does not share (a check the twin's
+ * check contains is shared). The pencil marks are equal in number on both halves of a pair, so
+ * circling them all would ring correct details on the forgery too. Without a twin, or when nothing
+ * differs, it falls back to every check.
+ */
+export function revealHighlight(msg: Message, era: Era, lang: Lang): string[] {
+  const checks = (msg.checks?.[lang] ?? []).filter((c) => c.trim() !== '')
+  if (msg.real || msg.pair === undefined) return checks
+  const twins = era.messages.filter((o) => o !== msg && o.pair === msg.pair)
+  if (twins.length === 0) return checks
+  const shared = twins.flatMap((o) => o.checks?.[lang] ?? []).filter((c) => c.trim() !== '')
+  const slip = checks.filter((c) => !shared.some((t) => t.includes(c)))
+  return slip.length > 0 ? slip : checks
+}
+
+/**
  * What the paper's back says after the stamp. On the chapter's last reveal (caught, or the last day
  * survived) it also carries the era's ending: its title, one line of what happened, and its stamp.
  */
@@ -117,7 +134,7 @@ export function buildReveal(p: {
     outcome: right ? 'right' : verdict === 'timeout' ? 'timeout' : 'wrong',
     real: msg.real,
     documentMark: !!msg.document,
-    highlight: (msg.checks?.[lang] ?? []).filter((c) => c.trim() !== ''),
+    highlight: revealHighlight(msg, era, lang),
     note,
     back: {
       verdictLine: verdictLine(msg, verdict, lang),

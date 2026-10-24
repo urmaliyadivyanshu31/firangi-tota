@@ -1,4 +1,4 @@
-import type { Fact, Lang } from '../content/types'
+import type { Era, Fact, Lang, Message } from '../content/types'
 
 // Pencil marks in the case file: the facts that share words with the message's checks. The match
 // uses only the checks, which genuine and forged messages both carry, so a mark never gives away
@@ -45,4 +45,15 @@ export function relatedFacts(checks: string[], facts: Fact[], lang: Lang, max = 
     .sort((a, b) => b.score - a.score || a.i - b.i)
     .slice(0, max)
   return scored.sort((a, b) => a.i - b.i).map((s) => s.id)
+}
+
+/**
+ * The checks the case file's pencil lines are worked out from: the message's own, plus its pair
+ * twin's. Both halves of a pair then always mark the same lines, so a content edit to one half's
+ * checks can never make the lines tell them apart.
+ */
+export function pairChecks(msg: Message, era: Pick<Era, 'messages'>, lang: Lang, own: string[] = msg.checks?.[lang] ?? []): string[] {
+  if (msg.pair === undefined) return own
+  const twins = era.messages.filter((o) => o !== msg && o.pair === msg.pair)
+  return [...new Set([...own, ...twins.flatMap((o) => o.checks?.[lang] ?? [])])]
 }

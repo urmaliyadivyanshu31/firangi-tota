@@ -401,6 +401,20 @@ describe('renderDay: case file and rulebook', () => {
     expect(marked()).toEqual([])
   })
 
+  it('pencils the same case-file lines on both halves of a pair, from the union of their checks', () => {
+    const e = era()
+    const root = mount()
+    const marked = () => [...root.querySelectorAll<HTMLElement>('.fact.is-pencilled')].map((f) => f.dataset.fact)
+    const m1 = e.messages.find((m) => m.id === 'm1')!
+    const m2 = e.messages.find((m) => m.id === 'm2')!
+    m1.pair = m2.pair = 'pp' // pair the genuine day 1 with the forged day 2, whose checks differ
+    renderDay(root, props(e, chapter(e, { day: 1 })), handlers())
+    const genuine = marked()
+    renderDay(root, props(e, chapter(e, { day: 2 })), handlers())
+    expect(marked()).toEqual(genuine)
+    expect(genuine).toContain('f2') // the forged half's line is marked on the genuine half too
+  })
+
   it('hides rules that have not arrived and tags new ones', () => {
     const e = era()
     e.rules = [
