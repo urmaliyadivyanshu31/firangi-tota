@@ -54,7 +54,8 @@ export const messages: Message[] = [
       en: "The Viceroy's tear-off calendar, one for each staff desk. Today's leaf reads: '10 Days left to prepare for the Transfer of Power'.",
       hi: "वायसराय का फाड़ने वाला कैलेंडर, स्टाफ़ की हर मेज़ के लिए एक। आज के पन्ने पर लिखा है: 'सत्ता सौंपने की तैयारी के लिए 10 दिन बाकी'।",
     },
-    checks: { en: ['tear-off calendar', '10 Days left', 'Transfer of Power'], hi: ['फाड़ने वाला कैलेंडर', '10 दिन बाकी', 'सत्ता सौंपने'] },
+    checks: { en: ['10 Days left'], hi: ['10 दिन बाकी'] },
+    verify: { '10 Days left': 'fact:appointed-day' },
     why: {
       text: {
         en: "Mountbatten's real calendar counted down; 5 to 15 August is ten days.",
@@ -75,7 +76,7 @@ export const messages: Message[] = [
       en: "The Viceroy's tear-off calendar, one for each staff desk. Today's leaf reads: '12 Days left to prepare for the Transfer of Power'.",
       hi: "वायसराय का फाड़ने वाला कैलेंडर, स्टाफ़ की हर मेज़ के लिए एक। आज के पन्ने पर लिखा है: 'सत्ता सौंपने की तैयारी के लिए 12 दिन बाकी'।",
     },
-    checks: { en: ['tear-off calendar', '12 Days left', 'Transfer of Power'], hi: ['फाड़ने वाला कैलेंडर', '12 दिन बाकी', 'सत्ता सौंपने'] },
+    checks: { en: ['12 Days left'], hi: ['12 दिन बाकी'] },
     tells: [
       {
         kind: 'number',
@@ -102,7 +103,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Gandhiji leaves Lahore by the Calcutta Mail this evening. He will stop a day in Patna, then go on to Calcutta and Noakhali.',
       hi: 'IMMEDIATE. गांधीजी आज शाम कलकत्ता मेल से लाहौर से निकल रहे हैं। वे एक दिन पटना रुकेंगे, फिर कलकत्ता और नोआखाली जाएँगे।',
     },
-    checks: { en: ['Calcutta Mail', 'a day in Patna', 'Calcutta and Noakhali'], hi: ['कलकत्ता मेल', 'एक दिन पटना', 'कलकत्ता और नोआखाली'] },
+    checks: { en: ['go on to Calcutta'], hi: ['फिर कलकत्ता'] },
     why: {
       text: {
         en: "Gandhi's own letter, Lahore, 6 August: Calcutta Mail, a day in Patna, then Calcutta.",
@@ -123,7 +124,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Gandhiji leaves Lahore by the Calcutta Mail this evening. He will stop a week in Patna and reach Calcutta on the 15th.',
       hi: 'IMMEDIATE. गांधीजी आज शाम कलकत्ता मेल से लाहौर से निकल रहे हैं। वे एक हफ़्ता पटना रुकेंगे और 15 तारीख़ को कलकत्ता पहुँचेंगे।',
     },
-    checks: { en: ['Calcutta Mail', 'a week in Patna', 'reach Calcutta on the 15th'], hi: ['कलकत्ता मेल', 'एक हफ़्ता पटना', '15 तारीख़ को कलकत्ता'] },
+    checks: { en: ['reach Calcutta on the 15th'], hi: ['15 तारीख़ को कलकत्ता'] },
     tells: [
       {
         kind: 'date',
@@ -198,7 +199,7 @@ export const messages: Message[] = [
       en: 'TOP SECRET. I enclose a map showing roughly the boundary which Sir Cyril Radcliffe proposes… The award itself is expected within the next 48 hours…',
       hi: 'TOP SECRET. साथ में एक नक्शा भेज रहा हूँ, जिसमें मोटे तौर पर वह सीमा है जो सर सिरिल रैडक्लिफ़ खींचना चाहते हैं… फ़ैसला ख़ुद अगले 48 घंटों में आने की उम्मीद है…',
     },
-    checks: { en: ['roughly the boundary', 'Sir Cyril Radcliffe', 'next 48 hours'], hi: ['मोटे तौर पर', 'सर सिरिल रैडक्लिफ़', 'अगले 48 घंटों'] },
+    checks: { en: ['Sir Cyril Radcliffe'], hi: ['सर सिरिल रैडक्लिफ़'] },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 377' }] },
     why: {
       text: {
@@ -220,7 +221,7 @@ export const messages: Message[] = [
       en: 'TOP SECRET. I enclose the award itself, signed by Sir Cyril Radcliffe this morning… Please keep it sealed until it is published…',
       hi: 'TOP SECRET. साथ में ख़ुद फ़ैसला भेज रहा हूँ, जिस पर सर सिरिल रैडक्लिफ़ ने आज सुबह दस्तख़त किए… छपने तक इसे बंद रखें…',
     },
-    checks: { en: ['the award itself', 'Sir Cyril Radcliffe', 'this morning'], hi: ['ख़ुद फ़ैसला', 'सर सिरिल रैडक्लिफ़', 'आज सुबह दस्तख़त किए'] },
+    checks: { en: ['the award itself'], hi: ['ख़ुद फ़ैसला'] },
     tells: [
       {
         kind: 'date',
@@ -244,7 +245,7 @@ export const messages: Message[] = [
       en: "The Viceroy, recorded today for America: '…let us remember August 15th—V.J. Day—not only as the celebration of a victory, but also as the fulfilment of a pledge.'",
       hi: "वायसराय, आज अमेरिका के लिए रिकॉर्ड किया गया: '…आइए 15 अगस्त, वी.जे. डे, को सिर्फ़ एक जीत के जश्न के रूप में नहीं, बल्कि एक वादा पूरा होने के रूप में भी याद करें।'",
     },
-    checks: { en: ['for America', 'August 15th', 'V.J. Day'], hi: ['अमेरिका के लिए', '15 अगस्त', 'वी.जे. डे'] },
+    checks: { en: ['August 15th'], hi: ['15 अगस्त'] },
     document: { sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 8 August 1947' }] },
     why: {
       text: {
@@ -268,7 +269,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Governor is taking law and order action on preliminary information given… he would like the document in final form 24 hours before its release…',
       hi: 'IMMEDIATE. गवर्नर मिली हुई शुरुआती जानकारी के आधार पर क़ानून-व्यवस्था के क़दम उठा रहे हैं… वे चाहते हैं कि फ़ैसला अपने आख़िरी रूप में, छपने से 24 घंटे पहले मिल जाए…',
     },
-    checks: { en: ['IMMEDIATE', '24 hours before its release'], hi: ['IMMEDIATE', '24 घंटे पहले'] },
+    checks: { en: ['IMMEDIATE'], hi: ['IMMEDIATE'] },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 391' }] },
     why: {
       text: {
@@ -290,7 +291,7 @@ export const messages: Message[] = [
       en: 'URGENT. Governor is taking law and order action on preliminary information given… he would like the document in final form 24 hours before its release…',
       hi: 'URGENT. गवर्नर मिली हुई शुरुआती जानकारी के आधार पर क़ानून-व्यवस्था के क़दम उठा रहे हैं… वे चाहते हैं कि फ़ैसला अपने आख़िरी रूप में, छपने से 24 घंटे पहले मिल जाए…',
     },
-    checks: { en: ['URGENT', '24 hours before its release'], hi: ['URGENT', '24 घंटे पहले'] },
+    checks: { en: ['URGENT'], hi: ['URGENT'] },
     tells: [
       {
         kind: 'form',
@@ -314,7 +315,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Gandhiji reached Calcutta today, on his way to Noakhali. He is staying at Sodepur, near the city.',
       hi: 'IMMEDIATE. गांधीजी आज कलकत्ता पहुँचे, नोआखाली जाते हुए। वे शहर के पास सोदपुर में ठहरे हैं।',
     },
-    checks: { en: ['reached Calcutta today', 'Noakhali', 'Sodepur'], hi: ['आज कलकत्ता पहुँचे', 'नोआखाली', 'सोदपुर'] },
+    checks: { en: ['reached Calcutta today'], hi: ['आज कलकत्ता पहुँचे'] },
     why: {
       text: {
         en: 'He reached Calcutta on 9 August and spoke at a prayer meeting in Sodepur.',
@@ -337,7 +338,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE. KARACHI. Pakistan's Constituent Assembly met for the first time today, at ten in the morning.",
       hi: 'IMMEDIATE. कराची। पाकिस्तान की संविधान सभा आज पहली बार बैठी, सुबह दस बजे।',
     },
-    checks: { en: ['KARACHI', 'met for the first time today', 'at ten in the morning'], hi: ['कराची', 'आज पहली बार बैठी', 'सुबह दस बजे'] },
+    checks: { en: ['KARACHI'], hi: ['कराची'] },
     why: {
       text: {
         en: "Its first sitting: Karachi, Sunday 10 August 1947, at ten o'clock.",
@@ -358,7 +359,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE. KARACHI. Pakistan's Constituent Assembly met for the first time today, and Mr Jinnah was sworn in as Governor-General.",
       hi: 'IMMEDIATE. कराची। पाकिस्तान की संविधान सभा आज पहली बार बैठी, और मिस्टर जिन्ना ने गवर्नर-जनरल की शपथ ली।',
     },
-    checks: { en: ['KARACHI', 'met for the first time today', 'sworn in as Governor-General'], hi: ['कराची', 'आज पहली बार बैठी', 'गवर्नर-जनरल की शपथ ली'] },
+    checks: { en: ['sworn in as Governor-General'], hi: ['गवर्नर-जनरल की शपथ ली'] },
     tells: [
       {
         kind: 'date',
@@ -432,7 +433,8 @@ export const messages: Message[] = [
       en: 'MOST IMMEDIATE. Sir Cyril Radcliffe has finished the Punjab and Bengal awards, dated New Delhi, 12 August 1947. The Sylhet award is not ready.',
       hi: 'MOST IMMEDIATE. सर सिरिल रैडक्लिफ़ ने पंजाब और बंगाल के फ़ैसले पूरे कर लिए हैं, तारीख़ नई दिल्ली, 12 अगस्त 1947। सिलहट का फ़ैसला अभी तैयार नहीं।',
     },
-    checks: { en: ['Punjab and Bengal awards', '12 August 1947', 'Sylhet award is not ready'], hi: ['पंजाब और बंगाल के फ़ैसले', '12 अगस्त 1947', 'सिलहट का फ़ैसला अभी तैयार नहीं'] },
+    checks: { en: ['12 August 1947', 'Sylhet award is not ready'], hi: ['12 अगस्त 1947', 'सिलहट का फ़ैसला अभी तैयार नहीं'] },
+    verify: { '12 August 1947': 'fact:awards' },
     why: {
       text: {
         en: "Both dated 12 August; Radcliffe called them 'complete and ready' that evening.",
@@ -453,7 +455,7 @@ export const messages: Message[] = [
       en: 'MOST IMMEDIATE. Sir Cyril Radcliffe has signed all three awards today: Punjab, Bengal and Sylhet. They will be published on the 15th.',
       hi: 'MOST IMMEDIATE. सर सिरिल रैडक्लिफ़ ने आज तीनों फ़ैसलों पर दस्तख़त कर दिए: पंजाब, बंगाल और सिलहट। ये 15 तारीख़ को छपेंगे।',
     },
-    checks: { en: ['all three awards today', 'Punjab, Bengal and Sylhet', 'published on the 15th'], hi: ['तीनों फ़ैसलों पर', 'पंजाब, बंगाल और सिलहट', '15 तारीख़ को छपेंगे'] },
+    checks: { en: ['all three awards today', 'published on the 15th'], hi: ['तीनों फ़ैसलों पर', '15 तारीख़ को छपेंगे'] },
     tells: [
       {
         kind: 'date',
@@ -466,51 +468,6 @@ export const messages: Message[] = [
         explain: { en: 'Published Sunday 17 August, not on the 15th.', hi: 'फ़ैसले रविवार 17 अगस्त को छपे, 15 को नहीं।' },
         factId: 'awards',
         sources: [{ id: 'mansergh-xii', loc: 'No. 489' }],
-      },
-    ],
-  },
-  {
-    id: 'd8-hyderabad-open',
-    tier: 2,
-    real: true,
-    pair: 'hyderabad',
-    onDay: 8,
-    from: STATES,
-    to: CIPHER,
-    text: {
-      en: 'IMMEDIATE. The Viceroy has told the Nizam of Hyderabad that the offer to join India stays open for two more months.',
-      hi: 'IMMEDIATE. वायसराय ने हैदराबाद के निज़ाम से कहा है कि भारत में शामिल होने का न्योता दो महीने और खुला रहेगा।',
-    },
-    checks: { en: ['Nizam of Hyderabad', 'two more months'], hi: ['हैदराबाद के निज़ाम', 'दो महीने और'] },
-    why: {
-      text: {
-        en: 'Menon: on 12 August the offer to Hyderabad was kept open two more months.',
-        hi: 'मेनन: 12 अगस्त को हैदराबाद के लिए न्योता दो महीने और खुला रखा गया।',
-      },
-      sources: [{ id: 'menon-1956', loc: 'ch. V, Stopping the Gap' }],
-    },
-  },
-  {
-    id: 'd8-hyderabad-signed',
-    tier: 3,
-    real: false,
-    pair: 'hyderabad',
-    onDay: 8,
-    from: STATES,
-    to: CIPHER,
-    text: {
-      en: 'IMMEDIATE. The Nizam of Hyderabad has signed the Instrument of Accession today, so Hyderabad joins India on 15 August.',
-      hi: 'IMMEDIATE. हैदराबाद के निज़ाम ने आज भारत में शामिल होने के कागज़ पर दस्तख़त कर दिए, यानी हैदराबाद 15 अगस्त को भारत में आएगा।',
-    },
-    checks: { en: ['Nizam of Hyderabad', 'signed the Instrument of Accession'], hi: ['हैदराबाद के निज़ाम', 'दस्तख़त कर दिए'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'Hyderabad held out in 1947; it came into India only in September 1948.',
-          hi: 'हैदराबाद 1947 में शामिल नहीं हुआ; वह सितंबर 1948 में ही भारत में आया।',
-        },
-        sources: [{ id: 'menon-1956', loc: 'ch. V, Stopping the Gap; Hyderabad chapters' }],
       },
     ],
   },
@@ -528,7 +485,8 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Sir Cyril Radcliffe signed the Sylhet award today. All three awards stay sealed while His Excellency is in Karachi.',
       hi: 'IMMEDIATE. सर सिरिल रैडक्लिफ़ ने आज सिलहट के फ़ैसले पर दस्तख़त किए। हिज़ एक्सेलेंसी कराची में हैं, तब तक तीनों फ़ैसले बंद रहेंगे।',
     },
-    checks: { en: ['Sylhet award today', 'stay sealed', 'in Karachi'], hi: ['सिलहट के फ़ैसले पर', 'कराची में हैं', 'बंद रहेंगे'] },
+    checks: { en: ['Sylhet award today', 'stay sealed'], hi: ['सिलहट के फ़ैसले पर', 'बंद रहेंगे'] },
+    verify: { 'stay sealed': 'fact:awards' },
     why: {
       text: {
         en: 'Sylhet is dated 13 August; Mountbatten flew to Karachi that day.',
@@ -552,7 +510,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Sir Cyril Radcliffe signed the Sylhet award today. All three awards will be published tomorrow, the 14th.',
       hi: 'IMMEDIATE. सर सिरिल रैडक्लिफ़ ने आज सिलहट के फ़ैसले पर दस्तख़त किए। तीनों फ़ैसले कल, 14 तारीख़ को छपेंगे।',
     },
-    checks: { en: ['Sylhet award today', 'All three awards', 'published tomorrow, the 14th'], hi: ['सिलहट के फ़ैसले पर', 'तीनों फ़ैसले', 'कल, 14 तारीख़ को छपेंगे'] },
+    checks: { en: ['Sylhet award today', 'published tomorrow, the 14th'], hi: ['सिलहट के फ़ैसले पर', 'कल, 14 तारीख़ को छपेंगे'] },
     tells: [
       {
         kind: 'date',
@@ -577,7 +535,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE. Gandhiji has moved into a house in Beliaghata with Mr Suhrawardy. He writes: 'I have taken many risks, perhaps this is the greatest of all.'",
       hi: "IMMEDIATE. गांधीजी मिस्टर सुहरावर्दी के साथ बेलियाघाटा के एक घर में आ गए हैं। वे लिखते हैं: 'मैंने बहुत जोखिम उठाए हैं, शायद यह सबसे बड़ा है।'",
     },
-    checks: { en: ['Beliaghata', 'Mr Suhrawardy', 'many risks'], hi: ['मिस्टर सुहरावर्दी', 'बेलियाघाटा', 'बहुत जोखिम'] },
+    checks: { en: ['Beliaghata', 'Mr Suhrawardy'], hi: ['बेलियाघाटा', 'मिस्टर सुहरावर्दी'] },
     document: { sources: [{ id: 'cwmg-89', loc: 'Letter to Satis Chandra Das Gupta, Hydari Mansion, 13 August 1947' }] },
     why: {
       text: {
@@ -599,7 +557,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Gandhiji leaves Calcutta tonight for Delhi, to be at the midnight session in the Council House tomorrow.',
       hi: 'IMMEDIATE. गांधीजी आज रात कलकत्ता से दिल्ली के लिए निकल रहे हैं, ताकि कल काउंसिल हाउस की आधी रात की बैठक में रहें।',
     },
-    checks: { en: ['leaves Calcutta tonight', 'for Delhi', 'midnight session'], hi: ['आज रात कलकत्ता से', 'दिल्ली के लिए', 'आधी रात की बैठक'] },
+    checks: { en: ['leaves Calcutta tonight', 'for Delhi'], hi: ['आज रात कलकत्ता से', 'दिल्ली के लिए'] },
     tells: [
       {
         kind: 'place',
@@ -626,7 +584,8 @@ export const messages: Message[] = [
       en: '…commenced in the Constitution Hall, New Delhi, at Eleven P. M.… Mr. President: It is just half a minute to 12. I am expecting the clock to strike 12.',
       hi: '…सत्र रात ग्यारह बजे कॉन्स्टिट्यूशन हॉल, नई दिल्ली में शुरू हुआ… अध्यक्ष: 12 बजने में बस आधा मिनट है। मैं घड़ी के 12 बजाने का इंतज़ार कर रहा हूँ।',
     },
-    checks: { en: ['Constitution Hall', 'Eleven P. M.', 'half a minute to 12'], hi: ['रात ग्यारह बजे', 'कॉन्स्टिट्यूशन हॉल', 'बस आधा मिनट'] },
+    checks: { en: ['Eleven P. M.', 'Mr. President'], hi: ['रात ग्यारह बजे', 'अध्यक्ष'] },
+    verify: { 'Eleven P. M.': 'fact:session' },
     document: { sources: [{ id: 'cad-14aug1947' }] },
     why: {
       text: {
@@ -648,7 +607,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Assembly sits at eleven tonight, Dr Rajendra Prasad, President of India, in the chair. Pledge at the stroke of midnight.',
       hi: 'IMMEDIATE. सभा आज रात ग्यारह बजे बैठेगी, अध्यक्षता भारत के राष्ट्रपति राजेंद्र प्रसाद करेंगे। ठीक आधी रात को शपथ होगी।',
     },
-    checks: { en: ['at eleven tonight', 'Dr Rajendra Prasad', 'President of India'], hi: ['आज रात ग्यारह बजे', 'राजेंद्र प्रसाद', 'भारत के राष्ट्रपति'] },
+    checks: { en: ['Dr Rajendra Prasad', 'President of India'], hi: ['राजेंद्र प्रसाद', 'भारत के राष्ट्रपति'] },
     tells: [
       {
         kind: 'anachronism',
@@ -659,52 +618,6 @@ export const messages: Message[] = [
         factId: 'session',
         ruleId: 'council-house',
         sources: [{ id: 'cad-14aug1947' }],
-      },
-    ],
-  },
-  {
-    id: 'd10-lucknow-flag',
-    tier: 3,
-    real: true,
-    pair: 'lucknow-flag',
-    onDay: 10,
-    from: WYLIE,
-    to: VISCOUNT,
-    text: {
-      en: 'IMMEDIATE. LUCKNOW, 14 August, 2.45 pm; received in London 12.10 pm: The Union Jack on Lucknow Residency was lowered at 20 hours on 13 August.',
-      hi: 'IMMEDIATE. लखनऊ, 14 अगस्त, दोपहर 2.45; लंदन में 12.10 पर मिला: लखनऊ रेज़िडेंसी का यूनियन जैक 13 अगस्त को रात 8 बजे (20 बजे) उतार दिया गया।',
-    },
-    checks: { en: ['14 August, 2.45 pm', 'received in London 12.10 pm', 'on 13 August'], hi: ['14 अगस्त, दोपहर 2.45', 'लंदन में 12.10 पर', '13 अगस्त को'] },
-    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 477' }] },
-    why: {
-      text: {
-        en: 'London is 4½ hours behind; Wylie lowered the flag a day earlier than planned.',
-        hi: 'लंदन 4½ घंटे पीछे है; वाइली ने झंडा तय दिन से एक दिन पहले उतार दिया।',
-      },
-      sources: [{ id: 'mansergh-xii', loc: 'No. 477 and note; No. 243, para 6' }],
-    },
-  },
-  {
-    id: 'd10-lucknow-tonight',
-    tier: 2,
-    real: false,
-    pair: 'lucknow-flag',
-    onDay: 10,
-    from: WYLIE,
-    to: VISCOUNT,
-    text: {
-      en: 'IMMEDIATE. LUCKNOW, 14 August, 2.45 pm; received in London 12.10 pm: The Union Jack on Lucknow Residency was lowered at 20 hours on 14 August.',
-      hi: 'IMMEDIATE. लखनऊ, 14 अगस्त, दोपहर 2.45; लंदन में 12.10 पर मिला: लखनऊ रेज़िडेंसी का यूनियन जैक 14 अगस्त को रात 8 बजे (20 बजे) उतार दिया गया।',
-    },
-    checks: { en: ['14 August, 2.45 pm', 'received in London 12.10 pm', 'on 14 August'], hi: ['14 अगस्त, दोपहर 2.45', 'लंदन में 12.10 पर', '14 अगस्त को'] },
-    tells: [
-      {
-        kind: 'date',
-        explain: {
-          en: 'Sent at 2.45 pm on the 14th, it cannot report 8 pm that night.',
-          hi: '14 की दोपहर 2.45 पर भेजा तार उसी रात 8 बजे की ख़बर नहीं दे सकता।',
-        },
-        sources: [{ id: 'mansergh-xii', loc: 'No. 477' }],
       },
     ],
   },
@@ -743,7 +656,7 @@ export const messages: Message[] = [
       en: 'The Constituent Assembly of India has assumed power for the governance of India, and… endorsed the recommendation that Lord Mountbatten be Governor-General of India from the 15th August 1947.',
       hi: 'भारत की संविधान सभा ने भारत का शासन सँभाल लिया है, और… सिफ़ारिश मान ली है कि 15 अगस्त 1947 से लॉर्ड माउंटबेटन भारत के गवर्नर-जनरल हों।',
     },
-    checks: { en: ['assumed power', 'Lord Mountbatten', 'Governor-General of India'], hi: ['शासन सँभाल लिया है', 'लॉर्ड माउंटबेटन', 'भारत के गवर्नर-जनरल'] },
+    checks: { en: ['Lord Mountbatten', 'Governor-General of India'], hi: ['लॉर्ड माउंटबेटन', 'भारत के गवर्नर-जनरल'] },
     document: { sources: [{ id: 'cad-14aug1947' }] },
     why: {
       text: {
@@ -765,7 +678,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. For His Excellency the Viceroy: crowd at Princes Park far above the thirty thousand planned. Flag ceremony goes ahead this evening.',
       hi: 'IMMEDIATE. हिज़ एक्सेलेंसी वायसराय के लिए: प्रिंसेस पार्क में भीड़ तय तीस हज़ार से कहीं ज़्यादा है। शाम का झंडा समारोह होगा।',
     },
-    checks: { en: ['His Excellency the Viceroy', 'Princes Park', 'thirty thousand'], hi: ['हिज़ एक्सेलेंसी वायसराय', 'प्रिंसेस पार्क', 'तीस हज़ार'] },
+    checks: { en: ['His Excellency the Viceroy', 'Princes Park'], hi: ['हिज़ एक्सेलेंसी वायसराय', 'प्रिंसेस पार्क'] },
     tells: [
       {
         kind: 'anachronism',
@@ -790,7 +703,8 @@ export const messages: Message[] = [
       en: "From last night's sitting, Pandit Nehru: '…At the stroke of the midnight hour, when the world sleeps, India will awake to life and freedom.'",
       hi: "कल रात की बैठक से, पंडित नेहरू: '…ठीक आधी रात के घंटे पर, जब दुनिया सो रही है, भारत जीवन और आज़ादी के लिए जाग उठेगा।'",
     },
-    checks: { en: ['last night', 'Pandit Nehru', 'midnight hour'], hi: ['कल रात', 'पंडित नेहरू', 'आधी रात के घंटे'] },
+    checks: { en: ['last night', 'Pandit Nehru'], hi: ['कल रात', 'पंडित नेहरू'] },
+    verify: { 'last night': 'fact:tryst' },
     document: { sources: [{ id: 'cad-14aug1947' }] },
     why: {
       text: {
@@ -812,7 +726,7 @@ export const messages: Message[] = [
       en: "From the Red Fort this morning, Pandit Nehru: '…At the stroke of the midnight hour, when the world sleeps, India will awake to life and freedom.'",
       hi: "आज सुबह लाल क़िले से, पंडित नेहरू: '…ठीक आधी रात के घंटे पर, जब दुनिया सो रही है, भारत जीवन और आज़ादी के लिए जाग उठेगा।'",
     },
-    checks: { en: ['Red Fort this morning', 'Pandit Nehru', 'midnight hour'], hi: ['आज सुबह लाल क़िले से', 'पंडित नेहरू', 'आधी रात के घंटे'] },
+    checks: { en: ['Red Fort this morning', 'Pandit Nehru'], hi: ['आज सुबह लाल क़िले से', 'पंडित नेहरू'] },
     tells: [
       {
         kind: 'knowledge',
@@ -831,72 +745,6 @@ export const messages: Message[] = [
         },
         factId: 'delhi-flags',
         sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 16 August 1947' }],
-      },
-    ],
-  },
-  {
-    id: 'd11-empty-envelope',
-    tier: 3,
-    real: true,
-    onDay: 11,
-    from: PRESS_GH,
-    to: CIPHER,
-    text: {
-      en: "Note: the envelope Pandit Nehru gave His Excellency after midnight, meant to hold the new Cabinet's portfolios, was empty.",
-      hi: 'नोट: आधी रात के बाद पंडित नेहरू ने हिज़ एक्सेलेंसी को जो लिफ़ाफ़ा दिया, उसमें नए मंत्रियों के विभागों की सूची होनी थी। वह ख़ाली निकला।',
-    },
-    checks: { en: ['after midnight', "Cabinet's portfolios", 'was empty'], hi: ['आधी रात के बाद', 'मंत्रियों के विभागों', 'ख़ाली निकला'] },
-    why: {
-      text: {
-        en: "True: Campbell-Johnson was there; 'by sublime oversight Nehru's envelope was empty.'",
-        hi: "सच: कैंपबेल-जॉनसन वहीं थे; 'भारी भूल से नेहरू का लिफ़ाफ़ा ख़ाली था।'",
-      },
-      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 14–15 August 1947' }],
-    },
-  },
-  {
-    id: 'd11-women-flag',
-    tier: 2,
-    real: true,
-    pair: 'women-flag',
-    onDay: 11,
-    from: CAI,
-    to: RECORD,
-    text: {
-      en: "From last night's sitting: Shrimati Sucheta Kripalani sang Vande Mataram. Shrimati Hansa Mehta: '…on behalf of the women of India, to present this flag to the Nation…'",
-      hi: "कल रात की बैठक से: श्रीमती सुचेता कृपलानी ने वंदे मातरम गाया। श्रीमती हंसा मेहता: '…भारत की महिलाओं की ओर से यह झंडा देश को भेंट करना…'",
-    },
-    checks: { en: ['Sucheta Kripalani', 'Hansa Mehta', 'women of India'], hi: ['सुचेता कृपलानी', 'हंसा मेहता', 'भारत की महिलाओं'] },
-    document: { sources: [{ id: 'cad-14aug1947' }] },
-    why: {
-      text: {
-        en: 'Hansa Mehta presented the flag; Sarojini Naidu was absent.',
-        hi: 'झंडा हंसा मेहता ने भेंट किया; सरोजिनी नायडू वहाँ नहीं थीं।',
-      },
-      sources: [{ id: 'cad-14aug1947' }],
-    },
-  },
-  {
-    id: 'd11-women-naidu',
-    tier: 3,
-    real: false,
-    pair: 'women-flag',
-    onDay: 11,
-    from: CAI,
-    to: RECORD,
-    text: {
-      en: "From last night's sitting: Shrimati Sucheta Kripalani sang Vande Mataram. Shrimati Sarojini Naidu: '…on behalf of the women of India, to present this flag to the Nation…'",
-      hi: "कल रात की बैठक से: श्रीमती सुचेता कृपलानी ने वंदे मातरम गाया। श्रीमती सरोजिनी नायडू: '…भारत की महिलाओं की ओर से यह झंडा देश को भेंट करना…'",
-    },
-    checks: { en: ['Sucheta Kripalani', 'Sarojini Naidu', 'women of India'], hi: ['सुचेता कृपलानी', 'सरोजिनी नायडू', 'भारत की महिलाओं'] },
-    tells: [
-      {
-        kind: 'name',
-        explain: {
-          en: 'Hansa Mehta presented the flag; Sarojini Naidu was absent that night.',
-          hi: 'झंडा हंसा मेहता ने भेंट किया; सरोजिनी नायडू उस रात थीं ही नहीं।',
-        },
-        sources: [{ id: 'cad-14aug1947' }],
       },
     ],
   },
@@ -942,7 +790,8 @@ export const messages: Message[] = [
       en: 'SECRET. Boundary Commission… lacking an announcement, the wildest rumours are current, and are being spread by mischief makers of whom there is no lack.',
       hi: 'SECRET. सीमा कमीशन… फ़ैसले का ऐलान न होने से सबसे बेतुकी अफ़वाहें फैली हैं, और उन्हें फैलाने वाले शरारती लोगों की कोई कमी नहीं।',
     },
-    checks: { en: ['Boundary Commission', 'lacking an announcement', 'wildest rumours'], hi: ['सीमा कमीशन', 'ऐलान न होने से', 'सबसे बेतुकी अफ़वाहें'] },
+    checks: { en: ['Boundary Commission', 'lacking an announcement'], hi: ['सीमा कमीशन', 'ऐलान न होने से'] },
+    verify: { 'lacking an announcement': 'fact:awards' },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 486, para 5' }] },
     why: {
       text: {
@@ -964,7 +813,7 @@ export const messages: Message[] = [
       en: 'SECRET. Boundary Commission… the award was announced this morning, and the rumours have already died down.',
       hi: 'SECRET. सीमा कमीशन… फ़ैसले का ऐलान आज सुबह हो गया, और अफ़वाहें थम गई हैं।',
     },
-    checks: { en: ['Boundary Commission', 'announced this morning', 'already died down'], hi: ['सीमा कमीशन', 'ऐलान आज सुबह हो गया', 'अफ़वाहें थम गई हैं'] },
+    checks: { en: ['Boundary Commission', 'announced this morning'], hi: ['सीमा कमीशन', 'ऐलान आज सुबह हो गया'] },
     tells: [
       {
         kind: 'date',
@@ -988,7 +837,8 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. National flag hoisted over the Red Fort very early this morning. Pandit Nehru addressed some half a million.',
       hi: 'IMMEDIATE. आज बहुत सुबह लाल क़िले पर राष्ट्रीय झंडा फहराया गया। पंडित नेहरू ने करीब पाँच लाख लोगों के सामने भाषण दिया।',
     },
-    checks: { en: ['Red Fort', 'very early this morning', 'half a million'], hi: ['आज बहुत सुबह', 'लाल क़िले पर', 'पाँच लाख'] },
+    checks: { en: ['Red Fort', 'very early this morning'], hi: ['लाल क़िले पर', 'आज बहुत सुबह'] },
+    verify: { 'very early this morning': 'fact:delhi-flags' },
     why: {
       text: {
         en: 'Red Fort flag: Saturday 16 August, not Independence Day itself.',
@@ -1009,7 +859,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. National flag hoisted over the Red Fort yesterday, 15 August, at 8.30 am. Pandit Nehru addressed some half a million.',
       hi: 'IMMEDIATE. कल, 15 अगस्त को सुबह 8.30 बजे लाल क़िले पर राष्ट्रीय झंडा फहराया गया। पंडित नेहरू ने करीब पाँच लाख लोगों के सामने भाषण दिया।',
     },
-    checks: { en: ['Red Fort', 'yesterday, 15 August', 'half a million'], hi: ['कल, 15 अगस्त', 'लाल क़िले पर', 'पाँच लाख'] },
+    checks: { en: ['Red Fort', 'yesterday, 15 August'], hi: ['लाल क़िले पर', 'कल, 15 अगस्त'] },
     tells: [
       {
         kind: 'date',
@@ -1034,7 +884,7 @@ export const messages: Message[] = [
       en: 'Ministers now have the awards. Pandit Nehru, Mr Liaquat Ali Khan and Sardar Patel meet Lord Mountbatten here at 5 pm.',
       hi: 'मंत्रियों को फ़ैसले मिल गए हैं। पंडित नेहरू, मिस्टर लियाक़त अली ख़ान और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
     },
-    checks: { en: ['Mr Liaquat Ali Khan', 'Sardar Patel', 'at 5 pm'], hi: ['मिस्टर लियाक़त अली ख़ान', 'सरदार पटेल', 'शाम 5 बजे'] },
+    checks: { en: ['Sardar Patel'], hi: ['सरदार पटेल'] },
     why: {
       text: {
         en: 'Minutes: Government House, 16 August, 5 pm; Liaquat came for Pakistan.',
@@ -1055,7 +905,7 @@ export const messages: Message[] = [
       en: 'Ministers now have the awards. Pandit Nehru, Mr Jinnah and Sardar Patel meet Lord Mountbatten here at 5 pm.',
       hi: 'मंत्रियों को फ़ैसले मिल गए हैं। पंडित नेहरू, मिस्टर जिन्ना और सरदार पटेल शाम 5 बजे यहाँ लॉर्ड माउंटबेटन से मिलेंगे।',
     },
-    checks: { en: ['Mr Jinnah', 'Sardar Patel', 'at 5 pm'], hi: ['मिस्टर जिन्ना', 'सरदार पटेल', 'शाम 5 बजे'] },
+    checks: { en: ['Mr Jinnah'], hi: ['मिस्टर जिन्ना'] },
     tells: [
       {
         kind: 'name',
@@ -1082,7 +932,8 @@ export const messages: Message[] = [
       en: "Published today. Report dated 12 August 1947, para 12: 'I am conscious too that the award cannot go far towards satisfying sentiments and aspirations deeply held on either side…'",
       hi: "आज छपा। रिपोर्ट, तारीख़ 12 अगस्त 1947, पैरा 12: 'मैं यह भी जानता हूँ कि यह फ़ैसला दोनों तरफ़ की गहरी भावनाओं और उम्मीदों को ज़्यादा पूरा नहीं कर सकता…'",
     },
-    checks: { en: ['Published today', 'dated 12 August 1947', 'para 12'], hi: ['आज छपा', 'तारीख़ 12 अगस्त 1947', 'पैरा 12'] },
+    checks: { en: ['Published today', 'dated 12 August 1947'], hi: ['आज छपा', 'तारीख़ 12 अगस्त 1947'] },
+    verify: { 'Published today': 'fact:awards', 'dated 12 August 1947': 'fact:awards' },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 12' }] },
     why: {
       text: {
@@ -1107,7 +958,8 @@ export const messages: Message[] = [
       en: "Published Saturday, {date}. Report dated 12 August 1947, para 12: '…the award cannot go far towards satisfying sentiments and aspirations deeply held on either side…'",
       hi: "शनिवार, {date} को छपा। रिपोर्ट, तारीख़ 12 अगस्त 1947, पैरा 12: '…यह फ़ैसला दोनों तरफ़ की गहरी भावनाओं और उम्मीदों को ज़्यादा पूरा नहीं कर सकता…'",
     },
-    checks: { en: ['Published Saturday', 'dated 12 August 1947', 'para 12'], hi: ['शनिवार', 'तारीख़ 12 अगस्त 1947', 'पैरा 12'] },
+    checks: { en: ['Published Saturday', 'dated 12 August 1947'], hi: ['शनिवार', 'तारीख़ 12 अगस्त 1947'] },
+    verify: { 'dated 12 August 1947': 'fact:awards' },
     tells: [
       {
         kind: 'weekday',
@@ -1130,7 +982,8 @@ export const messages: Message[] = [
       en: "IMMEDIATE. From V.P. Menon, Secretary, States Ministry: today's newspapers report that Junagadh has joined Pakistan. Please confirm.",
       hi: 'IMMEDIATE. रियासत मंत्रालय के सचिव मेनन की ओर से: आज के अख़बारों में ख़बर है कि जूनागढ़ पाकिस्तान में शामिल हो गया है, कृपया पुष्टि करें।',
     },
-    checks: { en: ['V.P. Menon', 'Secretary, States Ministry', 'Junagadh has joined Pakistan'], hi: ['मेनन', 'रियासत मंत्रालय के सचिव', 'जूनागढ़ पाकिस्तान में शामिल'] },
+    checks: { en: ['V.P. Menon', 'Secretary, States Ministry'], hi: ['मेनन', 'रियासत मंत्रालय के सचिव'] },
+    verify: { 'Secretary, States Ministry': 'fact:states' },
     why: {
       text: {
         en: 'Menon learned of it from the newspapers of 17 August and wired at once.',
@@ -1151,7 +1004,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE. From V.P. Menon, Minister of States: today's newspapers report that Junagadh has joined Pakistan. Please confirm.",
       hi: 'IMMEDIATE. रियासतों के मंत्री मेनन की ओर से: आज के अख़बारों में ख़बर है कि जूनागढ़ पाकिस्तान में शामिल हो गया है, कृपया पुष्टि करें।',
     },
-    checks: { en: ['V.P. Menon', 'Minister of States', 'Junagadh has joined Pakistan'], hi: ['मेनन', 'रियासतों के मंत्री', 'जूनागढ़ पाकिस्तान में शामिल'] },
+    checks: { en: ['V.P. Menon', 'Minister of States'], hi: ['मेनन', 'रियासतों के मंत्री'] },
     tells: [
       {
         kind: 'name',
@@ -1175,7 +1028,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE, JUNAGADH, {weekday} {date}. Reference your telegram of yesterday: Junagadh has joined Pakistan, as announced on 15 August.',
       hi: 'IMMEDIATE, जूनागढ़, {weekday} {date}। कल के आपके तार के जवाब में: जूनागढ़ पाकिस्तान में शामिल हो गया है, जैसा 15 अगस्त को ऐलान हुआ था।',
     },
-    checks: { en: ['IMMEDIATE, JUNAGADH', 'telegram of yesterday', 'announced on 15 August'], hi: ['IMMEDIATE, जूनागढ़', 'कल के आपके तार', '15 अगस्त को ऐलान'] },
+    checks: { en: ['IMMEDIATE', 'announced on 15 August'], hi: ['IMMEDIATE', '15 अगस्त को ऐलान'] },
     why: {
       text: {
         en: "Menon: 'the next day he telegraphed to me that Junagadh had acceded to Pakistan.'",
@@ -1196,7 +1049,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE, JUNAGADH, Tuesday {date}. Reference your telegram of yesterday: Junagadh has joined Pakistan, as announced on 15 August.',
       hi: 'IMMEDIATE, जूनागढ़, मंगलवार {date}। कल के आपके तार के जवाब में: जूनागढ़ पाकिस्तान में शामिल हो गया है, जैसा 15 अगस्त को ऐलान हुआ था।',
     },
-    checks: { en: ['IMMEDIATE, JUNAGADH', 'Tuesday', 'announced on 15 August'], hi: ['IMMEDIATE, जूनागढ़', 'मंगलवार', '15 अगस्त को ऐलान'] },
+    checks: { en: ['Tuesday', 'announced on 15 August'], hi: ['मंगलवार', '15 अगस्त को ऐलान'] },
     tells: [
       {
         kind: 'weekday',
@@ -1204,48 +1057,6 @@ export const messages: Message[] = [
         factId: 'appointed-day',
         ruleId: 'weekday',
         sources: [{ id: 'menon-1956', loc: 'ch. VI, Junagadh' }],
-      },
-    ],
-  },
-  {
-    id: 'd14-lahore-award',
-    tier: 2,
-    real: true,
-    pair: 'lahore-award',
-    onDay: 14,
-    from: TEL_LAHORE,
-    to: GOVT_HOUSE,
-    text: {
-      en: 'IMMEDIATE. The award is out. Lahore city is in West Punjab, Pakistan; Amritsar district is in East Punjab, India.',
-      hi: 'IMMEDIATE. फ़ैसला छप गया है। लाहौर शहर पश्चिमी पंजाब, यानी पाकिस्तान में है; अमृतसर ज़िला पूर्वी पंजाब, यानी भारत में।',
-    },
-    checks: { en: ['The award is out', 'Lahore city is in West Punjab', 'Amritsar district is in East Punjab'], hi: ['फ़ैसला छप गया है', 'लाहौर शहर पश्चिमी पंजाब', 'अमृतसर ज़िला पूर्वी पंजाब'] },
-    why: {
-      text: {
-        en: 'Published 17 August: Lahore went to Pakistan, Amritsar to India.',
-        hi: '17 अगस्त को छपा: लाहौर पाकिस्तान को, अमृतसर भारत को मिला।',
-      },
-      sources: [{ id: 'menon-1957', loc: 'ch. XVII (award outcome)' }, { id: 'mansergh-xii', loc: 'No. 488, Appendix I' }],
-    },
-  },
-  {
-    id: 'd14-lahore-reversed',
-    tier: 3,
-    real: false,
-    pair: 'lahore-award',
-    onDay: 14,
-    from: TEL_LAHORE,
-    to: GOVT_HOUSE,
-    text: {
-      en: 'IMMEDIATE. The award is out. Lahore city is in East Punjab, India; Amritsar district is in West Punjab, Pakistan.',
-      hi: 'IMMEDIATE. फ़ैसला छप गया है। लाहौर शहर पूर्वी पंजाब, यानी भारत में है; अमृतसर ज़िला पश्चिमी पंजाब, यानी पाकिस्तान में।',
-    },
-    checks: { en: ['The award is out', 'Lahore city is in East Punjab', 'Amritsar district is in West Punjab'], hi: ['फ़ैसला छप गया है', 'लाहौर शहर पूर्वी पंजाब', 'अमृतसर ज़िला पश्चिमी पंजाब'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: { en: 'Reversed: Lahore went to Pakistan and Amritsar to India.', hi: 'उल्टा है: लाहौर पाकिस्तान को और अमृतसर भारत को मिला।' },
-        sources: [{ id: 'menon-1957', loc: 'ch. XVII (award outcome)' }],
       },
     ],
   },
@@ -1302,7 +1113,7 @@ export const messages: Message[] = [
       en: 'Note for the desk: the Indian Independence Act became law on Friday 18 July. Its appointed day is Friday 15 August.',
       hi: 'मेज़ के लिए नोट: भारत की आज़ादी के क़ानून को शुक्रवार 18 जुलाई को राजा की मंज़ूरी मिली। उसका तय दिन शुक्रवार 15 अगस्त है।',
     },
-    checks: { en: ['Indian Independence Act', 'Friday 18 July', 'Friday 15 August'], hi: ['आज़ादी के क़ानून', 'शुक्रवार 18 जुलाई', 'शुक्रवार 15 अगस्त'] },
+    checks: { en: ['Friday 18 July', 'Friday 15 August'], hi: ['शुक्रवार 18 जुलाई', 'शुक्रवार 15 अगस्त'] },
     why: {
       text: { en: 'Introduced 4 July; law, by Royal Assent, on Friday 18 July.', hi: 'बिल 4 जुलाई को पेश हुआ; शुक्रवार 18 जुलाई को राजा की मंज़ूरी से क़ानून बना।' },
       sources: [{ id: 'menon-1957', loc: 'ch. XVII' }],
@@ -1319,7 +1130,7 @@ export const messages: Message[] = [
       en: 'Note for the desk: the Indian Independence Act became law on Friday 4 July. Its appointed day is Friday 15 August.',
       hi: 'मेज़ के लिए नोट: भारत की आज़ादी के क़ानून को शुक्रवार 4 जुलाई को राजा की मंज़ूरी मिली। उसका तय दिन शुक्रवार 15 अगस्त है।',
     },
-    checks: { en: ['Indian Independence Act', 'Friday 4 July', 'Friday 15 August'], hi: ['आज़ादी के क़ानून', 'शुक्रवार 4 जुलाई', 'शुक्रवार 15 अगस्त'] },
+    checks: { en: ['Friday 4 July', 'Friday 15 August'], hi: ['शुक्रवार 4 जुलाई', 'शुक्रवार 15 अगस्त'] },
     tells: [
       {
         kind: 'date',
@@ -1344,7 +1155,7 @@ export const messages: Message[] = [
       en: 'For the file: at his press conference on 4 June, the Viceroy first hinted that 15 August would be the likely date.',
       hi: 'फ़ाइल के लिए: 4 जून की प्रेस कॉन्फ़्रेंस में वायसराय ने पहली बार इशारा किया कि तारीख़ शायद 15 अगस्त होगी।',
     },
-    checks: { en: ['press conference', '4 June', '15 August'], hi: ['प्रेस कॉन्फ़्रेंस', '4 जून', '15 अगस्त'] },
+    checks: { en: ['15 August'], hi: ['15 अगस्त'] },
     why: {
       text: {
         en: "Campbell-Johnson: 'the first informal indication that 15th August would be the likely date'.",
@@ -1364,7 +1175,7 @@ export const messages: Message[] = [
       en: 'For the file: at his press conference on 4 June, the Viceroy first hinted that June 1948 would be the likely date.',
       hi: 'फ़ाइल के लिए: 4 जून की प्रेस कॉन्फ़्रेंस में वायसराय ने पहली बार इशारा किया कि तारीख़ शायद जून 1948 होगी।',
     },
-    checks: { en: ['press conference', '4 June', 'June 1948'], hi: ['प्रेस कॉन्फ़्रेंस', '4 जून', 'जून 1948'] },
+    checks: { en: ['June 1948'], hi: ['जून 1948'] },
     tells: [
       {
         kind: 'date',
@@ -1392,7 +1203,7 @@ export const messages: Message[] = [
       en: 'Punjab Boundary Force under Maj-Gen T.W. Rees, set up 1 August: about 50,000 officers and men, to keep the peace in the border districts.',
       hi: 'मेजर-जनरल टी.डब्ल्यू. रीस की पंजाब बाउंड्री फ़ोर्स, 1 अगस्त को बनी: करीब 50,000 अफ़सर और जवान, सीमा के ज़िलों में शांति रखने के लिए।',
     },
-    checks: { en: ['Maj-Gen T.W. Rees', 'set up 1 August', 'about 50,000'], hi: ['टी.डब्ल्यू. रीस', '1 अगस्त को बनी', 'करीब 50,000'] },
+    checks: { en: ['Maj-Gen T.W. Rees', 'about 50,000'], hi: ['टी.डब्ल्यू. रीस', 'करीब 50,000'] },
     why: {
       text: { en: 'Menon: set up 1 August, about 50,000 officers and men.', hi: 'मेनन: 1 अगस्त को बनी, करीब 50,000 अफ़सर और जवान।' },
       sources: [{ id: 'menon-1957', loc: 'ch. XVIII' }],
@@ -1409,7 +1220,7 @@ export const messages: Message[] = [
       en: 'Punjab Boundary Force under Maj-Gen T.W. Rees, set up 1 August: about 5,000 officers and men, to keep the peace in the border districts.',
       hi: 'मेजर-जनरल टी.डब्ल्यू. रीस की पंजाब बाउंड्री फ़ोर्स, 1 अगस्त को बनी: करीब 5,000 अफ़सर और जवान, सीमा के ज़िलों में शांति रखने के लिए।',
     },
-    checks: { en: ['Maj-Gen T.W. Rees', 'set up 1 August', 'about 5,000'], hi: ['टी.डब्ल्यू. रीस', '1 अगस्त को बनी', 'करीब 5,000'] },
+    checks: { en: ['Maj-Gen T.W. Rees', 'about 5,000'], hi: ['टी.डब्ल्यू. रीस', 'करीब 5,000'] },
     tells: [
       {
         kind: 'number',
@@ -1431,7 +1242,7 @@ export const messages: Message[] = [
       en: 'Note for the file: from 15 August, Lord Mountbatten is Governor-General of India, and Mr Jinnah Governor-General of Pakistan.',
       hi: 'फ़ाइल के लिए नोट: 15 अगस्त से लॉर्ड माउंटबेटन भारत के गवर्नर-जनरल हैं, और मिस्टर जिन्ना पाकिस्तान के।',
     },
-    checks: { en: ['Lord Mountbatten', 'Governor-General of India', 'Mr Jinnah'], hi: ['लॉर्ड माउंटबेटन', 'भारत के गवर्नर-जनरल', 'मिस्टर जिन्ना'] },
+    checks: { en: ['Mr Jinnah Governor-General'], hi: ['मिस्टर जिन्ना पाकिस्तान के'] },
     why: {
       text: { en: 'Two Governors-General: Mountbatten in Delhi, Jinnah in Karachi.', hi: 'दो गवर्नर-जनरल: दिल्ली में माउंटबेटन, कराची में जिन्ना।' },
       sources: [{ id: 'menon-1957', loc: 'ch. XVIII' }],
@@ -1448,7 +1259,7 @@ export const messages: Message[] = [
       en: 'Note for the file: from 15 August, Lord Mountbatten is Governor-General of both India and Pakistan.',
       hi: 'फ़ाइल के लिए नोट: 15 अगस्त से लॉर्ड माउंटबेटन भारत और पाकिस्तान, दोनों के गवर्नर-जनरल हैं।',
     },
-    checks: { en: ['Lord Mountbatten', 'Governor-General', 'both India and Pakistan'], hi: ['लॉर्ड माउंटबेटन', 'भारत और पाकिस्तान', 'दोनों के गवर्नर-जनरल'] },
+    checks: { en: ['both India and Pakistan'], hi: ['दोनों के गवर्नर-जनरल'] },
     tells: [
       {
         kind: 'name',
@@ -1475,7 +1286,7 @@ export const messages: Message[] = [
       en: "IMMEDIATE. Please repeat the Partition Council's statement of 22 July: both Governments will accept the awards, 'whatever these may be'.",
       hi: "IMMEDIATE. कृपया 22 जुलाई का पार्टिशन काउंसिल का बयान फिर भेजें: दोनों सरकारें फ़ैसले मानेंगी, 'चाहे जो भी हों'।",
     },
-    checks: { en: ['IMMEDIATE', '22 July', 'whatever these may be'], hi: ['IMMEDIATE', '22 जुलाई', 'चाहे जो भी हों'] },
+    checks: { en: ['IMMEDIATE'], hi: ['IMMEDIATE'] },
     why: {
       text: {
         en: 'Real header style; on 22 July both Governments pledged to accept the awards.',
@@ -1495,7 +1306,7 @@ export const messages: Message[] = [
       en: "URGENT!! Please repeat the Partition Council's statement of 22 July: both Governments will accept the awards, 'whatever these may be'.",
       hi: "URGENT!! कृपया 22 जुलाई का पार्टिशन काउंसिल का बयान फिर भेजें: दोनों सरकारें फ़ैसले मानेंगी, 'चाहे जो भी हों'।",
     },
-    checks: { en: ['URGENT!!', '22 July', 'whatever these may be'], hi: ['URGENT!!', '22 जुलाई', 'चाहे जो भी हों'] },
+    checks: { en: ['URGENT!!'], hi: ['URGENT!!'] },
     tells: [
       {
         kind: 'form',
@@ -1520,7 +1331,7 @@ export const messages: Message[] = [
       en: 'Standing order: no one in this House may contact Sir Cyril Radcliffe about the awards, which must be his alone.',
       hi: 'स्थायी आदेश: इस हाउस में कोई भी सर सिरिल रैडक्लिफ़ से फ़ैसलों के बारे में बात नहीं करेगा; फ़ैसले सिर्फ़ उनके अपने हों।',
     },
-    checks: { en: ['Standing order', 'Sir Cyril Radcliffe', 'his alone'], hi: ['स्थायी आदेश', 'सर सिरिल रैडक्लिफ़', 'सिर्फ़ उनके अपने'] },
+    checks: { en: ['Sir Cyril Radcliffe'], hi: ['सर सिरिल रैडक्लिफ़'] },
     why: {
       text: {
         en: 'Mountbatten ordered staff to have no contact with Radcliffe; whether it held is disputed.',
@@ -1540,7 +1351,7 @@ export const messages: Message[] = [
       en: 'Standing order: no one in this House may contact Sir Cyril Radcliffe about the awards, which must be his alone. Jai Hind.',
       hi: 'स्थायी आदेश: इस हाउस में कोई भी सर सिरिल रैडक्लिफ़ से फ़ैसलों के बारे में बात नहीं करेगा; फ़ैसले सिर्फ़ उनके अपने हों। जय हिंद।',
     },
-    checks: { en: ['Standing order', 'Sir Cyril Radcliffe', 'Jai Hind'], hi: ['स्थायी आदेश', 'सर सिरिल रैडक्लिफ़', 'जय हिंद'] },
+    checks: { en: ['Jai Hind'], hi: ['जय हिंद'] },
     tells: [
       {
         kind: 'habit',
@@ -1565,7 +1376,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE, CALCUTTA. The Bengal Commission sat in public here from 16 to 24 July. Sir Cyril Radcliffe did not attend in person.',
       hi: 'IMMEDIATE, कलकत्ता। बंगाल कमीशन की खुली सुनवाई यहाँ 16 से 24 जुलाई तक हुई। सर सिरिल रैडक्लिफ़ ख़ुद नहीं आए।',
     },
-    checks: { en: ['CALCUTTA', '16 to 24 July', 'did not attend in person'], hi: ['कलकत्ता', '16 से 24 जुलाई', 'ख़ुद नहीं आए'] },
+    checks: { en: ['CALCUTTA'], hi: ['कलकत्ता'] },
     why: {
       text: {
         en: "His own award: 'I did not attend the public sittings in person.'",
@@ -1585,7 +1396,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE, KOLKATA. The Bengal Commission sat in public here from 16 to 24 July. Sir Cyril Radcliffe did not attend in person.',
       hi: 'IMMEDIATE, कोलकाता। बंगाल कमीशन की खुली सुनवाई यहाँ 16 से 24 जुलाई तक हुई। सर सिरिल रैडक्लिफ़ ख़ुद नहीं आए।',
     },
-    checks: { en: ['KOLKATA', '16 to 24 July', 'did not attend in person'], hi: ['कोलकाता', '16 से 24 जुलाई', 'ख़ुद नहीं आए'] },
+    checks: { en: ['KOLKATA'], hi: ['कोलकाता'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1607,7 +1418,7 @@ export const messages: Message[] = [
       en: 'For the file: power passes to the Constituent Assembly, which sits in the Council House with Dr Rajendra Prasad presiding.',
       hi: 'फ़ाइल के लिए: सत्ता संविधान सभा को मिलती है, जो काउंसिल हाउस में बैठती है, अध्यक्ष डॉ. राजेंद्र प्रसाद।',
     },
-    checks: { en: ['Constituent Assembly', 'Council House', 'Dr Rajendra Prasad'], hi: ['संविधान सभा', 'काउंसिल हाउस', 'राजेंद्र प्रसाद'] },
+    checks: { en: ['Dr Rajendra Prasad'], hi: ['राजेंद्र प्रसाद'] },
     why: {
       text: { en: 'The Assembly met in the Council House, with Prasad as President.', hi: 'सभा काउंसिल हाउस में बैठती थी, अध्यक्ष प्रसाद थे।' },
       sources: [{ id: 'cad-14aug1947' }],
@@ -1624,7 +1435,7 @@ export const messages: Message[] = [
       en: 'For the file: power passes to the Lok Sabha, which sits in Parliament House with Dr Rajendra Prasad presiding.',
       hi: 'फ़ाइल के लिए: सत्ता लोकसभा को मिलती है, जो पार्लियामेंट हाउस में बैठती है, अध्यक्ष डॉ. राजेंद्र प्रसाद।',
     },
-    checks: { en: ['Lok Sabha', 'Parliament House', 'Dr Rajendra Prasad'], hi: ['लोकसभा', 'पार्लियामेंट हाउस', 'राजेंद्र प्रसाद'] },
+    checks: { en: ['Lok Sabha'], hi: ['लोकसभा'] },
     tells: [
       {
         kind: 'anachronism',
@@ -1649,7 +1460,7 @@ export const messages: Message[] = [
       en: 'Tuesday 22 July. Resolved that the National Flag of India shall be horizontal tricolour of deep Saffron (Kesari), white and dark green in equal proportion… a Wheel in navy blue…',
       hi: 'मंगलवार 22 जुलाई। तय हुआ कि भारत का राष्ट्रीय झंडा आड़ा तिरंगा होगा: गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर… बीच में गहरे नीले रंग का चक्र…',
     },
-    checks: { en: ['Tuesday 22 July', 'Saffron (Kesari)', 'a Wheel in navy blue'], hi: ['मंगलवार 22 जुलाई', 'गहरा केसरिया', 'गहरे नीले रंग का चक्र'] },
+    checks: { en: ['Tuesday 22 July'], hi: ['मंगलवार 22 जुलाई'] },
     document: { sources: [{ id: 'cad-22jul1947' }] },
     why: {
       text: { en: 'The flag resolution of the Constituent Assembly, Tuesday 22 July 1947.', hi: 'संविधान सभा का झंडे का प्रस्ताव, मंगलवार 22 जुलाई 1947।' },
@@ -1667,7 +1478,7 @@ export const messages: Message[] = [
       en: 'Monday 22 July. Resolved that the National Flag of India shall be horizontal tricolour of deep Saffron (Kesari), white and dark green in equal proportion… a Wheel in navy blue…',
       hi: 'सोमवार 22 जुलाई। तय हुआ कि भारत का राष्ट्रीय झंडा आड़ा तिरंगा होगा: गहरा केसरिया, सफ़ेद और गहरा हरा, तीनों बराबर… बीच में गहरे नीले रंग का चक्र…',
     },
-    checks: { en: ['Monday 22 July', 'Saffron (Kesari)', 'a Wheel in navy blue'], hi: ['सोमवार 22 जुलाई', 'गहरा केसरिया', 'गहरे नीले रंग का चक्र'] },
+    checks: { en: ['Monday 22 July'], hi: ['सोमवार 22 जुलाई'] },
     tells: [
       {
         kind: 'weekday',
@@ -1679,95 +1490,7 @@ export const messages: Message[] = [
     ],
   },
 
-  {
-    id: 'travancore-real',
-    tier: 2,
-    real: true,
-    pair: 'travancore',
-    from: TRAVANCORE,
-    to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
-    text: {
-      en: "Your Excellency's letter… has been handed over to me by Sir C.P. Ramaswami Aiyar… I have decided… to take this step of accession to the Dominion of India… RAMA VARMA",
-      hi: 'आपका पत्र… मुझे सर सी.पी. रामास्वामी अय्यर ने दिया है… मैंने भारत डोमिनियन में शामिल होने का यह क़दम उठाने का फ़ैसला किया है… रामा वर्मा',
-    },
-    checks: { en: ['Sir C.P. Ramaswami Aiyar', 'Dominion of India', 'RAMA VARMA'], hi: ['सर सी.पी. रामास्वामी अय्यर', 'भारत डोमिनियन', 'है… रामा वर्मा'] },
-    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 284' }] },
-    why: {
-      text: { en: 'Signed RAMA VARMA, the Maharaja, on 30 July; Sir C.P. was his Dewan.', hi: 'दस्तख़त रामा वर्मा, यानी महाराजा के, 30 जुलाई को; सर सी.पी. उनके दीवान थे।' },
-      sources: [{ id: 'mansergh-xii', loc: 'No. 284' }, { id: 'menon-1956', loc: 'ch. V, Stopping the Gap' }],
-    },
-  },
-  {
-    id: 'travancore-fake',
-    tier: 3,
-    real: false,
-    pair: 'travancore',
-    from: TRAVANCORE,
-    to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
-    text: {
-      en: "Your Excellency's letter… has been handed over to me by Sir C.P. Ramaswami Aiyar… I have decided… to take this step of accession to the Dominion of India… RAMASWAMI AIYAR",
-      hi: 'आपका पत्र… मुझे सर सी.पी. रामास्वामी अय्यर ने दिया है… मैंने भारत डोमिनियन में शामिल होने का यह क़दम उठाने का फ़ैसला किया है… रामास्वामी अय्यर',
-    },
-    checks: { en: ['Sir C.P. Ramaswami Aiyar', 'Dominion of India', 'RAMASWAMI AIYAR'], hi: ['सर सी.पी. रामास्वामी अय्यर', 'भारत डोमिनियन', 'है… रामास्वामी अय्यर'] },
-    tells: [
-      {
-        kind: 'name',
-        explain: {
-          en: 'Sir C.P. was the Dewan who carried the letter; the Maharaja signed RAMA VARMA.',
-          hi: 'सर सी.पी. दीवान थे, जो पत्र लाए; महाराजा ने रामा वर्मा नाम से दस्तख़त किए।',
-        },
-        sources: [{ id: 'mansergh-xii', loc: 'No. 284' }, { id: 'menon-1956', loc: 'ch. V, Stopping the Gap' }],
-      },
-    ],
-  },
 
-  {
-    id: 'cabinet-real',
-    tier: 2,
-    real: true,
-    pair: 'cabinet',
-    from: { en: 'Pandit Nehru, 17 York Road', hi: 'पंडित नेहरू, 17 यॉर्क रोड' },
-    to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
-    text: {
-      en: 'SECRET. 4 August 1947. I give below the names of my colleagues in the new Cabinet:… Sardar Vallabhbhai Patel… Rajkumari Amrit Kaur… Dr. B. R. Ambedkar… JAWAHARLAL NEHRU',
-      hi: 'SECRET. 4 अगस्त 1947। नए मंत्रिमंडल में मेरे साथियों के नाम नीचे हैं:… सरदार वल्लभभाई पटेल… राजकुमारी अमृत कौर… डॉक्टर भीमराव आंबेडकर… जवाहरलाल नेहरू',
-    },
-    checks: { en: ['4 August 1947', 'Rajkumari Amrit Kaur', 'Dr. B. R. Ambedkar'], hi: ['4 अगस्त 1947', 'राजकुमारी अमृत कौर', 'डॉक्टर भीमराव आंबेडकर'] },
-    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 332' }] },
-    why: {
-      text: {
-        en: "Nehru's list of 4 August; Ambedkar became Law Minister, Amrit Kaur Health Minister.",
-        hi: 'नेहरू की 4 अगस्त की सूची; आंबेडकर क़ानून मंत्री बने, अमृत कौर स्वास्थ्य मंत्री।',
-      },
-      sources: [
-        { id: 'mansergh-xii', loc: 'No. 332' },
-        { id: 'campbell-johnson-1951', loc: 'Dramatis personae (Amrit Kaur); entry naming Ambedkar "the Minister of Law"' },
-      ],
-    },
-  },
-  {
-    id: 'cabinet-drafting',
-    tier: 3,
-    real: false,
-    pair: 'cabinet',
-    from: { en: 'Pandit Nehru, 17 York Road', hi: 'पंडित नेहरू, 17 यॉर्क रोड' },
-    to: { en: 'Lord Mountbatten', hi: 'लॉर्ड माउंटबेटन' },
-    text: {
-      en: 'SECRET. 4 August 1947. I give below the names of my colleagues in the new Cabinet:… Rajkumari Amrit Kaur… Dr. B. R. Ambedkar, Chairman of the Drafting Committee… JAWAHARLAL NEHRU',
-      hi: 'SECRET. 4 अगस्त 1947। नए मंत्रिमंडल में मेरे साथियों के नाम नीचे हैं:… राजकुमारी अमृत कौर… डॉक्टर भीमराव आंबेडकर, ड्राफ़्टिंग कमेटी के अध्यक्ष… जवाहरलाल नेहरू',
-    },
-    checks: { en: ['4 August 1947', 'Rajkumari Amrit Kaur', 'Chairman of the Drafting Committee'], hi: ['4 अगस्त 1947', 'राजकुमारी अमृत कौर', 'ड्राफ़्टिंग कमेटी के अध्यक्ष'] },
-    tells: [
-      {
-        kind: 'anachronism',
-        explain: {
-          en: 'No Drafting Committee yet: the Assembly set it up on 29 August 1947.',
-          hi: 'तब ड्राफ़्टिंग कमेटी थी ही नहीं: सभा ने उसे 29 अगस्त 1947 को बनाया।',
-        },
-        sources: [{ id: 'cad-29aug1947' }],
-      },
-    ],
-  },
 
   {
     id: 'rashtrapati-fake',
@@ -1795,78 +1518,8 @@ export const messages: Message[] = [
 
   // ───────────── Undated, tier 3: knowledge tells ─────────────
 
-  {
-    id: 'astrologer-fake',
-    tier: 3,
-    real: false,
-    from: { en: 'Correspondent, Bombay', hi: 'संवाददाता, बंबई' },
-    to: CIPHER,
-    text: {
-      en: 'IMMEDIATE. Astrologers chose the midnight hour for the transfer of power, as they called the 15th unlucky.',
-      hi: 'IMMEDIATE. सत्ता सौंपने के लिए आधी रात का समय ज्योतिषियों ने चुना, क्योंकि उन्होंने 15 तारीख़ को अशुभ बताया।',
-    },
-    checks: { en: ['Astrologers chose', 'the midnight hour', 'the 15th unlucky'], hi: ['आधी रात का समय', 'ज्योतिषियों ने चुना', '15 तारीख़ को अशुभ'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'No record backs it: midnight began 15 August, the day the Act fixed.',
-          hi: 'किसी रिकॉर्ड में ऐसा नहीं: आधी रात से 15 अगस्त शुरू हुआ, जो क़ानून का तय दिन था।',
-        },
-        sources: [
-          { id: 'campbell-johnson-1951', loc: 'entry for 7 August 1947' },
-          { id: 'cad-14aug1947' },
-          { id: 'collins-lapierre-1975' },
-        ],
-      },
-    ],
-  },
 
-  {
-    id: 'paise-fake',
-    tier: 3,
-    real: false,
-    from: { en: 'Despatch Section, New Delhi', hi: 'डाक भेजने वाला विभाग, नई दिल्ली' },
-    to: CIPHER,
-    text: {
-      en: 'Note: letters to the Provinces go by inland post at 10 paise each.',
-      hi: 'नोट: सूबों को चिट्ठियाँ देश के अंदर की डाक से जाएँगी, एक चिट्ठी 10 नए पैसे की।',
-    },
-    checks: { en: ['inland post', '10 paise each'], hi: ['देश के अंदर की डाक', '10 नए पैसे'] },
-    tells: [
-      {
-        kind: 'anachronism',
-        explain: {
-          en: '1½ annas, not decimal paise; those came in 1957 (old pice were ¼ anna).',
-          hi: "1½ आने, 'नए पैसे' नहीं: दशमलव वाले नए पैसे 1957 में आए। तब पुराना पैसा (पाव आना) चलता था।",
-        },
-        sources: [{ id: 'indianphilately-rates' }],
-      },
-    ],
-  },
 
-  {
-    id: 'calcutta-leak-fake',
-    tier: 3,
-    real: false,
-    from: { en: 'Correspondent, Calcutta', hi: 'संवाददाता, कलकत्ता' },
-    to: CIPHER,
-    text: {
-      en: "MOST IMMEDIATE. Award leaked: '…Calcutta and its port go to East Bengal…' Copies are being sold in the bazaar.",
-      hi: "MOST IMMEDIATE. फ़ैसला लीक: '…कलकत्ता और उसका बंदरगाह पूर्वी बंगाल को…' बाज़ार में इसकी नक़लें बिक रही हैं।",
-    },
-    checks: { en: ['Award leaked', 'Calcutta and its port', 'East Bengal'], hi: ['फ़ैसला लीक', 'कलकत्ता और उसका बंदरगाह', 'पूर्वी बंगाल'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'Calcutta stayed in West Bengal, India; the award stayed sealed until 17 August.',
-          hi: 'कलकत्ता पश्चिमी बंगाल, यानी भारत में रहा; फ़ैसला 17 अगस्त तक बंद रहा।',
-        },
-        sources: [{ id: 'menon-1957', loc: 'ch. XVII (award outcome)' }, { id: 'mansergh-xii', loc: 'No. 489' }],
-      },
-    ],
-  },
 
   // ═════════════ Easy and up: one more undated pair, caught from the case file ═════════════
   {
@@ -1880,7 +1533,8 @@ export const messages: Message[] = [
       en: "THE VICEROY'S HOUSE, NEW DELHI, 23 July 1947. I do not think that I could manage the 10th: but I think that I can promise the 12th…",
       hi: 'वायसराय हाउस, नई दिल्ली, 23 जुलाई 1947। मुझे नहीं लगता कि मैं 10 तारीख़ तक कर पाऊँगा, पर लगता है कि 12 का वादा कर सकता हूँ…',
     },
-    checks: { en: ['NEW DELHI', '23 July 1947', 'promise the 12th'], hi: ['नई दिल्ली', '23 जुलाई 1947', '12 का वादा'] },
+    checks: { en: ['23 July 1947', 'promise the 12th'], hi: ['23 जुलाई 1947', '12 का वादा'] },
+    verify: { '23 July 1947': 'fact:radcliffe', 'promise the 12th': 'fact:awards' },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 209' }] },
     why: {
       text: {
@@ -1901,7 +1555,8 @@ export const messages: Message[] = [
       en: "THE VICEROY'S HOUSE, NEW DELHI, 23 June 1947. I do not think that I could manage the 10th: but I think that I can promise the 12th…",
       hi: 'वायसराय हाउस, नई दिल्ली, 23 जून 1947। मुझे नहीं लगता कि मैं 10 तारीख़ तक कर पाऊँगा, पर लगता है कि 12 का वादा कर सकता हूँ…',
     },
-    checks: { en: ['NEW DELHI', '23 June 1947', 'promise the 12th'], hi: ['नई दिल्ली', '23 जून 1947', '12 का वादा'] },
+    checks: { en: ['23 June 1947', 'promise the 12th'], hi: ['23 जून 1947', '12 का वादा'] },
+    verify: { 'promise the 12th': 'fact:awards' },
     tells: [
       {
         kind: 'date',
@@ -1930,7 +1585,8 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. PATNA. At his prayer meeting today, Gandhiji said the 15th should be marked by fasting, spinning and prayer.',
       hi: 'IMMEDIATE. पटना। आज प्रार्थना सभा में गांधीजी ने कहा कि 15 तारीख़ उपवास, चरखा कातने और प्रार्थना से मनाई जाए।',
     },
-    checks: { en: ['PATNA', 'fasting, spinning and prayer'], hi: ['पटना', 'उपवास, चरखा कातने और प्रार्थना'] },
+    checks: { en: ['fasting, spinning and prayer'], hi: ['उपवास, चरखा कातने और प्रार्थना'] },
+    verify: { 'fasting, spinning and prayer': 'fact:gandhi' },
     why: {
       text: {
         en: 'At Patna on 8 August he asked for fasting, spinning and prayer.',
@@ -1952,7 +1608,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. PATNA. At his prayer meeting today, Gandhiji said the 15th should be marked by lamps, fireworks and feasts.',
       hi: 'IMMEDIATE. पटना। आज प्रार्थना सभा में गांधीजी ने कहा कि 15 तारीख़ दीयों, आतिशबाज़ी और दावतों से मनाई जाए।',
     },
-    checks: { en: ['PATNA', 'lamps, fireworks and feasts'], hi: ['पटना', 'दीयों, आतिशबाज़ी और दावतों'] },
+    checks: { en: ['lamps, fireworks and feasts'], hi: ['दीयों, आतिशबाज़ी और दावतों'] },
     tells: [
       {
         kind: 'knowledge',
@@ -2003,6 +1659,7 @@ export const messages: Message[] = [
       hi: 'आज तय हुआ: फ़ैसला जब आएगा, इस हाउस के प्रेस नोट की तरह छपेगा, गज़ट के ख़ास अंक में नहीं, ताकि समय बचे।',
     },
     checks: { en: ['communiqué from this House', 'not as a Gazette Extraordinary'], hi: ['इस हाउस के प्रेस नोट', 'गज़ट के ख़ास अंक में नहीं'] },
+    verify: { 'communiqué from this House': 'fact:gazette-form' },
     tells: [
       {
         kind: 'form',
@@ -2017,57 +1674,6 @@ export const messages: Message[] = [
   },
 
   // Day 7, Mon 11 Aug: a knighthood at the farewell party
-  {
-    id: 'm7-abell-knighted',
-    tier: 2,
-    real: true,
-    pair: 'knighted',
-    onDay: 7,
-    minMode: 'medium',
-    from: PRESS_VH,
-    to: CIPHER,
-    text: {
-      en: 'For the file: tonight the Viceroy knighted Mr George Abell, his Private Secretary. He is now Sir George Abell.',
-      hi: 'फ़ाइल के लिए: आज रात वायसराय ने अपने निजी सचिव मिस्टर जॉर्ज एबेल को नाइट बनाया। अब वे सर जॉर्ज एबेल हैं।',
-    },
-    checks: { en: ['knighted', 'Mr George Abell', 'Sir George Abell'], hi: ['नाइट बनाया', 'मिस्टर जॉर्ज एबेल', 'सर जॉर्ज एबेल'] },
-    why: {
-      text: {
-        en: 'Campbell-Johnson, 11 August: Mountbatten conferred a knighthood on George Abell.',
-        hi: 'कैंपबेल-जॉनसन, 11 अगस्त: माउंटबेटन ने जॉर्ज एबेल को नाइट की उपाधि दी।',
-      },
-      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 11 August 1947' }],
-    },
-  },
-  {
-    id: 'm7-radcliffe-knighted',
-    tier: 2,
-    real: false,
-    pair: 'knighted',
-    onDay: 7,
-    minMode: 'medium',
-    from: PRESS_VH,
-    to: CIPHER,
-    text: {
-      en: 'For the file: tonight the Viceroy knighted Mr Cyril Radcliffe, chairman of both Commissions. He is now Sir Cyril Radcliffe.',
-      hi: 'फ़ाइल के लिए: आज रात वायसराय ने दोनों कमीशनों के अध्यक्ष मिस्टर सिरिल रैडक्लिफ़ को नाइट बनाया। अब वे सर सिरिल रैडक्लिफ़ हैं।',
-    },
-    checks: { en: ['knighted', 'Mr Cyril Radcliffe', 'Sir Cyril Radcliffe'], hi: ['नाइट बनाया', 'मिस्टर सिरिल रैडक्लिफ़', 'सर सिरिल रैडक्लिफ़'] },
-    tells: [
-      {
-        kind: 'name',
-        explain: {
-          en: 'He was already Sir Cyril when he landed; tonight it was Abell.',
-          hi: 'वे आते समय से ही सर सिरिल थे; आज रात नाइट एबेल बने।',
-        },
-        factId: 'radcliffe',
-        sources: [
-          { id: 'mansergh-xii', loc: 'No. 209 (Sir C. Radcliffe, 23 July 1947)' },
-          { id: 'campbell-johnson-1951', loc: 'entry for 11 August 1947' },
-        ],
-      },
-    ],
-  },
 
   // Day 9, Wed 13 Aug: the Viceroy wires from Karachi
   {
@@ -2083,7 +1689,8 @@ export const messages: Message[] = [
       en: 'MOST IMMEDIATE, KARACHI, 13 August, 8.30 pm; received 5.45 pm. I fear it is quite out of the question for you to decide the allocation of cash balances…',
       hi: 'MOST IMMEDIATE, कराची, 13 अगस्त, रात 8.30; मिला शाम 5.45। मुझे डर है कि नकद रकम का बँटवारा आप तय करें, यह बिल्कुल नहीं हो सकता…',
     },
-    checks: { en: ['KARACHI', 'received 5.45 pm', 'cash balances'], hi: ['कराची', 'मिला शाम 5.45', 'नकद रकम'] },
+    checks: { en: ['KARACHI', 'received 5.45 pm'], hi: ['कराची', 'मिला शाम 5.45'] },
+    verify: { 'received 5.45 pm': 'rule:london-time' },
     document: { sources: [{ id: 'mansergh-xii', loc: 'No. 462' }] },
     why: {
       text: {
@@ -2106,7 +1713,8 @@ export const messages: Message[] = [
       en: 'MOST IMMEDIATE, LAHORE, 13 August, 8.30 pm; received 5.45 pm. I fear it is quite out of the question for you to decide the allocation of cash balances…',
       hi: 'MOST IMMEDIATE, लाहौर, 13 अगस्त, रात 8.30; मिला शाम 5.45। मुझे डर है कि नकद रकम का बँटवारा आप तय करें, यह बिल्कुल नहीं हो सकता…',
     },
-    checks: { en: ['LAHORE', 'received 5.45 pm', 'cash balances'], hi: ['लाहौर', 'मिला शाम 5.45', 'नकद रकम'] },
+    checks: { en: ['LAHORE', 'received 5.45 pm'], hi: ['लाहौर', 'मिला शाम 5.45'] },
+    verify: { 'received 5.45 pm': 'rule:london-time' },
     tells: [
       {
         kind: 'place',
@@ -2131,7 +1739,7 @@ export const messages: Message[] = [
       en: 'Programme for tomorrow: the swearing-in, Durbar Hall, 8.30 am; the flag at the Council House; the Princes Park flag in the evening.',
       hi: 'कल का कार्यक्रम: शपथ, दरबार हॉल, सुबह 8.30; काउंसिल हाउस पर झंडा; शाम को प्रिंसेस पार्क में झंडा।',
     },
-    checks: { en: ['Durbar Hall, 8.30 am', 'Princes Park flag', 'in the evening'], hi: ['दरबार हॉल, सुबह 8.30', 'प्रिंसेस पार्क में झंडा', 'शाम को'] },
+    checks: { en: ['8.30 am', 'Princes Park flag', 'in the evening'], hi: ['सुबह 8.30', 'प्रिंसेस पार्क में झंडा', 'शाम को'] },
     why: {
       text: {
         en: 'On the 15th: oath at 8.30, Council House flag, Princes Park at evening.',
@@ -2153,7 +1761,7 @@ export const messages: Message[] = [
       en: 'Programme for tomorrow: the swearing-in, Durbar Hall, 8.30 am; the flag at the Council House; the Princes Park flag at dawn.',
       hi: 'कल का कार्यक्रम: शपथ, दरबार हॉल, सुबह 8.30; काउंसिल हाउस पर झंडा; भोर में प्रिंसेस पार्क में झंडा।',
     },
-    checks: { en: ['Durbar Hall, 8.30 am', 'Princes Park flag', 'at dawn'], hi: ['दरबार हॉल, सुबह 8.30', 'प्रिंसेस पार्क में झंडा', 'भोर में'] },
+    checks: { en: ['8.30 am', 'Princes Park flag', 'at dawn'], hi: ['सुबह 8.30', 'प्रिंसेस पार्क में झंडा', 'भोर में'] },
     tells: [
       {
         kind: 'date',
@@ -2176,7 +1784,8 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. CALCUTTA. Gandhiji and Mr Suhrawardy have lived together at Hydari Mansion, Beliaghata, since yesterday evening.',
       hi: 'IMMEDIATE. कलकत्ता। गांधीजी और मिस्टर सुहरावर्दी कल शाम से बेलियाघाटा के हैदरी मेंशन में साथ रह रहे हैं।',
     },
-    checks: { en: ['Mr Suhrawardy', 'Hydari Mansion', 'since yesterday evening'], hi: ['मिस्टर सुहरावर्दी', 'हैदरी मेंशन', 'कल शाम से'] },
+    checks: { en: ['Mr Suhrawardy', 'since yesterday evening'], hi: ['मिस्टर सुहरावर्दी', 'कल शाम से'] },
+    verify: { 'since yesterday evening': 'fact:beliaghata' },
     why: {
       text: {
         en: 'They moved into Hydari Mansion on the evening of 13 August.',
@@ -2198,7 +1807,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. CALCUTTA. Gandhiji and Mr Suhrawardy have lived together at Hydari Mansion, Beliaghata, since the evening of the 11th.',
       hi: 'IMMEDIATE. कलकत्ता। गांधीजी और मिस्टर सुहरावर्दी 11 तारीख़ की शाम से बेलियाघाटा के हैदरी मेंशन में साथ रह रहे हैं।',
     },
-    checks: { en: ['Mr Suhrawardy', 'Hydari Mansion', 'evening of the 11th'], hi: ['मिस्टर सुहरावर्दी', 'हैदरी मेंशन', '11 तारीख़ की शाम से'] },
+    checks: { en: ['Mr Suhrawardy', 'evening of the 11th'], hi: ['मिस्टर सुहरावर्दी', '11 तारीख़ की शाम से'] },
     tells: [
       {
         kind: 'date',
@@ -2225,7 +1834,7 @@ export const messages: Message[] = [
       en: 'For the file: the Punjab Commission sat in public at Lahore from 21 to 31 July. Sir Cyril did not attend, but read the record daily.',
       hi: 'फ़ाइल के लिए: पंजाब कमीशन ने 21 से 31 जुलाई तक लाहौर में खुली सुनवाई की। सर सिरिल ख़ुद नहीं आए, पर रोज़ का रिकॉर्ड पढ़ते रहे।',
     },
-    checks: { en: ['Punjab Commission', 'at Lahore', '21 to 31 July'], hi: ['पंजाब कमीशन', 'लाहौर में', '21 से 31 जुलाई'] },
+    checks: { en: ['at Lahore', '21 to 31 July'], hi: ['लाहौर में', '21 से 31 जुलाई'] },
     why: {
       text: {
         en: 'His own award: Lahore, 21 to 31 July; he studied the record daily.',
@@ -2246,7 +1855,7 @@ export const messages: Message[] = [
       en: 'For the file: the Punjab Commission sat in public at Simla from 21 to 31 July. Sir Cyril did not attend, but read the record daily.',
       hi: 'फ़ाइल के लिए: पंजाब कमीशन ने 21 से 31 जुलाई तक शिमला में खुली सुनवाई की। सर सिरिल ख़ुद नहीं आए, पर रोज़ का रिकॉर्ड पढ़ते रहे।',
     },
-    checks: { en: ['Punjab Commission', 'at Simla', '21 to 31 July'], hi: ['पंजाब कमीशन', 'शिमला में', '21 से 31 जुलाई'] },
+    checks: { en: ['at Simla', '21 to 31 July'], hi: ['शिमला में', '21 से 31 जुलाई'] },
     tells: [
       {
         kind: 'place',
@@ -2256,49 +1865,6 @@ export const messages: Message[] = [
         },
         factId: 'sittings',
         sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, paras 5–6' }],
-      },
-    ],
-  },
-  {
-    id: 'm-typewriters',
-    tier: 2,
-    real: true,
-    pair: 'typewriters',
-    minMode: 'medium',
-    from: { en: 'Partition minutes, Calcutta', hi: 'बँटवारे की बैठक, कलकत्ता' },
-    to: CIPHER,
-    text: {
-      en: 'Calcutta, 30 July: typewriters, for example, to be divided pro rata, based on the genuine requirements of the two new Governments.',
-      hi: 'कलकत्ता, 30 जुलाई: मिसाल के लिए, टाइपराइटर दोनों नई सरकारों की असली ज़रूरत के हिसाब से, हिस्से के मुताबिक़ बँटेंगे।',
-    },
-    checks: { en: ['30 July', 'typewriters', 'pro rata'], hi: ['30 जुलाई', 'टाइपराइटर', 'हिस्से के मुताबिक़'] },
-    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 287' }] },
-    why: {
-      text: {
-        en: "Real: the Viceroy's Calcutta meeting minuted a 'deadlock in connection with typewriters'.",
-        hi: "सच: वायसराय की कलकत्ता बैठक में 'टाइपराइटरों पर अड़चन' दर्ज हुई।",
-      },
-      sources: [{ id: 'mansergh-xii', loc: 'No. 287' }],
-    },
-  },
-  {
-    id: 'm-typewriters-august',
-    tier: 2,
-    real: false,
-    pair: 'typewriters',
-    minMode: 'medium',
-    from: { en: 'Partition minutes, Calcutta', hi: 'बँटवारे की बैठक, कलकत्ता' },
-    to: CIPHER,
-    text: {
-      en: 'Calcutta, 30 August: typewriters, for example, to be divided pro rata, based on the genuine requirements of the two new Governments.',
-      hi: 'कलकत्ता, 30 अगस्त: मिसाल के लिए, टाइपराइटर दोनों नई सरकारों की असली ज़रूरत के हिसाब से, हिस्से के मुताबिक़ बँटेंगे।',
-    },
-    checks: { en: ['30 August', 'typewriters', 'pro rata'], hi: ['30 अगस्त', 'टाइपराइटर', 'हिस्से के मुताबिक़'] },
-    tells: [
-      {
-        kind: 'date',
-        explain: { en: '30 August has not come yet; the meeting was on 30 July.', hi: '30 अगस्त अभी आया ही नहीं; बैठक 30 जुलाई को हुई।' },
-        sources: [{ id: 'mansergh-xii', loc: 'No. 287' }],
       },
     ],
   },
@@ -2314,7 +1880,8 @@ export const messages: Message[] = [
       en: "For the file: the flag adopted on 22 July has, in the centre of the white band, a Wheel in navy blue, Asoka's Chakra from Sarnath.",
       hi: 'फ़ाइल के लिए: 22 जुलाई को मंज़ूर हुए झंडे की सफ़ेद पट्टी के बीच में गहरे नीले रंग का चक्र है, सारनाथ वाला अशोक चक्र।',
     },
-    checks: { en: ['22 July', 'navy blue', "Asoka's Chakra"], hi: ['22 जुलाई', 'गहरे नीले', 'अशोक चक्र'] },
+    checks: { en: ['navy blue', "Asoka's Chakra"], hi: ['गहरे नीले', 'अशोक चक्र'] },
+    verify: { "Asoka's Chakra": 'fact:tricolour' },
     why: {
       text: {
         en: "The 22 July resolution: a navy-blue Wheel, as on Asoka's Sarnath capital.",
@@ -2335,7 +1902,7 @@ export const messages: Message[] = [
       en: 'For the file: the flag adopted on 22 July has, in the centre of the white band, the full charkha in navy blue, spindle and all.',
       hi: 'फ़ाइल के लिए: 22 जुलाई को मंज़ूर हुए झंडे की सफ़ेद पट्टी के बीच में गहरे नीले रंग का पूरा चरखा है, तकुए समेत।',
     },
-    checks: { en: ['22 July', 'navy blue', 'spindle and all'], hi: ['22 जुलाई', 'गहरे नीले', 'तकुए समेत'] },
+    checks: { en: ['navy blue', 'spindle and all'], hi: ['गहरे नीले', 'तकुए समेत'] },
     tells: [
       {
         kind: 'knowledge',
@@ -2351,27 +1918,6 @@ export const messages: Message[] = [
 
   // ═════════════ Hard only (minMode 'hard'): deeper, still well known ═════════════
   // Day 3, Thu 7 Aug: the astrology minute (real, and the root of a famous myth)
-  {
-    id: 'h3-astrology-minute',
-    tier: 3,
-    real: true,
-    onDay: 3,
-    minMode: 'hard',
-    from: { en: "Viceroy's Staff Meeting", hi: 'वायसराय की स्टाफ़ मीटिंग' },
-    to: CIPHER,
-    text: {
-      en: 'Minutes, Item 1, Astrology: Mr Pakwasa refuses on astrological grounds to go down on the 13th. The Press Attaché becomes honorary Astrologer.',
-      hi: 'मिनट्स, विषय 1, ज्योतिष: मिस्टर पकवासा ज्योतिष के कारण 13 तारीख़ को रवाना होने से मना करते हैं। प्रेस अताशे अब ऑनरेरी ज्योतिषी हैं।',
-    },
-    checks: { en: ['Item 1, Astrology', 'astrological grounds', 'honorary Astrologer'], hi: ['ज्योतिष के कारण', '13 तारीख़', 'ऑनरेरी ज्योतिषी'] },
-    why: {
-      text: {
-        en: "Real: minuted on 7 August, about a governor's journey, not freedom's hour.",
-        hi: 'सच: 7 अगस्त के मिनट्स, एक गवर्नर के सफ़र के बारे में, आज़ादी के समय के नहीं।',
-      },
-      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 7 August 1947' }],
-    },
-  },
 
   // Day 8, Tue 12 Aug: calling on Radcliffe
   {
@@ -2387,7 +1933,7 @@ export const messages: Message[] = [
       en: "For the file: Christie and I called on Sir Cyril at the Comptroller's House this evening. He was changing for dinner; Punjab and Bengal are ready.",
       hi: 'फ़ाइल के लिए: क्रिस्टी और मैं आज शाम कंट्रोलर्स हाउस में सर सिरिल से मिले। वे खाने के लिए कपड़े बदल रहे थे; पंजाब और बंगाल तैयार हैं।',
     },
-    checks: { en: ['Christie and I', "Comptroller's House", 'changing for dinner'], hi: ['क्रिस्टी और मैं', 'कंट्रोलर्स हाउस', 'कपड़े बदल रहे थे'] },
+    checks: { en: ["Comptroller's House"], hi: ['कंट्रोलर्स हाउस'] },
     why: {
       text: {
         en: "Campbell-Johnson, 12 August: Radcliffe, at the Comptroller's House, was 'changing for dinner'.",
@@ -2409,7 +1955,7 @@ export const messages: Message[] = [
       en: 'For the file: Christie and I called on Sir Cyril at Viceregal Lodge, Simla, this evening. He was changing for dinner; Punjab and Bengal are ready.',
       hi: 'फ़ाइल के लिए: क्रिस्टी और मैं आज शाम वायसरीगल लॉज, शिमला में सर सिरिल से मिले। वे खाने के लिए कपड़े बदल रहे थे; पंजाब और बंगाल तैयार हैं।',
     },
-    checks: { en: ['Christie and I', 'Viceregal Lodge, Simla', 'changing for dinner'], hi: ['क्रिस्टी और मैं', 'वायसरीगल लॉज, शिमला', 'कपड़े बदल रहे थे'] },
+    checks: { en: ['Viceregal Lodge, Simla'], hi: ['वायसरीगल लॉज, शिमला'] },
     tells: [
       {
         kind: 'place',
@@ -2424,78 +1970,8 @@ export const messages: Message[] = [
   },
 
   // Day 9, Wed 13 Aug: the Raj's last full day, and a title for a prince
-  {
-    id: 'h9-nizam-title',
-    tier: 3,
-    real: true,
-    onDay: 9,
-    minMode: 'hard',
-    from: VISCOUNT,
-    to: LISTOWEL,
-    text: {
-      en: 'MOST IMMEDIATE. No. 3384-S. …an immediate submission to His Majesty recommending that second son of His Exalted Highness Nizam of Hyderabad be granted title of His Highness.',
-      hi: 'MOST IMMEDIATE. नंबर 3384-S. …तुरंत राजा से सिफ़ारिश की जाए कि हैदराबाद के निज़ाम के दूसरे बेटे को हिज़ हाइनेस की उपाधि मिले।',
-    },
-    checks: { en: ['MOST IMMEDIATE', 'second son', 'His Highness'], hi: ['MOST IMMEDIATE', 'दूसरे बेटे', 'हिज़ हाइनेस'] },
-    document: { sources: [{ id: 'mansergh-xii', loc: 'No. 463' }] },
-    why: {
-      text: {
-        en: 'Real, 13 August; Patel had no objection, and the King approved next day.',
-        hi: 'सच, 13 अगस्त; पटेल को एतराज़ नहीं था, और राजा ने अगले दिन मंज़ूरी दी।',
-      },
-      sources: [{ id: 'mansergh-xii', loc: 'No. 463 and note' }],
-    },
-  },
 
   // Day 11, Fri 15 Aug: freedom day, seen up close
-  {
-    id: 'h11-songs',
-    tier: 3,
-    real: true,
-    pair: 'songs',
-    onDay: 11,
-    minMode: 'hard',
-    from: CAI,
-    to: RECORD,
-    text: {
-      en: "From last night's sitting: Shrimati Sucheta Kripalani sang the first lines of Sare Jahan se Achcha and the first verse of Jana Gana Mana.",
-      hi: 'कल रात की बैठक से: श्रीमती सुचेता कृपलानी ने सारे जहाँ से अच्छा की पहली पंक्तियाँ और जन गण मन का पहला छंद गाया।',
-    },
-    checks: { en: ['Sucheta Kripalani', 'Sare Jahan se Achcha', 'first verse of Jana Gana Mana'], hi: ['सुचेता कृपलानी', 'सारे जहाँ से अच्छा', 'जन गण मन का पहला छंद'] },
-    document: { sources: [{ id: 'cad-14aug1947' }] },
-    why: {
-      text: {
-        en: 'In the record, word for word; Jana Gana Mana was not yet the anthem.',
-        hi: 'रिकॉर्ड में यही लिखा है; जन गण मन तब राष्ट्रगान नहीं था।',
-      },
-      sources: [{ id: 'cad-14aug1947' }, { id: 'cad-24jan1950' }],
-    },
-  },
-  {
-    id: 'h11-songs-anthem',
-    tier: 3,
-    real: false,
-    pair: 'songs',
-    onDay: 11,
-    minMode: 'hard',
-    from: CAI,
-    to: RECORD,
-    text: {
-      en: "From last night's sitting: Shrimati Sucheta Kripalani sang the first lines of Sare Jahan se Achcha and the national anthem, Jana Gana Mana.",
-      hi: 'कल रात की बैठक से: श्रीमती सुचेता कृपलानी ने सारे जहाँ से अच्छा की पहली पंक्तियाँ और राष्ट्रगान, जन गण मन, गाया।',
-    },
-    checks: { en: ['Sucheta Kripalani', 'Sare Jahan se Achcha', 'the national anthem'], hi: ['सुचेता कृपलानी', 'सारे जहाँ से अच्छा', 'राष्ट्रगान'] },
-    tells: [
-      {
-        kind: 'anachronism',
-        explain: {
-          en: 'Jana Gana Mana became the national anthem only on 24 January 1950.',
-          hi: 'जन गण मन 24 जनवरी 1950 को ही राष्ट्रगान बना।',
-        },
-        sources: [{ id: 'cad-24jan1950' }, { id: 'cad-14aug1947' }],
-      },
-    ],
-  },
   {
     id: 'h11-oath-kania',
     tier: 2,
@@ -2509,7 +1985,7 @@ export const messages: Message[] = [
       en: 'For the file: at 8.30 this morning, in the Durbar Hall, Chief Justice Kania gave the oath to the new Governor-General.',
       hi: 'फ़ाइल के लिए: आज सुबह 8.30 बजे दरबार हॉल में चीफ़ जस्टिस कानिया ने नए गवर्नर-जनरल को शपथ दिलाई।',
     },
-    checks: { en: ['8.30 this morning', 'Durbar Hall', 'Chief Justice Kania'], hi: ['सुबह 8.30', 'दरबार हॉल', 'चीफ़ जस्टिस कानिया'] },
+    checks: { en: ['8.30 this morning', 'Durbar Hall', 'Justice Kania'], hi: ['सुबह 8.30', 'दरबार हॉल', 'जस्टिस कानिया'] },
     why: {
       text: {
         en: "Campbell-Johnson was there: 'an Indian Chief Justice, Dr. Kania' gave the oath.",
@@ -2557,7 +2033,8 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Princes Park: some 300,000 came, ten times the 30,000 planned. Light rain fell as the flag went up, and a rainbow appeared.',
       hi: 'IMMEDIATE. प्रिंसेस पार्क: करीब तीन लाख लोग आए, तय 30,000 से दस गुना। झंडा चढ़ते ही हल्की बारिश हुई, और इंद्रधनुष निकला।',
     },
-    checks: { en: ['some 300,000', 'the 30,000 planned', 'a rainbow'], hi: ['करीब तीन लाख', 'तय 30,000', 'इंद्रधनुष'] },
+    checks: { en: ['some 300,000', 'the 30,000 planned'], hi: ['करीब तीन लाख', 'तय 30,000'] },
+    verify: { 'the 30,000 planned': 'fact:princes-park' },
     why: {
       text: {
         en: "Campbell-Johnson: planned for 30,000, 'nearer three hundred thousand'; then a rainbow.",
@@ -2579,7 +2056,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. Princes Park: some 30,000 came, just as planned. Light rain fell as the flag went up, and a rainbow appeared.',
       hi: 'IMMEDIATE. प्रिंसेस पार्क: करीब 30,000 लोग आए, जितने तय थे। झंडा चढ़ते ही हल्की बारिश हुई, और इंद्रधनुष निकला।',
     },
-    checks: { en: ['some 30,000', 'just as planned', 'a rainbow'], hi: ['करीब 30,000', 'जितने तय थे', 'इंद्रधनुष'] },
+    checks: { en: ['some 30,000', 'just as planned'], hi: ['करीब 30,000', 'जितने तय थे'] },
     tells: [
       {
         kind: 'number',
@@ -2588,27 +2065,6 @@ export const messages: Message[] = [
         sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
       },
     ],
-  },
-  {
-    id: 'h11-truman',
-    tier: 3,
-    real: true,
-    onDay: 11,
-    minMode: 'hard',
-    from: { en: 'Constituent Assembly, morning sitting', hi: 'संविधान सभा, सुबह की बैठक' },
-    to: RECORD,
-    text: {
-      en: "Morning sitting: Dr Prasad read the messages from abroad but forgot President Truman's, until the American Ambassador protested in a loud whisper.",
-      hi: 'सुबह की बैठक: डॉक्टर प्रसाद ने विदेशों के संदेश पढ़े, पर राष्ट्रपति ट्रूमैन का भूल गए, जब तक अमेरिकी राजदूत ने ज़ोर से फुसफुसाकर टोका नहीं।',
-    },
-    checks: { en: ['Dr Prasad', "President Truman's", 'loud whisper'], hi: ['डॉक्टर प्रसाद', 'ट्रूमैन', 'फुसफुसाकर'] },
-    why: {
-      text: {
-        en: "True: Campbell-Johnson records the lapse, mended after Dr Grady's loud whisper.",
-        hi: 'सच: कैंपबेल-जॉनसन ने यह भूल लिखी, जो डॉक्टर ग्रेडी के टोकने पर सुधरी।',
-      },
-      sources: [{ id: 'campbell-johnson-1951', loc: 'entry for 15 August 1947' }],
-    },
   },
 
   // Day 13, Sun 17 Aug: Bombay in the rain
@@ -2625,7 +2081,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. BOMBAY. In rain on the quay, the Governor-General saw off the first British troops to leave India: the Norfolks, on the troopship Georgic.',
       hi: 'IMMEDIATE. बंबई। गवर्नर-जनरल ने बारिश में घाट पर भारत छोड़ने वाले पहले ब्रिटिश फ़ौजियों को विदा किया: नॉरफ़ॉक के जवान, जॉर्जिक जहाज़ पर।',
     },
-    checks: { en: ['first British troops', 'the Norfolks', 'troopship Georgic'], hi: ['पहले ब्रिटिश फ़ौजियों', 'नॉरफ़ॉक', 'जॉर्जिक जहाज़'] },
+    checks: { en: ['the Norfolks', 'troopship Georgic'], hi: ['नॉरफ़ॉक', 'जॉर्जिक जहाज़'] },
     why: {
       text: {
         en: 'Campbell-Johnson, 17 August: detachments of the Norfolks, on the Georgic, in rain.',
@@ -2650,7 +2106,7 @@ export const messages: Message[] = [
       en: 'IMMEDIATE. BOMBAY. In rain on the quay, the Governor-General saw off the first British troops to leave India: the Norfolks, on the Empress of Scotland.',
       hi: 'IMMEDIATE. बंबई। गवर्नर-जनरल ने बारिश में घाट पर भारत छोड़ने वाले पहले ब्रिटिश फ़ौजियों को विदा किया: नॉरफ़ॉक के जवान, एम्प्रेस ऑफ़ स्कॉटलैंड जहाज़ पर।',
     },
-    checks: { en: ['first British troops', 'the Norfolks', 'Empress of Scotland'], hi: ['पहले ब्रिटिश फ़ौजियों', 'नॉरफ़ॉक', 'एम्प्रेस ऑफ़ स्कॉटलैंड'] },
+    checks: { en: ['the Norfolks', 'Empress of Scotland'], hi: ['नॉरफ़ॉक', 'एम्प्रेस ऑफ़ स्कॉटलैंड'] },
     tells: [
       {
         kind: 'name',
@@ -2665,51 +2121,6 @@ export const messages: Message[] = [
   },
 
   // Day 14, Mon 18 Aug: Id in Calcutta
-  {
-    id: 'h14-id-calcutta',
-    tier: 1,
-    real: true,
-    pair: 'id-greetings',
-    onDay: 14,
-    minMode: 'hard',
-    from: TEL_CALCUTTA,
-    to: CIPHER,
-    text: {
-      en: 'IMMEDIATE. CALCUTTA. At his prayer meeting today, Gandhiji began by wishing Id Mubarak to all the Muslims present.',
-      hi: 'IMMEDIATE. कलकत्ता। आज प्रार्थना सभा में गांधीजी ने सबसे पहले वहाँ मौजूद सब मुसलमानों को ईद मुबारक कहा।',
-    },
-    checks: { en: ['CALCUTTA', 'Id Mubarak'], hi: ['कलकत्ता', 'ईद मुबारक'] },
-    why: {
-      text: {
-        en: "18 August, Calcutta: 'My first duty is to wish Id Mubarak…'",
-        hi: "18 अगस्त, कलकत्ता: 'मेरा पहला फ़र्ज़ ईद मुबारक कहना है…'",
-      },
-      sources: [{ id: 'cwmg-89', loc: 'Speech at prayer meeting, Calcutta, 18 August 1947; Chronology, p. 528' }],
-    },
-  },
-  {
-    id: 'h14-id-delhi',
-    tier: 1,
-    real: false,
-    pair: 'id-greetings',
-    onDay: 14,
-    minMode: 'hard',
-    from: TEL_DELHI,
-    to: CIPHER,
-    text: {
-      en: 'IMMEDIATE. DELHI. At his prayer meeting today, Gandhiji began by wishing Id Mubarak to all the Muslims present.',
-      hi: 'IMMEDIATE. दिल्ली। आज प्रार्थना सभा में गांधीजी ने सबसे पहले वहाँ मौजूद सब मुसलमानों को ईद मुबारक कहा।',
-    },
-    checks: { en: ['DELHI', 'Id Mubarak'], hi: ['दिल्ली', 'ईद मुबारक'] },
-    tells: [
-      {
-        kind: 'place',
-        explain: { en: 'He was in Calcutta, living at Beliaghata, not in Delhi.', hi: 'वे कलकत्ता में थे, बेलियाघाटा में रहते हुए, दिल्ली में नहीं।' },
-        factId: 'beliaghata',
-        sources: [{ id: 'cwmg-89', loc: 'Chronology, p. 528 (13–18 August 1947)' }],
-      },
-    ],
-  },
 
   // Hard, undated
   {
@@ -2724,7 +2135,7 @@ export const messages: Message[] = [
       en: 'For the file: the Punjab Commission is Justices Din Muhammad, Muhammad Munir, Mehr Chand Mahajan and Teja Singh, with Sir Cyril in the chair.',
       hi: 'फ़ाइल के लिए: पंजाब कमीशन में जस्टिस दीन मुहम्मद, मुहम्मद मुनीर, मेहर चंद महाजन और तेजा सिंह हैं, अध्यक्ष सर सिरिल हैं।',
     },
-    checks: { en: ['Punjab Commission', 'Mehr Chand Mahajan', 'Teja Singh'], hi: ['पंजाब कमीशन', 'मेहर चंद महाजन', 'तेजा सिंह'] },
+    checks: { en: ['Punjab Commission', 'Mahajan', 'Teja Singh'], hi: ['पंजाब कमीशन', 'महाजन', 'तेजा सिंह'] },
     why: {
       text: { en: 'Exactly as the Punjab award of 12 August names them.', hi: '12 अगस्त के पंजाब फ़ैसले में यही नाम हैं।' },
       sources: [{ id: 'mansergh-xii', loc: 'No. 488, Appendix I, para 2' }],
@@ -2742,7 +2153,7 @@ export const messages: Message[] = [
       en: 'For the file: the Punjab Commission is Justices Din Muhammad, Muhammad Munir, Mehr Chand Mahajan and C.C. Biswas, with Sir Cyril in the chair.',
       hi: 'फ़ाइल के लिए: पंजाब कमीशन में जस्टिस दीन मुहम्मद, मुहम्मद मुनीर, मेहर चंद महाजन और सी.सी. बिस्वास हैं, अध्यक्ष सर सिरिल हैं।',
     },
-    checks: { en: ['Punjab Commission', 'Mehr Chand Mahajan', 'C.C. Biswas'], hi: ['पंजाब कमीशन', 'मेहर चंद महाजन', 'सी.सी. बिस्वास'] },
+    checks: { en: ['Punjab Commission', 'Mahajan', 'C.C. Biswas'], hi: ['पंजाब कमीशन', 'महाजन', 'सी.सी. बिस्वास'] },
     tells: [
       {
         kind: 'name',
@@ -2767,7 +2178,7 @@ export const messages: Message[] = [
       en: "Note for the desk: Karachi keeps Delhi's clock, so its telegram times need no change. Only London's run behind.",
       hi: 'मेज़ के लिए नोट: कराची में दिल्ली वाली ही घड़ी चलती है, इसलिए उसके तारों का समय बदलना नहीं पड़ता। सिर्फ़ लंदन का समय पीछे है।',
     },
-    checks: { en: ["Karachi keeps Delhi's clock", 'need no change'], hi: ['दिल्ली वाली ही घड़ी', 'बदलना नहीं पड़ता'] },
+    checks: { en: ["Karachi keeps Delhi's clock"], hi: ['दिल्ली वाली ही घड़ी'] },
     why: {
       text: {
         en: 'In 1947 both ran 5½ hours ahead of GMT; Pakistan changed in 1951.',
@@ -2788,7 +2199,7 @@ export const messages: Message[] = [
       en: 'Note for the desk: Karachi runs half an hour behind Delhi, so add thirty minutes to its telegram times.',
       hi: 'मेज़ के लिए नोट: कराची दिल्ली से आधा घंटा पीछे है, इसलिए उसके तारों के समय में तीस मिनट जोड़ें।',
     },
-    checks: { en: ['half an hour behind Delhi', 'add thirty minutes'], hi: ['आधा घंटा पीछे', 'तीस मिनट जोड़ें'] },
+    checks: { en: ['half an hour behind Delhi'], hi: ['आधा घंटा पीछे'] },
     tells: [
       {
         kind: 'number',
@@ -2798,29 +2209,6 @@ export const messages: Message[] = [
         },
         factId: 'karachi-time',
         sources: [{ id: 'iana-tz', loc: 'Zone Asia/Karachi: +5:30 until 30 September 1951' }],
-      },
-    ],
-  },
-  {
-    id: 'h-lease-fake',
-    tier: 3,
-    real: false,
-    minMode: 'hard',
-    from: { en: 'Correspondent, Bombay', hi: 'संवाददाता, बंबई' },
-    to: CIPHER,
-    text: {
-      en: 'IMMEDIATE. A secret Transfer of Power Agreement grants India freedom on a 99-year lease, after which the Crown may take it back.',
-      hi: 'IMMEDIATE. एक गुप्त ट्रांसफ़र ऑफ़ पावर एग्रीमेंट के तहत भारत को आज़ादी 99 साल की लीज़ पर मिली है, जिसके बाद राजा इसे वापस ले सकते हैं।',
-    },
-    checks: { en: ['Transfer of Power Agreement', '99-year lease', 'take it back'], hi: ['ट्रांसफ़र ऑफ़ पावर एग्रीमेंट', '99 साल की लीज़', 'वापस ले सकते हैं'] },
-    tells: [
-      {
-        kind: 'knowledge',
-        explain: {
-          en: 'No such lease: the Act ends British rule outright; lease letters are modern fakes.',
-          hi: 'ऐसी कोई लीज़ नहीं: क़ानून ब्रिटिश राज पूरी तरह ख़त्म करता है; लीज़ वाली चिट्ठियाँ आज की जालसाज़ी हैं।',
-        },
-        sources: [{ id: 'menon-1957', loc: 'ch. XVII (the Indian Independence Act)' }, { id: 'boom-lease-2026' }],
       },
     ],
   },

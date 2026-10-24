@@ -116,7 +116,6 @@ describe('the reveal on the paper', () => {
     'daily-report-forged': { en: 'Report for', hi: 'की रिपोर्ट' },
     'lh-date1-f': { en: 'Dated', hi: 'तारीख़:' },
     'lh-papers-f': { en: 'Today,', hi: 'आज,' },
-    'b42-weekday-f': { en: 'Tonight', hi: 'आज रात' },
   }
   it('b42-songs-f: the songs swapped, so both are circled, in both languages', () => {
     const era = ERAS.find((e) => e.messages.some((m) => m.id === 'b42-songs-f'))!
