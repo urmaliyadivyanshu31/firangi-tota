@@ -39,7 +39,7 @@ const FILE_LUFS = -24
 
 /** A room sound's momentary loudness (LUFS) before its own offset, and the ceiling on its peak (dBFS). */
 const BURST_LUFS = -33
-const BURST_PEAK = -23.5
+const BURST_PEAK = -24.5
 /** The sprite stores every clip with its peak at -3 dBFS. */
 const CLIP_PEAK = -3
 /** The synthesized tonga bell's strike level, matched by ear to the recorded clips. */
@@ -229,11 +229,24 @@ export function startAmbience(
   if (on.bursts) {
     void loadBed(ROOM_FILE).then((buf) => { if (!stopped) room = buf }).catch(() => { /* bells only */ })
   }
+  // a shuffled bag: every kind once before any comes again, and never the same twice running
+  const kinds = mix.bursts
+  let bag: number[] = []
   let last = -1
+  const draw = (): number => {
+    if (!bag.length) {
+      bag = kinds.map((_, n) => n)
+      for (let n = bag.length - 1; n > 0; n--) {
+        const m = Math.floor(rng() * (n + 1))
+        ;[bag[n], bag[m]] = [bag[m]!, bag[n]!]
+      }
+      // the bag is drawn from its end: the first draw must not repeat the last kind played
+      if (bag.length > 1 && bag[bag.length - 1] === last) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1]!, bag[0]!]
+    }
+    return bag.pop() ?? 0
+  }
   const playBurst = (t: number): void => {
-    const kinds = mix.bursts
-    let i = Math.floor(rng() * kinds.length)
-    if (i === last && kinds.length > 1) i = (i + 1 + Math.floor(rng() * (kinds.length - 1))) % kinds.length
+    const i = draw()
     const k = kinds[i]
     if (!k) return
     if ('tonga' in k) {
@@ -241,7 +254,7 @@ export function startAmbience(
       tongaBell(ctx, bus, t, TONGA_LEVEL * dB((k.db ?? 0) + rand(-1.5, 1)))
       return
     }
-    if (!room) return // not loaded yet: the next turn tries again
+    if (!room) { bag.push(i); return } // not loaded yet: this kind waits for the next turn
     last = i
     const [start, dur, lufs] = ROOM[k.clip]
     // set by loudness, a little different each time, and never past the peak ceiling

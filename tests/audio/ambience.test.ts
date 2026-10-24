@@ -119,7 +119,9 @@ describe('era ambience', () => {
       expect(timers.length).toBeGreaterThan(0) // it keeps going
       expect(played).not.toContain('?')
       for (let i = 1; i < played.length; i++) expect(played[i], `${era} #${i}`).not.toBe(played[i - 1])
-      expect(new Set(played).size, era).toBeGreaterThanOrEqual(6)
+      // every kind once before any comes round again
+      const n = burstKinds(era)
+      for (let i = 0; i + n <= played.length; i += n) expect(new Set(played.slice(i, i + n)).size, `${era} round ${i / n}`).toBe(n)
     }
   })
 
@@ -130,12 +132,12 @@ describe('era ambience', () => {
     for (let i = 0; i < 300; i++) step()
     const sources = ctx.nodes.filter((n) => clipOf(n))
     expect(sources.length).toBeGreaterThan(20)
-    // each clip's gain node: from silence, up to its level, at most -20.5 dB (the clip peaks at -3 dBFS)
+    // each clip's gain node: from silence, up to its level, at most -21.5 dB (the clip peaks at -3 dBFS)
     const gains = ctx.nodes.filter((n) => n.kind === 'gain' && n.gain.calls[0]?.name === 'set' && n.gain.calls[0].args[0] === 0.0001 && n.gain.calls.length === 4)
     expect(gains.length).toBeGreaterThan(20)
     for (const g of gains) {
       const up = g.gain.calls[1]!
-      expect(up.args[0]).toBeLessThanOrEqual(10 ** (-20.5 / 20) + 1e-9)
+      expect(up.args[0]).toBeLessThanOrEqual(10 ** (-21.5 / 20) + 1e-9)
       expect(up.args[1]! - g.gain.calls[0]!.args[1]!).toBeGreaterThan(0.01) // never an instant start
     }
   })

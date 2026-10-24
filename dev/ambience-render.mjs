@@ -42,10 +42,10 @@ await page.goto(`${BASE}/dev/ambience.html`)
 await page.locator('#status', { hasText: 'ready' }).waitFor()
 
 async function render(req, file) {
-  let b64
+  let res
   for (let attempt = 0; ; attempt++) {
     try {
-      b64 = await page.evaluate((r) => window.renderAmbience(r), req)
+      res = await page.evaluate((r) => window.renderAmbience(r), req)
       break
     } catch (e) {
       // the dev server reloads the page when a source file has just changed: wait and go again
@@ -54,8 +54,8 @@ async function render(req, file) {
       await page.locator('#status', { hasText: 'ready' }).waitFor()
     }
   }
-  writeFileSync(file, Buffer.from(b64, 'base64'))
-  return measure(file)
+  writeFileSync(file, Buffer.from(res.wav, 'base64'))
+  return { ...measure(file), events: res.events }
 }
 
 const rows = []
@@ -66,7 +66,7 @@ for (const [i, era] of ERAS.entries()) {
   spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', demo, '-c:a', 'libmp3lame', '-b:a', '160k', join(OUT, `ambience-${era}.mp3`)])
   // what a player gets: two minutes at the game's own pace (a room sound every 15–40 s)
   const g = await render({ era, seconds: 120, seed: 21 + i }, join(tmp, `${era}-game.wav`))
-  rows.push(`${era}\n  30 s demo  ${fmt(d)}\n  120 s game ${fmt(g)}`)
+  rows.push(`${era}\n  30 s demo  ${fmt(d)}\n    room sounds: ${d.events.join(', ')}\n  120 s game ${fmt(g)}\n    room sounds: ${g.events.join(', ')}`)
   if (process.env.LAYERS) {
     for (const layer of ['bed', 'music', 'steady', 'bursts']) {
       const layers = { bed: layer === 'bed', music: layer === 'music', steady: layer === 'steady', bursts: layer === 'bursts' }

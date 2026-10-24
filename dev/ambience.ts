@@ -1,6 +1,8 @@
 // Renders an era's ambience offline (OfflineAudioContext), through the game's own code and the
-// master level, and hands back a 16-bit stereo WAV as base64. Driven by dev/ambience-render.mjs.
+// master level, and hands back a 16-bit stereo WAV as base64 with the room sounds it played.
+// Driven by dev/ambience-render.mjs.
 import { MUSIC_FILES, startAmbience, type AmbienceOptions } from '../src/audio/ambience'
+import { ROOM, ROOM_FILE, type RoomClip } from '../src/audio/room-sprite'
 import type { Later } from '../src/audio/ambience-synth'
 import type { EraId } from '../src/content/types'
 
@@ -50,7 +52,7 @@ function wav16(buf: AudioBuffer): string {
   return btoa(s)
 }
 
-async function render(req: RenderRequest): Promise<string> {
+async function render(req: RenderRequest): Promise<{ wav: string; events: string[] }> {
   const ctx = new OfflineAudioContext(2, Math.round(req.seconds * SR), SR)
   const master = ctx.createGain()
   master.gain.value = MASTER_LEVEL
@@ -88,6 +90,32 @@ async function render(req: RenderRequest): Promise<string> {
     }
     list.push(fn)
   }
+  // note which room sound starts when (a clip is known by its start in the sprite; the tonga bell
+  // is the only synthesized one, a 1568 Hz oscillator)
+  const events: string[] = []
+  const room = await loadBed(ROOM_FILE)
+  const make = ctx.createBufferSource.bind(ctx)
+  ctx.createBufferSource = () => {
+    const src = make()
+    const start = src.start.bind(src)
+    src.start = (when?: number, offset?: number, duration?: number) => {
+      const clip = src.buffer === room ? (Object.keys(ROOM) as RoomClip[]).find((k) => ROOM[k][0] === offset) : undefined
+      if (clip) events.push(`${(when ?? 0).toFixed(1)}s ${clip}`)
+      start(when, offset, duration)
+    }
+    return src
+  }
+  const makeOsc = ctx.createOscillator.bind(ctx)
+  let lastBell = -9
+  ctx.createOscillator = () => {
+    const osc = makeOsc()
+    const start = osc.start.bind(osc)
+    osc.start = (when?: number) => {
+      if (osc.frequency.value === 1568 && (when ?? 0) - lastBell > 1) { lastBell = when ?? 0; events.push(`${lastBell.toFixed(1)}s tonga bell`) }
+      start(when)
+    }
+    return osc
+  }
   startAmbience(ctx as unknown as AudioContext, master, req.era, loadBed, {
     later,
     random: mulberry(req.seed ?? 1),
@@ -97,7 +125,7 @@ async function render(req: RenderRequest): Promise<string> {
   })
   await new Promise((r) => setTimeout(r, 50)) // the loaded bed's start runs in a microtask
   const out = await ctx.startRendering()
-  return wav16(out)
+  return { wav: wav16(out), events }
 }
 
 ;(window as unknown as { renderAmbience: typeof render }).renderAmbience = render
