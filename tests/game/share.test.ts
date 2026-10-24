@@ -30,13 +30,12 @@ describe('the story a post tells', () => {
     expect(chapterStory(state(q, { day: 7, phase: 'survived' }), 'survived', 'en')).toEqual({ how: 'survived', fact: { kind: 'catch', text: 'Sixteen annas make a rupee.' } })
   })
 
-  it('a forgery passed tells its tell; a genuine one thrown out brags about the best catch before it, else says why it was genuine', () => {
+  it('a forgery passed tells its tell; a genuine one thrown out brags about the best catch before it, and never explains the genuine one', () => {
     expect(chapterStory(state(q, { day: 3, phase: 'caught', lastVerdict: 'asli' }), 'caught', 'en')).toEqual({ how: 'missed', fact: { kind: 'missed', text: 'The 38th was in Delhi, not the 37th.' } })
     expect(chapterStory(state(q, { day: 5, phase: 'caught', lastVerdict: 'tota' }), 'caught', 'en')).toEqual({ how: 'rejected', fact: { kind: 'catch', text: 'Sixteen annas make a rupee.' } })
-    // caught on day 2 with no forgery caught before: the why, without its "Written for the game" lead
-    expect(chapterStory(state([genuine('x', 'Written for the game: the King wrote to all.')], { day: 1, phase: 'caught', lastVerdict: 'tota' }), 'caught', 'en'))
-      .toEqual({ how: 'rejected', fact: { kind: 'real', text: 'the King wrote to all.' } })
-    expect(chapterStory(state([genuine('x', 'True: a real petition.')], { day: 1, phase: 'caught', lastVerdict: 'tota' }), 'caught', 'hi').fact?.text).toBe('True: a real petition.')
+    expect(chapterStory(state(q, { day: 2, phase: 'caught', lastVerdict: 'tota' }), 'caught', 'en')).toEqual({ how: 'rejected', fact: { kind: 'catch', text: 'The 3rd rode, not the 4th.' } })
+    // caught on day 1, no forgery caught before: no fact at all (the why would read like filler)
+    expect(chapterStory(state([genuine('x', 'Written for the game: the King wrote to all.')], { day: 1, phase: 'caught', lastVerdict: 'tota' }), 'caught', 'en')).toEqual({ how: 'rejected' })
   })
 
   it('a burnt-out agarbatti brags about the best catch before it, or says nothing more', () => {
@@ -48,6 +47,8 @@ describe('the story a post tells', () => {
     expect(dailyFact(q.slice(0, 5), [true, true, true, false, true], 'en')).toEqual({ kind: 'catch', text: 'The 38th was in Delhi, not the 37th.' })
     expect(dailyFact(q.slice(0, 2), [false, false], 'en')).toEqual({ kind: 'missed', text: 'The 3rd rode, not the 4th.' })
     expect(dailyFact(q.slice(1, 2), [true], 'en')).toBeUndefined()
+    expect(dailyFact(q.slice(1, 3), [false, false], 'en')).toEqual({ kind: 'missed', text: 'The 38th was in Delhi, not the 37th.' }) // a genuine one missed is skipped
+    expect(dailyFact(q.slice(1, 2), [false], 'en')).toBeUndefined()
   })
 })
 
@@ -59,8 +60,24 @@ describe('the post', () => {
       "🦜 I held out all 7 days in Bahadur Shah Zafar's darbar, Delhi 1857\nMy best catch: the 38th was in Delhi, not the 37th\nYour turn, can you spot the Tota?")
     expect(chapterPost({ result: r({ outcome: 'caught', days: 3, lang: 'hi' }), how: 'missed', fact: { kind: 'missed', text: 'दिल्ली में 38वीं पलटन थी, 37वीं नहीं।' } })).toBe(
       '🦜 दिल्ली 1857 में बहादुर शाह ज़फ़र के दरबार में चौथे दिन फ़िरंगी तोते ने मुझे चकमा दे दिया\nजो चूक मुझसे छूट गई: दिल्ली में 38वीं पलटन थी, 37वीं नहीं\nआप कितने दिन टिकेंगे?')
+  })
+
+  it('without a tell to tell, says one short true line instead, never a filler explanation', () => {
+    expect(chapterPost({ result: r({ outcome: 'caught', days: 0 }), how: 'rejected' })).toBe(
+      "🦜 I called a real message fake on day 1 in Bahadur Shah Zafar's darbar, Delhi 1857\nThe Tota made me doubt the truth\nCan you last longer?")
+    expect(chapterPost({ result: r({ outcome: 'caught', days: 0, lang: 'hi' }), how: 'rejected' })).toBe(
+      '🦜 दिल्ली 1857 में बहादुर शाह ज़फ़र के दरबार में पहले दिन मैंने असली संदेश को जाली मान लिया\nतोते ने मुझे सच पर ही शक करा दिया\nआप कितने दिन टिकेंगे?')
     expect(chapterPost({ result: r({ era: 'delhi-1947', mode: 'hard', outcome: 'caught', days: 0 }), how: 'timeout' })).toBe(
-      "🦜 My agarbatti burnt out on day 1 at the Viceroy's House telegraph desk, Delhi 1947\nCan you last longer?")
+      "🦜 My agarbatti burnt out on day 1 at the Viceroy's House telegraph desk, Delhi 1947\nThe clock sided with the Tota\nCan you last longer?")
+    expect(chapterPost({ result: r({ lang: 'hi' }), how: 'survived' }).split('\n')[1]).toBe('हर सच्ची बात आगे पहुँची')
+    expect(chapterPost({ result: r({ outcome: 'caught', days: 2 }), how: 'missed' }).split('\n')[1]).toBe("The Tota's forgery fooled me")
+    for (const how of ['survived', 'missed', 'rejected', 'timeout'] as How[]) {
+      for (const lang of LANGS) {
+        const post = chapterPost({ result: r({ era: 'lahore-1929', mode: 'hard', lang, ...(how === 'survived' ? { days: 14 } : { outcome: 'caught', days: 13 }) }), how })
+        expect(post.split('\n'), post).toHaveLength(3)
+        expect(post).not.toMatch(/[.।]$/m) // no full stops at line ends
+      }
+    }
   })
 
   it('the daily post carries the score, the ticks and crosses, the fact and a dare', () => {
@@ -76,10 +93,8 @@ describe('the post', () => {
     for (const era of Object.values(SERVER_ERAS)) {
       for (const lang of LANGS) {
         for (const m of era.messages) {
-          // the raw why (with its lead) is longer than what a post carries, so this errs long
-          const facts = m.real
-            ? [{ kind: 'real' as const, text: m.why?.text[lang] ?? '' }]
-            : (m.tells ?? []).map((t) => ({ kind: 'catch' as const, text: t.explain[lang] }))
+          // every tell, as a catch and as the slip that was missed
+          const facts = (m.tells ?? []).flatMap((t) => [{ kind: 'catch' as const, text: t.explain[lang] }, { kind: 'missed' as const, text: t.explain[lang] }])
           for (const fact of facts) {
             for (const how of ['survived', 'missed', 'rejected', 'timeout'] as How[]) {
               const days = how === 'survived' ? DAYS.hard : DAYS.hard - 1

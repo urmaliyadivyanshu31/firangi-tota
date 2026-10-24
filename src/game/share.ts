@@ -23,8 +23,12 @@ export const ORDINAL_HI = ['पहले', 'दूसरे', 'तीसरे',
  */
 export type How = 'survived' | 'missed' | 'rejected' | 'timeout'
 
-/** The one fact the post carries: a forgery caught, the slip that was missed, or a real message's proof. */
-export interface Fact { kind: 'catch' | 'missed' | 'real'; text: string }
+/**
+ * The one fact a post carries: always a forgery's tell ("the 38th was in Delhi, not the 37th"),
+ * one the player caught or the one that fooled them. A genuine message's explanation reads like
+ * filler in a post, so it is never used; without a tell the post gets a short line instead.
+ */
+export interface Fact { kind: 'catch' | 'missed'; text: string }
 
 /** At most this many characters before the link. */
 export const MAX_POST = 230
@@ -37,12 +41,10 @@ function bestCatch(caught: Message[], lang: Lang): Fact | undefined {
   return text ? { kind: 'catch', text } : undefined
 }
 
-/** A why's bookkeeping lead, which reads oddly in a post ("Written for the game: …", "True: …"). */
-const WHY_LEAD = /^(?:Written for the game|True|खेल के लिए लिखा गया|सच)\s*[:;]\s*/u
-
-function slipOf(m: Message, lang: Lang): Fact | undefined {
-  const text = m.real ? m.why?.text[lang]?.replace(WHY_LEAD, '') : m.tells?.[0]?.explain[lang]
-  return text ? { kind: m.real ? 'real' : 'missed', text } : undefined
+/** The tell of a forgery that got past the player. */
+function missedTell(m: Message, lang: Lang): Fact | undefined {
+  const text = m.real ? undefined : m.tells?.[0]?.explain[lang]
+  return text ? { kind: 'missed', text } : undefined
 }
 
 /** A chapter's story, read from its state at the end: how it ended and the fact worth telling. */
@@ -59,17 +61,17 @@ export function chapterStory(s: ChapterState, outcome: 'survived' | 'caught', la
     return fact ? { how: 'timeout', fact } : { how: 'timeout' }
   }
   // a forgery passed: its tell is the story. A genuine one thrown out: brag about the best catch
-  // before it, else say why it was genuine.
-  const fact = msg.real ? bestCatch(before, lang) ?? slipOf(msg, lang) : slipOf(msg, lang)
+  // before it, if there was one.
+  const fact = msg.real ? bestCatch(before, lang) : missedTell(msg, lang)
   const how: How = msg.real ? 'rejected' : 'missed'
   return fact ? { how, fact } : { how }
 }
 
-/** The daily puzzle's fact: the best forgery caught, else the first message that went wrong. */
+/** The daily puzzle's fact: the best forgery caught, else the first forgery that got past. */
 export function dailyFact(messages: Message[], results: boolean[], lang: Lang): Fact | undefined {
   const caught = messages.filter((m, i) => results[i] === true && !m.real)
-  const missed = messages.find((_m, i) => results[i] === false)
-  return bestCatch(caught, lang) ?? (missed ? slipOf(missed, lang) : undefined)
+  const missed = messages.find((m, i) => results[i] === false && !m.real)
+  return bestCatch(caught, lang) ?? (missed ? missedTell(missed, lang) : undefined)
 }
 
 /** Words that may open a tell and read lower case after a colon ("My best catch: the 38th …"). */
@@ -86,7 +88,18 @@ export function clause(text: string, lang: Lang): string {
 const FACT_LEAD: Record<Fact['kind'], L10n> = {
   catch: { en: 'My best catch', hi: 'मेरी सबसे बढ़िया पकड़' },
   missed: { en: 'The slip I missed', hi: 'जो चूक मुझसे छूट गई' },
-  real: { en: 'It was genuine', hi: 'वह संदेश असली था' },
+}
+
+/**
+ * When the run has no tell to tell, a short line true to how it ended. The Hindi never genders the
+ * player: the Tota, the clock or the messages do the verbs.
+ */
+const NO_TELL: Record<How, L10n> = {
+  // every forgery that came was caught: only a run with none at all lands here
+  survived: { en: 'Every true word got through', hi: 'हर सच्ची बात आगे पहुँची' },
+  missed: { en: "The Tota's forgery fooled me", hi: 'तोते की जालसाज़ी ने मुझे छल लिया' },
+  rejected: { en: 'The Tota made me doubt the truth', hi: 'तोते ने मुझे सच पर ही शक करा दिया' },
+  timeout: { en: 'The clock sided with the Tota', hi: 'इस बार घड़ी तोते के साथ थी' },
 }
 
 function headline(how: How, era: EraId, days: number, lang: Lang): string {
@@ -126,7 +139,7 @@ export function chapterPost(p: { result: ShareResult; how: How; fact?: Fact }): 
   const dare = r.outcome === 'survived'
     ? (r.lang === 'hi' ? 'अब आपकी बारी, तोता पकड़ पाएँगे?' : 'Your turn, can you spot the Tota?')
     : (r.lang === 'hi' ? 'आप कितने दिन टिकेंगे?' : 'Can you last longer?')
-  return fit([`🦜 ${headline(p.how, r.era, r.days, r.lang)}`], factLine(p.fact, r.lang), dare)
+  return fit([`🦜 ${headline(p.how, r.era, r.days, r.lang)}`], factLine(p.fact, r.lang) ?? NO_TELL[p.how][r.lang], dare)
 }
 
 /** The daily puzzle's post, without the link: the score, the ticks and crosses, a fact and a dare. */
