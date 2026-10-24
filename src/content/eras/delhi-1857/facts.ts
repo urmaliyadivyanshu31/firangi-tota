@@ -103,14 +103,16 @@ export const facts: Fact[] = [
     // MH pp.39-40: each village was told to bake five and pass them on; "neither its origin, nor its
     // intention, were known". At the trial Jat Mall heard of no message with them, and Metcalfe said
     // "There is nothing but conjecture regarding them". Majumdar pp.202-03: more than a dozen readings.
+    // "No written message": Jat Mall heard of no message with them at all (the weaker claim is entailed);
+    // the spoken word to bake five and pass them on (MH) is not a written message.
     id: 'chapatis',
     para: 1,
     minMode: 'hard',
     label: { en: 'Chapatis, February', hi: 'रोटियाँ, फ़रवरी' },
-    value: { en: 'Passed village to village; meaning unknown', hi: 'गाँव-गाँव पहुँचीं; मतलब किसी को पता नहीं' },
+    value: { en: 'Village to village, unwritten; meaning unknown', hi: 'गाँव-गाँव, बिना लिखे संदेश; मतलब अज्ञात' },
     story: {
-      en: 'In February chapatis passed from [[village to village]]; their [[meaning]] was [[unknown]] to all.',
-      hi: 'फ़रवरी में रोटियाँ [[गाँव-गाँव]] पहुँचीं; उनका [[मतलब]] किसी को [[पता नहीं]] था।',
+      en: 'In February chapatis passed from [[village to village]] with [[no written message]]; their [[meaning]] was [[unknown]] to all.',
+      hi: 'फ़रवरी में रोटियाँ [[बिना किसी लिखे संदेश]] के [[गाँव-गाँव]] पहुँचीं; उनका [[मतलब]] किसी को [[पता नहीं]] था।',
     },
     sources: [mh('pp.39-40'), trial(JATMALL_CHAPATI), trial(METCALFE_CHAPATI), majumdar('pp.202-03')],
   },
@@ -251,31 +253,33 @@ export const facts: Fact[] = [
     label: { en: 'Rohtak treasure', hi: 'रोहतक का ख़ज़ाना' },
     value: { en: 'Rs 175,000; many bags of pice', hi: '1,75,000 रुपये; कई थैलियों में पैसे' },
     story: {
-      en: 'The Rohtak treasure, [[Rs 175,000]], turns out to be many bags of mere [[pice]].',
+      en: 'The Rohtak treasure, [[Rs 175,000]], turns out to be many bags of mere [[pice]], small copper coins.',
       hi: 'रोहतक का ख़ज़ाना, [[1,75,000 रुपये]], खुला तो कई थैलियों में बस [[पैसे]] निकले।',
     },
     sources: [jl('p.104'), yule('s.v. Pice')],
   },
   {
-    // MH p.60: the King's orders promised these sums to regiments that came over (see pay-real).
+    // MH p.60: the King's orders (perwanahs) promised these sums to regiments that came over (see pay-real).
     id: 'pay',
     para: 2,
     label: { en: 'Pay promised', hi: 'वादे की तनख़्वाह' },
     value: { en: 'Foot soldier Rs 30, horseman 50', hi: 'पैदल 30 रुपये, सवार 50 रुपये' },
     story: {
-      en: 'Any regiment that joins is promised [[30 rupees]] for each [[foot soldier]] and [[50]] for each [[horseman]].',
-      hi: 'आ मिलने वाली पलटनों से वादा है: हर [[पैदल]] सिपाही को [[30 रुपये]], हर [[सवार]] को [[50 रुपये]]।',
+      en: "The King's orders promise any regiment that joins [[30 rupees]] for each [[foot soldier]] and [[50]] for each [[horseman]].",
+      hi: 'बादशाह के हुक्म आ मिलने वाली पलटनों से वादा करते हैं: हर [[पैदल]] सिपाही को [[30 रुपये]], हर [[सवार]] को [[50 रुपये]]।',
     },
     sources: [mh('p.60')],
   },
   {
+    // Sen p.79: on 8 June the Field Force beat the sepoys at Badli-ki-Serai and occupied the Ridge, the
+    // start of the siege of Delhi. "Only then" lets a player rule out a May "siege" (besieged-forged).
     id: 'english-force',
     para: 3,
     label: { en: 'English army, Ambala', hi: 'अंग्रेज़ी फ़ौज, अंबाला' },
-    value: { en: 'Takes the Ridge on 8 June', hi: 'रिज पर 8 जून को क़ब्ज़ा' },
+    value: { en: 'Ridge taken, siege begun, 8 June', hi: 'रिज पर क़ब्ज़ा, घेरा शुरू, 8 जून' },
     story: {
-      en: 'Ahead, the English army marches from Ambala and takes the [[Ridge]] on [[8 June]].',
-      hi: 'आगे, अंग्रेज़ी फ़ौज अंबाला से चलकर [[8 जून]] को [[रिज]] पर क़ब्ज़ा करती है।',
+      en: 'Ahead, the English army marches from Ambala and takes the [[Ridge]] on [[8 June]]; only then does its [[siege]] of Delhi begin.',
+      hi: 'आगे, अंग्रेज़ी फ़ौज अंबाला से चलकर [[8 जून]] को [[रिज]] पर क़ब्ज़ा करती है; तभी दिल्ली का [[घेरा]] शुरू होता है।',
     },
     sources: [sen('p.77'), sen('p.79'), trial(CHUNI_17), jl('pp.107-08')],
   },
