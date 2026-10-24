@@ -51,8 +51,8 @@ export function appEras(): Era[] {
       { id: 's2', author: 'B. Author', title: 'Second Book', year: '1950', url: 'https://example.org/book' },
     ],
     facts: [
-      { id: 'f1', label: l('City', 'शहर'), value: l('Delhi', 'दिल्ली'), sources: [{ id: 's1' }] },
-      { id: 'f2', label: l('Seal', 'मुहर'), value: l('Round', 'गोल'), sources: [{ id: 's2' }], hardHidden: true },
+      { id: 'f1', label: l('City', 'शहर'), value: l('Delhi', 'दिल्ली'), story: l('The city is [[Delhi]].', 'शहर [[दिल्ली]] है।'), para: 1, sources: [{ id: 's1' }] },
+      { id: 'f2', label: l('Seal', 'मुहर'), value: l('Round', 'गोल'), story: l('The seal is [[round]].', 'मुहर [[गोल]] होती है।'), para: 2, sources: [{ id: 's2' }], hardHidden: true },
     ],
     rules: [
       { id: 'r1', text: l('Check the seal', 'मुहर जाँचें'), arrivesOnDay: 1 },
