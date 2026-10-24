@@ -8,7 +8,18 @@ export type TellKind = 'name' | 'place' | 'number' | 'date' | 'weekday' | 'anach
 
 export interface Source { id: string; author: string; title: string; year: string; url?: string }
 export interface SourceRef { id: string; loc?: string }            // loc: page, section or URL anchor
-export interface Fact { id: string; label: L10n; value: L10n; sources: SourceRef[]; hardHidden?: boolean }
+/**
+ * A case-file line. `label` and `value` are the short form (the pencil, the reveal and the tests use
+ * them). `story` is how the case file reads it: one sentence in the era's voice, with every checkable
+ * word of the value inside [[ ]] (a marker swash on the card, a blank rule in Hard when `hardHidden`).
+ * A story never adds a claim beyond the value and its sources.
+ */
+export interface Fact {
+  id: string; label: L10n; value: L10n; story: L10n
+  /** Its paragraph in the case file (facts are listed in story order, so paragraphs only go up). */
+  para: 1 | 2 | 3
+  sources: SourceRef[]; hardHidden?: boolean
+}
 export interface Rule { id: string; text: L10n; arrivesOnDay: number } // 1-based day index
 export interface Tell {
   kind: TellKind; explain: L10n; factId?: string; sources?: SourceRef[]
