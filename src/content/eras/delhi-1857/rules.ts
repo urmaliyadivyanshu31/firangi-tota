@@ -1,7 +1,8 @@
 import type { Rule } from '../../types.js'
 
 // The rulebook, one line each. Sources: trial petitions (form); Chuni Lal's diary, JL p.102 and
-// Petition No. 64 (weekdays, Eid); the Trial's Persian-rumour papers; the King's own order (manners);
+// Petition No. 64 (weekdays, Eid: No. 64 says "This is Sunday… the new moon of the festival of the Eed
+// appeared" on 24 May, and JL p.102 has Eid on Monday 25 May); the Trial's Persian-rumour papers; the King's own order (manners);
 // Majumdar p.71, Sen p.321 and Fanshawe p.214 (titles); Mainodin p.59 (the planted letter).
 export const rules: Rule[] = [
   {
@@ -24,8 +25,8 @@ export const rules: Rule[] = [
     id: 'weekdays',
     arrivesOnDay: 2,
     text: {
-      en: '17 May 1857 is a Sunday; count on. Eid is Monday 25 May.',
-      hi: '17 मई 1857 रविवार है; आगे गिनिए। ईद सोमवार 25 मई को है।',
+      en: '17 May is a Sunday; count on. Eid moon: Sunday 24th. Eid: Monday 25th.',
+      hi: '17 मई रविवार है; आगे गिनिए। ईद का चाँद: रविवार 24 मई। ईद: सोमवार 25 मई।',
     },
   },
   {
