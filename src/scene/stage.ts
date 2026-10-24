@@ -1174,9 +1174,9 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
     await tweens.wait(300)
   }
 
-  // (the margin is a share of the width: a short landscape screen takes a thinner one, or the
-  // cards would lose a third of the little height there is)
-  // (a phone, width-bound, gets a thin margin too: every pixel of card width is type size)
+  // The margin is a share of the width, so a short landscape screen takes a thinner one (or the
+  // cards would lose a third of the little height there is), and so does a phone, which is
+  // width-bound: there every pixel of card width is type size.
   const introPoseFn: PoseFn = (aspect) => introPose(aspect, box(aspect < 0.9 ? 0.03 : 0.05 * Math.min(1, 1.2 / aspect)))
 
   const introPlay = (token: number): IntroPlay => {
@@ -1431,7 +1431,8 @@ export function createStage(el: HTMLElement, opts: StageOptions): Stage | null {
       introSpec = null
       introToken++
       if (animating) {
-        // the cards are still on their way: they jump home, then leave as usual
+        // the cards are still on their way: their motion ends at once where they are (quietly),
+        // and they leave from there; the day after them is animated as usual
         introRush = true
         tweens.setInstant(true)
         tweens.clear()
